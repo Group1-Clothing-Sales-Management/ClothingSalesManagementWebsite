@@ -1,38 +1,24 @@
-# ==================== Maven ====================
+# Maven
 target/
 *.war
 *.jar
-*.ear
 
-# ==================== NetBeans ====================
+# NetBeans
 nbproject/private/
 build/
 dist/
 nbactions.xml
 nb-configuration.xml
 
-# ==================== IDE ====================
+# IDE
 .idea/
 *.iml
 .vscode/
-*.swp
-*.swo
 
-# ==================== Logs & Temp ====================
+# Logs
 *.log
 logs/
-temp/
-tmp/
 
-# ==================== OS ====================
+# OS
 .DS_Store
 Thumbs.db
-
-# ==================== Database & Config ====================
-*.bak
-*.sql.bak
-
-# ==================== Other ====================
-.classpath
-.project
-.settings/
