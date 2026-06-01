@@ -9,5 +9,8 @@ package com.clothingsale.service;
  * @author Admin
  */
 public class AdminManageProductService {
-    
+    public int insert(int a){
+        int dem;
+        return a;
+    }
 }
