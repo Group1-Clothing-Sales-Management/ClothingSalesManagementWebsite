@@ -128,6 +128,69 @@
                                                 </tr>
                                             </c:otherwise>
                                         </c:choose>
+                                    <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <div class="modal-content border-0 shadow">
+                                                <div class="modal-header bg-dark text-white">
+                                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-box-open me-2"></i>Thêm sản phẩm mới</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="${pageContext.request.contextPath}/AdminManageProduct" method="POST" enctype="multipart/form-data">
+                                                    <div class="modal-body p-4">
+                                                        <div class="row g-3">
+                                                            <div class="col-md-6">
+                                                                <label class="form-label fw-semibold">Tên sản phẩm</label>
+                                                                <input type="text" class="form-control" name="productName" placeholder="Ví dụ: Áo sơ mi nam Linen" required>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label fw-semibold">Đường dẫn mẫu (Slug - SEO)</label>
+                                                                <input type="text" class="form-control" name="slug" placeholder="Ví dụ: ao-so-mi-nam-linen" required>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label fw-semibold">Thương hiệu</label>
+                                                                <select class="form-select" name="brandId" required>
+                                                                    <option value="1">Coolmate (ID: 1)</option>
+                                                                    <option value="2">Routine (ID: 2)</option>
+                                                                    <option value="3">Uniqlo (ID: 3)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label fw-semibold">Danh mục phân loại</label>
+                                                                <select class="form-select" name="categoryId" required>
+                                                                    <option value="3">Áo Thun T-Shirt (ID: 3)</option>
+                                                                    <option value="4">Áo Sơ Mi (ID: 4)</option>
+                                                                    <option value="5">Quần Jean Nam (ID: 5)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label class="form-label fw-semibold">Ảnh đại diện chính (.jpg/.png)</label>
+                                                                <input type="file" class="form-control" name="productImage" accept="image/*" required>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label class="form-label fw-semibold">Mô tả ngắn</label>
+                                                                <textarea class="form-control" name="shortDescription" rows="2" placeholder="Tóm tắt đặc tính nổi bật của sản phẩm..."></textarea>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label class="form-label fw-semibold">Mô tả chi tiết</label>
+                                                                <textarea class="form-control" name="longDescription" rows="4" placeholder="Thông số chi tiết, hướng dẫn bảo quản..."></textarea>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label fw-semibold">Trạng thái phát hành</label>
+                                                                <select class="form-select" name="status">
+                                                                    <option value="ACTIVE">Kinh doanh tức thì (ACTIVE)</option>
+                                                                    <option value="DRAFT">Lưu bản nháp ẩn (DRAFT)</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer bg-light">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                        <button type="submit" class="btn btn-primary px-4 fw-semibold">Lưu sản phẩm</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                     </tbody>
                                 </table>
                             </div>

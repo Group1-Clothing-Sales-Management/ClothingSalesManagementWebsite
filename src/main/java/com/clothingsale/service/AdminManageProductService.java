@@ -11,4 +11,7 @@ public class AdminManageProductService {
     public List<Product> getAllProducts() {
         return productDAO.getAllProducts();
     }
+    public boolean addProduct(Product p, String imageName) {
+        return productDAO.insertProductWithImage(p, imageName);
+    }
 }
