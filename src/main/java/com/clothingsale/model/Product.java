@@ -18,13 +18,14 @@ public class Product {
     private String status;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private String mainImageUrl;
 
     public Product() {
     }
 
     public Product(int id, String productName, String slug, int brandId, int categoryId,
             String shortDescription, String longDescription, String status,
-            Timestamp createdAt, Timestamp updatedAt) {
+            Timestamp createdAt, Timestamp updatedAt,String mainImageUrl) {
         this.id = id;
         this.productName = productName;
         this.slug = slug;
@@ -35,6 +36,7 @@ public class Product {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.mainImageUrl = mainImageUrl;
     }
 
     // Getters and Setters
@@ -117,4 +119,13 @@ public class Product {
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getMainImageUrl() {
+        return mainImageUrl;
+    }
+
+    public void setMainImageUrl(String mainImageUrl) {
+        this.mainImageUrl = mainImageUrl;
+    }
+    
 }

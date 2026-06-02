@@ -1,16 +1,14 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.clothingsale.service;
 
-/**
- *
- * @author Admin
- */
+import com.clothingsale.dao.AdminManageProductDAO;
+import com.clothingsale.model.Product;
+import java.util.List;
+
 public class AdminManageProductService {
-    public int insert(int a){
-        int dem;
-        return a;
+    
+    private final AdminManageProductDAO productDAO = new AdminManageProductDAO();
+
+    public List<Product> getAllProducts() {
+        return productDAO.getAllProducts();
     }
 }
