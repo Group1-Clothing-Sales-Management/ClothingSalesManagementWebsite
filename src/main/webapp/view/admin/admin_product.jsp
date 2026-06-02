@@ -86,7 +86,7 @@
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${not empty p.mainImageUrl}">
-                                                                    <img src="${pageContext.request.contextPath}/uploads/products/${p.mainImageUrl}" 
+                                                                    <img src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}" 
                                                                          alt="${p.productName}" 
                                                                          class="img-thumbnail rounded shadow-sm" 
                                                                          style="width: 55px; height: 55px; object-fit: cover;">
