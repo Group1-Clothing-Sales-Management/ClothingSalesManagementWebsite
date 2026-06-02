@@ -1,175 +1,274 @@
+CREATE DATABASE ClothesShopDB;
+GO
 USE ClothesShopDB;
 GO
 
 -- =========================================================================
--- 1. CHÈN DỮ LIỆU ĐỊA GIỚI HÀNH CHÍNH (Tỉnh, Huyện, Xã mẫu)
+-- I. PHÂN HỆ ĐỊA GIỚI HÀNH CHÍNH (Sẵn sàng tích hợp API Giao hàng GHN/GHTK)
 -- =========================================================================
-INSERT INTO Province (id, province_name, type) VALUES 
-('01', N'Thành phố Hà Nội', N'Thành phố Trung ương'),
-('79', N'Thành phố Hồ Chí Minh', N'Thành phố Trung ương'),
-('92', N'Thành phố Cần Thơ', N'Thành phố Trung ương');
 
-INSERT INTO District (id, district_name, type, province_id) VALUES 
-('001', N'Quận Ba Đình', N'Quận', '01'),
-('002', N'Quận Tây Hồ', N'Quận', '01'),
-('760', N'Quận 1', N'Quận', '79'),
-('769', N'Quận Thủ Đức', N'Quận', '79'),
-('916', N'Quận Ninh Kiều', N'Quận', '92');
+-- 1. Bảng Tỉnh / Thành phố
+CREATE TABLE Province (
+    id VARCHAR(20) PRIMARY KEY, -- Có thể dùng mã Code của Tổng cục Thống kê hoặc API (VD: '01' cho Hà Nội)
+    province_name NVARCHAR(100) NOT NULL,
+    type NVARCHAR(30) -- Thành phố TW, Tỉnh
+);
 
-INSERT INTO Ward (id, ward_name, type, district_id) VALUES 
-('00001', N'Phường Phúc Xá', N'Phường', '001'),
-('00010', N'Phường Trúc Bạch', N'Phường', '001'),
-('26734', N'Phường Bến Nghé', N'Phường', '760'),
-('26743', N'Phường Cô Giang', N'Phường', '760'),
-('31147', N'Phường An Khánh', N'Phường', '916'),
-('31162', N'Phường Xuân Khánh', N'Phường', '916');
+-- 2. Bảng Quận / Huyện
+CREATE TABLE District (
+    id VARCHAR(20) PRIMARY KEY,
+    district_name NVARCHAR(100) NOT NULL,
+    type NVARCHAR(30),
+    province_id VARCHAR(20) FOREIGN KEY REFERENCES Province(id)
+);
 
-
--- =========================================================================
--- 2. CHÈN DỮ LIỆU PHÂN QUYỀN & TÀI KHOẢN (Mật khẩu mẫu đang để text thô để bạn dễ test)
--- =========================================================================
-INSERT INTO Role (role_name, description) VALUES 
-('ADMIN', N'Quản trị viên toàn quyền hệ thống'),
-('STAFF', N'Nhân viên quản lý kho và đơn hàng'),
-('CUSTOMER', N'Khách hàng mua sắm trực tuyến');
-
-INSERT INTO [User] (username, password, full_name, email, phone, status, role_id) VALUES 
-('admin01', 'admin123', N'Nguyễn Văn Admin', 'admin@clothesshop.com', '0911223344', 'ACTIVE', 1),
-('staff01', 'staff123', N'Trần Thị Nhân Viên', 'staff@clothesshop.com', '0922334455', 'ACTIVE', 2),
-('quy_nn', 'customer123', N'Nguyễn Ngọc Quý', 'quynn@gmail.com', '0933445566', 'ACTIVE', 3),
-('khachhang02', 'customer123', N'Lê Hoàng Nam', 'namlh@gmail.com', '0944556677', 'ACTIVE', 3);
+-- 3. Bảng Phường / Xã / Thị trấn
+CREATE TABLE Ward (
+    id VARCHAR(20) PRIMARY KEY,
+    ward_name NVARCHAR(100) NOT NULL,
+    type NVARCHAR(30),
+    district_id VARCHAR(20) FOREIGN KEY REFERENCES District(id)
+);
 
 
 -- =========================================================================
--- 3. CHÈN SỔ ĐỊA CHỈ NGƯỜI DÙNG
+-- II. PHÂN HỆ TÀI KHOẢN & PHÂN QUYỀN
 -- =========================================================================
-INSERT INTO User_Address (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default) VALUES 
-(3, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Số 123 Đường 3/2', 1),
-(3, N'Anh Quý (Văn phòng)', '0933445566', '26734', N'Tòa nhà Bitexco, Tầng 15', 0),
-(4, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 1);
 
+-- 4. Bảng Role
+CREATE TABLE Role (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    role_name VARCHAR(50) NOT NULL UNIQUE, -- ADMIN, CUSTOMER, STAFF, MANAGER
+    description NVARCHAR(255)
+);
 
--- =========================================================================
--- 4. CHÈN DANH MỤC & THƯƠNG HIỆU (Hỗ trợ danh mục đa cấp)
--- =========================================================================
-INSERT INTO Brand (brand_name, slug, description, logo_url) VALUES 
-('Coolmate', 'coolmate', N'Thương hiệu thời trang nam tối giản', 'coolmate_logo.png'),
-('Routine', 'routine', N'Thời trang nam nữ phong cách hằng ngày', 'routine_logo.png'),
-('Uniqlo', 'uniqlo', N'Thời trang bán lẻ quốc tế đến từ Nhật Bản', 'uniqlo_logo.png');
+-- 5. Bảng User
+CREATE TABLE [User] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL, -- Lưu hash password (BCrypt/SCrypt)
+    full_name NVARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(15) NULL,
+    avatar_url VARCHAR(255) NULL,
+    status VARCHAR(30) DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, LOCKED
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    role_id INT FOREIGN KEY REFERENCES Role(id)
+);
 
--- Thêm danh mục cha trước
-INSERT INTO Category (category_name, slug, parent_id, description, status) VALUES 
-(N'Áo Nam', 'ao-nam', NULL, N'Các sản phẩm áo dành cho nam', 1),
-(N'Quần Nam', 'quan-nam', NULL, N'Các sản phẩm quần dành cho nam', 1);
+-- 6. Bảng Sổ địa chỉ người dùng (Một user có nhiều địa chỉ)
+CREATE TABLE User_Address (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE,
+    recipient_name NVARCHAR(100) NOT NULL, -- Tên người nhận (có thể mua hộ người khác)
+    recipient_phone VARCHAR(15) NOT NULL,   -- Số điện thoại người nhận
+    ward_id VARCHAR(20) FOREIGN KEY REFERENCES Ward(id), -- Từ đây JOIN ra District và Province
+    address_detail NVARCHAR(255) NOT NULL,  -- Số nhà, tên đường, thôn/xóm
+    is_default BIT DEFAULT 0 -- 1: Địa chỉ mặc định
+);
 
--- Thêm danh mục con (Cần lấy chính xác ID của danh mục cha vừa tạo, ở đây giả định ID tự tăng là 1 và 2)
-INSERT INTO Category (category_name, slug, parent_id, description, status) VALUES 
-(N'Áo Thun T-Shirt', 'ao-thun-t-shirt', 1, N'Áo thun cổ tròn, cổ tim nam', 1),
-(N'Áo Sơ Mi', 'ao-so-mi', 1, N'Áo sơ mi dài tay, ngắn tay', 1),
-(N'Quần Jean Nam', 'quan-jean-nam', 2, N'Quần bò, jean dáng dài', 1);
+-- 7. Bảng Token bảo mật (Dùng chung cho cả Reset Pass và Verify Email)
+CREATE TABLE Security_Token (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE,
+    token_type VARCHAR(30) NOT NULL, -- RESET_PASSWORD, EMAIL_VERIFICATION
+    token_value VARCHAR(255) NOT NULL UNIQUE,
+    expiry_date DATETIME NOT NULL,
+    is_used BIT DEFAULT 0
+);
 
-
--- =========================================================================
--- 5. CHÈN THUỘC TÍNH (Bảng lõi của mô hình EAV)
--- =========================================================================
-INSERT INTO Attribute (attribute_name) VALUES 
-(N'Color'),
-(N'Size');
-
-
--- =========================================================================
--- 6. CHÈN SẢN PHẨM & CÁC BIẾN THỂ (SKU) CỦA SẢN PHẨM
--- =========================================================================
--- Sản phẩm 1: Áo thun Coolmate
-INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES 
-(N'Áo Thun Nam Cotton Compact', 'ao-thun-nam-cotton-compact', 1, 3, N'Áo thun 100% cotton siêu mát', N'Chất liệu cotton compact bền bỉ gấp 2 lần cotton thường, thấm hút mồ hôi cực tốt thích hợp mặc hằng ngày.', 'ACTIVE');
-
--- Biến thể của Sản phẩm 1 (Giả định Product_id = 1)
-INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status) VALUES 
-(1, 'CM-TSHIRT-BLK-M', 90000, 189000, 50, 'ACTIVE'),
-(1, 'CM-TSHIRT-BLK-L', 90000, 189000, 45, 'ACTIVE'),
-(1, 'CM-TSHIRT-WHT-M', 90000, 189000, 30, 'ACTIVE'),
-(1, 'CM-TSHIRT-WHT-L', 90000, 189000, 0, 'ACTIVE'); -- Hết hàng công nghệ vẫn hiển thị
-
--- Ánh xạ Thuộc tính cho từng biến thể của Sản phẩm 1 (Giả định Variant_id từ 1 đến 4)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES 
-(1, 1, N'Đen'), (1, 2, 'M'),
-(2, 1, N'Đen'), (2, 2, 'L'),
-(3, 1, N'Trắng'), (3, 2, 'M'),
-(4, 1, N'Trắng'), (4, 2, 'L');
-
--- Sản phẩm 2: Quần Jean Routine
-INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES 
-(N'Quần Jean Nam Dáng Slimfit', 'quan-jean-nam-dang-slimfit', 2, 5, N'Quần jean co giãn nhẹ lịch lãm', N'Thiết kế ôm nhẹ tôn dáng, chất liệu jean dày dặn có co giãn giúp thoải mái vận động cả ngày dài.', 'ACTIVE');
-
--- Biến thể của Sản phẩm 2 (Giả định Product_id = 2)
-INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status) VALUES 
-(2, 'RT-JEAN-BLU-30', 250000, 450000, 20, 'ACTIVE'),
-(2, 'RT-JEAN-BLU-31', 250000, 450000, 15, 'ACTIVE');
-
--- Ánh xạ Thuộc tính cho biến thể Sản phẩm 2 (Giả định Variant_id là 5 và 6)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES 
-(5, 1, N'Xanh Khói'), (5, 2, '30'),
-(6, 1, N'Xanh Khói'), (6, 2, '31');
+-- 8. Bảng Nhật ký hệ thống
+CREATE TABLE Activity_Log (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE SET NULL,
+    action_type VARCHAR(50) NOT NULL, -- LOGIN, UPDATE_PROFILE, PLACE_ORDER...
+    description NVARCHAR(MAX),
+    ip_address VARCHAR(45),
+    created_at DATETIME DEFAULT GETDATE()
+);
 
 
 -- =========================================================================
--- 7. CHÈN HÌNH ẢNH SẢN PHẨM
--- =========================================================================
-INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES 
-(1, 'ao_thun_den_front.png', 1, 0),
-(1, 'ao_thun_den_back.png', 0, 1),
-(1, 'ao_thun_trang_front.png', 0, 2),
-(2, 'quan_jean_xanh_front.png', 1, 0);
-
-
--- =========================================================================
--- 8. CHÈN MÃ GIẢM GIÁ (VOUCHER)
--- =========================================================================
-INSERT INTO Voucher (code, title, discount_type, discount_value, max_discount_amount, min_order_value, start_date, end_date, usage_limit, used_count) VALUES 
-('XINCHAO50', N'Voucher chào mừng thành viên mới', 'FIXED_AMOUNT', 50000, 50000, 150000, '2026-01-01', '2026-12-31', 1000, 5),
-('HE2026', N'Khuyến mãi bộ sưu tập hè giảm 10%', 'PERCENTAGE', 10, 30000, 200000, '2026-05-01', '2026-08-31', 500, 12);
-
-
--- =========================================================================
--- 9. GIỎ HÀNG (Mẫu khách hàng QuyNN đang thêm đồ vào giỏ)
--- =========================================================================
-INSERT INTO Cart (user_id, variant_id, quantity) VALUES 
-(3, 1, 2),  -- Thêm 2 cái Áo thun đen size M
-(3, 5, 1);  -- Thêm 1 cái Quần jean xanh size 30
-
-
--- =========================================================================
--- 10. PHÂN HỆ ĐƠN HÀNG MẪU (Quy trình mua thành công 1 đơn hàng)
+-- III. PHÂN HỆ SẢN PHẨM & KHO HÀNG (Mô hình EAV linh hoạt, không sợ đổi ngành hàng)
 -- =========================================================================
 
--- Bước A: Tạo thông tin vận chuyển trước
-INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time) VALUES 
-(N'Giao Hàng Nhanh (GHN)', 'SHIPPING', 'GHN998877A', 30000, '2026-06-05');
+-- 9. Bảng Thương hiệu
+CREATE TABLE Brand (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    brand_name NVARCHAR(100) NOT NULL,
+    slug VARCHAR(150) NOT NULL UNIQUE, -- Phục vụ SEO URL đẹp (VD: 'nike-store')
+    description NVARCHAR(MAX),
+    logo_url VARCHAR(255)
+);
 
--- Bước B: Tạo đơn hàng (Giả định lấy thông tin từ địa chỉ mặc định của User_id = 3 và Shipment_id = 1, Voucher_id = 1)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note) VALUES 
-('SHOP-20260601-001', 3, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Số 123 Đường 3/2', 639000, 50000, 30000, 619000, 'SHIPPING', N'Giao giờ hành chính giúp em');
+-- 10. Bảng Danh mục (Hỗ trợ danh mục đa cấp - Đệ quy)
+CREATE TABLE Category (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    category_name NVARCHAR(100) NOT NULL,
+    slug VARCHAR(150) NOT NULL UNIQUE,
+    parent_id INT FOREIGN KEY REFERENCES Category(id), -- Thư mục cha (VD: Áo -> Áo Sơ Mi -> Áo Sơ Mi Hàn Quốc)
+    description NVARCHAR(MAX),
+    status BIT DEFAULT 1
+);
 
--- Bước C: Tạo chi tiết đơn hàng (Mua 1 áo thun đen M [giá 189k] và 1 quần jean [giá 450k])
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) VALUES 
-(1, 1, N'Áo Thun Nam Cotton Compact', N'Color: Đen, Size: M', 1, 189000),
-(1, 5, N'Quần Jean Nam Dáng Slimfit', N'Color: Xanh Khói, Size: 30', 1, 450000);
+-- 11. Bảng Sản phẩm (Thông tin cốt lõi)
+CREATE TABLE Product (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    product_name NVARCHAR(200) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    brand_id INT FOREIGN KEY REFERENCES Brand(id),
+    category_id INT FOREIGN KEY REFERENCES Category(id),
+    short_description NVARCHAR(500),
+    long_description NVARCHAR(MAX),
+    status VARCHAR(30) DEFAULT 'DRAFT', -- DRAFT, ACTIVE, OUT_OF_STOCK, HIDDEN
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
 
--- Bước D: Tạo trạng thái thanh toán cho đơn hàng (Khách thanh toán qua VNPAY thành công)
-INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date) VALUES 
-(1, 'VNPAY', 'PAID', 619000, 'VNPAY123456789', '2026-06-01 08:30:00');
+-- 12. Bảng Hình ảnh sản phẩm
+CREATE TABLE Product_Image (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    product_id INT FOREIGN KEY REFERENCES Product(id) ON DELETE CASCADE,
+    image_url VARCHAR(255) NOT NULL,
+    is_main BIT DEFAULT 0, -- 1: Ảnh đại diện hiển thị ở danh sách
+    sort_order INT DEFAULT 0 -- Thứ tự sắp xếp ảnh khi slide
+);
+
+-- 13. Bảng Biến thể sản phẩm (Mỗi bản ghi là một SKU thực tế trong kho)
+CREATE TABLE Product_Variant (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    product_id INT FOREIGN KEY REFERENCES Product(id) ON DELETE CASCADE,
+    sku VARCHAR(50) NOT NULL UNIQUE, -- Mã quản lý kho (VD: PREMIUM-JEAN-M-BLUE)
+    cost_price DECIMAL(18,2) NOT NULL, -- Giá vốn nhập vào (để tính lợi nhuận gộp sau này)
+    sale_price DECIMAL(18,2) NOT NULL, -- Giá bán niêm yết
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(30) DEFAULT 'ACTIVE' -- ACTIVE, INACTIVE
+);
+
+-- 14. Bảng Thuộc tính (Size, Color, Material...)
+CREATE TABLE Attribute (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    attribute_name NVARCHAR(100) NOT NULL UNIQUE
+);
+
+-- 15. Bảng Giá trị thuộc tính của từng Biến thể (Cầu nối m-n)
+CREATE TABLE Variant_Attribute_Value (
+    variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
+    attribute_id INT FOREIGN KEY REFERENCES Attribute(id),
+    attribute_value NVARCHAR(100) NOT NULL, -- VD: 'L', 'XL' hoặc 'Đỏ', 'Đen'
+    PRIMARY KEY (variant_id, attribute_id)
+);
+
+-- 16. Bảng Nhật ký kho hàng (Theo dõi chặt chẽ dòng chảy của hàng hóa)
+CREATE TABLE Inventory_Log (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
+    user_id INT FOREIGN KEY REFERENCES [User](id), -- Nhân viên thực hiện
+    change_quantity INT NOT NULL, -- Số lượng biến động (Nhập kho: +50, Bán hàng: -2)
+    transaction_type VARCHAR(50) NOT NULL, -- IMPORT (Nhập kho), EXPORT_SALE (Bán hàng), EXPORT_CANCEL (Hàng lỗi/hủy)
+    note NVARCHAR(500), -- Ghi chú lý do hoặc mã đơn hàng liên quan
+    created_at DATETIME DEFAULT GETDATE()
+);
 
 
 -- =========================================================================
--- 11. NHẬT KÝ KHO & ĐÁNH GIÁ (Bổ trợ kiểm thử tính năng)
+-- IV. PHÂN HỆ GIỎ HÀNG, KHUYẾN MÃI & ĐƠN HÀNG
 -- =========================================================================
--- Log kho lúc nhân viên nhập hàng đầu tháng
-INSERT INTO Inventory_Log (variant_id, user_id, change_quantity, transaction_type, note) VALUES 
-(1, 2, 50, 'IMPORT', N'Nhập lô hàng áo thun đen M đầu mùa hè'),
-(5, 2, 20, 'IMPORT', N'Nhập lô hàng quần jean dáng slimfit size 30');
 
--- Feedback mẫu từ khách hàng khác (User_id = 4)
-INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status) VALUES 
-(4, 1, NULL, 5, N'Áo mặc mát lắm, giặt không bị xù lông, sẽ ủng hộ shop tiếp!', 1);
+-- 17. Bảng Giỏ hàng (Lưu trực tiếp DB để đồng bộ trên mọi thiết bị khi User đăng nhập)
+CREATE TABLE Cart (
+    user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE,
+    variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    created_at DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (user_id, variant_id)
+);
+
+-- 18. Bảng Mã giảm giá
+CREATE TABLE Voucher (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    title NVARCHAR(200) NOT NULL,
+    discount_type VARCHAR(20) NOT NULL, -- PERCENTAGE (giảm %), FIXED_AMOUNT (giảm tiền thẳng)
+    discount_value DECIMAL(18,2) NOT NULL,
+    max_discount_amount DECIMAL(18,2) NULL, -- Giảm tối đa bao nhiêu tiền (áp dụng cho giảm %)
+    min_order_value DECIMAL(18,2) DEFAULT 0, -- Đơn hàng tối thiểu bao nhiêu thì được áp dụng
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    usage_limit INT NOT NULL, -- Tổng lượt sử dụng tối đa của voucher này
+    used_count INT DEFAULT 0 -- Số lượt đã dùng
+);
+
+-- 19. Bảng Đơn vị & Thông tin vận chuyển
+CREATE TABLE Shipment (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    carrier_name NVARCHAR(100) NOT NULL, -- GHN, GHTK, Tự giao hàng...
+    shipping_status VARCHAR(50) NOT NULL, -- PENDING_PICKUP, SHIPPING, DELIVERED, FAILED
+    tracking_code VARCHAR(100) NULL, -- Mã vận đơn của bên vận chuyển để khách tra cứu
+    shipping_cost DECIMAL(18,2) DEFAULT 0,
+    estimated_delivery_time DATETIME NULL
+);
+
+-- 20. Bảng Đơn hàng (Đóng băng toàn bộ thông tin tại thời điểm mua)
+CREATE TABLE [Order] (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    order_code VARCHAR(50) NOT NULL UNIQUE, -- Mã đơn hàng hiển thị trực quan (VD: SHOP-20260601-001)
+    user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE SET NULL, -- User xóa thì đơn hàng vẫn giữ lại để làm báo cáo
+    voucher_id INT FOREIGN KEY REFERENCES Voucher(id),
+    shipment_id INT FOREIGN KEY REFERENCES Shipment(id),
+    
+    -- Đóng băng thông tin nhận hàng phòng trường hợp User đổi địa chỉ trong tương lai
+    recipient_name NVARCHAR(100) NOT NULL,
+    recipient_phone VARCHAR(15) NOT NULL,
+    ward_id VARCHAR(20) FOREIGN KEY REFERENCES Ward(id),
+    address_detail NVARCHAR(255) NOT NULL,
+    
+    -- Tính toán số tiền
+    total_items_price DECIMAL(18,2) NOT NULL, -- Tổng tiền hàng trước giảm giá
+    discount_amount DECIMAL(18,2) DEFAULT 0,   -- Tiền được giảm từ Voucher
+    shipping_fee DECIMAL(18,2) DEFAULT 0,      -- Phí vận chuyển thực tế
+    total_payment DECIMAL(18,2) NOT NULL,      -- Số tiền cuối cùng khách phải trả = (Total - Discount + Shipping)
+    
+    order_status VARCHAR(50) DEFAULT 'PENDING', -- PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED, RETURNED
+    note NVARCHAR(500),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE()
+);
+
+-- 21. Bảng Chi tiết đơn hàng
+CREATE TABLE Order_Detail (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT FOREIGN KEY REFERENCES [Order](id) ON DELETE CASCADE,
+    variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE SET NULL, -- Biến thể xóa vẫn lưu log mua bán
+    
+    -- Đóng băng thông tin sản phẩm lúc mua (tránh việc sửa giá/tên sản phẩm làm sai lệch hóa đơn cũ)
+    product_name_snapshot NVARCHAR(200) NOT NULL,
+    variant_attributes_snapshot NVARCHAR(255) NULL, -- VD: "Size: L, Color: Red"
+    quantity INT NOT NULL CHECK (quantity > 0),
+    price DECIMAL(18,2) NOT NULL -- Giá bán thực tế tại thời điểm mua
+);
+
+-- 22. Bảng Thanh toán
+CREATE TABLE Payment (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT FOREIGN KEY REFERENCES [Order](id) ON DELETE CASCADE,
+    payment_method VARCHAR(50) NOT NULL, -- COD, VNPAY, MOMO, BANK_TRANSFER
+    payment_status VARCHAR(50) DEFAULT 'UNPAID', -- UNPAID, PAID, REFUNDED, FAILED
+    amount DECIMAL(18,2) NOT NULL,
+    transaction_reference VARCHAR(100) NULL, -- Mã giao dịch trả về từ ngân hàng/VNPAY (rất quan trọng đối soát)
+    payment_date DATETIME NULL
+);
+
+-- 23. Bảng Đánh giá & Bình luận
+CREATE TABLE Feedback (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT FOREIGN KEY REFERENCES [User](id),
+    product_id INT FOREIGN KEY REFERENCES Product(id) ON DELETE CASCADE,
+    order_id INT FOREIGN KEY REFERENCES [Order](id), -- Xác định xem cơ sở nào khách được đánh giá (đã mua mới được đánh giá)
+    rating INT CHECK (rating >= 1 AND rating <= 5),
+    comment NVARCHAR(MAX),
+    status BIT DEFAULT 1, -- 1: Hiện, 0: Ẩn (nếu dính comment thô tục/spam)
+    created_at DATETIME DEFAULT GETDATE()
+);
 GO
