@@ -65,12 +65,13 @@ public class AdminManageProduct extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Thiết lập chuẩn mã hóa UTF-8 để không bị lỗi font chữ tiếng Việt khi lưu vào SQL Server
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
+        // Phân loại hành động bằng trường ẩn "action" gửi từ Form lên (mặc định trống là thêm mới)
+        String action = request.getParameter("action");
+
         try {
-            // 1. Thu thập dữ liệu text thông thường từ Form gửi lên
             String productName = request.getParameter("productName");
             String slug = request.getParameter("slug");
             int brandId = Integer.parseInt(request.getParameter("brandId"));
@@ -79,49 +80,59 @@ public class AdminManageProduct extends HttpServlet {
             String longDescription = request.getParameter("longDescription");
             String status = request.getParameter("status");
 
-            // 2. Xử lý lưu File Ảnh tải lên thư mục vật lý vật chủ trên Server
-            Part filePart = request.getPart("productImage"); // Lấy thẻ chứa file ảnh
-            String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            // Xử lý File Ảnh
+            Part filePart = request.getPart("productImage");
+            String savedFileName = null;
 
-            // Đặt tên file ảnh duy nhất để không bị đè file nếu trùng tên (Dùng tiền tố thời gian hệ thống)
-            String savedFileName = System.currentTimeMillis() + "_" + originalFileName;
+            // Kiểm tra xem người dùng có thực sự chọn/tải ảnh mới lên không
+            if (filePart != null && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty()) {
+                String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                savedFileName = System.currentTimeMillis() + "_" + originalFileName;
 
-            // Xác định đường dẫn tuyệt đối dẫn đến thư mục chứa ảnh uploads/product/ bên trong Server chạy tạm thời
-            String uploadPath = getServletContext().getRealPath("") + File.separator + "uploads" + File.separator + "product";
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs(); // Tự động tạo cây thư mục nếu Server chưa có sẵn
+                String uploadPath = getServletContext().getRealPath("") + File.separator + "uploads" + File.separator + "product";
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+                filePart.write(uploadPath + File.separator + savedFileName);
             }
 
-            // Lưu file ảnh vật lý xuống đĩa cứng Server
-            String fileFullPath = uploadPath + File.separator + savedFileName;
-            filePart.write(fileFullPath);
+            // Đóng gói dữ liệu đối tượng
+            Product product = new Product();
+            product.setProductName(productName);
+            product.setSlug(slug);
+            product.setBrandId(brandId);
+            product.setCategoryId(categoryId);
+            product.setShortDescription(shortDescription);
+            product.setLongDescription(longDescription);
+            product.setStatus(status);
 
-            // 3. Đóng gói dữ liệu vào đối tượng Model Product
-            Product newProduct = new Product();
-            newProduct.setProductName(productName);
-            newProduct.setSlug(slug);
-            newProduct.setBrandId(brandId);
-            newProduct.setCategoryId(categoryId);
-            newProduct.setShortDescription(shortDescription);
-            newProduct.setLongDescription(longDescription);
-            newProduct.setStatus(status);
+            if ("UPDATE".equals(action)) {
+                // Trường hợp Cập Nhật sản phẩm
+                int id = Integer.parseInt(request.getParameter("productId"));
+                product.setId(id);
 
-            // 4. Gọi tầng Service điều phối nạp dữ liệu vào Database
-            boolean isSuccess = productService.addProduct(newProduct, savedFileName);
-
-            if (isSuccess) {
-                System.out.println("✅ Thêm sản phẩm mới thành công!");
+                boolean isSuccess = productService.updateProduct(product, savedFileName);
+                if (isSuccess) {
+                    System.out.println("✅ Cập nhật sản phẩm ID #" + id + " thành công!");
+                } else {
+                    System.err.println("❌ Cập nhật sản phẩm thất bại tại Database.");
+                }
             } else {
-                System.err.println("❌ Thêm sản phẩm thất bại tại tầng Database.");
+                // Trường hợp Thêm Mới mặc định (giữ nguyên code cũ của bạn)
+                boolean isSuccess = productService.addProduct(product, savedFileName);
+                if (isSuccess) {
+                    System.out.println("✅ Thêm sản phẩm mới thành công!");
+                } else {
+                    System.err.println("❌ Thêm sản phẩm thất bại tại tầng Database.");
+                }
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Lỗi nghiêm trọng trong quá trình xử lý Form nhận Product:");
+            System.err.println("❌ Lỗi xử lý Form Product:");
             e.printStackTrace();
         }
 
-        // 5. Điều hướng Redirect quay trở lại trang danh sách sạch để tránh lặp dữ liệu trùng khi người dùng nhấn F5
         response.sendRedirect(request.getContextPath() + "/AdminManageProduct");
     }
 
