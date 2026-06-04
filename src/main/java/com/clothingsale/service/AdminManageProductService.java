@@ -1,6 +1,8 @@
 package com.clothingsale.service;
 
 import com.clothingsale.dao.AdminManageProductDAO;
+import com.clothingsale.model.Brand;
+import com.clothingsale.model.Category;
 import com.clothingsale.model.Product;
 import java.util.List;
 
@@ -22,5 +24,23 @@ public class AdminManageProductService {
 
     public boolean updateProduct(Product p, String imageName) {
         return productDAO.updateProduct(p, imageName);
+    }
+
+    public boolean deleteProductSmartly(int id) {
+        if (productDAO.isProductInOrders(id)) {
+            System.out.println("⚠️ Sản phẩm ID #" + id + " đã có đơn hàng. Chuyển hướng sang XÓA MỀM.");
+            return productDAO.softDeleteProduct(id);
+        } else {
+            System.out.println("✅ Sản phẩm ID #" + id + " chưa có đơn hàng. Tiến hành XÓA CỨNG.");
+            return productDAO.hardDeleteProduct(id);
+        }
+    }
+
+    public List<Brand> getAllBrands() {
+        return productDAO.getAllBrands();
+    }
+
+    public List<Category> getAllCategories() {
+        return productDAO.getAllCategories();
     }
 }
