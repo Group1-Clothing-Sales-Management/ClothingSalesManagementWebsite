@@ -29,17 +29,17 @@ public class AuthFilter extends HttpFilter {
         boolean loggedIn = session != null && session.getAttribute("authUserId") != null;
 
         if (!loggedIn) {
-            response.sendRedirect(request.getContextPath() + "/admin-staff-login?error=unauthorized");
+            response.sendRedirect(request.getContextPath() + "/admin/login?error=unauthorized");
             return;
         }
 
         if (isAdminPath(path) && !isAdminRole(roleName)) {
-            response.sendRedirect(request.getContextPath() + "/admin-staff-login?error=forbidden");
+            response.sendRedirect(request.getContextPath() + "/admin/login?error=forbidden");
             return;
         }
 
         if (isStaffPath(path) && !isStaffOrAdminRole(roleName)) {
-            response.sendRedirect(request.getContextPath() + "/admin-staff-login?error=forbidden");
+            response.sendRedirect(request.getContextPath() + "/admin/login?error=forbidden");
             return;
         }
 
@@ -63,6 +63,7 @@ public class AuthFilter extends HttpFilter {
         String lowerPath = path.toLowerCase(Locale.ROOT);
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
+                || lowerPath.startsWith("/admin/login")
                 || lowerPath.startsWith("/logout")
                 || lowerPath.startsWith("/admin/logout")
                 || lowerPath.startsWith("/view/auth/")
@@ -77,6 +78,7 @@ public class AuthFilter extends HttpFilter {
 
     private boolean isAdminPath(String path) {
         return path.startsWith("/AdminDashboard")
+                || path.startsWith("/admin/dashboard")
                 || path.startsWith("/AdminManageProduct")
                 || path.startsWith("/admin/manage-product")
                 || path.startsWith("/view/admin/");
@@ -84,6 +86,7 @@ public class AuthFilter extends HttpFilter {
 
     private boolean isStaffPath(String path) {
         return path.startsWith("/StaffManageProducts")
+                || path.startsWith("/staff/products")
                 || "/StaffManageProducts.jsp".equals(path)
                 || "/StaffViewProduct.jsp".equals(path)
                 || "/StaffEditProduct.jsp".equals(path);

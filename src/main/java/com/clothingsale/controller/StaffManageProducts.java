@@ -11,7 +11,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "StaffManageProducts", urlPatterns = { "/staff/products" })
+@WebServlet(
+        name = "StaffManageProducts",
+        // Support both the old JSP links and the cleaner lowercase route.
+        urlPatterns = {"/StaffManageProducts", "/staff/products"}
+)
 public class StaffManageProducts extends HttpServlet {
 
     private StaffProductService productService = new StaffProductService();

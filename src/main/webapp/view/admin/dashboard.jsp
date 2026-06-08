@@ -25,7 +25,7 @@
                 <h4 class="text-white mb-0 fw-bold"><i class="fa-solid fa-shirt me-2"></i>Clothing Sale</h4>
             </div>
             <div class="py-2">
-                <a href="${pageContext.request.contextPath}/AdminDashboard" class="active"><i class="fa-solid fa-chart-line me-2"></i>Overview</a>
+                <a href="${pageContext.request.contextPath}/admin/dashboard" class="active"><i class="fa-solid fa-chart-line me-2"></i>Overview</a>
                 <a href="${pageContext.request.contextPath}/admin/manage-product"><i class="fa-solid fa-box me-2"></i>Product Management</a>
                 <a href="#"><i class="fa-solid fa-receipt me-2"></i>Orders</a>
                 <a href="#"><i class="fa-solid fa-users me-2"></i>Customers</a>

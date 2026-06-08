@@ -8,7 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "Logout", urlPatterns = {"/logout"})
+@WebServlet(
+        name = "Logout",
+        // Support both logout entry points so older redirects do not break.
+        urlPatterns = {"/logout", "/admin/logout"}
+)
 public class Logout extends HttpServlet {
 
     @Override
@@ -19,6 +23,6 @@ public class Logout extends HttpServlet {
             session.invalidate();
         }
 
-        response.sendRedirect(request.getContextPath() + "/admin-staff-login?logout=1");
+        response.sendRedirect(request.getContextPath() + "/admin/login?logout=1");
     }
 }
