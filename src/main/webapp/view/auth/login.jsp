@@ -210,7 +210,7 @@
                             </div>
                         <% } %>
 
-                        <form action="<%= request.getContextPath() %>/admin-staff-login" method="post" autocomplete="off">
+                        <form action="<%= request.getContextPath() %>/admin/login" method="post" autocomplete="off">
                             <div class="mb-3">
                                 <label class="form-label text-white-50 fw-semibold">Username</label>
                                 <input type="text"

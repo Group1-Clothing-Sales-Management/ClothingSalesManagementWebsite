@@ -16,7 +16,11 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author Admin
  */
-@WebServlet(name = "AdminDashboard", urlPatterns = {"/admin/dashboard"})
+@WebServlet(
+        name = "AdminDashboard",
+        // Keep the legacy mixed-case path and the lowercase canonical path working together.
+        urlPatterns = {"/AdminDashboard", "/admin/dashboard"}
+)
 public class AdminDashboard extends HttpServlet {
 
     /**

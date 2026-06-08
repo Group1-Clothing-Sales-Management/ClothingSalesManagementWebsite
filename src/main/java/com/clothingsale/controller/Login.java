@@ -12,8 +12,8 @@ import jakarta.servlet.http.HttpSession;
 
 @WebServlet(
         name = "Login",
-        // Keep both the legacy URL and the URL used by the form, filter, logout flow, and entry page.
-        urlPatterns = {"/admin/login"}
+        // Use the canonical /admin/login route while keeping the legacy entry URL alive.
+        urlPatterns = {"/admin-staff-login", "/admin/login"}
 )
 public class Login extends HttpServlet {
 
@@ -92,12 +92,12 @@ public class Login extends HttpServlet {
         String contextPath = request.getContextPath();
 
         if (ADMIN_ROLE.equalsIgnoreCase(roleName)) {
-            response.sendRedirect(contextPath + "/AdminDashboard");
+            response.sendRedirect(contextPath + "/admin/dashboard");
         } else if (STAFF_ROLE.equalsIgnoreCase(roleName)) {
-            response.sendRedirect(contextPath + "/StaffManageProducts");
+            response.sendRedirect(contextPath + "/staff/products");
         } else {
             session.invalidate();
-            response.sendRedirect(contextPath + "/admin-staff-login?error=unauthorized");
+            response.sendRedirect(contextPath + "/admin/login?error=unauthorized");
         }
     }
 }

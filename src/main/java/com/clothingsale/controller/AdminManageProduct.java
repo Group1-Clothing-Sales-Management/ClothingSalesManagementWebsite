@@ -13,7 +13,11 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
-@WebServlet(name = "AdminManageProduct", urlPatterns = {"/admin/manage-product"})
+@WebServlet(
+        name = "AdminManageProduct",
+        // Keep the legacy uppercase route available while the app uses the /admin/ path.
+        urlPatterns = {"/AdminManageProduct", "/admin/manage-product"}
+)
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 2,
         maxFileSize = 1024 * 1024 * 10,
