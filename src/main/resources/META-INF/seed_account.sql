@@ -25,6 +25,30 @@ DELETE FROM District;
 DELETE FROM Province;
 GO
 
+-- Sau khi xóa dữ liệu cũ, cần reset lại bộ đếm IDENTITY để các ID giả định
+-- trong phần seed bên dưới luôn khớp với dữ liệu vừa insert.
+DBCC CHECKIDENT ('Role', RESEED, 0);
+DBCC CHECKIDENT ('[User]', RESEED, 0);
+DBCC CHECKIDENT ('User_Address', RESEED, 0);
+DBCC CHECKIDENT ('Security_Token', RESEED, 0);
+DBCC CHECKIDENT ('Activity_Log', RESEED, 0);
+DBCC CHECKIDENT ('Brand', RESEED, 0);
+DBCC CHECKIDENT ('Category', RESEED, 0);
+DBCC CHECKIDENT ('Product', RESEED, 0);
+DBCC CHECKIDENT ('Product_Image', RESEED, 0);
+DBCC CHECKIDENT ('Product_Variant', RESEED, 0);
+DBCC CHECKIDENT ('Attribute', RESEED, 0);
+DBCC CHECKIDENT ('Variant_Attribute_Value', RESEED, 0);
+DBCC CHECKIDENT ('Inventory_Log', RESEED, 0);
+DBCC CHECKIDENT ('Cart', RESEED, 0);
+DBCC CHECKIDENT ('Voucher', RESEED, 0);
+DBCC CHECKIDENT ('Shipment', RESEED, 0);
+DBCC CHECKIDENT ('[Order]', RESEED, 0);
+DBCC CHECKIDENT ('Order_Detail', RESEED, 0);
+DBCC CHECKIDENT ('Payment', RESEED, 0);
+DBCC CHECKIDENT ('Feedback', RESEED, 0);
+GO
+
 -- =========================================================================
 -- 1. PHÂN HỆ ĐỊA GIỚI HÀNH CHÍNH (Tỉnh, Huyện, Xã) - [Từ seed_account gốc]
 -- =========================================================================
