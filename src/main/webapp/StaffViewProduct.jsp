@@ -51,6 +51,10 @@
                     <i class="fa-solid fa-receipt w-5 text-base"></i>
                     <span>Quản lý đơn hàng</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/logout" class="flex items-center gap-3 px-4 py-3 text-rose-300 hover:bg-slate-800 hover:text-white rounded-lg transition-all text-sm font-medium">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-base"></i>
+                    <span>Đăng xuất</span>
+                </a>
             </nav>
             <!-- Staff account -->
             <div class="p-4 border-t border-slate-800">
@@ -59,7 +63,9 @@
                         ST
                     </div>
                     <div class="min-w-0">
-                        <div class="text-sm font-semibold text-white truncate">staff01</div>
+                        <div class="text-sm font-semibold text-white truncate"><%= (session != null && session.getAttribute("authUsername") != null)
+                                ? session.getAttribute("authUsername")
+                                : (request.getAttribute("staffUser") != null ? request.getAttribute("staffUser") : "staff01") %></div>
                         <div class="text-xs text-emerald-400 flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
                             Nhân viên kho

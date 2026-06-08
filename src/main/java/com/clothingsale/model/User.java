@@ -19,6 +19,7 @@ public class User {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private int roleId;
+    private String roleName;
 
     // Constructors
     public User() {
@@ -127,5 +128,13 @@ public class User {
 
     public void setRoleId(int roleId) {
         this.roleId = roleId;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
     }
 }

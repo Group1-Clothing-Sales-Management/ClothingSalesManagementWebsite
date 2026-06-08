@@ -13,6 +13,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * @author Admin
@@ -29,7 +30,7 @@ public class StaffManageProducts extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         // BR1: Phân quyền tài khoản
-        String currentStaff = "staff01";
+        String currentStaff = getCurrentStaff(request);
         request.setAttribute("staffUser", currentStaff);
 
         String action = request.getParameter("action");
@@ -44,6 +45,7 @@ public class StaffManageProducts extends HttpServlet {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
+                        request.setAttribute("staffUser", currentStaff);
                         request.getRequestDispatcher("/StaffViewProduct.jsp").forward(request, response);
                         return;
                     }
@@ -54,6 +56,7 @@ public class StaffManageProducts extends HttpServlet {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
+                        request.setAttribute("staffUser", currentStaff);
                         request.getRequestDispatcher("StaffEditProduct.jsp").forward(request, response);
                         return;
                     }
@@ -77,7 +80,7 @@ public class StaffManageProducts extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
 
-        String currentStaff = "staff01";
+        String currentStaff = getCurrentStaff(request);
         request.setAttribute("staffUser", currentStaff);
 
         // Đón nhận dữ liệu
@@ -108,5 +111,20 @@ public class StaffManageProducts extends HttpServlet {
     @Override
     public String getServletInfo() {
         return "Staff Manage Product Controller Custom Template NetBeans";
+    }
+
+    private String getCurrentStaff(HttpServletRequest request) {
+        String currentStaff = "staff01";
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            String sessionUsername = (String) session.getAttribute("authUsername");
+            String sessionFullName = (String) session.getAttribute("authFullName");
+            if (sessionUsername != null && !sessionUsername.trim().isEmpty()) {
+                currentStaff = sessionUsername;
+            } else if (sessionFullName != null && !sessionFullName.trim().isEmpty()) {
+                currentStaff = sessionFullName;
+            }
+        }
+        return currentStaff;
     }
 }
