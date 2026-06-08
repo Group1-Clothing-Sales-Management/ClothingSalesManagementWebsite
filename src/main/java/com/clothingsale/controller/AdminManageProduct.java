@@ -13,7 +13,7 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
-@WebServlet(name = "AdminManageProduct", urlPatterns = {"/AdminManageProduct"})
+@WebServlet(name = "AdminManageProduct", urlPatterns = {"/admin/manage-product"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 2,
         maxFileSize = 1024 * 1024 * 10,
@@ -73,7 +73,7 @@ public class AdminManageProduct extends HttpServlet {
             e.printStackTrace();
         }
 
-        response.sendRedirect(request.getContextPath() + "/AdminManageProduct");
+        response.sendRedirect(request.getContextPath() + "/admin/manage-product");
     }
 
     private String handleImageUpload(Part filePart) throws IOException {

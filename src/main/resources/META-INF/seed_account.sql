@@ -1,4 +1,4 @@
-USE ClothesShopDB;
+﻿USE ClothesShopDB;
 GO
 
 -- Xóa dữ liệu cũ trong các bảng để đảm bảo không bị trùng lặp khóa chính/độc nhất (Unique/Slug Key)
@@ -57,13 +57,13 @@ INSERT INTO Role (role_name, description) VALUES
 ('STAFF', N'Nhân viên quản lý kho và đơn hàng'),
 ('CUSTOMER', N'Khách hàng mua sắm trực tuyến');
 
--- Demo internal accounts use a shared bcrypt-hashed password: password123
+-- Demo internal accounts use a shared bcrypt-hashed password: 123456
 INSERT INTO [User] (username, password, full_name, email, phone, status, role_id) VALUES 
-('admin01', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW', N'Nguyễn Văn Admin', 'admin@clothesshop.com', '0911223344', 'ACTIVE', 1),
-('admin02', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW', N'Nguyễn Nhật Quy', 'quy@gmail.com', '0911223344', 'ACTIVE', 1),
-('staff01', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW', N'Trần Thị Nhân Viên', 'staff@clothesshop.com', '0922334455', 'ACTIVE', 2),
-('quy_nn', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW', N'Nguyễn Ngọc Quý', 'quynn@gmail.com', '0933445566', 'ACTIVE', 3),
-('khachhang02', '$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW', N'Lê Hoàng Nam', 'namlh@gmail.com', '0944556677', 'ACTIVE', 3);
+('admin01', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Nguyễn Văn Admin', 'admin@clothesshop.com', '0911223344', 'ACTIVE', 1),
+('admin02', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Nguyễn Nhật Quy', 'quy@gmail.com', '0911223344', 'ACTIVE', 1),
+('staff01', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Trần Thị Nhân Viên', 'staff@clothesshop.com', '0922334455', 'ACTIVE', 2),
+('quy_nn', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Nguyễn Ngọc Quý', 'quynn@gmail.com', '0933445566', 'ACTIVE', 3),
+('khachhang02', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Lê Hoàng Nam', 'namlh@gmail.com', '0944556677', 'ACTIVE', 3);
 
 INSERT INTO User_Address (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default) VALUES 
 (3, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Số 123 Đường 3/2', 1),
@@ -230,3 +230,5 @@ INSERT INTO Inventory_Log (variant_id, user_id, change_quantity, transaction_typ
 INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status) VALUES 
 (4, 1, NULL, 5, N'Áo mặc mát lắm, giặt không bị xù lông, sẽ ủng hộ shop tiếp!', 1);
 GO
+
+

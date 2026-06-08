@@ -10,7 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "Login", urlPatterns = {"/admin-staff-login", "/login"})
+@WebServlet(
+        name = "Login",
+        // Keep both the legacy URL and the URL used by the form, filter, logout flow, and entry page.
+        urlPatterns = {"/admin/login"}
+)
 public class Login extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -34,13 +38,13 @@ public class Login extends HttpServlet {
         }
 
         if ("unauthorized".equalsIgnoreCase(messageType)) {
-            request.setAttribute("errorMessage", "Vui lòng đăng nhập để tiếp tục.");
+            request.setAttribute("errorMessage", "Please sign in to continue.");
         } else if ("forbidden".equalsIgnoreCase(messageType)) {
-            request.setAttribute("errorMessage", "Tài khoản hiện tại không có quyền truy cập trang này.");
+            request.setAttribute("errorMessage", "The current account does not have permission to access this page.");
         } else if ("timeout".equalsIgnoreCase(messageType)) {
-            request.setAttribute("errorMessage", "Phiên làm việc đã hết hạn, vui lòng đăng nhập lại.");
+            request.setAttribute("errorMessage", "Your session has expired. Please sign in again.");
         } else if ("1".equals(logout)) {
-            request.setAttribute("successMessage", "Bạn đã đăng xuất khỏi hệ thống.");
+            request.setAttribute("successMessage", "You have signed out successfully.");
         }
 
         request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
@@ -58,14 +62,14 @@ public class Login extends HttpServlet {
         request.setAttribute("username", username != null ? username.trim() : "");
 
         if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()) {
-            request.setAttribute("errorMessage", "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
+            request.setAttribute("errorMessage", "Please enter both username and password.");
             request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
             return;
         }
 
         User user = userDAO.authenticateInternalAccount(username.trim(), password);
         if (user == null) {
-            request.setAttribute("errorMessage", "Tên đăng nhập hoặc mật khẩu không chính xác.");
+            request.setAttribute("errorMessage", "The username or password is incorrect.");
             request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
             return;
         }

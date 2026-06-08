@@ -28,10 +28,10 @@ public class AdminManageProductService {
 
     public boolean deleteProductSmartly(int id) {
         if (productDAO.isProductInOrders(id)) {
-            System.out.println("⚠️ Sản phẩm ID #" + id + " đã có đơn hàng. Chuyển hướng sang XÓA MỀM.");
+            System.out.println("⚠️ Product ID #" + id + " already exists in orders. Switching to soft delete.");
             return productDAO.softDeleteProduct(id);
         } else {
-            System.out.println("✅ Sản phẩm ID #" + id + " chưa có đơn hàng. Tiến hành XÓA CỨNG.");
+            System.out.println("✅ Product ID #" + id + " is not in any order. Proceeding with hard delete.");
             return productDAO.hardDeleteProduct(id);
         }
     }

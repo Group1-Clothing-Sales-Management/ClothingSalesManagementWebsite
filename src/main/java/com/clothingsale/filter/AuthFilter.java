@@ -64,6 +64,7 @@ public class AuthFilter extends HttpFilter {
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
                 || lowerPath.startsWith("/logout")
+                || lowerPath.startsWith("/admin/logout")
                 || lowerPath.startsWith("/view/auth/")
                 || lowerPath.startsWith("/uploads/")
                 || lowerPath.startsWith("/css/")
@@ -77,6 +78,7 @@ public class AuthFilter extends HttpFilter {
     private boolean isAdminPath(String path) {
         return path.startsWith("/AdminDashboard")
                 || path.startsWith("/AdminManageProduct")
+                || path.startsWith("/admin/manage-product")
                 || path.startsWith("/view/admin/");
     }
 

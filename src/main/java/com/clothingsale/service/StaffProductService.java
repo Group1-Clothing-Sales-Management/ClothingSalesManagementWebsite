@@ -9,54 +9,54 @@ public class StaffProductService {
 
     private StaffProductDAO productDAO = new StaffProductDAO();
 
-    // Lấy toàn bộ danh sách sản phẩm từ DB
+    // Load the full product list from the database.
     public List<StaffProductModel> getAllProducts() throws Exception {
         return productDAO.getAllProductsFromDB();
     }
 
     public String updateProductDetails(String sku, String name, String priceStr, String stockStr, String currentStaff) {
 
-        // BR2: Kiểm tra các trường bắt buộc không được để trống (Chặn lỗi Exception E2)
+        // BR2: Validate required fields before touching the database.
         if (name == null || name.trim().isEmpty() || priceStr == null || stockStr == null || priceStr.trim().isEmpty()
                 || stockStr.trim().isEmpty()) {
-            return "Dữ liệu nhập vào không hợp lệ! Tên, giá bán và số lượng không được để trống.";
+            return "Invalid input data. Name, sale price, and stock quantity are required.";
         }
 
         try {
             BigDecimal salePrice = new BigDecimal(priceStr);
             int stockQuantity = Integer.parseInt(stockStr);
 
-            // Kiểm tra giá trị logic của số lượng tồn kho
+            // Validate the stock quantity and sale price values.
             if (stockQuantity < 0) {
-                return "Số lượng tồn kho không thể là số âm!";
+                return "Stock quantity cannot be negative.";
             }
             if (salePrice.compareTo(BigDecimal.ZERO) < 0) {
-                return "Giá bán không thể nhỏ hơn 0đ!";
+                return "Sale price cannot be less than 0.";
             }
 
-            // Gọi DAO thực thi cập nhật xuống Database
+            // Persist the update through the DAO layer.
             boolean isUpdated = productDAO.updateProductInDB(sku, name, salePrice, stockQuantity);
 
             if (isUpdated) {
                 List<StaffProductModel> currentList = productDAO.getAllProductsFromDB();
                 for (StaffProductModel item : currentList) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
-                        String actionLog = "Staff cập nhật thành công sản phẩm -> Tên mới: " + name + " | Giá mới: "
-                                + salePrice + "đ | Tồn kho mới: " + stockQuantity;
+                        String actionLog = "Staff successfully updated product -> New name: " + name + " | New price: "
+                                + salePrice + " VND | New stock: " + stockQuantity;
                         productDAO.saveInventoryLog(item.getVariantId(), currentStaff, actionLog);
                         break;
                     }
                 }
                 return "SUCCESS";
             } else {
-                return "Không tìm thấy sản phẩm hoặc lỗi thao tác kết nối CSDL.";
+                return "Product not found or database operation failed.";
             }
 
         } catch (NumberFormatException e) {
-            return "Định dạng giá bán hoặc số lượng nhập vào không đúng kiểm dữ liệu số.";
+            return "The sale price or stock quantity has an invalid numeric format.";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Lỗi hệ thống mất kết nối CSDL đột ngột. Vui lòng thử lại sau.";
+            return "System error: the database connection was interrupted. Please try again later.";
         }
     }
 }

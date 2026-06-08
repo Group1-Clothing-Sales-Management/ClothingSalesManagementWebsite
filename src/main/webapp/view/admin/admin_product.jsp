@@ -46,7 +46,7 @@
                     </div>
                     <div class="py-2">
                         <a href="${pageContext.request.contextPath}/AdminDashboard"><i class="fa-solid fa-chart-line me-2"></i>Dashboard</a>
-                        <a href="${pageContext.request.contextPath}/AdminManageProduct" class="active"><i class="fa-solid fa-box me-2"></i>Manage Products</a>
+                        <a href="${pageContext.request.contextPath}/admin/manage-product" class="active"><i class="fa-solid fa-box me-2"></i>Manage Products</a>
                         <a href="#"><i class="fa-solid fa-receipt me-2"></i>Orders</a>
                         <a href="#"><i class="fa-solid fa-users me-2"></i>Customers</a>
                     </div>
@@ -67,7 +67,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="ps-4">ID</th>
-                                            <th>Image</th> 
+                                            <th>Image</th>
                                             <th>Product Name</th>
                                             <th>Slug</th>
                                             <th>Category ID</th>
@@ -107,7 +107,7 @@
                                                                     <i class="fa-solid fa-pen-to-square"></i>
                                                                 </button>
 
-                                                                <form action="${pageContext.request.contextPath}/AdminManageProduct" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" style="margin: 0;">
+                                                                <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="margin: 0;">
                                                                     <input type="hidden" name="action" value="DELETE">
                                                                     <input type="hidden" name="productId" value="${p.id}">
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -120,7 +120,7 @@
                                                 </c:forEach>
                                             </c:when>
                                             <c:otherwise>
-                                                <tr><td colspan="8" class="text-center py-5 text-muted">Không tìm thấy dữ liệu sản phẩm.</td></tr>
+                                                <tr><td colspan="8" class="text-center py-5 text-muted">No product data found.</td></tr>
                                             </c:otherwise>
                                         </c:choose>
                                     </tbody>
@@ -139,7 +139,7 @@
                         <h5 class="modal-title fw-bold"><i class="fa-solid fa-box-open me-2"></i>Add New Product</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form action="${pageContext.request.contextPath}/AdminManageProduct" method="POST" enctype="multipart/form-data">
+                    <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" enctype="multipart/form-data">
                         <div class="modal-body p-4">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -151,7 +151,7 @@
                                     <input type="text" class="form-control" name="slug" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Brand (Thương hiệu)</label>
+                                    <label class="form-label fw-semibold">Brand</label>
                                     <select class="form-select" name="brandId" required>
                                         <c:forEach var="b" items="${brands}">
                                             <option value="${b.id}">${b.brandName} (ID: ${b.id})</option>
@@ -159,7 +159,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Category (Danh mục)</label>
+                                    <label class="form-label fw-semibold">Category</label>
                                     <select class="form-select" name="categoryId" required>
                                         <c:forEach var="c" items="${categories}">
                                             <option value="${c.id}">${c.categoryName} (ID: ${c.id})</option>
@@ -203,7 +203,7 @@
                         <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Product</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form action="${pageContext.request.contextPath}/AdminManageProduct" method="POST" enctype="multipart/form-data">
+                    <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="action" value="UPDATE">
                         <input type="hidden" name="productId" id="edit_productId">
                         <div class="modal-body p-4">
@@ -217,7 +217,7 @@
                                     <input type="text" class="form-control" name="slug" id="edit_slug" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Brand (Thương hiệu)</label>
+                                    <label class="form-label fw-semibold">Brand</label>
                                     <select class="form-select" name="brandId" id="edit_brandId" required>
                                         <c:forEach var="b" items="${brands}">
                                             <option value="${b.id}">${b.brandName} (ID: ${b.id})</option>
@@ -225,7 +225,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Category (Danh mục)</label>
+                                    <label class="form-label fw-semibold">Category</label>
                                     <select class="form-select" name="categoryId" id="edit_categoryId" required>
                                         <c:forEach var="c" items="${categories}">
                                             <option value="${c.id}">${c.categoryName} (ID: ${c.id})</option>
@@ -233,7 +233,7 @@
                                     </select>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label fw-semibold">Product Image (Để trống nếu giữ nguyên ảnh)</label>
+                                    <label class="form-label fw-semibold">Product Image (leave blank to keep the current image)</label>
                                     <input type="file" class="form-control" name="productImage" accept="image/*">
                                 </div>
                                 <div class="col-12">
@@ -264,20 +264,20 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-                                                                    document.addEventListener("DOMContentLoaded", function () {
-                                                                        document.querySelectorAll('.btn-edit').forEach(button => {
-                                                                            button.addEventListener('click', function () {
-                                                                                document.getElementById('edit_productId').value = this.getAttribute('data-id');
-                                                                                document.getElementById('edit_productName').value = this.getAttribute('data-name');
-                                                                                document.getElementById('edit_slug').value = this.getAttribute('data-slug');
-                                                                                document.getElementById('edit_brandId').value = this.getAttribute('data-brand');
-                                                                                document.getElementById('edit_categoryId').value = this.getAttribute('data-category');
-                                                                                document.getElementById('edit_shortDescription').value = this.getAttribute('data-short');
-                                                                                document.getElementById('edit_longDescription').value = this.getAttribute('data-long');
-                                                                                document.getElementById('edit_status').value = this.getAttribute('data-status');
-                                                                            });
-                                                                        });
-                                                                    });
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll('.btn-edit').forEach(button => {
+                    button.addEventListener('click', function () {
+                        document.getElementById('edit_productId').value = this.getAttribute('data-id');
+                        document.getElementById('edit_productName').value = this.getAttribute('data-name');
+                        document.getElementById('edit_slug').value = this.getAttribute('data-slug');
+                        document.getElementById('edit_brandId').value = this.getAttribute('data-brand');
+                        document.getElementById('edit_categoryId').value = this.getAttribute('data-category');
+                        document.getElementById('edit_shortDescription').value = this.getAttribute('data-short');
+                        document.getElementById('edit_longDescription').value = this.getAttribute('data-long');
+                        document.getElementById('edit_status').value = this.getAttribute('data-status');
+                    });
+                });
+            });
         </script>
     </body>
 </html>

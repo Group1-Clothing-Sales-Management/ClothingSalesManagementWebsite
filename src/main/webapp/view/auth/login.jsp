@@ -5,11 +5,11 @@
     String successMessage = (String) request.getAttribute("successMessage");
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập | Clothing Sale</title>
+    <title>Login | Clothing Sale</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
@@ -153,11 +153,11 @@
                         <div class="mb-3">
                             <span class="helper-badge mb-3">
                                 <i class="fa-solid fa-shield-halved"></i>
-                                Hệ thống nội bộ
+                                Internal system
                             </span>
-                            <h1 class="display-6 fw-bold mb-3 text-white">Đăng nhập Admin & Staff</h1>
+                            <h1 class="display-6 fw-bold mb-3 text-white">Admin & Staff Login</h1>
                             <p class="text-white-50 mb-0">
-                                Dành cho tài khoản quản trị và nhân viên kho. Tài khoản khách hàng không được phép truy cập khu vực này.
+                                For administrator and warehouse staff accounts. Customer accounts are not allowed to access this area.
                             </p>
                         </div>
 
@@ -165,22 +165,22 @@
                             <div class="d-flex gap-3 mb-3">
                                 <i class="fa-solid fa-lock mt-1"></i>
                                 <div>
-                                    <div class="fw-semibold text-white">Phân quyền tự động</div>
-                                    <div class="text-white-50 small">Hệ thống nhận diện `ADMIN` hoặc `STAFF` sau khi đăng nhập.</div>
+                                    <div class="fw-semibold text-white">Automatic role detection</div>
+                                    <div class="text-white-50 small">The system detects `ADMIN` or `STAFF` after login.</div>
                                 </div>
                             </div>
                             <div class="d-flex gap-3 mb-3">
                                 <i class="fa-solid fa-chart-line mt-1"></i>
                                 <div>
-                                    <div class="fw-semibold text-white">Đi tới đúng trang</div>
-                                    <div class="text-white-50 small">Admin vào dashboard, staff vào màn quản lý sản phẩm.</div>
+                                    <div class="fw-semibold text-white">Direct navigation</div>
+                                    <div class="text-white-50 small">Admins go to the dashboard, staff go to the product management screen.</div>
                                 </div>
                             </div>
                             <div class="d-flex gap-3">
                                 <i class="fa-solid fa-clock-rotate-left mt-1"></i>
                                 <div>
-                                    <div class="fw-semibold text-white">Phiên làm việc 30 phút</div>
-                                    <div class="text-white-50 small">Tự động hết hạn nếu không hoạt động trong thời gian dài.</div>
+                                    <div class="fw-semibold text-white">30-minute session</div>
+                                    <div class="text-white-50 small">The session expires automatically after prolonged inactivity.</div>
                                 </div>
                             </div>
                         </div>
@@ -191,8 +191,8 @@
                     <div class="login-card rounded-4 p-4 p-lg-5">
                         <div class="d-flex justify-content-between align-items-start mb-4">
                             <div>
-                                <h2 class="h3 fw-bold text-white mb-2">Đăng nhập hệ thống</h2>
-                                <p class="text-white-50 mb-0">Nhập tài khoản nội bộ để tiếp tục.</p>
+                                <h2 class="h3 fw-bold text-white mb-2">Sign in</h2>
+                                <p class="text-white-50 mb-0">Enter an internal account to continue.</p>
                             </div>
                             <span class="badge rounded-pill text-bg-primary px-3 py-2">Admin / Staff</span>
                         </div>
@@ -212,23 +212,23 @@
 
                         <form action="<%= request.getContextPath() %>/admin-staff-login" method="post" autocomplete="off">
                             <div class="mb-3">
-                                <label class="form-label text-white-50 fw-semibold">Tên đăng nhập</label>
+                                <label class="form-label text-white-50 fw-semibold">Username</label>
                                 <input type="text"
                                        name="username"
                                        class="form-control"
-                                       placeholder="VD: admin01"
+                                       placeholder="Example: admin01"
                                        value="<%= usernameValue != null ? usernameValue : "" %>"
                                        required>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label text-white-50 fw-semibold">Mật khẩu</label>
+                                <label class="form-label text-white-50 fw-semibold">Password</label>
                                 <div class="input-group">
                                     <input type="password"
                                            name="password"
                                            id="passwordField"
                                            class="form-control"
-                                           placeholder="Nhập mật khẩu"
+                                           placeholder="Enter your password"
                                            required>
                                     <button class="btn btn-outline-light" type="button" id="togglePassword">
                                         <i class="fa-regular fa-eye"></i>
@@ -240,16 +240,16 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" value="1" id="rememberMe" disabled>
                                     <label class="form-check-label text-white-50" for="rememberMe">
-                                        Ghi nhớ phiên đăng nhập
+                                        Remember this session
                                     </label>
                                 </div>
-                                <a href="<%= request.getContextPath() %>/logout" class="link-info text-decoration-none small">
-                                    Đăng xuất tài khoản khác
+                                <a href="<%= request.getContextPath() %>/admin/logout" class="link-info text-decoration-none small">
+                                    Sign out another account
                                 </a>
                             </div>
 
                             <button type="submit" class="btn btn-login w-100 text-white">
-                                <i class="fa-solid fa-right-to-bracket me-2"></i>Đăng nhập
+                                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign in
                             </button>
                         </form>
 
@@ -257,7 +257,7 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <span class="helper-badge"><i class="fa-solid fa-user-shield"></i>Admin</span>
                                 <span class="helper-badge"><i class="fa-solid fa-user-gear"></i>Staff</span>
-                                <span class="helper-badge"><i class="fa-solid fa-circle-info"></i>Không hỗ trợ Customer</span>
+                                <span class="helper-badge"><i class="fa-solid fa-circle-info"></i>Customer not supported</span>
                             </div>
                         </div>
                     </div>
@@ -270,6 +270,7 @@
         const passwordField = document.getElementById('passwordField');
         const togglePassword = document.getElementById('togglePassword');
 
+        // Toggle password visibility without affecting form submission.
         togglePassword.addEventListener('click', function () {
             const showing = passwordField.type === 'text';
             passwordField.type = showing ? 'password' : 'text';
