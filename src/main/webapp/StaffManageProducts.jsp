@@ -89,7 +89,8 @@
                     <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-gray-50/50">
                         <div class="relative">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Search by product name or SKU..." class="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-full sm:w-80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all bg-white">
+                            <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Search by product name or SKU..."
+                                   class="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-full sm:w-80 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all bg-white">
                         </div>
                     </div>
 
@@ -100,7 +101,7 @@
                                     <th class="py-4 px-6">Product & Brand</th>
                                     <th class="py-4 px-6">SKU</th>
                                     <th class="py-4 px-6 text-right">Cost Price</th>
-                                    <th class="py-4 px-6 text-right">Current Sale Price</th>
+                                    <th class="py-4 px-6 text-right">Sale Price</th>
                                     <th class="py-4 px-6 text-center">Stock</th>
                                     <th class="py-4 px-6 text-center">Status</th>
                                     <th class="py-4 px-6 text-center">Actions</th>
@@ -108,9 +109,7 @@
                             </thead>
                             <tbody id="productTable" class="divide-y divide-gray-100 text-sm text-gray-600">
                                 <%
-                                    Locale localeVN = new Locale("vi", "VN");
-                                    NumberFormat currencyVN = NumberFormat.getCurrencyInstance(localeVN);
-
+                                    NumberFormat numFormat = NumberFormat.getNumberInstance(Locale.US);
                                     List<StaffProductModel> products = (List<StaffProductModel>) request.getAttribute("productList");
 
                                     if (products == null || products.isEmpty()) {
@@ -120,26 +119,30 @@
                                             <div class="flex flex-col items-center justify-center gap-2">
                                                 <i class="fa-solid fa-box-open text-5xl text-gray-300 mb-1"></i>
                                                 <span class="font-medium text-base text-gray-500">No products available</span>
-                                                <p class="text-xs text-gray-400 max-w-xs">The system has not recorded any available product data yet.</p>
+                                                <p class="text-xs text-gray-400 max-w-xs">No product data has been recorded in the system yet.</p>
                                             </div>
                                         </td>
                                     </tr>
                                 <%
                                     } else {
                                         for (StaffProductModel item : products) {
-                                            String stockClass = item.getStockQuantity() > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200";
-                                            String statusClass = "ACTIVE".equals(item.getStatus()) ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800";
+                                            String stockClass = item.getStockQuantity() > 0
+                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                    : "bg-rose-50 text-rose-700 border-rose-200";
+                                            String statusClass = "ACTIVE".equals(item.getStatus())
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-gray-100 text-gray-800";
                                 %>
                                     <tr class="hover:bg-slate-50/70 transition-all">
-                                        <td class="py-4 px-6 font-medium text-gray-900">
+                                        <td class="py-4 px-6">
                                             <div class="font-semibold text-slate-800 text-[14px]"><%= item.getProductName() %></div>
                                             <span class="text-xs font-medium text-indigo-600 bg-indigo-50/60 px-2 py-0.5 rounded mt-1 inline-block"><%= item.getBrandName() %></span>
                                         </td>
 
                                         <td class="py-4 px-6 font-mono text-xs text-gray-500 font-semibold"><%= item.getSku() %></td>
 
-                                        <td class="py-4 px-6 text-right text-gray-500 font-medium"><%= currencyVN.format(item.getCostPrice()) %></td>
-                                        <td class="py-4 px-6 text-right font-bold text-slate-900"><%= currencyVN.format(item.getSalePrice()) %></td>
+                                        <td class="py-4 px-6 text-right text-gray-500 font-medium"><%= numFormat.format(item.getCostPrice()) %> VND</td>
+                                        <td class="py-4 px-6 text-right font-bold text-slate-900"><%= numFormat.format(item.getSalePrice()) %> VND</td>
 
                                         <td class="py-4 px-6 text-center">
                                             <span class="px-2.5 py-0.5 text-xs font-bold border rounded-md <%= stockClass %>">
@@ -158,12 +161,12 @@
                                                 <a href="StaffManageProducts?action=view&sku=<%= item.getSku() %>"
                                                    class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors border border-transparent hover:border-blue-100"
                                                    title="View details">
-                                                     <i class="fa-regular fa-eye text-base"></i>
+                                                    <i class="fa-regular fa-eye text-base"></i>
                                                 </a>
                                                 <a href="StaffManageProducts?action=edit&sku=<%= item.getSku() %>"
                                                    class="inline-flex items-center justify-center w-8 h-8 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded-lg transition-colors border border-transparent hover:border-amber-100"
                                                    title="Update information">
-                                                     <i class="fa-regular fa-pen-to-square text-base"></i>
+                                                    <i class="fa-regular fa-pen-to-square text-base"></i>
                                                 </a>
                                             </div>
                                         </td>
@@ -183,24 +186,17 @@
 
     <script>
         function filterProducts() {
-            let input = document.getElementById("searchInput");
-            let filter = input.value.toLowerCase().trim();
-            let tbody = document.getElementById("productTable");
-            let tr = tbody.getElementsByTagName("tr");
+            const filter = document.getElementById("searchInput").value.toLowerCase().trim();
+            const rows = document.getElementById("productTable").getElementsByTagName("tr");
 
-            for (let i = 0; i < tr.length; i++) {
-                let nameElement = tr[i].getElementsByClassName("font-semibold")[0];
-                let skuElement = tr[i].getElementsByClassName("font-mono")[0];
+            for (let i = 0; i < rows.length; i++) {
+                const nameEl = rows[i].getElementsByClassName("font-semibold")[0];
+                const skuEl  = rows[i].getElementsByClassName("font-mono")[0];
 
-                if (nameElement && skuElement) {
-                    let productName = nameElement.textContent || nameElement.innerText;
-                    let sku = skuElement.textContent || skuElement.innerText;
-
-                    if (productName.toLowerCase().indexOf(filter) > -1 || sku.toLowerCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
+                if (nameEl && skuEl) {
+                    const name = nameEl.textContent || nameEl.innerText;
+                    const sku  = skuEl.textContent  || skuEl.innerText;
+                    rows[i].style.display = (name.toLowerCase().includes(filter) || sku.toLowerCase().includes(filter)) ? "" : "none";
                 }
             }
         }

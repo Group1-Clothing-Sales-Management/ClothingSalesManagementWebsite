@@ -76,6 +76,7 @@
             <div class="flex-1 overflow-y-auto flex flex-col items-center justify-start px-8 pb-8 pt-4">
                 <form action="StaffManageProducts" method="POST" class="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <input type="hidden" name="sku" value="<%= product.getSku() %>" />
+                    <input type="hidden" name="variantId" value="<%= product.getVariantId() %>" />
 
                     <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                         <div>
@@ -121,9 +122,10 @@
                                        class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-bold text-slate-900 transition-all bg-white" />
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Stock quantity *</label>
-                                <input type="number" name="stockQuantity" value="<%= product.getStockQuantity() %>" min="0" required
-                                       class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-bold text-indigo-600 transition-all bg-white" />
+                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Stock quantity (read only)</label>
+                                <div class="p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm text-indigo-400 font-bold select-none">
+                                    <%= product.getStockQuantity() %> units
+                                </div>
                             </div>
                         </div>
                     </div>

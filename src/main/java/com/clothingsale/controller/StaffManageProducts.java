@@ -11,11 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(
-        name = "StaffManageProducts",
-        // Support both the old JSP links and the cleaner lowercase route.
-        urlPatterns = {"/StaffManageProducts", "/staff/products"}
-)
+@WebServlet(name = "StaffManageProducts", urlPatterns = { "/StaffManageProducts", "/staff/products" })
 public class StaffManageProducts extends HttpServlet {
 
     private StaffProductService productService = new StaffProductService();
@@ -26,7 +22,6 @@ public class StaffManageProducts extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
 
-        // Resolve the current account role for the sidebar header.
         String currentStaff = getCurrentStaff(request);
         request.setAttribute("staffUser", currentStaff);
 
@@ -34,41 +29,33 @@ public class StaffManageProducts extends HttpServlet {
         String sku = request.getParameter("sku");
 
         try {
-            // Load the product list once and reuse it for every view mode.
             List<StaffProductModel> list = productService.getAllProducts();
 
-            // View mode.
             if ("view".equals(action) && sku != null) {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
-                        request.setAttribute("staffUser", currentStaff);
                         request.getRequestDispatcher("/StaffViewProduct.jsp").forward(request, response);
                         return;
                     }
                 }
-            }
-
-            // Edit mode.
-            else if ("edit".equals(action) && sku != null) {
+            } else if ("edit".equals(action) && sku != null) {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
-                        request.setAttribute("staffUser", currentStaff);
                         request.getRequestDispatcher("/StaffEditProduct.jsp").forward(request, response);
                         return;
                     }
                 }
             }
 
-            // Default: show the list view.
             request.setAttribute("productList", list);
             request.getRequestDispatcher("/StaffManageProducts.jsp").forward(request, response);
 
         } catch (Exception e) {
+            e.printStackTrace();
             request.setAttribute("errorMessage", "E1: System error while loading data.");
             request.getRequestDispatcher("/StaffManageProducts.jsp").forward(request, response);
-            e.printStackTrace();
         }
     }
 
@@ -81,25 +68,32 @@ public class StaffManageProducts extends HttpServlet {
         String currentStaff = getCurrentStaff(request);
         request.setAttribute("staffUser", currentStaff);
 
-        // Read form data from the update request.
         String sku = request.getParameter("sku");
+        String variantIdStr = request.getParameter("variantId");
         String newName = request.getParameter("productName");
         String salePriceStr = request.getParameter("salePrice");
-        String stockStr = request.getParameter("stockQuantity");
 
-        // Call the service layer for validation and persistence.
-        String result = productService.updateProductDetails(sku, newName, salePriceStr, stockStr, currentStaff);
+        int variantId = 0;
+        try {
+            variantId = Integer.parseInt(variantIdStr);
+        } catch (NumberFormatException e) {
+            request.setAttribute("errorMessage", "Invalid variant ID.");
+            request.getRequestDispatcher("/StaffManageProducts.jsp").forward(request, response);
+            return;
+        }
+
+        String result = productService.updateProductDetails(sku, variantId, newName, salePriceStr, currentStaff);
 
         if (result.equals("SUCCESS")) {
-            request.setAttribute("successMessage", "Product information was updated and the inventory history log was saved (BR3).");
+            request.setAttribute("successMessage", "Product updated and inventory log saved successfully.");
         } else {
             request.setAttribute("errorMessage", result);
         }
 
         try {
-            List<StaffProductModel> list = productService.getAllProducts();
-            request.setAttribute("productList", list);
+            request.setAttribute("productList", productService.getAllProducts());
         } catch (Exception e) {
+            e.printStackTrace();
             request.setAttribute("errorMessage", "E1: System error while reloading data.");
         }
 
@@ -108,21 +102,19 @@ public class StaffManageProducts extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "Staff Manage Product Controller Custom Template NetBeans";
+        return "Staff Manage Product Controller";
     }
 
     private String getCurrentStaff(HttpServletRequest request) {
-        String currentStaff = "staff01";
         HttpSession session = request.getSession(false);
         if (session != null) {
-            String sessionUsername = (String) session.getAttribute("authUsername");
-            String sessionFullName = (String) session.getAttribute("authFullName");
-            if (sessionUsername != null && !sessionUsername.trim().isEmpty()) {
-                currentStaff = sessionUsername;
-            } else if (sessionFullName != null && !sessionFullName.trim().isEmpty()) {
-                currentStaff = sessionFullName;
-            }
+            String username = (String) session.getAttribute("authUsername");
+            String fullName = (String) session.getAttribute("authFullName");
+            if (username != null && !username.trim().isEmpty())
+                return username;
+            if (fullName != null && !fullName.trim().isEmpty())
+                return fullName;
         }
-        return currentStaff;
+        return "staff01";
     }
 }

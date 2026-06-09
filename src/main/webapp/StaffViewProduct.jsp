@@ -15,16 +15,13 @@
 <body class="bg-gray-50 font-sans antialiased text-gray-900">
 
     <%
-        // Load the selected product from the request before rendering the page.
         StaffProductModel product = (StaffProductModel) request.getAttribute("product");
-
-        Locale localeVN = new Locale("vi", "VN");
-        NumberFormat currencyVN = NumberFormat.getCurrencyInstance(localeVN);
-
         if (product == null) {
             response.sendRedirect("StaffManageProducts");
             return;
         }
+
+        NumberFormat numFormat = NumberFormat.getNumberInstance(Locale.US);
 
         String stockClass = product.getStockQuantity() > 0
             ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -127,20 +124,20 @@
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Cost price</label>
                                 <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg font-medium text-gray-600">
-                                    <%= currencyVN.format(product.getCostPrice()) %>
+                                    <%= numFormat.format(product.getCostPrice()) %> VND
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Current sale price</label>
                                 <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg font-bold text-slate-900 text-lg">
-                                    <%= currencyVN.format(product.getSalePrice()) %>
+                                    <%= numFormat.format(product.getSalePrice()) %> VND
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Stock quantity</label>
                                 <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
                                     <span class="px-3 py-1 text-sm font-bold border rounded-md <%= stockClass %>">
-                                        <%= product.getStockQuantity() %> items
+                                        <%= product.getStockQuantity() %> units
                                     </span>
                                 </div>
                             </div>
