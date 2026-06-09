@@ -86,18 +86,17 @@ public class Login extends HttpServlet {
     }
 
     private void redirectByRole(HttpSession session, HttpServletResponse response, HttpServletRequest request)
-            throws IOException {
-        Object roleObj = session.getAttribute("authRoleName");
-        String roleName = roleObj != null ? roleObj.toString() : null;
-        String contextPath = request.getContextPath();
+        throws IOException {
+    Object roleObj = session.getAttribute("authRoleName");
+    String roleName = roleObj != null ? roleObj.toString() : null;
+    String contextPath = request.getContextPath();
 
-        if (ADMIN_ROLE.equalsIgnoreCase(roleName)) {
-            response.sendRedirect(contextPath + "/admin/dashboard");
-        } else if (STAFF_ROLE.equalsIgnoreCase(roleName)) {
-            response.sendRedirect(contextPath + "/staff/products");
-        } else {
-            session.invalidate();
-            response.sendRedirect(contextPath + "/admin/login?error=unauthorized");
-        }
+    // Hợp nhất luồng: Cả Admin và Staff sau đăng nhập đều đưa thẳng về trang Dashboard chung
+    if ("ADMIN".equalsIgnoreCase(roleName) || "STAFF".equalsIgnoreCase(roleName)) {
+        response.sendRedirect(contextPath + "/admin/dashboard");
+    } else {
+        session.invalidate();
+        response.sendRedirect(contextPath + "/admin/login?error=unauthorized");
     }
+}
 }

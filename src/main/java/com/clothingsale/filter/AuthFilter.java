@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Locale;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +21,7 @@ public class AuthFilter extends HttpFilter {
 
         String path = getRequestPath(request);
 
+        // 1. Nếu là đường dẫn công khai, cho qua luôn
         if (isPublicPath(path)) {
             chain.doFilter(request, response);
             return;
@@ -28,16 +31,33 @@ public class AuthFilter extends HttpFilter {
         String roleName = session != null ? (String) session.getAttribute("authRoleName") : null;
         boolean loggedIn = session != null && session.getAttribute("authUserId") != null;
 
+        // 2. Chưa đăng nhập -> Đá về trang đăng nhập
         if (!loggedIn) {
             response.sendRedirect(request.getContextPath() + "/admin/login?error=unauthorized");
             return;
         }
 
+        // --- ĐOẠN XỬ LÝ NGOẠI LỆ GỘP ĐƯỜNG DẪN DASHBOARD ---
+        // Nếu đang truy cập vào trang dashboard dùng chung
+        if ("/admin/dashboard".equals(path) || "/AdminDashboard".equals(path)) {
+            // Cho phép cả ADMIN và STAFF cùng vào
+            if ("ADMIN".equalsIgnoreCase(roleName) || "STAFF".equalsIgnoreCase(roleName)) {
+                chain.doFilter(request, response);
+                return;
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/login?error=forbidden");
+                return;
+            }
+        }
+        // --------------------------------------------------
+
+        // 3. Nếu vào các trang Admin khác (Quản lý User, Xoá sản phẩm, mã giảm giá...) -> Chỉ ADMIN được vào
         if (isAdminPath(path) && !isAdminRole(roleName)) {
             response.sendRedirect(request.getContextPath() + "/admin/login?error=forbidden");
             return;
         }
 
+        // 4. Nếu vào các trang Staff cũ -> STAFF hoặc ADMIN đều vào được
         if (isStaffPath(path) && !isStaffOrAdminRole(roleName)) {
             response.sendRedirect(request.getContextPath() + "/admin/login?error=forbidden");
             return;
