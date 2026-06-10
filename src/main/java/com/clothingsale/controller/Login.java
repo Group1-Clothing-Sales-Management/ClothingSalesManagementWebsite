@@ -67,8 +67,28 @@ public class Login extends HttpServlet {
             return;
         }
 
-        User user = userDAO.authenticateInternalAccount(username.trim(), password);
+        // allow login by username OR email for any role
+        User user = userDAO.findByUsernameOrEmail(username.trim());
         if (user == null) {
+            request.setAttribute("errorMessage", "The username or password is incorrect.");
+            request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
+            return;
+        }
+
+        if (user.getStatus() == null || !"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            request.setAttribute("errorMessage", "Account not active. Please verify your email.");
+            request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
+            return;
+        }
+
+        boolean matched = false;
+        try {
+            matched = com.clothingsale.util.SecurityUtil.checkPassword(password, user.getPassword());
+        } catch (IllegalArgumentException ex) {
+            matched = false;
+        }
+
+        if (!matched) {
             request.setAttribute("errorMessage", "The username or password is incorrect.");
             request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
             return;
@@ -91,9 +111,13 @@ public class Login extends HttpServlet {
     String roleName = roleObj != null ? roleObj.toString() : null;
     String contextPath = request.getContextPath();
 
-    // Hợp nhất luồng: Cả Admin và Staff sau đăng nhập đều đưa thẳng về trang Dashboard chung
+    // Admin & Staff -> admin dashboard
     if ("ADMIN".equalsIgnoreCase(roleName) || "STAFF".equalsIgnoreCase(roleName)) {
         response.sendRedirect(contextPath + "/admin/dashboard");
+    }
+    // Customer -> front page
+    else if ("CUSTOMER".equalsIgnoreCase(roleName)) {
+        response.sendRedirect(contextPath + "/");
     } else {
         session.invalidate();
         response.sendRedirect(contextPath + "/admin/login?error=unauthorized");

@@ -152,12 +152,12 @@
                         </div>
                         <div class="mb-3">
                             <span class="helper-badge mb-3">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                Internal system
+                                <i class="fa-solid fa-user"></i>
+                                Unified Login
                             </span>
-                            <h1 class="display-6 fw-bold mb-3 text-white">Admin & Staff Login</h1>
+                            <h1 class="display-6 fw-bold mb-3 text-white">Sign in to Clothing Sale</h1>
                             <p class="text-white-50 mb-0">
-                                For administrator and warehouse staff accounts. Customer accounts are not allowed to access this area.
+                                Use your Admin, Staff, or Customer account to sign in. Access is controlled by role.
                             </p>
                         </div>
 
@@ -189,12 +189,12 @@
 
                 <div class="col-12 col-lg-5">
                     <div class="login-card rounded-4 p-4 p-lg-5">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
                             <div>
                                 <h2 class="h3 fw-bold text-white mb-2">Sign in</h2>
-                                <p class="text-white-50 mb-0">Enter an internal account to continue.</p>
+                                <p class="text-white-50 mb-0">Enter your account to continue.</p>
                             </div>
-                            <span class="badge rounded-pill text-bg-primary px-3 py-2">Admin / Staff</span>
+                            <span class="badge rounded-pill text-bg-primary px-3 py-2">Admin / Staff / Customer</span>
                         </div>
 
                         <% if (errorMessage != null) { %>
@@ -243,8 +243,8 @@
                                         Remember this session
                                     </label>
                                 </div>
-                                <a href="<%= request.getContextPath() %>/admin/logout" class="link-info text-decoration-none small">
-                                    Sign out another account
+                                <a href="<%= request.getContextPath() %>/customer/register" class="link-info text-decoration-none small">
+                                    Create customer account
                                 </a>
                             </div>
 
@@ -257,7 +257,7 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <span class="helper-badge"><i class="fa-solid fa-user-shield"></i>Admin</span>
                                 <span class="helper-badge"><i class="fa-solid fa-user-gear"></i>Staff</span>
-                                <span class="helper-badge"><i class="fa-solid fa-circle-info"></i>Customer not supported</span>
+                                <span class="helper-badge"><i class="fa-solid fa-user"></i>Customer</span>
                             </div>
                         </div>
                     </div>
