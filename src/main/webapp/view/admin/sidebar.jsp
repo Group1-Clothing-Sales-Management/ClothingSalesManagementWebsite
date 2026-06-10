@@ -1,7 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
-    // Lấy thông tin vai trò để hiển thị nhãn (Badge) tương ứng bên dưới sidebar
     String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : null;
     String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Nhân viên kho" : "Quản trị viên";
     String badgeClass = "STAFF".equalsIgnoreCase(roleName) ? "bg-emerald-400" : "bg-primary";
@@ -18,13 +17,17 @@
             <i class="fa-solid fa-box me-2"></i>Manage Products
         </a>
         <a href="#"><i class="fa-solid fa-receipt me-2"></i>Orders</a>
-        <a href="#"><i class="fa-solid fa-users me-2"></i>Customers</a>
+
+        <a href="${pageContext.request.contextPath}/staff/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
+            <i class="fa-solid fa-users me-2"></i>Customers
+        </a>
+
         <a href="#"><i class="fa-solid fa-ticket me-2"></i>Discount Codes</a>
     </div>
 
     <div class="p-3 border-top border-secondary bg-dark text-white" style="position: absolute; bottom: 0; width: 100%;">
         <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-indigo flex-shrink-0 d-flex align-items-center justify-center text-white font-bold" 
+            <div class="rounded-circle bg-indigo flex-shrink-0 d-flex align-items-center justify-center text-white font-bold"
                  style="width: 40px; height: 40px; background-color: #6366f1; justify-content: center;">
                 ${not empty sessionScope.authUsername ? sessionScope.authUsername.substring(0,2).toUpperCase() : 'US'}
             </div>
