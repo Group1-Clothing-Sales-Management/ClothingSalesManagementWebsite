@@ -90,11 +90,8 @@ public class AuthFilter extends HttpFilter {
         // Allow only public static assets, the homepage, and explicit auth endpoints
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
-<<<<<<< HEAD
                 || lowerPath.startsWith("/customer")
                 || lowerPath.startsWith("/cart")
-=======
->>>>>>> e76dff9 (update customer login and cart)
                 || lowerPath.startsWith("/admin/login")
                 || lowerPath.startsWith("/customer/login")
                 || lowerPath.startsWith("/customer/register")
