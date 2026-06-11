@@ -37,7 +37,6 @@
 <body>
 <div class="main-wrapper">
     <jsp:include page="/view/admin/sidebar.jsp">
-        <!-- Danh dau menu dang duoc mo de sidebar hien trang thai active -->
         <jsp:param name="activeTab" value="customers"/>
     </jsp:include>
 
