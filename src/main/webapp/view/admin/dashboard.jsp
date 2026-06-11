@@ -15,10 +15,36 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
+        /* Khoa layout theo chieu cao man hinh de sidebar va noi dung cuon doc lap. */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { min-height: 100vh; background: #212529; color: #fff; position: relative; }
+        .container-fluid {
+            height: 100vh;
+            overflow: hidden;
+        }
+        .row {
+            height: 100%;
+        }
+        .sidebar {
+            min-height: 100vh;
+            height: 100%;
+            background: #212529;
+            color: #fff;
+            position: relative;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
         .sidebar a { color: #adb5bd; text-decoration: none; display: block; padding: 12px 20px; transition: 0.2s; }
         .sidebar a:hover, .sidebar a.active { background: #343a40; color: #fff; border-left: 4px solid #0d6efd; }
+        .content-scroll {
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
         .stat-card { border: none; border-radius: 10px; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-5px); }
         .table-responsive { background: #fff; border-radius: 8px; }
@@ -33,7 +59,7 @@
             <jsp:param name="activeTab" value="${param.tab == 'products' ? 'products' : 'dashboard'}" />
         </jsp:include>
 
-        <div class="col-md-10 p-4" style="margin-bottom: 80px;">
+        <div class="col-md-10 p-4 content-scroll" style="margin-bottom: 80px;">
             
             <c:choose>
                 <%-- TÌNH HUỐNG 1: HIỂN THỊ TAB QUẢN LÝ SẢN PHẨM (?tab=products) --%>

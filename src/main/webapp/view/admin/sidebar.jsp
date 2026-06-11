@@ -18,11 +18,14 @@
     /* Shared sidebar styling for all admin/staff pages */
     .sidebar-shell {
         min-height: 100vh;
+        height: 100vh;
         background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
         color: #e5e7eb;
         display: flex;
         flex-direction: column;
         position: relative;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .sidebar-brand {

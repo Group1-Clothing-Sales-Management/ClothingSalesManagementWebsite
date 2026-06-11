@@ -9,14 +9,30 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
         <style>
+            /* Khoa layout theo chieu cao man hinh de sidebar va noi dung cuon doc lap. */
+            html, body {
+                height: 100%;
+                overflow: hidden;
+            }
+
             body {
                 background-color: #f8f9fa;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
+            .container-fluid {
+                height: 100vh;
+                overflow: hidden;
+            }
+            .row {
+                height: 100%;
+            }
             .sidebar {
                 min-height: 100vh;
+                height: 100%;
                 background: #212529;
                 color: #fff;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
             .sidebar a {
                 color: #adb5bd;
@@ -29,6 +45,11 @@
                 background: #343a40;
                 color: #fff;
                 border-left: 4px solid #0d6efd;
+            }
+            .content-scroll {
+                height: 100%;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
             .table-responsive {
                 background: #fff;
@@ -52,7 +73,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-10 p-4">
+                <div class="col-md-10 p-4 content-scroll">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                         <h2 class="fw-bold text-dark mb-0">Product Management</h2>
                         <button class="btn btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#addProductModal">
