@@ -3,6 +3,7 @@ package com.clothingsale.controller;
 import com.clothingsale.model.Product;
 import com.clothingsale.model.Brand;
 import com.clothingsale.model.Category;
+import com.clothingsale.model.ProductVariant;
 import com.clothingsale.service.AdminManageProductService;
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +13,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import java.util.ArrayList;
 
 @WebServlet(
         name = "AdminManageProduct",
-        // Keep the legacy uppercase route available while the app uses the /admin/ path.
-        urlPatterns = {"/AdminManageProduct", "/admin/manage-product"}
+        urlPatterns = {"/AdminManageProduct", "/admin/manage-product", "/admin/products"}
 )
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 2,
@@ -35,11 +36,23 @@ public class AdminManageProduct extends HttpServlet {
         List<Brand> brands = productService.getAllBrands();
         List<Category> categories = productService.getAllCategories();
 
+        if (products != null) {
+            for (Product p : products) {
+                try {
+                    List<com.clothingsale.model.ProductVariant> varList = productService.getVariantsByProductId(p.getId());
+                    p.setVariants(varList);
+                } catch (Exception ex) {
+                    System.err.println("Lỗi nạp Variant cho sản phẩm ID " + p.getId() + ": " + ex.getMessage());
+                    p.setVariants(new ArrayList<>()); // Nếu lỗi thì gán danh sách rỗng để JSP không bị lỗi Null pointer
+                }
+            }
+        }
+
         request.setAttribute("products", products);
         request.setAttribute("brands", brands);
         request.setAttribute("categories", categories);
 
-        // Forward chính xác về folder view admin của bạn
+        // Forward về folder view admin để hiển thị giao diện Accordion lồng nhau
         request.getRequestDispatcher("/view/admin/admin_product.jsp").forward(request, response);
     }
 

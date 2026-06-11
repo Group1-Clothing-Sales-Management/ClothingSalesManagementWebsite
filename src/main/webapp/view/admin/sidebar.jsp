@@ -6,6 +6,11 @@
     String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : null;
     String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Warehouse Staff" : "Administrator";
     String badgeClass = "STAFF".equalsIgnoreCase(roleName) ? "bg-success" : "bg-primary";
+    
+    // Tạo tiền tố URL động dựa trên Role để dùng cho các tính năng chung
+    String rolePrefix = "STAFF".equalsIgnoreCase(roleName) ? "/staff" : "/admin";
+    request.setAttribute("rolePrefix", rolePrefix);
+
     String username = (session != null) ? (String) session.getAttribute("authUsername") : null;
     String userInitials = "US";
     if (username != null && !username.isBlank()) {
@@ -132,18 +137,24 @@
         <a href="${pageContext.request.contextPath}/admin/dashboard" class="${param.activeTab == 'dashboard' ? 'active' : ''}">
             <i class="fa-solid fa-chart-line me-2"></i>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/staff/products" class="${param.activeTab == 'products' ? 'active' : ''}">
+        
+        <a href="${pageContext.request.contextPath}${rolePrefix}/products" class="${param.activeTab == 'products' ? 'active' : ''}">
             <i class="fa-solid fa-box me-2"></i>Manage Products
         </a>
-        <a href="${pageContext.request.contextPath}/staff/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
+        
+        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
             <i class="fa-solid fa-receipt me-2"></i>Orders
         </a>
 
-        <a href="${pageContext.request.contextPath}/staff/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
             <i class="fa-solid fa-users me-2"></i>Customers
         </a>
 
-        <a href="#"><i class="fa-solid fa-ticket me-2"></i>Discount Codes</a>
+        <c:if test="${sessionScope.authRoleName != 'STAFF'}">
+            <a href="${pageContext.request.contextPath}/admin/discounts" class="${param.activeTab == 'discounts' ? 'active' : ''}">
+                <i class="fa-solid fa-ticket me-2"></i>Discount Codes
+            </a>
+        </c:if>
     </div>
 
     <div class="sidebar-footer">
@@ -167,9 +178,8 @@
                     <%= displayRole%>
                 </div>
             </div>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-outline-danger d-flex align-items-center gap-2" onclick="return confirm('Are you sure you want to sign out?');">
+            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1" onclick="return confirm('Are you sure you want to sign out?');" title="Sign out">
                 <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Sign out</span>
             </a>
         </div>
     </div>

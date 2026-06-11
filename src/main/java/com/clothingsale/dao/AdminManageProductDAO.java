@@ -282,4 +282,63 @@ public class AdminManageProductDAO {
         }
         return categories;
     }
+
+    public List<com.clothingsale.model.ProductVariant> getVariantsByProductId(int productId) {
+        List<com.clothingsale.model.ProductVariant> list = new ArrayList<>();
+        // Câu lệnh SQL tường minh, loại bỏ hoàn toàn các hàm gộp phức tạp gây chậm database
+        String sql = "SELECT pv.id, pv.product_id, pv.sku, pv.cost_price, pv.sale_price, pv.stock_quantity, pv.status, "
+                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') as color, "
+                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') as size "
+                + "FROM Product_Variant pv "
+                + "WHERE pv.product_id = ?";
+
+        // Đảm bảo đóng Connection, PreparedStatement và ResultSet tự động bằng Try-with-resources để tránh treo kết nối DB
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.clothingsale.model.ProductVariant v = new com.clothingsale.model.ProductVariant();
+                    v.setId(rs.getInt("id"));
+
+                    // Xử lý an toàn phòng trường hợp product_id bị NULL trong DB
+                    int prodId = rs.getInt("product_id");
+                    if (!rs.wasNull()) {
+                        v.setProductId(prodId);
+                    }
+
+                    v.setSku(rs.getString("sku"));
+                    v.setCostPrice(rs.getBigDecimal("cost_price"));
+                    v.setSalePrice(rs.getBigDecimal("sale_price"));
+                    v.setStockQuantity(rs.getInt("stock_quantity"));
+                    v.setStatus(rs.getString("status"));
+
+                    // Xử lý chuỗi hiển thị Color / Size trực tiếp
+                    String color = rs.getString("color");
+                    String size = rs.getString("size");
+                    StringBuilder details = new StringBuilder();
+                    if (color != null && !color.trim().isEmpty()) {
+                        details.append("Color: ").append(color);
+                    }
+                    if (size != null && !size.trim().isEmpty()) {
+                        if (details.length() > 0) {
+                            details.append(" / ");
+                        }
+                        details.append("Size: ").append(size);
+                    }
+                    if (details.length() == 0) {
+                        details.append("Standard");
+                    }
+
+                    // Gán vào thuộc tính mô tả (Nếu Model của bạn có trường attributeDetails)
+                    // v.setAttributeDetails(details.toString());
+                    list.add(v);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("LỖI SQL tại getVariantsByProductId: " + e.getMessage());
+            e.printStackTrace(); // In ra console để bạn dễ theo dõi lỗi nếu có
+        }
+        return list;
+    }
 }

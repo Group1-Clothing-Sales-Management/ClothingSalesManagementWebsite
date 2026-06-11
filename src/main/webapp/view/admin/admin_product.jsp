@@ -1,5 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- Security Access Control Check --%>
+<c:if test="${empty sessionScope.user || (sessionScope.user.role != 1 && sessionScope.user.role != 2)}">
+    <%
+        request.setAttribute("errorMessage", "Unauthorized access. Please login with a valid account.");
+        response.sendRedirect(request.getContextPath() + "/login");
+    %>
+</c:if>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -79,9 +86,11 @@
                                     <tbody>
                                         <c:choose>
                                             <c:when test="${not empty products}">
-                                                <c:forEach var="p" items="${products}">
-                                                    <tr>
-                                                        <td class="ps-4 fw-bold text-secondary">#${p.id}</td>
+                                                <c:forEach var="p" items="${products}" varStatus="loop">
+                                                    <tr data-bs-toggle="collapse" data-bs-target="#variants-row-${p.id}" class="clickable-row" style="cursor: pointer;" title="Click to view variants">
+                                                        <td class="ps-4 fw-bold text-secondary">
+                                                            <i class="fa-solid fa-chevron-right me-2 small text-muted"></i>#${p.id}
+                                                        </td>
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${not empty p.mainImageUrl}">
@@ -97,7 +106,7 @@
                                                         <td><span class="badge bg-secondary-subtle text-secondary border">ID: ${p.categoryId}</span></td>
                                                         <td><span class="badge bg-light text-dark border">ID: ${p.brandId}</span></td>
                                                         <td><span class="badge ${p.status == 'ACTIVE' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} border">${p.status}</span></td>
-                                                        <td class="text-end pe-4">
+                                                        <td class="text-end pe-4" onclick="event.stopPropagation();">
                                                             <div class="d-flex justify-content-end align-items-center">
                                                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit" title="Edit"
                                                                         data-bs-toggle="modal" data-bs-target="#editProductModal"
@@ -106,7 +115,6 @@
                                                                         data-short="${p.shortDescription}" data-long="${p.longDescription}" data-status="${p.status}">
                                                                     <i class="fa-solid fa-pen-to-square"></i>
                                                                 </button>
-
                                                                 <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="margin: 0;">
                                                                     <input type="hidden" name="action" value="DELETE">
                                                                     <input type="hidden" name="productId" value="${p.id}">
@@ -114,6 +122,69 @@
                                                                         <i class="fa-solid fa-trash"></i>
                                                                     </button>
                                                                 </form>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr id="variants-row-${p.id}" class="collapse bg-light-subtle">
+                                                        <td colspan="8" class="p-3">
+                                                            <div class="px-4 py-2 border rounded bg-white shadow-sm">
+                                                                <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-tags me-2"></i>SKU Variants for ${p.productName}</h6>
+                                                                <table class="table table-sm table-bordered align-middle mb-0">
+                                                                    <thead class="table-secondary small">
+                                                                        <tr>
+                                                                            <th>Variant ID</th>
+                                                                            <th>SKU Code</th>
+                                                                            <th>Size / Color / Attribute</th>
+                                                                            <th>Total Stock</th>
+                                                                            <th>Cost Price (Latest)</th>
+                                                                            <th>Sale Price</th>
+                                                                            <th class="text-center" style="width: 180px;">Inventory Actions</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <%-- Giả định kiến trúc BE đã map danh sách variants vào đối tượng product 'p.variants' --%>
+                                                                        <c:choose>
+                                                                            <c:when test="${not empty p.variants}">
+                                                                                <c:forEach var="v" items="${p.variants}">
+                                                                                    <tr>
+                                                                                        <td class="fw-bold text-secondary">#${v.id}</td>
+                                                                                        <td><span class="badge bg-dark">${v.sku}</span></td>
+                                                                                        <td>${v.attributeDetails}</td>
+                                                                                        <td>
+                                                                                            <span class="badge ${v.stockQuantity > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">
+                                                                                                ${v.stockQuantity} pcs
+                                                                                            </span>
+                                                                                        </td>
+                                                                                        <td>$${v.costPrice}</td>
+                                                                                        <td>$${v.salePrice}</td>
+                                                                                        <td class="text-center">
+                                                                                            <%-- Strict Role Filter: Chỉ Admin (role == 1) mới thấy nút Import Goods --%>
+                                                                                            <c:if test="${sessionScope.user.role == 1}">
+                                                                                                <button class="btn btn-xs btn-success btn-sm fw-semibold text-white btn-import" 
+                                                                                                        data-bs-toggle="modal" 
+                                                                                                        data-bs-target="#importGoodsModal"
+                                                                                                        data-variant-id="${v.id}"
+                                                                                                        data-sku="${v.sku}"
+                                                                                                        data-product-name="${p.productName}">
+                                                                                                    <i class="fa-solid fa-file-import me-1"></i>Import Goods
+                                                                                                </button>
+                                                                                            </c:if>
+                                                                                            <c:if test="${sessionScope.user.role != 1}">
+                                                                                                <span class="text-muted small"><i class="fa-solid fa-lock me-1"></i>View Only</span>
+                                                                                            </c:if>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </c:forEach>
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <tr>
+                                                                                    <td colspan="7" class="text-center text-muted small py-2">No SKU variants generated for this product yet.</td>
+                                                                                </tr>
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </tbody>
+                                                                </table>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -261,23 +332,84 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="importGoodsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-boxes-stacked me-2"></i>Import Goods (New FIFO Batch)</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="${pageContext.request.contextPath}/admin/inventory" method="POST">
+                        <input type="hidden" name="action" value="import">
+                        <input type="hidden" name="variantId" id="import_variantId">
+
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-muted small d-block">Target Product / SKU</label>
+                                <div class="p-2 bg-light border rounded fw-bold text-dark" id="import_productDetailsDisplay"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Batch Code</label>
+                                <input type="text" class="form-control" name="batchCode" placeholder="e.g., BATCH-2026-06-A" required>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Cost Price (Input)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control" name="costPrice" required min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Sale Price (New Update)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control" name="salePrice" required min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Quantity to Import</label>
+                                <input type="number" class="form-control" name="initialQuantity" required min="1">
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success px-4 fw-semibold">Execute Import</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>             
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll('.btn-edit').forEach(button => {
-                    button.addEventListener('click', function () {
-                        document.getElementById('edit_productId').value = this.getAttribute('data-id');
-                        document.getElementById('edit_productName').value = this.getAttribute('data-name');
-                        document.getElementById('edit_slug').value = this.getAttribute('data-slug');
-                        document.getElementById('edit_brandId').value = this.getAttribute('data-brand');
-                        document.getElementById('edit_categoryId').value = this.getAttribute('data-category');
-                        document.getElementById('edit_shortDescription').value = this.getAttribute('data-short');
-                        document.getElementById('edit_longDescription').value = this.getAttribute('data-long');
-                        document.getElementById('edit_status').value = this.getAttribute('data-status');
-                    });
-                });
-            });
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    document.querySelectorAll('.btn-edit').forEach(button => {
+                                        button.addEventListener('click', function () {
+                                            document.getElementById('edit_productId').value = this.getAttribute('data-id');
+                                            document.getElementById('edit_productName').value = this.getAttribute('data-name');
+                                            document.getElementById('edit_slug').value = this.getAttribute('data-slug');
+                                            document.getElementById('edit_brandId').value = this.getAttribute('data-brand');
+                                            document.getElementById('edit_categoryId').value = this.getAttribute('data-category');
+                                            document.getElementById('edit_shortDescription').value = this.getAttribute('data-short');
+                                            document.getElementById('edit_longDescription').value = this.getAttribute('data-long');
+                                            document.getElementById('edit_status').value = this.getAttribute('data-status');
+                                        });
+                                    });
+                                });
+                                // JavaScript binding dữ liệu động cho Form Nhập kho FIFO
+                                document.querySelectorAll('.btn-import').forEach(button => {
+                                    button.addEventListener('click', function () {
+                                        const variantId = this.getAttribute('data-variant-id');
+                                        const sku = this.getAttribute('data-sku');
+                                        const productName = this.getAttribute('data-product-name');
+
+                                        document.getElementById('edit_productId').value = this.getAttribute('data-id'); // Gán ID variant vào hidden field
+                                        document.getElementById('import_variantId').value = variantId;
+                                        document.getElementById('import_productDetailsDisplay').innerText = productName + " (SKU: " + sku + ")";
+                                    });
+                                });
         </script>
     </body>
 </html>

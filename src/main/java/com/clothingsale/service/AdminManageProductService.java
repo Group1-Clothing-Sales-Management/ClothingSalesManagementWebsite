@@ -43,4 +43,8 @@ public class AdminManageProductService {
     public List<Category> getAllCategories() {
         return productDAO.getAllCategories();
     }
+
+    public List<com.clothingsale.model.ProductVariant> getVariantsByProductId(int productId) {
+        return productDAO.getVariantsByProductId(productId);
+    }
 }

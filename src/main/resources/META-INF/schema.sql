@@ -272,3 +272,20 @@ CREATE TABLE Feedback (
     created_at DATETIME DEFAULT GETDATE()
 );
 GO
+
+
+
+-- Phần thêm bảng vào 
+-- nếu có thay đổi ae phải add vào DB 
+
+-- Thêm bảng mới phục vụ quản lý lô hàng theo cơ chế FIFO
+CREATE TABLE Product_Batch (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
+    batch_code VARCHAR(50) NOT NULL, -- Ví dụ: BATCH-20260611-01
+    cost_price DECIMAL(18,2) NOT NULL, -- Giá vốn nhập riêng của lô này
+    sale_price DECIMAL(18,2) NOT NULL, -- Giá bán riêng của lô này
+    initial_quantity INT NOT NULL, -- Số lượng nhập ban đầu
+    current_quantity INT NOT NULL, -- Số lượng còn lại (Sẽ trừ dần về 0 theo FIFO)
+    created_at DATETIME DEFAULT GETDATE() -- Sắp xếp theo thời gian tăng dần để tìm lô cũ nhất
+);

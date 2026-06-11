@@ -15,6 +15,7 @@ public class ProductVariant {
     private BigDecimal salePrice;
     private int stockQuantity;
     private String status;
+    private String attributeDetails;
 
     public ProductVariant() {
     }
@@ -31,6 +32,14 @@ public class ProductVariant {
     }
 
     // Getters and Setters
+    public String getAttributeDetails() {
+        return attributeDetails;
+    }
+
+    public void setAttributeDetails(String attributeDetails) {
+        this.attributeDetails = attributeDetails;
+    }
+
     public int getId() {
         return id;
     }
