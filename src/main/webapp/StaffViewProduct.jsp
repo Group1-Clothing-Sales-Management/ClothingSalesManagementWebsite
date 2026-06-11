@@ -164,6 +164,30 @@
                         <div class="field-label">Sale Price</div>
                         <div class="field-value price-main"><%= numFormat.format(product.getSalePrice()) %> VND</div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="field-label">Color</div>
+                        <div class="field-value">
+                            <% if (product.getColor() != null && !product.getColor().isEmpty()) { %>
+                                <span class="badge rounded-pill px-3 py-2" style="background:#eef2ff;color:#4338ca;font-size:.85rem;">
+                                    <i class="bi bi-palette-fill me-1"></i><%= product.getColor() %>
+                                </span>
+                            <% } else { %>
+                                <span class="text-muted">—</span>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="field-label">Size</div>
+                        <div class="field-value">
+                            <% if (product.getSize() != null && !product.getSize().isEmpty()) { %>
+                                <span class="badge rounded-pill px-3 py-2" style="background:#f0fdf4;color:#166534;font-size:.85rem;">
+                                    <i class="bi bi-tag-fill me-1"></i><%= product.getSize() %>
+                                </span>
+                            <% } else { %>
+                                <span class="text-muted">—</span>
+                            <% } %>
+                        </div>
+                    </div>
                 </div>
             </div>
 

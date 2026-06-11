@@ -190,6 +190,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Product & Brand</th>
+                                <th class="text-center">Color / Size</th>
                                 <th class="text-center">Stock</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Actions</th>
@@ -222,6 +223,26 @@
                                 <td>
                                     <div class="fw-semibold text-dark product-name"><%= item.getProductName() %></div>
                                     <span class="brand-badge"><%= item.getBrandName() %></span>
+                                </td>
+                                <td class="text-center">
+                                    <%
+                                        String colorVal = item.getColor();
+                                        String sizeVal  = item.getSize();
+                                    %>
+                                    <% if (colorVal != null && !colorVal.isEmpty()) { %>
+                                        <span class="badge rounded-pill" style="background:#eef2ff;color:#4338ca;font-size:.78rem;">
+                                            <i class="bi bi-palette-fill me-1"></i><%= colorVal %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted small">—</span>
+                                    <% } %>
+                                    <% if (sizeVal != null && !sizeVal.isEmpty()) { %>
+                                        <span class="badge rounded-pill ms-1" style="background:#f0fdf4;color:#166534;font-size:.78rem;">
+                                            <i class="bi bi-tag-fill me-1"></i><%= sizeVal %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted small ms-1">—</span>
+                                    <% } %>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge px-2 py-1 rounded-pill <%= stockClass %>">

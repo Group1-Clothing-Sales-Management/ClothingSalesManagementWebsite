@@ -5,7 +5,6 @@ import com.clothingsale.util.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,27 +50,54 @@ public class StaffProductDAO {
         return list;
     }
 
-    public boolean updateProductInDB(String sku, String newName, BigDecimal newSalePrice)
+    public boolean updateProductInDB(String sku, String newName, String newColor, String newSize)
             throws Exception {
-        String updateVariantSql = "UPDATE Product_Variant " +
-                "SET sale_price = ? " +
-                "WHERE sku = ?";
         String updateProductSql = "UPDATE Product SET product_name = ? " +
                 "WHERE id = (SELECT product_id FROM Product_Variant WHERE sku = ?)";
+
+        // UPDATE attribute value nếu record đã tồn tại, INSERT nếu chưa có
+        String upsertAttrSql = "MERGE INTO Variant_Attribute_Value AS target " +
+                "USING (SELECT pv.id AS vid, a.id AS aid " +
+                "       FROM Product_Variant pv " +
+                "       JOIN Attribute a ON a.attribute_name = ? " +
+                "       WHERE pv.sku = ?) AS src " +
+                "ON target.variant_id = src.vid AND target.attribute_id = src.aid " +
+                "WHEN MATCHED THEN " +
+                "    UPDATE SET target.attribute_value = ? " +
+                "WHEN NOT MATCHED THEN " +
+                "    INSERT (variant_id, attribute_id, attribute_value) " +
+                "    VALUES (src.vid, src.aid, ?);";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement psV = conn.prepareStatement(updateVariantSql)) {
-                    psV.setBigDecimal(1, newSalePrice);
-                    psV.setString(2, sku);
-                    psV.executeUpdate();
-                }
-
+                // 1. Cập nhật tên sản phẩm
                 try (PreparedStatement psP = conn.prepareStatement(updateProductSql)) {
                     psP.setString(1, newName);
                     psP.setString(2, sku);
                     psP.executeUpdate();
+                }
+
+                // 2. Cập nhật Color
+                if (newColor != null && !newColor.trim().isEmpty()) {
+                    try (PreparedStatement psC = conn.prepareStatement(upsertAttrSql)) {
+                        psC.setString(1, "Color");
+                        psC.setString(2, sku);
+                        psC.setString(3, newColor.trim());
+                        psC.setString(4, newColor.trim());
+                        psC.executeUpdate();
+                    }
+                }
+
+                // 3. Cập nhật Size
+                if (newSize != null && !newSize.trim().isEmpty()) {
+                    try (PreparedStatement psS = conn.prepareStatement(upsertAttrSql)) {
+                        psS.setString(1, "Size");
+                        psS.setString(2, sku);
+                        psS.setString(3, newSize.trim());
+                        psS.setString(4, newSize.trim());
+                        psS.executeUpdate();
+                    }
                 }
 
                 conn.commit();
