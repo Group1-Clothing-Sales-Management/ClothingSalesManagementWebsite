@@ -31,9 +31,15 @@ public class AuthFilter extends HttpFilter {
         String roleName = session != null ? (String) session.getAttribute("authRoleName") : null;
         boolean loggedIn = session != null && session.getAttribute("authUserId") != null;
 
-        // 2. Chưa đăng nhập -> Đá về trang đăng nhập
+        // 2. Chưa đăng nhập -> Đá về trang đăng nhập phù hợp
         if (!loggedIn) {
-            response.sendRedirect(request.getContextPath() + "/admin/login?error=unauthorized");
+            // Nếu đang truy cập admin/staff area, redirect tới admin login
+            if (isAdminPath(path) || isStaffPath(path) || path.startsWith("/admin")) {
+                response.sendRedirect(request.getContextPath() + "/admin/login?error=unauthorized");
+            } else {
+                // Mặc định các thao tác customer cần đăng nhập -> gửi đến customer login
+                response.sendRedirect(request.getContextPath() + "/customer/login?error=unauthorized");
+            }
             return;
         }
 
@@ -80,16 +86,24 @@ public class AuthFilter extends HttpFilter {
         if (path == null || path.isEmpty() || "/".equals(path) || "/index.html".equals(path)) {
             return true;
         }
-
         String lowerPath = path.toLowerCase(Locale.ROOT);
+        // Allow only public static assets, the homepage, and explicit auth endpoints
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
+<<<<<<< HEAD
                 || lowerPath.startsWith("/customer")
                 || lowerPath.startsWith("/cart")
+=======
+>>>>>>> e76dff9 (update customer login and cart)
                 || lowerPath.startsWith("/admin/login")
-                || lowerPath.startsWith("/logout")
-                || lowerPath.startsWith("/admin/logout")
+                || lowerPath.startsWith("/customer/login")
+                || lowerPath.startsWith("/customer/register")
+                || lowerPath.startsWith("/customer/verify")
                 || lowerPath.startsWith("/view/auth/")
+                || lowerPath.startsWith("/cart")
+                || lowerPath.startsWith("/cart/add")
+                || lowerPath.startsWith("/cart/update")
+                || lowerPath.startsWith("/cart/remove")
                 || lowerPath.startsWith("/uploads/")
                 || lowerPath.startsWith("/css/")
                 || lowerPath.startsWith("/js/")

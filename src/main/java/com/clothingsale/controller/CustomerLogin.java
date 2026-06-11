@@ -67,9 +67,17 @@ public class CustomerLogin extends HttpServlet {
         }
 
         HttpSession session = request.getSession(true);
+        // Set both customer-specific and unified auth attributes so filters/controllers work consistently
         session.setAttribute("customerId", user.getId());
         session.setAttribute("customerUsername", user.getUsername());
         session.setAttribute("customerFullName", user.getFullName());
+
+        session.setMaxInactiveInterval(30 * 60);
+        session.setAttribute("authUserId", user.getId());
+        session.setAttribute("authUsername", user.getUsername());
+        session.setAttribute("authFullName", user.getFullName());
+        session.setAttribute("authRoleId", user.getRoleId());
+        session.setAttribute("authRoleName", user.getRoleName());
 
         response.sendRedirect(request.getContextPath() + "/");
     }
