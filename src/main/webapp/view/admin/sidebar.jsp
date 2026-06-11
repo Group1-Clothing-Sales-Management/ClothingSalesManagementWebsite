@@ -101,7 +101,7 @@
            class="${param.activeTab == 'dashboard' ? 'active' : ''}">
             <i class="fa-solid fa-chart-line"></i>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products"
+        <a href="${pageContext.request.contextPath}/staff/products"
            class="${param.activeTab == 'products' ? 'active' : ''}">
             <i class="fa-solid fa-box"></i>Manage Products
         </a>

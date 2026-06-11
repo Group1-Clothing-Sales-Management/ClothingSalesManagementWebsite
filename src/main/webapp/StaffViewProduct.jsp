@@ -92,7 +92,6 @@
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="StaffManageProducts">Product Management</a></li>
                 <li class="breadcrumb-item active">Product Details</li>
             </ol>
@@ -105,7 +104,7 @@
             </a>
         </div>
 
-        <div class="card card-main" style="max-width: 860px;">
+        <div class="card card-main" style="max-width: 960px; margin: 0 auto;">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <div>
                     <div class="fw-bold text-dark" style="font-size:1rem;">Current detail data for the selected variant</div>

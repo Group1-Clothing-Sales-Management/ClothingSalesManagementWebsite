@@ -16,7 +16,7 @@
         .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
         .page-title .bi { color: #5c6bc0; margin-right: 8px; }
 
-        .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); max-width: 860px; }
+        .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); max-width: 860px; margin: 0 auto; }
         .card-main .card-header {
             background: #fafbff;
             border-bottom: 1px solid #eef0f5;
@@ -84,7 +84,6 @@
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="StaffManageProducts">Product Management</a></li>
                 <li class="breadcrumb-item active">Edit Product</li>
             </ol>

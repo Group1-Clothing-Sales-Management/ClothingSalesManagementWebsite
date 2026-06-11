@@ -63,7 +63,41 @@
             margin-top: 3px;
         }
 
-        .search-group { max-width: 360px; }
+        .search-bar-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .search-bar-wrapper label {
+            font-size: .88rem;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+            margin: 0;
+        }
+        .search-bar-wrapper .input-group {
+            max-width: 420px;
+            flex: 1;
+        }
+        .search-bar-wrapper .form-control {
+            border-left: none;
+            box-shadow: none;
+        }
+        .search-bar-wrapper .input-group-text {
+            background: #fff;
+            border-right: none;
+        }
+        .result-count {
+            font-size: .82rem;
+            color: #6b7280;
+            margin-left: auto;
+        }
 
         .empty-state { padding: 56px 0; text-align: center; color: #9ca3af; }
         .empty-state .bi { font-size: 2.8rem; display: block; margin-bottom: 12px; }
@@ -104,7 +138,6 @@
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
                 <li class="breadcrumb-item active">Product Management</li>
             </ol>
         </nav>
@@ -113,18 +146,25 @@
             <h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Management</h1>
         </div>
 
+        <!-- Search Bar -->
+        <div class="search-bar-wrapper">
+            <label for="searchInput"><i class="bi bi-search me-1 text-primary"></i>Search by name:</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-type text-muted"></i></span>
+                <input type="text" id="searchInput" onkeyup="filterProducts()"
+                       class="form-control" placeholder="Enter product name..."/>
+                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()" title="Clear">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <span class="result-count" id="resultCount"></span>
+        </div>
+
         <div class="card card-main">
             <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <span class="fw-semibold text-secondary" style="font-size:.9rem">
                     <i class="bi bi-list-ul me-1"></i>Product List
                 </span>
-                <div class="search-group">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="searchInput" onkeyup="filterProducts()"
-                               class="form-control" placeholder="Search by name or SKU..."/>
-                    </div>
-                </div>
             </div>
 
             <div class="card-body p-0">
@@ -134,9 +174,6 @@
                             <tr>
                                 <th>#</th>
                                 <th>Product & Brand</th>
-                                <th>SKU</th>
-                                <th class="text-end">Cost Price</th>
-                                <th class="text-end">Sale Price</th>
                                 <th class="text-center">Stock</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Actions</th>
@@ -144,13 +181,12 @@
                         </thead>
                         <tbody id="productTable">
                             <%
-                                NumberFormat numFormat = NumberFormat.getNumberInstance(Locale.US);
                                 List<StaffProductModel> products = (List<StaffProductModel>) request.getAttribute("productList");
 
                                 if (products == null || products.isEmpty()) {
                             %>
                             <tr>
-                                <td colspan="8">
+                                <td colspan="5">
                                     <div class="empty-state">
                                         <i class="bi bi-box-seam"></i>
                                         <p class="mb-0 fw-semibold">No products available</p>
@@ -168,12 +204,9 @@
                             <tr>
                                 <td class="text-muted"><%= index++ %></td>
                                 <td>
-                                    <div class="fw-semibold text-dark"><%= item.getProductName() %></div>
+                                    <div class="fw-semibold text-dark product-name"><%= item.getProductName() %></div>
                                     <span class="brand-badge"><%= item.getBrandName() %></span>
                                 </td>
-                                <td><code class="text-muted"><%= item.getSku() %></code></td>
-                                <td class="text-end text-muted"><%= numFormat.format(item.getCostPrice()) %> VND</td>
-                                <td class="text-end fw-bold"><%= numFormat.format(item.getSalePrice()) %> VND</td>
                                 <td class="text-center">
                                     <span class="badge px-2 py-1 rounded-pill <%= stockClass %>">
                                         <%= item.getStockQuantity() %>
@@ -185,14 +218,14 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="StaffManageProducts?action=view&sku=<%= item.getSku() %>"
-                                       class="btn btn-sm btn-outline-secondary px-2 py-1" title="View details">
-                                        <i class="bi bi-eye-fill"></i>
-                                    </a>
-                                    <a href="StaffManageProducts?action=edit&sku=<%= item.getSku() %>"
-                                       class="btn btn-sm btn-outline-primary px-2 py-1" title="Edit">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
+                                    <a href="${pageContext.request.contextPath}/StaffManageProducts?action=view&sku=<%= item.getSku() %>"
+   class="btn btn-sm btn-outline-info px-2 py-1" title="View details">
+    <i class="bi bi-eye-fill"></i> View
+</a>
+                                    <a href="${pageContext.request.contextPath}/StaffManageProducts?action=edit&sku=<%= item.getSku() %>"
+   class="btn btn-sm btn-outline-primary px-2 py-1" title="Edit">
+    <i class="bi bi-pencil-fill"></i> Edit
+</a>
                                 </td>
                             </tr>
                             <%
@@ -210,20 +243,34 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    const totalRows = document.getElementById("productTable").querySelectorAll("tr[class=''], tr:not([class])").length;
+
     function filterProducts() {
         const filter = document.getElementById("searchInput").value.toLowerCase().trim();
-        const rows = document.getElementById("productTable").getElementsByTagName("tr");
+        const rows   = document.getElementById("productTable").getElementsByTagName("tr");
+        let visible  = 0;
 
         for (let i = 0; i < rows.length; i++) {
-            const nameEl = rows[i].querySelector(".fw-semibold");
-            const skuEl  = rows[i].querySelector("code");
-
-            if (nameEl && skuEl) {
+            const nameEl = rows[i].querySelector(".product-name");
+            if (nameEl) {
                 const name = nameEl.textContent || nameEl.innerText;
-                const sku  = skuEl.textContent  || skuEl.innerText;
-                rows[i].style.display = (name.toLowerCase().includes(filter) || sku.toLowerCase().includes(filter)) ? "" : "none";
+                const show = name.toLowerCase().includes(filter);
+                rows[i].style.display = show ? "" : "none";
+                if (show) visible++;
             }
         }
+
+        const countEl = document.getElementById("resultCount");
+        if (filter === "") {
+            countEl.textContent = "";
+        } else {
+            countEl.textContent = visible + " result(s) found";
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById("searchInput").value = "";
+        filterProducts();
     }
 
     document.querySelectorAll('.alert').forEach(function (el) {
