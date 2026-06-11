@@ -51,7 +51,8 @@ public class AuthFilter extends HttpFilter {
         }
         // --------------------------------------------------
 
-        // 3. Nếu vào các trang Admin khác (Quản lý User, Xoá sản phẩm, mã giảm giá...) -> Chỉ ADMIN được vào
+        // 3. Nếu vào các trang Admin khác (Quản lý User, Xoá sản phẩm, mã giảm giá...)
+        // -> Chỉ ADMIN được vào
         if (isAdminPath(path) && !isAdminRole(roleName)) {
             response.sendRedirect(request.getContextPath() + "/admin/login?error=forbidden");
             return;
@@ -83,8 +84,8 @@ public class AuthFilter extends HttpFilter {
         String lowerPath = path.toLowerCase(Locale.ROOT);
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
-            || lowerPath.startsWith("/customer")
-            || lowerPath.startsWith("/cart")
+                || lowerPath.startsWith("/customer")
+                || lowerPath.startsWith("/cart")
                 || lowerPath.startsWith("/admin/login")
                 || lowerPath.startsWith("/logout")
                 || lowerPath.startsWith("/admin/logout")
@@ -109,6 +110,7 @@ public class AuthFilter extends HttpFilter {
     private boolean isStaffPath(String path) {
         return path.startsWith("/StaffManageProducts")
                 || path.startsWith("/staff/products")
+                || "/StaffManageCustomers.jsp".equals(path)
                 || "/StaffManageProducts.jsp".equals(path)
                 || "/StaffViewProduct.jsp".equals(path)
                 || "/StaffEditProduct.jsp".equals(path);

@@ -2,160 +2,167 @@
 <%@ page import="com.clothingsale.model.StaffProductModel" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.Locale" %>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Product Details</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
-<body class="bg-gray-50 font-sans antialiased text-gray-900">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+    <style>
+        body { background: #f5f6fa; font-family: 'Segoe UI', sans-serif; }
+        .main-wrapper { display: flex; min-height: 100vh; }
+        .content-area { flex: 1; padding: 28px 32px; min-width: 0; }
 
-    <%
-        StaffProductModel product = (StaffProductModel) request.getAttribute("product");
-        if (product == null) {
-            response.sendRedirect("StaffManageProducts");
-            return;
+        .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
+        .page-title .bi { color: #5c6bc0; margin-right: 8px; }
+
+        .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+        .card-main .card-header {
+            background: #fff;
+            border-bottom: 1px solid #eef0f5;
+            border-radius: 14px 14px 0 0 !important;
+            padding: 20px 24px;
+        }
+        .card-main .card-footer {
+            background: #fafbff;
+            border-top: 1px solid #eef0f5;
+            border-radius: 0 0 14px 14px !important;
+            padding: 16px 24px;
         }
 
-        NumberFormat numFormat = NumberFormat.getNumberInstance(Locale.US);
+        .field-label {
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+        .field-value {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: .9rem;
+            color: #1e293b;
+        }
+        .field-value.mono { font-family: monospace; font-weight: 700; color: #6b7280; }
+        .field-value.price-main { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
 
-        String stockClass = product.getStockQuantity() > 0
-            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-            : "bg-rose-50 text-rose-700 border-rose-200";
-        String statusClass = "ACTIVE".equals(product.getStatus())
-            ? "bg-green-100 text-green-800"
-            : "bg-gray-100 text-gray-800";
-    %>
+        .brand-badge {
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: .8rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
 
-    <div class="min-h-screen flex">
-        <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl flex-shrink-0">
-            <a href="StaffManageProducts" class="p-5 text-xl font-bold border-b border-slate-800 flex items-center gap-2 tracking-wide hover:bg-slate-800 transition-colors block">
-                <i class="fa-solid fa-shirt text-indigo-400"></i>
-                <span>ClothesShop</span>
+        .badge-active   { background: #d1fae5; color: #065f46; }
+        .badge-inactive { background: #fee2e2; color: #991b1b; }
+        .badge-stock-ok  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .badge-stock-out { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        .breadcrumb { font-size: .82rem; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+<%
+    StaffProductModel product = (StaffProductModel) request.getAttribute("product");
+    if (product == null) {
+        response.sendRedirect("StaffManageProducts");
+        return;
+    }
+    NumberFormat numFormat = NumberFormat.getNumberInstance(Locale.US);
+    String stockClass  = product.getStockQuantity() > 0 ? "badge-stock-ok" : "badge-stock-out";
+    String statusClass = "ACTIVE".equals(product.getStatus()) ? "badge-active" : "badge-inactive";
+%>
+
+<div class="main-wrapper">
+
+    <jsp:include page="/view/admin/sidebar.jsp">
+        <jsp:param name="activeTab" value="products"/>
+    </jsp:include>
+
+    <div class="content-area">
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="StaffManageProducts">Product Management</a></li>
+                <li class="breadcrumb-item active">Product Details</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+            <h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Details</h1>
+            <a href="StaffManageProducts" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-arrow-left me-1"></i>Back to list
             </a>
-            <nav class="flex-1 p-4 space-y-1.5">
-                <a href="StaffManageProducts" class="flex items-center gap-3 px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium shadow-md transition-all text-sm">
-                    <i class="fa-solid fa-box w-5 text-base"></i>
-                    <span>Product Management</span>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all text-sm font-medium">
-                    <i class="fa-solid fa-receipt w-5 text-base"></i>
-                    <span>Order Management</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/admin/logout" class="flex items-center gap-3 px-4 py-3 text-rose-300 hover:bg-slate-800 hover:text-white rounded-lg transition-all text-sm font-medium">
-                    <i class="fa-solid fa-right-from-bracket w-5 text-base"></i>
-                    <span>Sign out</span>
-                </a>
-            </nav>
+        </div>
 
-            <div class="p-4 border-t border-slate-800">
-                <div class="flex items-center gap-3 px-2 py-2">
-                    <div class="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                        ST
+        <div class="card card-main" style="max-width: 860px;">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="fw-bold text-dark" style="font-size:1rem;">Current detail data for the selected variant</div>
+                    <div class="text-muted mt-1" style="font-size:.82rem;">Read-only view — use Edit to make changes</div>
+                </div>
+                <span class="badge px-3 py-2 rounded-pill <%= statusClass %>">
+                    <%= product.getStatus() %>
+                </span>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="field-label">Product Name</div>
+                        <div class="field-value fw-semibold"><%= product.getProductName() %></div>
                     </div>
-                    <div class="min-w-0">
-                        <div class="text-sm font-semibold text-white truncate"><%= (session != null && session.getAttribute("authUsername") != null)
-                                ? session.getAttribute("authUsername")
-                                : (request.getAttribute("staffUser") != null ? request.getAttribute("staffUser") : "staff01") %></div>
-                        <div class="text-xs text-emerald-400 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                            Warehouse staff
+                    <div class="col-md-6">
+                        <div class="field-label">SKU</div>
+                        <div class="field-value mono"><%= product.getSku() %></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="field-label">Brand</div>
+                        <div class="field-value">
+                            <span class="brand-badge"><%= product.getBrandName() %></span>
                         </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="field-label">Stock Quantity</div>
+                        <div class="field-value">
+                            <span class="badge px-3 py-2 rounded-pill <%= stockClass %>">
+                                <%= product.getStockQuantity() %> units
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="field-label">Cost Price</div>
+                        <div class="field-value text-muted"><%= numFormat.format(product.getCostPrice()) %> VND</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="field-label">Sale Price</div>
+                        <div class="field-value price-main"><%= numFormat.format(product.getSalePrice()) %> VND</div>
                     </div>
                 </div>
             </div>
-        </aside>
 
-        <main class="flex-1 flex flex-col min-w-0">
-            <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shadow-sm flex-shrink-0">
-                <div class="text-gray-800 font-bold text-lg tracking-wide">
-                    Product Warehouse
-                </div>
-            </header>
-
-            <div class="px-8 pt-6">
-                <a href="StaffManageProducts" class="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-indigo-600 transition-colors">
-                    <i class="fa-solid fa-arrow-left"></i> Back to product list
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a href="StaffManageProducts" class="btn btn-outline-secondary px-4">Close</a>
+                <a href="StaffManageProducts?action=edit&sku=<%= product.getSku() %>"
+                   class="btn btn-warning px-4 text-white">
+                    <i class="bi bi-pencil-fill me-1"></i>Edit Product
                 </a>
             </div>
+        </div>
 
-            <div class="flex-1 overflow-y-auto flex flex-col items-center justify-start px-8 pb-8 pt-4">
-                <div class="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
-                    <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800">Product details</h2>
-                            <p class="text-xs text-gray-500 mt-1">Current detail data for the selected variant</p>
-                        </div>
-                        <span class="px-3 py-1 text-xs font-semibold rounded-full <%= statusClass %>">
-                            Status: <%= product.getStatus() %>
-                        </span>
-                    </div>
-
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Product name</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-slate-800">
-                                    <%= product.getProductName() %>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">SKU</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm text-gray-600 font-bold">
-                                    <%= product.getSku() %>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Brand</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                    <span class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
-                                        <%= product.getBrandName() %>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Cost price</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg font-medium text-gray-600">
-                                    <%= numFormat.format(product.getCostPrice()) %> VND
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Current sale price</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg font-bold text-slate-900 text-lg">
-                                    <%= numFormat.format(product.getSalePrice()) %> VND
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Stock quantity</label>
-                                <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                    <span class="px-3 py-1 text-sm font-bold border rounded-md <%= stockClass %>">
-                                        <%= product.getStockQuantity() %> units
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3">
-                        <a href="StaffManageProducts" class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-all">
-                            Close
-                        </a>
-                        <a href="StaffManageProducts?action=edit&sku=<%= product.getSku() %>" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium shadow-sm transition-all flex items-center gap-1.5">
-                            <i class="fa-regular fa-pen-to-square"></i> Update information
-                        </a>
-                    </div>
-
-                </div>
-            </div>
-        </main>
     </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

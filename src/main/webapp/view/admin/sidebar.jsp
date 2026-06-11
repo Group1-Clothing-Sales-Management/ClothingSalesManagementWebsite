@@ -2,37 +2,128 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
     String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : null;
-    String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Nhân viên kho" : "Quản trị viên";
-    String badgeClass = "STAFF".equalsIgnoreCase(roleName) ? "bg-emerald-400" : "bg-primary";
+    String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Warehouse Staff" : "Administrator";
+    String badgeColor  = "STAFF".equalsIgnoreCase(roleName) ? "#10b981" : "#6366f1";
 %>
-<div class="col-md-2 px-0 sidebar d-none d-md-block shadow">
-    <div class="p-3 text-center border-bottom border-secondary">
-        <h4 class="text-white mb-0 fw-bold"><i class="fa-solid fa-shirt me-2"></i>Clothing Sale</h4>
-    </div>
-    <div class="py-2 flex-grow-1">
-        <a href="${pageContext.request.contextPath}/admin/dashboard" class="${param.activeTab == 'dashboard' ? 'active' : ''}">
-            <i class="fa-solid fa-chart-line me-2"></i>Dashboard
-        </a>
-        <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
-            <i class="fa-solid fa-box me-2"></i>Manage Products
-        </a>
-        <a href="#"><i class="fa-solid fa-receipt me-2"></i>Orders</a>
 
-        <a href="${pageContext.request.contextPath}/staff/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
-            <i class="fa-solid fa-users me-2"></i>Customers
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+    .sidebar {
+        width: 230px;
+        min-width: 230px;
+        background: #0f172a;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        position: relative;
+        flex-shrink: 0;
+    }
+    .sidebar .sidebar-brand {
+        padding: 18px 20px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        border-bottom: 1px solid #1e293b;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: .02em;
+    }
+    .sidebar .sidebar-brand:hover { background: #1e293b; }
+    .sidebar .sidebar-brand i { color: #818cf8; }
+
+    .sidebar nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: .875rem;
+        font-weight: 500;
+        color: #94a3b8;
+        text-decoration: none;
+        transition: background .15s, color .15s;
+    }
+    .sidebar nav a:hover  { background: #1e293b; color: #fff; }
+    .sidebar nav a.active { background: #4f46e5; color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(79,70,229,.35); }
+    .sidebar nav a i { width: 18px; text-align: center; font-size: .95rem; }
+
+    .sidebar .sidebar-footer {
+        padding: 14px 16px;
+        border-top: 1px solid #1e293b;
+        background: #0f172a;
+    }
+    .sidebar .sidebar-footer .user-avatar {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: #6366f1;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: .85rem; color: #fff;
+        flex-shrink: 0;
+    }
+    .sidebar .sidebar-footer .user-name {
+        font-size: .85rem; font-weight: 600; color: #fff;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 110px;
+    }
+    .sidebar .sidebar-footer .user-role {
+        font-size: .75rem; color: #94a3b8;
+        display: flex; align-items: center; gap: 5px; margin-top: 2px;
+    }
+    .sidebar .sidebar-footer .role-dot {
+        width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sidebar .sidebar-footer .btn-logout {
+        background: transparent;
+        border: 1px solid #ef4444;
+        color: #ef4444;
+        border-radius: 7px;
+        padding: 5px 10px;
+        font-size: .8rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background .15s, color .15s;
+    }
+    .sidebar .sidebar-footer .btn-logout:hover { background: #ef4444; color: #fff; }
+</style>
+
+<div class="sidebar">
+    <a href="${pageContext.request.contextPath}/admin/dashboard" class="sidebar-brand">
+        <i class="fa-solid fa-shirt"></i>
+        <span>Clothing Sale</span>
+    </a>
+
+    <nav>
+        <a href="${pageContext.request.contextPath}/admin/dashboard"
+           class="${param.activeTab == 'dashboard' ? 'active' : ''}">
+            <i class="fa-solid fa-chart-line"></i>Dashboard
         </a>
+        <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products"
+           class="${param.activeTab == 'products' ? 'active' : ''}">
+            <i class="fa-solid fa-box"></i>Manage Products
+        </a>
+        <a href="#" class="${param.activeTab == 'orders' ? 'active' : ''}">
+            <i class="fa-solid fa-receipt"></i>Orders
+        </a>
+        <a href="${pageContext.request.contextPath}/staff/customers"
+           class="${param.activeTab == 'customers' ? 'active' : ''}">
+            <i class="fa-solid fa-users"></i>Customers
+        </a>
+        <a href="#" class="${param.activeTab == 'discounts' ? 'active' : ''}">
+            <i class="fa-solid fa-ticket"></i>Discount Codes
+        </a>
+    </nav>
 
-        <a href="#"><i class="fa-solid fa-ticket me-2"></i>Discount Codes</a>
-    </div>
-
-    <div class="p-3 border-top border-secondary bg-dark text-white" style="position: absolute; bottom: 0; width: 100%;">
-        <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-indigo flex-shrink-0 d-flex align-items-center justify-center text-white font-bold"
-                 style="width: 40px; height: 40px; background-color: #6366f1; justify-content: center;">
+    <div class="sidebar-footer">
+        <div class="d-flex align-items-center gap-2">
+            <div class="user-avatar">
                 ${not empty sessionScope.authUsername ? sessionScope.authUsername.substring(0,2).toUpperCase() : 'US'}
             </div>
-            <div class="min-w-0 flex-grow-1">
-                <div class="text-sm fw-bold text-white text-truncate">
+            <div style="flex:1; min-width:0;">
+                <div class="user-name">
                     <c:choose>
                         <c:when test="${not empty sessionScope.authFullName}">
                             <c:out value="${sessionScope.authFullName}"/>
@@ -42,17 +133,15 @@
                         </c:otherwise>
                     </c:choose>
                 </div>
-                <div class="text-xs text-muted d-flex align-items-center gap-1 mt-1">
-                    <span class="rounded-circle inline-block <%= badgeClass%>" style="width: 6px; height: 6px; display: inline-block;"></span>
-                    <%= displayRole%>
+                <div class="user-role">
+                    <span class="role-dot" style="background-color: <%= badgeColor %>;"></span>
+                    <%= displayRole %>
                 </div>
             </div>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="text-danger fs-5 ms-auto" title="Đăng xuất">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-outline-danger d-flex align-items-center gap-2" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?');">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Đăng xuất</span>
+            <a href="${pageContext.request.contextPath}/admin/logout"
+               class="btn-logout"
+               onclick="return confirm('Are you sure you want to sign out?');">
+                <i class="fa-solid fa-right-from-bracket me-1"></i>Sign out
             </a>
         </div>
     </div>
