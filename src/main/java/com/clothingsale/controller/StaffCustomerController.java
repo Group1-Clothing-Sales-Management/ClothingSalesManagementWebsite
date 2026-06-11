@@ -16,24 +16,25 @@ public class StaffCustomerController extends HttpServlet {
     private final StaffCustomerService service = new StaffCustomerService();
 
     // ----------------------------------------------------------------
-    // GET — list / search / show edit form / show add form
+    // GET - list / search / show edit form / show add form
     // ----------------------------------------------------------------
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         // BR1: Staff must be logged in
-        if (!isStaffLoggedIn(req, resp))
+        if (!isStaffLoggedIn(req, resp)) {
             return;
+        }
 
         String action = req.getParameter("action");
-        if (action == null)
+        if (action == null) {
             action = "list";
+        }
 
         switch (action) {
             case "add":
-                req.getRequestDispatcher("/StaffManageCustomers.jsp")
-                        .forward(req, resp);
+                req.getRequestDispatcher("/StaffManageCustomers.jsp").forward(req, resp);
                 break;
 
             case "edit":
@@ -46,14 +47,15 @@ public class StaffCustomerController extends HttpServlet {
     }
 
     // ----------------------------------------------------------------
-    // POST — add / update
+    // POST - add / update
     // ----------------------------------------------------------------
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        if (!isStaffLoggedIn(req, resp))
+        if (!isStaffLoggedIn(req, resp)) {
             return;
+        }
 
         req.setCharacterEncoding("UTF-8");
         String action = req.getParameter("action");
@@ -89,7 +91,7 @@ public class StaffCustomerController extends HttpServlet {
         StaffCustomer customer = (id > 0) ? service.getCustomerById(id) : null;
 
         if (customer == null) {
-            req.setAttribute("errorMsg", "Không tìm thấy khách hàng.");
+            req.setAttribute("errorMsg", "Customer not found.");
             handleList(req, resp);
             return;
         }
@@ -108,7 +110,7 @@ public class StaffCustomerController extends HttpServlet {
         Map<String, String> errors = service.addCustomer(c, password);
 
         if (errors.isEmpty()) {
-            req.getSession().setAttribute("successMsg", "Thêm khách hàng thành công!");
+            req.getSession().setAttribute("successMsg", "Customer added successfully.");
             resp.sendRedirect(req.getContextPath() + "/staff/customers");
         } else {
             req.setAttribute("errors", errors);
@@ -127,7 +129,7 @@ public class StaffCustomerController extends HttpServlet {
         Map<String, String> errors = service.updateCustomer(c);
 
         if (errors.isEmpty()) {
-            req.getSession().setAttribute("successMsg", "Cập nhật khách hàng thành công!");
+            req.getSession().setAttribute("successMsg", "Customer updated successfully.");
             resp.sendRedirect(req.getContextPath() + "/staff/customers");
         } else {
             req.setAttribute("errors", errors);

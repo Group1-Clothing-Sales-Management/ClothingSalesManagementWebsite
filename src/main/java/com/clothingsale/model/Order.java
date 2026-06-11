@@ -27,6 +27,20 @@ public class Order {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // Thông tin mở rộng phục vụ màn hình quản lý đơn hàng
+    private String customerUsername;
+    private String customerFullName;
+    private String customerEmail;
+    private String shipmentCarrierName;
+    private String shipmentTrackingCode;
+    private String shippingStatus;
+    private String paymentMethod;
+    private String paymentStatus;
+    private int detailCount;
+    private String provinceName;
+    private String districtName;
+    private String wardName;
+
     public Order() {
     }
 
@@ -189,5 +203,101 @@ public class Order {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getCustomerUsername() {
+        return customerUsername;
+    }
+
+    public void setCustomerUsername(String customerUsername) {
+        this.customerUsername = customerUsername;
+    }
+
+    public String getCustomerFullName() {
+        return customerFullName;
+    }
+
+    public void setCustomerFullName(String customerFullName) {
+        this.customerFullName = customerFullName;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public String getShipmentCarrierName() {
+        return shipmentCarrierName;
+    }
+
+    public void setShipmentCarrierName(String shipmentCarrierName) {
+        this.shipmentCarrierName = shipmentCarrierName;
+    }
+
+    public String getShipmentTrackingCode() {
+        return shipmentTrackingCode;
+    }
+
+    public void setShipmentTrackingCode(String shipmentTrackingCode) {
+        this.shipmentTrackingCode = shipmentTrackingCode;
+    }
+
+    public String getShippingStatus() {
+        return shippingStatus;
+    }
+
+    public void setShippingStatus(String shippingStatus) {
+        this.shippingStatus = shippingStatus;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public int getDetailCount() {
+        return detailCount;
+    }
+
+    public void setDetailCount(int detailCount) {
+        this.detailCount = detailCount;
+    }
+
+    public String getProvinceName() {
+        return provinceName;
+    }
+
+    public void setProvinceName(String provinceName) {
+        this.provinceName = provinceName;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getWardName() {
+        return wardName;
+    }
+
+    public void setWardName(String wardName) {
+        this.wardName = wardName;
     }
 }

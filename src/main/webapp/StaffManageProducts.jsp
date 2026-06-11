@@ -113,7 +113,6 @@
     </jsp:include>
 
     <div class="content-area">
-
         <%
             String errorMsg = (String) request.getAttribute("errorMessage");
             if (errorMsg != null) {

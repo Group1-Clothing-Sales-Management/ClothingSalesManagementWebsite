@@ -15,6 +15,7 @@ public class OrderDetail {
     private String variantAttributesSnapshot;
     private int quantity;
     private BigDecimal price;
+    private BigDecimal lineTotal;
 
     public OrderDetail() {
     }
@@ -85,5 +86,13 @@ public class OrderDetail {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public BigDecimal getLineTotal() {
+        return lineTotal;
+    }
+
+    public void setLineTotal(BigDecimal lineTotal) {
+        this.lineTotal = lineTotal;
     }
 }
