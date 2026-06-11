@@ -97,7 +97,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-4">
                             <div>
                                 <h2 class="h3 fw-bold text-white mb-2">Customer Sign in</h2>
-                                <p class="text-white-50 mb-0">Enter your account to continue.</p>
+                                <p class="text-white-50 mb-0">Nhập thông tin để đăng nhập.</p>
                             </div>
                             <span class="badge rounded-pill text-bg-primary px-3 py-2">Customer</span>
                         </div>
@@ -134,10 +134,10 @@
 
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <div></div>
-                                <a href="<%= request.getContextPath() %>/customer/register" class="link-info text-decoration-none small">Create account</a>
+                                <a href="<%= request.getContextPath() %>/customer/register" class="link-info text-decoration-none small">Tạo tài khoản</a>
                             </div>
 
-                            <button type="submit" class="btn btn-login w-100 text-white"><i class="fa-solid fa-right-to-bracket me-2"></i>Sign in</button>
+                            <button type="submit" class="btn btn-login w-100 text-white"><i class="fa-solid fa-right-to-bracket me-2"></i>Đăng nhập</button>
                         </form>
 
                         <div class="mt-4 pt-3 border-top border-light border-opacity-10">

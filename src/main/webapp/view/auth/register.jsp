@@ -70,8 +70,8 @@
                                 <input class="form-control" name="phone" placeholder="Số điện thoại">
                             </div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-primary w-100">Create account</button>
-                                <a class="btn btn-outline-light" href="<%= request.getContextPath() %>/customer/login">Sign in</a>
+                                <button class="btn btn-primary w-100">Tạo tài khoản</button>
+                                <a class="btn btn-outline-light" href="<%= request.getContextPath() %>/customer/login">Đã có tài khoản? Đăng nhập</a>
                             </div>
                         </form>
                     </div>
