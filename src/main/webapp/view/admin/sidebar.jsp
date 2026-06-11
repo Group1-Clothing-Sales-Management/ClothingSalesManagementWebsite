@@ -2,7 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
     String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : null;
-    String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Nhân viên kho" : "Quản trị viên";
+    String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Warehouse Staff" : "Administrator";
     String badgeClass = "STAFF".equalsIgnoreCase(roleName) ? "bg-emerald-400" : "bg-primary";
 %>
 <div class="col-md-2 px-0 sidebar d-none d-md-block shadow">
@@ -16,7 +16,9 @@
         <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
             <i class="fa-solid fa-box me-2"></i>Manage Products
         </a>
-        <a href="#"><i class="fa-solid fa-receipt me-2"></i>Orders</a>
+        <a href="${pageContext.request.contextPath}/staff/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
+            <i class="fa-solid fa-receipt me-2"></i>Orders
+        </a>
 
         <a href="${pageContext.request.contextPath}/staff/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
             <i class="fa-solid fa-users me-2"></i>Customers
@@ -47,12 +49,12 @@
                     <%= displayRole%>
                 </div>
             </div>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="text-danger fs-5 ms-auto" title="Đăng xuất">
+            <a href="${pageContext.request.contextPath}/admin/logout" class="text-danger fs-5 ms-auto" title="Sign out">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-outline-danger d-flex align-items-center gap-2" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?');">
+            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-outline-danger d-flex align-items-center gap-2" onclick="return confirm('Are you sure you want to sign out?');">
                 <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Đăng xuất</span>
+                <span>Sign out</span>
             </a>
         </div>
     </div>

@@ -23,91 +23,101 @@ public class StaffCustomerService {
     }
 
     // ----------------------------------------------------------------
-    // ADD CUSTOMER — returns error map (empty = success)
+    // ADD CUSTOMER - returns error map (empty = success)
     // ----------------------------------------------------------------
     public Map<String, String> addCustomer(StaffCustomer c, String rawPassword) {
         Map<String, String> errors = validateNewCustomer(c);
-        if (!errors.isEmpty())
+        if (!errors.isEmpty()) {
             return errors;
+        }
 
-        // Simple default password hash placeholder — replace with BCrypt in production
+        // Simple default password hash placeholder - replace with BCrypt in production
         String hashed = hashPassword(rawPassword);
         if (!dao.addCustomer(c, hashed)) {
-            errors.put("general", "Thêm khách hàng thất bại, vui lòng thử lại.");
+            errors.put("general", "Failed to add the customer. Please try again.");
         }
         return errors;
     }
 
     // ----------------------------------------------------------------
-    // UPDATE CUSTOMER — returns error map (empty = success)
+    // UPDATE CUSTOMER - returns error map (empty = success)
     // ----------------------------------------------------------------
     public Map<String, String> updateCustomer(StaffCustomer c) {
         Map<String, String> errors = validateUpdateCustomer(c);
-        if (!errors.isEmpty())
+        if (!errors.isEmpty()) {
             return errors;
+        }
 
         if (!dao.updateCustomer(c)) {
-            errors.put("general", "Cập nhật thất bại, vui lòng thử lại.");
+            errors.put("general", "Update failed. Please try again.");
         }
         return errors;
     }
 
     // ----------------------------------------------------------------
-    // VALIDATION — NEW CUSTOMER (BR2, BR3)
+    // VALIDATION - NEW CUSTOMER (BR2, BR3)
     // ----------------------------------------------------------------
     private Map<String, String> validateNewCustomer(StaffCustomer c) {
         Map<String, String> errors = new HashMap<>();
 
-        if (isBlank(c.getUsername()))
-            errors.put("username", "Tên đăng nhập không được để trống.");
-        else if (dao.isUsernameExists(c.getUsername()))
-            errors.put("username", "Tên đăng nhập đã tồn tại.");
+        if (isBlank(c.getUsername())) {
+            errors.put("username", "Username cannot be empty.");
+        } else if (dao.isUsernameExists(c.getUsername())) {
+            errors.put("username", "Username already exists.");
+        }
 
-        if (isBlank(c.getFullName()))
-            errors.put("fullName", "Họ và tên không được để trống.");
+        if (isBlank(c.getFullName())) {
+            errors.put("fullName", "Full name cannot be empty.");
+        }
 
-        if (isBlank(c.getEmail()))
-            errors.put("email", "Email không được để trống.");
-        else if (!isValidEmail(c.getEmail()))
-            errors.put("email", "Email không đúng định dạng.");
-        else if (dao.isEmailExists(c.getEmail(), 0))
-            errors.put("email", "Email đã được sử dụng bởi tài khoản khác.");
+        if (isBlank(c.getEmail())) {
+            errors.put("email", "Email cannot be empty.");
+        } else if (!isValidEmail(c.getEmail())) {
+            errors.put("email", "Invalid email format.");
+        } else if (dao.isEmailExists(c.getEmail(), 0)) {
+            errors.put("email", "This email is already used by another account.");
+        }
 
-        if (isBlank(c.getPhone()))
-            errors.put("phone", "Số điện thoại không được để trống.");
-        else if (!isValidPhone(c.getPhone()))
-            errors.put("phone", "Số điện thoại không đúng định dạng (10 số, bắt đầu 0).");
-        else if (dao.isPhoneExists(c.getPhone(), 0))
-            errors.put("phone", "Số điện thoại đã được sử dụng bởi tài khoản khác.");
+        if (isBlank(c.getPhone())) {
+            errors.put("phone", "Phone number cannot be empty.");
+        } else if (!isValidPhone(c.getPhone())) {
+            errors.put("phone", "Invalid phone number format (10 digits, starting with 0).");
+        } else if (dao.isPhoneExists(c.getPhone(), 0)) {
+            errors.put("phone", "This phone number is already used by another account.");
+        }
 
         return errors;
     }
 
     // ----------------------------------------------------------------
-    // VALIDATION — UPDATE CUSTOMER (BR2, BR3)
+    // VALIDATION - UPDATE CUSTOMER (BR2, BR3)
     // ----------------------------------------------------------------
     private Map<String, String> validateUpdateCustomer(StaffCustomer c) {
         Map<String, String> errors = new HashMap<>();
 
-        if (isBlank(c.getFullName()))
-            errors.put("fullName", "Họ và tên không được để trống.");
+        if (isBlank(c.getFullName())) {
+            errors.put("fullName", "Full name cannot be empty.");
+        }
 
-        if (isBlank(c.getEmail()))
-            errors.put("email", "Email không được để trống.");
-        else if (!isValidEmail(c.getEmail()))
-            errors.put("email", "Email không đúng định dạng.");
-        else if (dao.isEmailExists(c.getEmail(), c.getId()))
-            errors.put("email", "Email đã được sử dụng bởi tài khoản khác.");
+        if (isBlank(c.getEmail())) {
+            errors.put("email", "Email cannot be empty.");
+        } else if (!isValidEmail(c.getEmail())) {
+            errors.put("email", "Invalid email format.");
+        } else if (dao.isEmailExists(c.getEmail(), c.getId())) {
+            errors.put("email", "This email is already used by another account.");
+        }
 
-        if (isBlank(c.getPhone()))
-            errors.put("phone", "Số điện thoại không được để trống.");
-        else if (!isValidPhone(c.getPhone()))
-            errors.put("phone", "Số điện thoại không đúng định dạng (10 số, bắt đầu 0).");
-        else if (dao.isPhoneExists(c.getPhone(), c.getId()))
-            errors.put("phone", "Số điện thoại đã được sử dụng bởi tài khoản khác.");
+        if (isBlank(c.getPhone())) {
+            errors.put("phone", "Phone number cannot be empty.");
+        } else if (!isValidPhone(c.getPhone())) {
+            errors.put("phone", "Invalid phone number format (10 digits, starting with 0).");
+        } else if (dao.isPhoneExists(c.getPhone(), c.getId())) {
+            errors.put("phone", "This phone number is already used by another account.");
+        }
 
-        if (isBlank(c.getStatus()))
-            errors.put("status", "Trạng thái không được để trống.");
+        if (isBlank(c.getStatus())) {
+            errors.put("status", "Status cannot be empty.");
+        }
 
         return errors;
     }
@@ -128,7 +138,7 @@ public class StaffCustomerService {
     }
 
     /**
-     * Placeholder — replace with BCrypt in production.
+     * Placeholder - replace with BCrypt in production.
      * e.g. return BCrypt.hashpw(raw, BCrypt.gensalt(12));
      */
     private String hashPassword(String raw) {

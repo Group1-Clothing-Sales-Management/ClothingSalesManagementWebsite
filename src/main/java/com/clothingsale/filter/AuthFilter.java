@@ -111,7 +111,10 @@ public class AuthFilter extends HttpFilter {
                 || path.startsWith("/staff/products")
                 || "/StaffManageProducts.jsp".equals(path)
                 || "/StaffViewProduct.jsp".equals(path)
-                || "/StaffEditProduct.jsp".equals(path);
+                || "/StaffEditProduct.jsp".equals(path)
+                || path.startsWith("/StaffManageOrders")
+                || path.startsWith("/staff/orders")
+                || "/StaffManageOrders.jsp".equals(path);
     }
 
     private boolean isAdminRole(String roleName) {

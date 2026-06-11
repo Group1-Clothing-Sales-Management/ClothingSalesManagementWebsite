@@ -28,7 +28,7 @@
                     <i class="fa-solid fa-box w-5 text-base"></i>
                     <span>Product Management</span>
                 </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all text-sm font-medium">
+                <a href="${pageContext.request.contextPath}/staff/orders" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all text-sm font-medium">
                     <i class="fa-solid fa-receipt w-5 text-base"></i>
                     <span>Order Management</span>
                 </a>
