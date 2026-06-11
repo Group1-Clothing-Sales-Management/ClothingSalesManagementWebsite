@@ -36,14 +36,15 @@ public class AdminManageProduct extends HttpServlet {
         List<Brand> brands = productService.getAllBrands();
         List<Category> categories = productService.getAllCategories();
 
+     
         if (products != null) {
             for (Product p : products) {
                 try {
                     List<com.clothingsale.model.ProductVariant> varList = productService.getVariantsByProductId(p.getId());
                     p.setVariants(varList);
-                } catch (Exception ex) {
-                    System.err.println("Lỗi nạp Variant cho sản phẩm ID " + p.getId() + ": " + ex.getMessage());
-                    p.setVariants(new ArrayList<>()); // Nếu lỗi thì gán danh sách rỗng để JSP không bị lỗi Null pointer
+                } catch (Exception e) {
+                    System.err.println("⚠️ Cảnh báo: Lỗi nạp Variant cho sản phẩm ID " + p.getId() + ": " + e.getMessage());
+                    p.setVariants(new ArrayList<>()); 
                 }
             }
         }
@@ -51,8 +52,7 @@ public class AdminManageProduct extends HttpServlet {
         request.setAttribute("products", products);
         request.setAttribute("brands", brands);
         request.setAttribute("categories", categories);
-
-        // Forward về folder view admin để hiển thị giao diện Accordion lồng nhau
+        request.setAttribute("activeTab", "products");
         request.getRequestDispatcher("/view/admin/admin_product.jsp").forward(request, response);
     }
 

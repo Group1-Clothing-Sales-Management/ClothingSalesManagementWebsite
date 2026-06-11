@@ -35,7 +35,7 @@ public class AdminDashboard extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession(false);
         String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : "";
 
@@ -58,19 +58,23 @@ public class AdminDashboard extends HttpServlet {
             e.printStackTrace();
         }
 
-        // Chuyển tiếp về giao diện trang chủ tích hợp duy nhất
-        request.getRequestDispatcher("/view/admin/dashboard.jsp").forward(request, response);
+        String tab = request.getParameter("tab");
+        if ("products".equals(tab)) {
+            request.getRequestDispatcher("/view/admin/admin_product.jsp").forward(request, response);
+        } else {
+            request.getRequestDispatcher("/view/admin/dashboard.jsp").forward(request, response);
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        
+
         HttpSession session = request.getSession(false);
         String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : "";
         String username = (session != null) ? (String) session.getAttribute("authUsername") : "system";
-        
+
         String action = request.getParameter("action");
 
         try {

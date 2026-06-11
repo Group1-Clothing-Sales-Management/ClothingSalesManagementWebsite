@@ -18,7 +18,7 @@ import jakarta.servlet.http.HttpSession;
 public class AdminInventoryController extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
@@ -26,7 +26,7 @@ public class AdminInventoryController extends HttpServlet {
         if ("import".equals(action)) {
             HttpSession session = request.getSession();
             User loggedInUser = (User) session.getAttribute("user");
-            
+
             // Bảo vệ quyền kiểm tra đăng nhập hệ thống
             if (loggedInUser == null) {
                 response.sendRedirect(request.getContextPath() + "/login.jsp");
@@ -54,10 +54,11 @@ public class AdminInventoryController extends HttpServlet {
                 InventoryDAO inventoryDAO = new InventoryDAO();
                 boolean isSuccess = inventoryDAO.importGoods(batch, loggedInUser.getId(), note);
 
+                
                 if (isSuccess) {
-                    response.sendRedirect(request.getContextPath() + "/view/admin/admin_product.jsp?status=success");
+                    response.sendRedirect(request.getContextPath() + "/admin/dashboard?tab=products&status=success");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/view/admin/admin_product.jsp?status=error");
+                    response.sendRedirect(request.getContextPath() + "/admin/dashboard?tab=products&status=error");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
