@@ -132,7 +132,7 @@
         <a href="${pageContext.request.contextPath}/admin/dashboard" class="${param.activeTab == 'dashboard' ? 'active' : ''}">
             <i class="fa-solid fa-chart-line me-2"></i>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}/staff/products" class="${param.activeTab == 'products' ? 'active' : ''}">
             <i class="fa-solid fa-box me-2"></i>Manage Products
         </a>
         <a href="${pageContext.request.contextPath}/staff/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
