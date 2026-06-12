@@ -42,7 +42,9 @@
     </head>
     <body>
         <div class="wrapper">
-            <jsp:include page="sidebar.jsp" />
+            <jsp:include page="sidebar.jsp">
+                <jsp:param name="activeTab" value="inventory" />
+            </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">

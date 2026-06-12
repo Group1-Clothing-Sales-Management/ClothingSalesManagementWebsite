@@ -41,12 +41,19 @@
                 background: #f9fafb;
                 border-radius: 8px;
             }
+            .hero-img-fallback {
+                min-height: 250px;
+                border-radius: 8px;
+                background: #f9fafb;
+            }
         </style>
     </head>
     <body>
 
         <div class="wrapper">
-            <jsp:include page="sidebar.jsp" />
+            <jsp:include page="sidebar.jsp">
+                <jsp:param name="activeTab" value="products" />
+            </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
@@ -59,7 +66,24 @@
                     <div class="card detail-card shadow-sm p-4 mb-4">
                         <div class="row g-4">
                             <div class="col-md-3 text-center">
-                                <img src="${pageContext.request.contextPath}/${product.mainImageUrl != null ? product.mainImageUrl : 'assets/img/default-product.png'}" class="hero-img border p-2" alt="product-image">
+                                <%-- Dùng fallback text thay cho ảnh vỡ để trang chi tiết vẫn ổn định khi file ảnh thiếu --%>
+                                <c:choose>
+                                    <c:when test="${not empty product.mainImageUrl}">
+                                        <img
+                                            src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}"
+                                            class="hero-img border p-2"
+                                            alt="product-image"
+                                            onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                        <div class="hero-img-fallback border d-none d-flex align-items-center justify-content-center text-muted fw-semibold">
+                                            No image available
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="hero-img-fallback border d-flex align-items-center justify-content-center text-muted fw-semibold">
+                                            No image available
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                             <div class="col-md-9 d-flex flex-column justify-content-center">
                                 <span class="badge bg-primary mb-2 align-self-start py-2 px-3 fs-6 rounded-3">ID: PROD-${product.id}</span>

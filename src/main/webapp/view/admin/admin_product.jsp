@@ -16,7 +16,7 @@
             .wrapper {
                 display: flex;
                 width: 100%;
-                align-items: stretch;
+                align-items: flex-start;
             }
             .main-content {
                 width: 100%;
@@ -29,6 +29,14 @@
                 height: 50px;
                 object-fit: cover;
                 border-radius: 6px;
+                background: #f8fafc;
+            }
+            .product-img-fallback {
+                width: 50px;
+                height: 50px;
+                border-radius: 6px;
+                font-size: 11px;
+                line-height: 1.1;
             }
             .table th {
                 background-color: #f1f3f5;
@@ -48,7 +56,10 @@
     <body>
 
         <div class="wrapper">
-            <jsp:include page="sidebar.jsp" />
+            <%-- Sidebar được cố định theo chiều dọc để không kéo trôi khi cuộn danh sách --%>
+            <jsp:include page="sidebar.jsp">
+                <jsp:param name="activeTab" value="products" />
+            </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
@@ -92,7 +103,24 @@
                                     <c:forEach var="p" items="${products}">
                                         <tr>
                                             <td class="text-center">
-                                                <img src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl != null ? p.mainImageUrl : 'default-product.png'}" class="product-img border" alt="product">
+                                                <%-- Ảnh sản phẩm được bảo vệ bằng fallback để tránh hiện icon bị hỏng khi file ảnh không tồn tại --%>
+                                                <c:choose>
+                                                    <c:when test="${not empty p.mainImageUrl}">
+                                                        <img
+                                                            src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
+                                                            class="product-img border"
+                                                            alt="product"
+                                                            onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                                        <div class="product-img-fallback border bg-light text-muted d-none d-flex align-items-center justify-content-center text-center px-1">
+                                                            No Img
+                                                        </div>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="product-img-fallback border bg-light text-muted d-flex align-items-center justify-content-center text-center px-1">
+                                                            No Img
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </td>
                                             <td>
                                                 <div class="fw-bold text-dark">${p.productName}</div>

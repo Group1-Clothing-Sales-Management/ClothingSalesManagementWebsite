@@ -16,6 +16,39 @@
         userInitials = username.length() >= 2 ? username.substring(0, 2) : username.substring(0, 1);
         userInitials = userInitials.toUpperCase();
     }
+
+    // Tự xác định mục đang mở nếu trang cha chưa truyền activeTab.
+    // Cách này giúp sidebar vẫn highlight đúng ngay cả khi JSP include bị thiếu tham số.
+    String activeTab = request.getParameter("activeTab");
+    if (activeTab == null || activeTab.isBlank()) {
+        String path = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (path != null && contextPath != null && path.startsWith(contextPath)) {
+            path = path.substring(contextPath.length());
+        }
+
+        if (path != null) {
+            if (path.startsWith("/admin/dashboard") || path.startsWith("/dashboard")) {
+                activeTab = "products".equalsIgnoreCase(request.getParameter("tab")) ? "products" : "dashboard";
+            } else if (path.startsWith("/admin/manage-product")
+                    || path.startsWith("/admin/products")
+                    || path.startsWith("/AdminManageProduct")
+                    || path.startsWith("/product-detail")) {
+                activeTab = "products";
+            } else if (path.startsWith("/admin/inventory")) {
+                activeTab = "inventory";
+            } else if (path.startsWith("/admin/discounts")) {
+                activeTab = "discounts";
+            } else if (path.startsWith("/admin/orders") || path.startsWith("/staff/orders")) {
+                activeTab = "orders";
+            } else if (path.startsWith("/admin/customers") || path.startsWith("/staff/customers")) {
+                activeTab = "customers";
+            } else if (path.startsWith("/staff/products")) {
+                activeTab = "products";
+            }
+        }
+    }
+    request.setAttribute("sidebarActiveTab", activeTab);
 %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <style>
@@ -26,7 +59,9 @@
         color: #e5e7eb;
         display: flex;
         flex-direction: column;
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 20;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
@@ -120,37 +155,37 @@
         <h4 class="sidebar-brand-title mb-0"><i class="fa-solid fa-shirt me-2"></i>Clothing Sale</h4>
     </div>
     <div class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/admin/dashboard" class="${param.activeTab == 'dashboard' ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}/admin/dashboard" class="${requestScope.sidebarActiveTab == 'dashboard' ? 'active' : ''}">
             <i class="fa-solid fa-chart-line me-2"></i>Dashboard
         </a>
 
         <%-- ĐÃ SỬA: Đồng bộ toàn bộ link điều hướng sản phẩm về cấu trúc tổng hợp quản lý của AdminDashboard Servlet --%>
         <c:choose>
             <c:when test="${sessionScope.authRoleName == 'STAFF'}">
-                <a href="${pageContext.request.contextPath}/staff/products" class="${param.activeTab == 'products' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/staff/products" class="${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
                     <i class="fa-solid fa-box me-2"></i>Manage Products
                 </a>
             </c:when>
             <c:otherwise>
-                <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box me-2"></i>Manage Products45
+                <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
+                    <i class="fa-solid fa-box me-2"></i>Manage Products
                 </a>
-                    <a href="${pageContext.request.contextPath}/admin/inventory" class="${param.activeTab == 'products' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/admin/inventory" class="${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
                     <i class="fa-solid fa-box me-2"></i>Stock
                 </a>
             </c:otherwise>
         </c:choose>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="${requestScope.sidebarActiveTab == 'orders' ? 'active' : ''}">
             <i class="fa-solid fa-receipt me-2"></i>Orders
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}">
             <i class="fa-solid fa-users me-2"></i>Customers
         </a>
 
         <c:if test="${sessionScope.authRoleName != 'STAFF'}">
-            <a href="${pageContext.request.contextPath}/admin/discounts" class="${param.activeTab == 'discounts' ? 'active' : ''}">
+            <a href="${pageContext.request.contextPath}/admin/discounts" class="${requestScope.sidebarActiveTab == 'discounts' ? 'active' : ''}">
                 <i class="fa-solid fa-ticket me-2"></i>Discount Codes
             </a>
         </c:if>
