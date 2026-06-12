@@ -135,6 +135,9 @@
                 <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
                     <i class="fa-solid fa-box me-2"></i>Manage Products45
                 </a>
+                    <a href="${pageContext.request.contextPath}/admin/inventory" class="${param.activeTab == 'products' ? 'active' : ''}">
+                    <i class="fa-solid fa-box me-2"></i>Stock
+                </a>
             </c:otherwise>
         </c:choose>
 
