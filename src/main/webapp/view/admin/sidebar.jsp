@@ -1,11 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%
-    // This sidebar is shared by multiple pages, so it keeps its own styles.
-    // That way it does not depend on the parent page CSS.
+    // Thành phần Sidebar dùng chung hệ thống
     String roleName = (session != null) ? (String) session.getAttribute("authRoleName") : null;
     String displayRole = "STAFF".equalsIgnoreCase(roleName) ? "Warehouse Staff" : "Administrator";
     String badgeClass = "STAFF".equalsIgnoreCase(roleName) ? "bg-success" : "bg-primary";
+
+    // Tạo tiền tố URL động dựa trên Role để dùng cho các tính năng chung
+    String rolePrefix = "STAFF".equalsIgnoreCase(roleName) ? "/staff" : "/admin";
+    request.setAttribute("rolePrefix", rolePrefix);
+
     String username = (session != null) ? (String) session.getAttribute("authUsername") : null;
     String userInitials = "US";
     if (username != null && !username.isBlank()) {
@@ -15,7 +19,6 @@
 %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <style>
-    /* Shared sidebar styling for all admin/staff pages */
     .sidebar-shell {
         min-height: 100vh;
         height: 100vh;
@@ -27,13 +30,11 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
-
     .sidebar-brand {
         padding: 1.15rem 1rem;
         text-align: center;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
-
     .sidebar-brand-title {
         color: #fff;
         font-size: 1.15rem;
@@ -41,18 +42,15 @@
         margin: 0;
         letter-spacing: .01em;
     }
-
     .sidebar-brand-title i {
         color: #60a5fa;
     }
-
     .sidebar-nav {
         padding: .75rem 0;
         display: flex;
         flex-direction: column;
         gap: .15rem;
     }
-
     .sidebar-nav a {
         color: #cbd5e1;
         text-decoration: none;
@@ -64,27 +62,23 @@
         border-left: 4px solid transparent;
         transition: background-color .2s ease, color .2s ease, border-color .2s ease;
     }
-
     .sidebar-nav a:hover,
     .sidebar-nav a.active {
         background: rgba(255, 255, 255, 0.06);
         color: #fff;
         border-left-color: #3b82f6;
     }
-
     .sidebar-nav i {
         width: 1.2rem;
         text-align: center;
         flex-shrink: 0;
     }
-
     .sidebar-footer {
         margin-top: auto;
         padding: 1rem;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(15, 23, 42, 0.96);
     }
-
     .sidebar-user-pill {
         width: 40px;
         height: 40px;
@@ -96,7 +90,6 @@
         font-weight: 800;
         flex-shrink: 0;
     }
-
     .sidebar-user-role {
         font-size: .78rem;
         color: #94a3b8;
@@ -105,23 +98,18 @@
         gap: .35rem;
         margin-top: .2rem;
     }
-
     .sidebar-user-dot {
         width: 6px;
         height: 6px;
         border-radius: 999px;
         display: inline-block;
     }
-
-    /* Small utility helpers used only inside the sidebar */
     .text-sm {
         font-size: .875rem;
     }
-
     .text-xs {
         font-size: .75rem;
     }
-
     .min-w-0 {
         min-width: 0;
     }
@@ -135,18 +123,34 @@
         <a href="${pageContext.request.contextPath}/admin/dashboard" class="${param.activeTab == 'dashboard' ? 'active' : ''}">
             <i class="fa-solid fa-chart-line me-2"></i>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/staff/products" class="${param.activeTab == 'products' ? 'active' : ''}">
-            <i class="fa-solid fa-box me-2"></i>Manage Products
-        </a>
-        <a href="${pageContext.request.contextPath}/staff/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
+
+        <%-- ĐÃ SỬA: Đồng bộ toàn bộ link điều hướng sản phẩm về cấu trúc tổng hợp quản lý của AdminDashboard Servlet --%>
+        <c:choose>
+            <c:when test="${sessionScope.authRoleName == 'STAFF'}">
+                <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
+                    <i class="fa-solid fa-box me-2"></i>Manage Products
+                </a>
+            </c:when>
+            <c:otherwise>
+                <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
+                    <i class="fa-solid fa-box me-2"></i>Manage Products45
+                </a>
+            </c:otherwise>
+        </c:choose>
+
+        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="${param.activeTab == 'orders' ? 'active' : ''}">
             <i class="fa-solid fa-receipt me-2"></i>Orders
         </a>
 
-        <a href="${pageContext.request.contextPath}/staff/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
+        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${param.activeTab == 'customers' ? 'active' : ''}">
             <i class="fa-solid fa-users me-2"></i>Customers
         </a>
 
-        <a href="#"><i class="fa-solid fa-ticket me-2"></i>Discount Codes</a>
+        <c:if test="${sessionScope.authRoleName != 'STAFF'}">
+            <a href="${pageContext.request.contextPath}/admin/discounts" class="${param.activeTab == 'discounts' ? 'active' : ''}">
+                <i class="fa-solid fa-ticket me-2"></i>Discount Codes
+            </a>
+        </c:if>
     </div>
 
     <div class="sidebar-footer">
@@ -170,9 +174,8 @@
                     <%= displayRole%>
                 </div>
             </div>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-outline-danger d-flex align-items-center gap-2" onclick="return confirm('Are you sure you want to sign out?');">
+            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1" onclick="return confirm('Are you sure you want to sign out?');" title="Sign out">
                 <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Sign out</span>
             </a>
         </div>
     </div>

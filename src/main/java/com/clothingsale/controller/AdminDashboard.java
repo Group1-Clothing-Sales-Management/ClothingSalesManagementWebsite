@@ -53,8 +53,12 @@ public class AdminDashboard extends HttpServlet {
             e.printStackTrace();
         }
 
-        // Chuyển tiếp về giao diện trang chủ tích hợp duy nhất
-        request.getRequestDispatcher("/view/admin/dashboard.jsp").forward(request, response);
+        String tab = request.getParameter("tab");
+        if ("products".equals(tab)) {
+            request.getRequestDispatcher("/view/admin/admin_product.jsp").forward(request, response);
+        } else {
+            request.getRequestDispatcher("/view/admin/dashboard.jsp").forward(request, response);
+        }
     }
 
     @Override

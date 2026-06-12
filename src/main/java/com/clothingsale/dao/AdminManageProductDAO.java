@@ -282,4 +282,61 @@ public class AdminManageProductDAO {
         }
         return categories;
     }
+
+    /**
+     * THÊM MỚI AN TOÀN: Lấy danh sách các biến thể Variant kèm chi tiết thuộc tính (Color, Size) theo Product ID
+     */
+    public List<com.clothingsale.model.ProductVariant> getVariantsByProductId(int productId) {
+        List<com.clothingsale.model.ProductVariant> list = new ArrayList<>();
+        // Câu lệnh SQL bóc tách các thuộc tính Color, Size thông qua các câu truy vấn con lồng nhau để tối ưu tốc độ load
+        String sql = "SELECT pv.id, pv.product_id, pv.sku, pv.cost_price, pv.sale_price, pv.stock_quantity, pv.status, "
+                   + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') as color, "
+                   + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') as size "
+                   + "FROM Product_Variant pv "
+                   + "WHERE pv.product_id = ?";
+
+        // Sử dụng Try-with-resources để tự động giải phóng kết nối, tránh treo bảng dữ liệu
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.clothingsale.model.ProductVariant v = new com.clothingsale.model.ProductVariant();
+                    v.setId(rs.getInt("id"));
+                    
+                    int prodId = rs.getInt("product_id");
+                    if (!rs.wasNull()) {
+                        v.setProductId(prodId);
+                    }
+                    
+                    v.setSku(rs.getString("sku"));
+                    v.setCostPrice(rs.getBigDecimal("cost_price"));
+                    v.setSalePrice(rs.getBigDecimal("sale_price"));
+                    v.setStockQuantity(rs.getInt("stock_quantity"));
+                    v.setStatus(rs.getString("status"));
+                    
+                    // Ghép các thuộc tính động Color và Size thành chuỗi mô tả
+                    String color = rs.getString("color");
+                    String size = rs.getString("size");
+                    StringBuilder details = new StringBuilder();
+                    if (color != null && !color.trim().isEmpty()) details.append("Color: ").append(color);
+                    if (size != null && !size.trim().isEmpty()) {
+                        if (details.length() > 0) details.append(" / ");
+                        details.append("Size: ").append(size);
+                    }
+                    if (details.length() == 0) details.append("Standard");
+                    
+                    // Gán chuỗi mô tả này vào thuộc tính attributeDetails của đối tượng ProductVariant
+                    v.setAttributeDetails(details.toString());
+                    
+                    list.add(v);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi SQL tại hàm getVariantsByProductId: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

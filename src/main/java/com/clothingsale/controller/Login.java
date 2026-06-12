@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet(
         name = "Login",
         // Use the canonical /admin/login route while keeping the legacy entry URL alive.
-        urlPatterns = {"/admin-staff-login", "/admin/login"}
+        urlPatterns = {"/admin-staff-login", "/admin/login", "/login"}
 )
 public class Login extends HttpServlet {
 

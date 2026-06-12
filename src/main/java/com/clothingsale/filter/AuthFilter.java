@@ -127,6 +127,7 @@ public class AuthFilter extends HttpFilter {
                 || "/StaffEditProduct.jsp".equals(path)
                 || path.startsWith("/StaffManageOrders")
                 || path.startsWith("/staff/orders")
+                || path.startsWith("/admin/products")
                 || "/StaffManageOrders.jsp".equals(path);
     }
 

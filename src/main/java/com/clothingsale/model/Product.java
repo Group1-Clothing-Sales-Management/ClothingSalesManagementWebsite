@@ -1,10 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.clothingsale.model;
 
 import java.sql.Timestamp;
+import java.util.List; // 1. Bổ sung import List
 
 public class Product {
 
@@ -20,12 +17,16 @@ public class Product {
     private Timestamp updatedAt;
     private String mainImageUrl;
 
+    // 2. Thêm thuộc tính variants để liên kết dữ liệu quan hệ 1-N
+    private List<ProductVariant> variants;
+
     public Product() {
     }
 
+    // Constructor cũ giữ nguyên hoặc bổ sung nếu cần
     public Product(int id, String productName, String slug, int brandId, int categoryId,
             String shortDescription, String longDescription, String status,
-            Timestamp createdAt, Timestamp updatedAt,String mainImageUrl) {
+            Timestamp createdAt, Timestamp updatedAt, String mainImageUrl) {
         this.id = id;
         this.productName = productName;
         this.slug = slug;
@@ -39,7 +40,16 @@ public class Product {
         this.mainImageUrl = mainImageUrl;
     }
 
-    // Getters and Setters
+    // 3. Bổ sung Getter và Setter cho thuộc tính variants (Bắt buộc để JSTL EL hoạt động)
+    public List<ProductVariant> getVariants() {
+        return variants;
+    }
+
+    public void setVariants(List<ProductVariant> variants) {
+        this.variants = variants;
+    }
+
+    // Các Getters và Setters cũ bên dưới giữ nguyên hoàn toàn...
     public int getId() {
         return id;
     }
@@ -127,5 +137,4 @@ public class Product {
     public void setMainImageUrl(String mainImageUrl) {
         this.mainImageUrl = mainImageUrl;
     }
-    
 }
