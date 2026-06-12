@@ -127,7 +127,7 @@
         <%-- ĐÃ SỬA: Đồng bộ toàn bộ link điều hướng sản phẩm về cấu trúc tổng hợp quản lý của AdminDashboard Servlet --%>
         <c:choose>
             <c:when test="${sessionScope.authRoleName == 'STAFF'}">
-                <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${param.activeTab == 'products' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/staff/products" class="${param.activeTab == 'products' ? 'active' : ''}">
                     <i class="fa-solid fa-box me-2"></i>Manage Products
                 </a>
             </c:when>
