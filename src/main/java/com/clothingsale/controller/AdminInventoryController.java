@@ -1,12 +1,11 @@
 package com.clothingsale.controller;
 
-import com.clothingsale.dao.InventoryDAO;
+import com.clothingsale.dao.AdminInventoryDAO;
 import com.clothingsale.model.ProductBatch;
 import com.clothingsale.model.User;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,55 +13,69 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet("/admin/inventory")
+@WebServlet(name = "AdminInventoryController", urlPatterns = {"/admin/inventory"})
 public class AdminInventoryController extends HttpServlet {
+
+    private final AdminInventoryDAO inventoryDAO = new AdminInventoryDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "list";
+        }
+
+        switch (action) {
+            case "new":
+                // Chuyển tới form nhập kho tiếng Anh độc lập của admin
+                request.getRequestDispatcher("/view/admin/import_stock.jsp").forward(request, response);
+                break;
+            case "list":
+            default:
+                List<ProductBatch> history = inventoryDAO.adminGetImportHistory();
+                request.setAttribute("importHistory", history);
+                request.getRequestDispatcher("/view/admin/inventory_list.jsp").forward(request, response);
+                break;
+        }
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
-        if ("import".equals(action)) {
+        if ("create".equals(action)) {
             HttpSession session = request.getSession();
             User loggedInUser = (User) session.getAttribute("user");
 
-            // Bảo vệ quyền kiểm tra đăng nhập hệ thống
-            if (loggedInUser == null) {
-                response.sendRedirect(request.getContextPath() + "/login.jsp");
-                return;
-            }
+            // Phòng ngừa lỗi và lấy ID của Admin đang thực hiện tác vụ
+            int adminUserId = (loggedInUser != null) ? loggedInUser.getId() : 1;
 
             try {
                 int variantId = Integer.parseInt(request.getParameter("variantId"));
-                int quantity = Integer.parseInt(request.getParameter("quantity"));
-                BigDecimal costPrice = new BigDecimal(request.getParameter("costPrice"));
-                BigDecimal salePrice = new BigDecimal(request.getParameter("salePrice"));
+                String batchCode = request.getParameter("batchCode");
+                int qty = Integer.parseInt(request.getParameter("quantity"));
+                BigDecimal cost = new BigDecimal(request.getParameter("costPrice"));
+                BigDecimal sale = new BigDecimal(request.getParameter("salePrice"));
                 String note = request.getParameter("note");
 
-                // Tự động sinh mã lô hàng theo thời gian thực tế
-                String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-                String batchCode = "BATCH-" + timeStamp;
+                ProductBatch newBatch = new ProductBatch();
+                newBatch.setVariantId(variantId);
+                newBatch.setBatchCode(batchCode);
+                newBatch.setInitialQuantity(qty);
+                newBatch.setCostPrice(cost);
+                newBatch.setSalePrice(sale);
 
-                ProductBatch batch = new ProductBatch();
-                batch.setVariantId(variantId);
-                batch.setBatchCode(batchCode);
-                batch.setCostPrice(costPrice);
-                batch.setSalePrice(salePrice);
-                batch.setInitialQuantity(quantity);
+                boolean success = inventoryDAO.adminExecuteStockImport(newBatch, adminUserId, note);
 
-                InventoryDAO inventoryDAO = new InventoryDAO();
-                boolean isSuccess = inventoryDAO.importGoods(batch, loggedInUser.getId(), note);
-
-                
-                if (isSuccess) {
-                    response.sendRedirect(request.getContextPath() + "/admin/dashboard?tab=products&status=success");
+                if (success) {
+                    response.sendRedirect(request.getContextPath() + "/admin/inventory?status=success");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/admin/dashboard?tab=products&status=error");
+                    response.sendRedirect(request.getContextPath() + "/admin/inventory?action=new&status=error");
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/view/admin/admin_product.jsp?status=error");
+                response.sendRedirect(request.getContextPath() + "/admin/inventory?action=new&status=invalid");
             }
         }
     }

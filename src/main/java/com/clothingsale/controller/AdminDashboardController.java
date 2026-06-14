@@ -18,11 +18,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "AdminDashboard", urlPatterns = { "/admin/dashboard", "/dashboard" } // Mở rộng tiếp nhận cả 2 URL để
-                                                                                        // quy hoạch chung
+@WebServlet(
+        name = "AdminDashboard",
+        urlPatterns = {"/admin/dashboard", "/dashboard"} // Mở rộng tiếp nhận cả 2 URL để quy hoạch chung
 )
-@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
-public class AdminDashboard extends HttpServlet {
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024 * 2,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 50
+)
+public class AdminDashboardController extends HttpServlet {
 
     private final AdminManageProductService adminProductService = new AdminManageProductService();
     private final StaffProductService staffProductService = new StaffProductService();
@@ -89,10 +94,9 @@ public class AdminDashboard extends HttpServlet {
                     String sku = request.getParameter("sku");
                     int variantId = Integer.parseInt(request.getParameter("variantId"));
                     String productName = request.getParameter("productName");
-                    String salePriceStr = request.getParameter("salePrice"); // Giá hiển thị, không đổi hoặc giữ nguyên
-                                                                             // theo cấu hình khoá
+                    String salePriceStr = request.getParameter("salePrice"); // Giá hiển thị, không đổi hoặc giữ nguyên theo cấu hình khoá
 
-                    staffProductService.updateProductDetails(sku, variantId, productName, roleName, username, action);
+                    staffProductService.updateProductDetails(sku, variantId, sku, action, sku, username);
                 }
             } else if ("DELETE".equals(action) && "ADMIN".equalsIgnoreCase(roleName)) {
                 int id = Integer.parseInt(request.getParameter("productId"));
@@ -109,9 +113,7 @@ public class AdminDashboard extends HttpServlet {
         }
 
         // Đồng bộ chuyển hướng quay trở lại màn hình chính của Tab tương ứng
-        String tabParam = request.getParameter("variantId") != null || "products".equals(request.getParameter("tab"))
-                ? "?tab=products"
-                : "";
+        String tabParam = request.getParameter("variantId") != null || "products".equals(request.getParameter("tab")) ? "?tab=products" : "";
         response.sendRedirect(request.getContextPath() + "/admin/dashboard" + tabParam);
     }
 }

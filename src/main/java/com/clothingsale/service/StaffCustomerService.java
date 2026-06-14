@@ -11,9 +11,6 @@ public class StaffCustomerService {
 
     private final StaffCustomerDAO dao = new StaffCustomerDAO();
 
-    // ----------------------------------------------------------------
-    // LIST / SEARCH
-    // ----------------------------------------------------------------
     public List<StaffCustomer> getCustomers(String keyword) {
         return dao.getAllCustomers(keyword);
     }
@@ -22,16 +19,12 @@ public class StaffCustomerService {
         return dao.getCustomerById(id);
     }
 
-    // ----------------------------------------------------------------
-    // ADD CUSTOMER - returns error map (empty = success)
-    // ----------------------------------------------------------------
     public Map<String, String> addCustomer(StaffCustomer c, String rawPassword) {
         Map<String, String> errors = validateNewCustomer(c);
         if (!errors.isEmpty()) {
             return errors;
         }
 
-        // Simple default password hash placeholder - replace with BCrypt in production
         String hashed = hashPassword(rawPassword);
         if (!dao.addCustomer(c, hashed)) {
             errors.put("general", "Failed to add the customer. Please try again.");
@@ -39,9 +32,6 @@ public class StaffCustomerService {
         return errors;
     }
 
-    // ----------------------------------------------------------------
-    // UPDATE CUSTOMER - returns error map (empty = success)
-    // ----------------------------------------------------------------
     public Map<String, String> updateCustomer(StaffCustomer c) {
         Map<String, String> errors = validateUpdateCustomer(c);
         if (!errors.isEmpty()) {
@@ -54,9 +44,6 @@ public class StaffCustomerService {
         return errors;
     }
 
-    // ----------------------------------------------------------------
-    // VALIDATION - NEW CUSTOMER (BR2, BR3)
-    // ----------------------------------------------------------------
     private Map<String, String> validateNewCustomer(StaffCustomer c) {
         Map<String, String> errors = new HashMap<>();
 
@@ -89,9 +76,6 @@ public class StaffCustomerService {
         return errors;
     }
 
-    // ----------------------------------------------------------------
-    // VALIDATION - UPDATE CUSTOMER (BR2, BR3)
-    // ----------------------------------------------------------------
     private Map<String, String> validateUpdateCustomer(StaffCustomer c) {
         Map<String, String> errors = new HashMap<>();
 
@@ -122,9 +106,6 @@ public class StaffCustomerService {
         return errors;
     }
 
-    // ----------------------------------------------------------------
-    // HELPERS
-    // ----------------------------------------------------------------
     private boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
     }
@@ -137,11 +118,7 @@ public class StaffCustomerService {
         return phone.matches("^0\\d{9}$");
     }
 
-    /**
-     * Placeholder - replace with BCrypt in production.
-     * e.g. return BCrypt.hashpw(raw, BCrypt.gensalt(12));
-     */
     private String hashPassword(String raw) {
-        return raw; // TODO: BCrypt
+        return raw;
     }
 }

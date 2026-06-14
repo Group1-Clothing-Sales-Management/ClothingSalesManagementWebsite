@@ -11,9 +11,6 @@ public class StaffCustomerDAO {
 
     private static final int CUSTOMER_ROLE_ID = 3;
 
-    // ----------------------------------------------------------------
-    // GET ALL CUSTOMERS (with optional search keyword)
-    // ----------------------------------------------------------------
     public List<StaffCustomer> getAllCustomers(String keyword) {
         List<StaffCustomer> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -47,9 +44,6 @@ public class StaffCustomerDAO {
         return list;
     }
 
-    // ----------------------------------------------------------------
-    // GET SINGLE CUSTOMER BY ID
-    // ----------------------------------------------------------------
     public StaffCustomer getCustomerById(int id) {
         String sql = "SELECT id, username, full_name, email, phone, avatar_url, status, " +
                 "       CONVERT(VARCHAR(19), created_at, 120) AS created_at, " +
@@ -70,9 +64,6 @@ public class StaffCustomerDAO {
         return null;
     }
 
-    // ----------------------------------------------------------------
-    // ADD NEW CUSTOMER (BR2, BR3)
-    // ----------------------------------------------------------------
     public boolean addCustomer(StaffCustomer c, String hashedPassword) {
         String sql = "INSERT INTO [User] (username, password, full_name, email, phone, status, role_id) " +
                 "VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)";
@@ -93,9 +84,6 @@ public class StaffCustomerDAO {
         return false;
     }
 
-    // ----------------------------------------------------------------
-    // UPDATE CUSTOMER (BR2, BR3)
-    // ----------------------------------------------------------------
     public boolean updateCustomer(StaffCustomer c) {
         String sql = "UPDATE [User] SET full_name = ?, email = ?, phone = ?, status = ?, updated_at = GETDATE() " +
                 "WHERE id = ? AND role_id = ?";
@@ -116,9 +104,6 @@ public class StaffCustomerDAO {
         return false;
     }
 
-    // ----------------------------------------------------------------
-    // CHECK DUPLICATE EMAIL (BR3)
-    // ----------------------------------------------------------------
     public boolean isEmailExists(String email, int excludeId) {
         String sql = "SELECT COUNT(*) FROM [User] WHERE email = ? AND id <> ?";
 
@@ -136,9 +121,6 @@ public class StaffCustomerDAO {
         return false;
     }
 
-    // ----------------------------------------------------------------
-    // CHECK DUPLICATE PHONE (BR3)
-    // ----------------------------------------------------------------
     public boolean isPhoneExists(String phone, int excludeId) {
         String sql = "SELECT COUNT(*) FROM [User] WHERE phone = ? AND id <> ?";
 
@@ -156,9 +138,6 @@ public class StaffCustomerDAO {
         return false;
     }
 
-    // ----------------------------------------------------------------
-    // CHECK DUPLICATE USERNAME (BR3)
-    // ----------------------------------------------------------------
     public boolean isUsernameExists(String username) {
         String sql = "SELECT COUNT(*) FROM [User] WHERE username = ?";
 
@@ -175,9 +154,6 @@ public class StaffCustomerDAO {
         return false;
     }
 
-    // ----------------------------------------------------------------
-    // HELPER: map ResultSet row -> StaffCustomer
-    // ----------------------------------------------------------------
     private StaffCustomer mapRow(ResultSet rs) throws SQLException {
         return new StaffCustomer(
                 rs.getInt("id"),

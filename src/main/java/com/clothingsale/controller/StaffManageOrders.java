@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpSession;
  * Shared servlet for Staff/Admin to view and manage orders.
  * This page focuses on the list view, detail view, and status changes.
  */
-@WebServlet(name = "StaffManageOrders", urlPatterns = {"/StaffManageOrders", "/staff/orders"})
+@WebServlet(name = "StaffManageOrders", urlPatterns = {"/StaffManageOrders", "/staff/orders", "/admin/orders"})
 public class StaffManageOrders extends HttpServlet {
 
     private final OrderManagementService service = new OrderManagementService();
@@ -65,7 +65,7 @@ public class StaffManageOrders extends HttpServlet {
         } else if ("updateStatus".equalsIgnoreCase(action)) {
             handleStatusChange(request, response, request.getParameter("newStatus"));
         } else {
-            response.sendRedirect(request.getContextPath() + "/staff/orders");
+            response.sendRedirect(buildOrdersBasePath(request));
         }
     }
 
@@ -128,9 +128,9 @@ public class StaffManageOrders extends HttpServlet {
         }
 
         if ("detail".equalsIgnoreCase(redirectMode)) {
-            response.sendRedirect(request.getContextPath() + "/staff/orders?action=view&id=" + orderId);
+            response.sendRedirect(buildOrdersBasePath(request) + "?action=view&id=" + orderId);
         } else {
-            response.sendRedirect(request.getContextPath() + "/staff/orders");
+            response.sendRedirect(buildOrdersBasePath(request));
         }
     }
 
@@ -164,5 +164,17 @@ public class StaffManageOrders extends HttpServlet {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    /**
+     * Return the current orders base URL so redirects preserve whether the user
+     * came from /admin/orders or /staff/orders.
+     */
+    private String buildOrdersBasePath(HttpServletRequest request) {
+        String path = request.getServletPath();
+        if ("/admin/orders".equals(path)) {
+            return request.getContextPath() + "/admin/orders";
+        }
+        return request.getContextPath() + "/staff/orders";
     }
 }

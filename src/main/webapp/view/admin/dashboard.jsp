@@ -19,6 +19,9 @@
                 background-color: #f8f9fa;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
+            .admin-layout-row {
+                align-items: flex-start;
+            }
             .stat-card {
                 border: none;
                 border-radius: 10px;
@@ -31,12 +34,27 @@
                 background: #fff;
                 border-radius: 8px;
             }
+            .product-thumb {
+                width: 50px;
+                height: 50px;
+                object-fit: cover;
+                border-radius: 0.375rem;
+                background: #f8fafc;
+            }
+            .thumb-fallback {
+                width: 50px;
+                height: 50px;
+                border-radius: 0.375rem;
+                font-size: 11px;
+                line-height: 1.1;
+            }
         </style>
     </head>
     <body>
 
         <div class="container-fluid">
-            <div class="row">
+            <%-- Giữ sidebar bám viewport, còn phần nội dung chính tự cuộn theo trang --%>
+            <div class="row admin-layout-row">
 
                 <jsp:include page="sidebar.jsp">
                     <jsp:param name="activeTab" value="${param.tab == 'products' ? 'products' : 'dashboard'}" />
@@ -84,10 +102,20 @@
                                                                     <td>
                                                                         <c:choose>
                                                                             <c:when test="${not empty p.mainImageUrl}">
-                                                                                <img src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}" class="img-thumbnail rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                                                                                <%-- Ảnh có thể bị thiếu hoặc sai đường dẫn, nên có fallback để không làm vỡ giao diện bảng --%>
+                                                                                <img
+                                                                                    src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
+                                                                                    class="product-thumb border shadow-sm"
+                                                                                    alt="${p.productName}"
+                                                                                    onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                                                                <div class="thumb-fallback bg-light border text-muted d-none d-flex align-items-center justify-content-center text-center px-1">
+                                                                                    No Img
+                                                                                </div>
                                                                             </c:when>
                                                                             <c:otherwise>
-                                                                                <div class="bg-light border text-muted d-flex align-items-center justify-content-center rounded" style="width: 50px; height: 50px; font-size: 11px;">No Img</div>
+                                                                                <div class="thumb-fallback bg-light border text-muted d-flex align-items-center justify-content-center text-center px-1">
+                                                                                    No Img
+                                                                                </div>
                                                                             </c:otherwise>
                                                                         </c:choose>
                                                                     </td>

@@ -10,9 +10,26 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
     <style>
+        /* Khoa chieu cao trang de sidebar va noi dung co thanh cuon rieng. */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body { background: #f5f6fa; font-family: 'Segoe UI', sans-serif; }
-        .main-wrapper { display: flex; min-height: 100vh; }
-        .content-area { flex: 1; padding: 28px 32px; min-width: 0; }
+        .main-wrapper {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .content-area {
+            flex: 1;
+            padding: 28px 32px;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
         .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
         .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
         .page-title .bi { color: #5c6bc0; margin-right: 8px; }

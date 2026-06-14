@@ -94,6 +94,14 @@ public class Login extends HttpServlet {
             return;
         }
 
+        // Prevent customer accounts from signing in via the admin/staff login form
+        String roleName = user.getRoleName();
+        if (roleName != null && "CUSTOMER".equalsIgnoreCase(roleName)) {
+            request.setAttribute("errorMessage", "This account is a customer account. Please sign in via the customer login page.");
+            request.getRequestDispatcher("/view/auth/login.jsp").forward(request, response);
+            return;
+        }
+
         HttpSession session = request.getSession(true);
         session.setMaxInactiveInterval(30 * 60);
         session.setAttribute("authUserId", user.getId());

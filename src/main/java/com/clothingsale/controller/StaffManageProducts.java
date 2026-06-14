@@ -71,7 +71,8 @@ public class StaffManageProducts extends HttpServlet {
         String sku = request.getParameter("sku");
         String variantIdStr = request.getParameter("variantId");
         String newName = request.getParameter("productName");
-        String salePriceStr = request.getParameter("salePrice");
+        String color = request.getParameter("color");
+        String size = request.getParameter("size");
 
         int variantId = 0;
         try {
@@ -82,7 +83,7 @@ public class StaffManageProducts extends HttpServlet {
             return;
         }
 
-        String result = productService.updateProductDetails(sku, variantId, newName, salePriceStr, currentStaff);
+        String result = productService.updateProductDetails(sku, variantId, newName, color, size, currentStaff);
 
         if (result.equals("SUCCESS")) {
             request.setAttribute("successMessage", "Product updated and inventory log saved successfully.");

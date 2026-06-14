@@ -15,14 +15,10 @@ public class StaffCustomerController extends HttpServlet {
 
     private final StaffCustomerService service = new StaffCustomerService();
 
-    // ----------------------------------------------------------------
-    // GET - list / search / show edit form / show add form
-    // ----------------------------------------------------------------
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // BR1: Staff must be logged in
         if (!isStaffLoggedIn(req, resp)) {
             return;
         }
@@ -46,9 +42,6 @@ public class StaffCustomerController extends HttpServlet {
         }
     }
 
-    // ----------------------------------------------------------------
-    // POST - add / update
-    // ----------------------------------------------------------------
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -69,9 +62,6 @@ public class StaffCustomerController extends HttpServlet {
         }
     }
 
-    // ----------------------------------------------------------------
-    // HANDLERS
-    // ----------------------------------------------------------------
     private void handleList(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
@@ -139,9 +129,6 @@ public class StaffCustomerController extends HttpServlet {
         }
     }
 
-    // ----------------------------------------------------------------
-    // HELPERS
-    // ----------------------------------------------------------------
     private StaffCustomer buildFromRequest(HttpServletRequest req, int id) {
         StaffCustomer c = new StaffCustomer();
         c.setId(id);
@@ -160,7 +147,6 @@ public class StaffCustomerController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/admin/login?error=unauthorized");
             return false;
         }
-        // Check role: only ADMIN or STAFF may access
         Object role = session.getAttribute("authRoleName");
         if (role == null
                 || (!"ADMIN".equalsIgnoreCase(role.toString()) && !"STAFF".equalsIgnoreCase(role.toString()))) {
