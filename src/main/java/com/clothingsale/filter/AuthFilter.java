@@ -84,6 +84,7 @@ public class AuthFilter extends HttpFilter {
         String lowerPath = path.toLowerCase(Locale.ROOT);
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
+                || lowerPath.startsWith("/home") 
                 || lowerPath.startsWith("/customer")
                 || lowerPath.startsWith("/cart")
                 || lowerPath.startsWith("/admin/login")
