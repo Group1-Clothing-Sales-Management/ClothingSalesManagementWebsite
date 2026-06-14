@@ -5,398 +5,500 @@
 <html>
 
     <head>
+
         <title>Clothing Sale</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
         <style>
 
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: Arial, sans-serif;
+            :root{
+                --navy:#172033;
+                --navy-light:#22304d;
+                --teal:#0f9b8e;
+                --teal-light:#19b8aa;
+                --bg:#f4f8fb;
+                --card:#ffffff;
+                --text:#1f2937;
+                --muted:#6b7280;
             }
 
-            body {
-                background: #f5f5f5;
+            body{
+                background:
+                    radial-gradient(circle at top left,
+                    rgba(15,155,142,.08),
+                    transparent 30%),
+                    radial-gradient(circle at right top,
+                    rgba(23,32,51,.08),
+                    transparent 25%),
+                    var(--bg);
+
+                font-family:'Segoe UI',sans-serif;
+                color:var(--text);
             }
 
+            /* NAVBAR */
 
-            /* ================= HEADER ================= */
-
-            .header {
-                background: #d70018;
-                height: 70px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+            .navbar{
+                background:rgba(255,255,255,.85)!important;
+                backdrop-filter:blur(12px);
+                box-shadow:0 5px 20px rgba(0,0,0,.05)!important;
             }
 
-            .logo {
-                color: white;
-                font-size: 28px;
-                font-weight: bold;
+            .navbar-brand{
+                color:var(--navy)!important;
+                font-size:24px;
             }
 
-
-            /* ================= CONTAINER ================= */
-
-            .container {
-                width: 90%;
-                margin: 30px auto;
+            .navbar-brand i{
+                color:var(--teal);
             }
 
+            /* BUTTON */
 
-            /* ================= SEARCH + FILTER ================= */
+            .btn-danger{
+                background:linear-gradient(
+                    135deg,
+                    var(--navy),
+                    var(--teal)
+                    ) !important;
 
-            .filter-box {
-                background: white;
-                padding: 20px;
-                border-radius: 12px;
-                margin-bottom: 25px;
-
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                flex-wrap: wrap;
-
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                border:none!important;
             }
 
-
-            /* Input và Select chung */
-
-            .filter-box input,
-            .filter-box select {
-                height: 42px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 0 15px;
-                outline: none;
-                font-size: 15px;
+            .btn-danger:hover{
+                background:linear-gradient(
+                    135deg,
+                    var(--navy-light),
+                    var(--teal-light)
+                    ) !important;
             }
 
-
-            /* Ô tìm kiếm lớn hơn */
-
-            .filter-box input[name="keyword"] {
-                flex: 3;
+            .btn-outline-dark{
+                border:2px solid var(--navy);
+                color:var(--navy);
             }
 
-
-            /* Min Price, Max Price và Sort nhỏ hơn */
-
-            .filter-box input[name="minPrice"],
-            .filter-box input[name="maxPrice"],
-            .filter-box select {
-                flex: 1;
+            .btn-outline-dark:hover{
+                background:var(--navy);
+                color:white;
             }
 
+            /* HERO */
 
-            /* Focus khi chọn */
-
-            .filter-box input:focus,
-            .filter-box select:focus {
-                border-color: #d70018;
+            .hero{
+                padding:90px 0;
             }
 
-
-            /* ================= TITLE ================= */
-
-            .title {
-                margin-bottom: 20px;
-                font-size: 28px;
-                color: #222;
+            .hero-title{
+                font-size:58px;
+                font-weight:800;
+                color:var(--navy);
+                line-height:1.1;
             }
 
-
-            /* ================= PRODUCT LIST ================= */
-
-            .product-list {
-                display: grid;
-                grid-template-columns: repeat(5, 1fr);
-                gap: 20px;
+            .hero-text{
+                color:var(--muted);
+                font-size:18px;
             }
 
-
-            /* ================= PRODUCT CARD ================= */
-
-            .product-card {
-                background: white;
-                border-radius: 12px;
-                padding: 15px;
-                text-align: center;
-                transition: 0.3s;
-                cursor: pointer;
+            .hero-image{
+                width:100%;
+                border-radius:25px;
+                box-shadow:0 20px 50px rgba(23,32,51,.15);
             }
 
+            /* SEARCH CARD */
 
-            .product-card:hover {
-                transform: translateY(-8px);
-                box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            .search-card{
+                border:none;
+                border-radius:24px;
+                background:white;
+                box-shadow:0 15px 40px rgba(0,0,0,.08);
             }
 
-
-            /* Hình ảnh sản phẩm */
-
-            .product-card img {
-                width: 100%;
-                height: 230px;
-                object-fit: cover;
+            .form-control,
+            .form-select{
+                border-radius:12px;
+                padding:12px;
             }
 
-
-            /* Tên sản phẩm */
-
-            .name {
-                margin: 12px 0;
-                font-size: 17px;
-                height: 45px;
-                overflow: hidden;
-                color: #333;
+            .form-control:focus,
+            .form-select:focus{
+                border-color:var(--teal);
+                box-shadow:0 0 0 .25rem rgba(15,155,142,.15);
             }
 
+            /* SECTION */
 
-            /* Giá */
-
-            .price {
-                color: #d70018;
-                font-size: 20px;
-                font-weight: bold;
-                min-height: 30px;
+            .section-title{
+                font-size:34px;
+                font-weight:800;
+                color:var(--navy);
             }
 
-
-            /* Button */
-
-            .btn {
-                margin-top: 12px;
-                background: #d70018;
-                color: white;
-                border: none;
-                padding: 10px 18px;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: 0.3s;
+            .section-subtitle{
+                color:var(--muted);
             }
 
+            /* PRODUCT CARD */
 
-            .btn:hover {
-                background: black;
+            .product-card{
+                border:none;
+                border-radius:24px;
+                overflow:hidden;
+                background:white;
+                transition:.3s;
+                box-shadow:0 8px 25px rgba(0,0,0,.05);
             }
 
-
-            /* Không có sản phẩm */
-
-            .empty-message {
-                text-align: center;
-                font-size: 22px;
-                color: #777;
-                margin-top: 50px;
+            .product-card:hover{
+                transform:translateY(-8px);
+                box-shadow:0 20px 45px rgba(23,32,51,.15);
             }
 
+            .product-image{
+                height:300px;
+                object-fit:cover;
+            }
 
-            /* ================= RESPONSIVE ================= */
+            .card-body h5{
+                color:var(--navy);
+            }
 
-            /* Tablet */
-            @media (max-width: 1024px) {
+            .text-danger{
+                color:var(--teal)!important;
+            }
 
-                .product-list {
-                    grid-template-columns: repeat(3, 1fr);
+            .badge.bg-primary{
+                background:rgba(15,155,142,.15)!important;
+                color:var(--teal)!important;
+            }
+
+            /* PRODUCT FOOTER */
+
+            .card-footer{
+                background:white!important;
+            }
+
+            .card-footer .btn-danger{
+                border-radius:12px;
+            }
+
+            /* EMPTY PRODUCT */
+
+            .fa-box-open{
+                color:var(--teal)!important;
+            }
+
+            /* FOOTER */
+
+            footer{
+                background:linear-gradient(
+                    135deg,
+                    var(--navy),
+                    #1f2c45
+                    )!important;
+            }
+
+            footer h4,
+            footer h5{
+                color:white;
+            }
+
+            footer p,
+            footer li{
+                color:#d1d5db;
+            }
+
+            hr{
+                border-color:rgba(255,255,255,.2);
+            }
+
+            /* RESPONSIVE */
+
+            @media(max-width:768px){
+
+                .hero-title{
+                    font-size:42px;
                 }
 
+                .hero{
+                    text-align:center;
+                }
+
+                .hero-image{
+                    margin-top:30px;
+                }
             }
 
-
-            /* Điện thoại */
-            @media (max-width: 768px) {
-
-                .filter-box {
-                    flex-direction: column;
-                }
-
-                .filter-box input,
-                .filter-box select {
-                    width: 100%;
-                }
-
-                .product-list {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-
-            }
-
-
-            /* Điện thoại nhỏ */
-            @media (max-width: 480px) {
-
-                .product-list {
-                    grid-template-columns: 1fr;
-                }
-
-                .logo {
-                    font-size: 22px;
-                }
-
-                .title {
-                    font-size: 24px;
-                }
-
-            }
         </style>
 
     </head>
 
-
     <body>
 
-        <!-- Header -->
+        <!-- NAVBAR -->
 
-        <div class="header">
+        <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
 
-            <div class="logo">
-                Clothing Sale
+            <div class="container">
+
+                <a class="navbar-brand fw-bold">
+
+                    <i class="fa-solid fa-shirt"></i>
+                    Clothing Sale
+
+                </a>
+
+                <div class="d-flex gap-2">
+
+                    <button class="btn btn-outline-dark">
+
+                        Cart
+
+                    </button>
+
+                    <a href="${pageContext.request.contextPath}/customer/login"
+                       class="btn btn-danger">
+                        Login
+                    </a>
+
+                </div>
+
             </div>
 
-        </div>
+        </nav>
 
+        <!-- HERO -->
 
-        <!-- Main Content -->
+        <section class="hero">
+
+            <div class="container">
+
+                <div class="row align-items-center">
+
+                    <div class="col-lg-6">
+
+                        <h1 class="hero-title">
+
+                            Discover New Fashion Trends
+
+                        </h1>
+
+                        <p class="hero-text mt-3">
+
+                            Explore premium clothing, hoodies, sneakers,
+                            jeans and accessories at affordable prices.
+
+                        </p>
+
+                        <a href="#products"
+                           class="btn btn-danger btn-lg mt-3">
+
+                            Shop Now
+
+                        </a>
+
+                    </div>
+
+                    <div class="col-lg-6">
+
+                        <img
+                            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8"
+                            class="hero-image">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- MAIN -->
 
         <div class="container">
 
-
-            <!-- Filter -->
+            <!-- SEARCH + FILTER -->
 
             <form action="${pageContext.request.contextPath}/home"
                   method="GET"
-                  class="filter-box">
+                  class="card search-card p-4 mb-5">
 
+                <div class="row g-3">               
+                    <div class="col-md-2">
 
-                <input
-                    type="number"
-                    name="minPrice"
-                    value="${param.minPrice}"
-                    placeholder="Minimum Price">
+                        <input
+                            type="number"
+                            name="minPrice"
+                            value="${param.minPrice}"
+                            class="form-control"
+                            placeholder="Min Price">
 
+                    </div>
 
-                <input
-                    type="number"
-                    name="maxPrice"
-                    value="${param.maxPrice}"
-                    placeholder="Maximum Price">
+                    <div class="col-md-2">
 
+                        <input
+                            type="number"
+                            name="maxPrice"
+                            value="${param.maxPrice}"
+                            class="form-control"
+                            placeholder="Max Price">
 
-                <select name="sort" onchange="this.form.submit()">
+                    </div>
 
-                    <option value="">
-                        Sort By
-                    </option>
+                    <div class="col-md-2">
 
+                        <select
+                            name="sort"
+                            class="form-select">
 
-                    <option value="priceAsc"
-                            ${param.sort == 'priceAsc' ? 'selected' : ''}>
+                            <option value="">
+                                Sort By
+                            </option>
 
-                        Price: Low to High
+                            <option value="priceAsc">
+                                Price ↑
+                            </option>
 
-                    </option>
+                            <option value="priceDesc">
+                                Price ↓
+                            </option>
 
+                            <option value="newest">
+                                Newest
+                            </option>
 
-                    <option value="priceDesc"
-                            ${param.sort == 'priceDesc' ? 'selected' : ''}>
+                        </select>
 
-                        Price: High to Low
+                    </div>
+                    <div class="col-md-4">
 
-                    </option>
+                        <input
+                            type="text"
+                            name="keyword"
+                            value="${param.keyword}"
+                            class="form-control"
+                            placeholder="Search products...">
 
+                    </div>
 
-                    <option value="newest"
-                            ${param.sort == 'newest' ? 'selected' : ''}>
+                    <div class="col-md-2">
 
-                        Newest Products
+                        <button
+                            class="btn btn-danger w-100">
 
-                    </option>
+                            Search
 
-                </select>
+                        </button>
 
+                    </div>
 
-                <!-- Search -->
-
-                <form action="${pageContext.request.contextPath}/home"
-                      method="GET"
-                      class="search-box">
-
-                    <input
-                        type="text"
-                        name="keyword"
-                        value="${param.keyword}"
-                        placeholder="Search clothes, shoes, accessories...">
-
-                </form>
+                </div>
 
             </form>
-            <!-- Product Section -->
 
-            <h1 class="title">
-                Featured Products
-            </h1>
+            <!-- PRODUCT SECTION TITLE -->
 
+            <div class="mb-4">
+
+                <h2 class="section-title">
+
+                    Featured Products
+
+                </h2>
+
+                <p class="section-subtitle">
+
+                    Best selling products this season
+
+                </p>
+
+            </div>
+            <!-- PRODUCT LIST -->
 
             <c:if test="${not empty products}">
 
-                <div class="product-list">
+                <div id="products"
+                     class="row g-4">
 
-                    <c:forEach items="${products}" var="p">
+                    <c:forEach items="${products}"
+                               var="p">
 
-                        <div class="product-card">
+                        <div class="col-lg-3 col-md-4 col-sm-6">
 
-                            <!-- Product Image -->
+                            <div class="card product-card h-100">
 
-                            <img 
-                                src="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}"
-                                alt="${p.productName}">
+                                <!-- IMAGE -->
 
+                                <img
+                                    src="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}"
+                                    alt="${p.productName}"
+                                    class="card-img-top product-image">
 
-                            <!-- Product Name -->
+                                <!-- BODY -->
 
-                            <h3 class="name">
+                                <div class="card-body">
 
-                                ${p.productName}
+                                    <span class="badge bg-primary mb-2">
+                                        Trending
+                                    </span>
 
-                            </h3>
+                                    <h5 class="fw-bold">
 
+                                        ${p.productName}
 
-                            <!-- Product Price -->
+                                    </h5>
 
-                            <p class="price">
+                                    <p class="text-secondary small">
 
-                                <c:choose>
+                                        Premium fashion product
 
-                                    <c:when test="${not empty p.variants}">
+                                    </p>
 
-                                        ${p.variants[0].salePrice} VND
+                                    <c:choose>
 
-                                    </c:when>
+                                        <c:when test="${not empty p.variants}">
 
+                                            <h4 class="text-danger fw-bold">
 
-                                    <c:otherwise>
+                                                ${p.variants[0].salePrice} $
 
-                                        Price not available
+                                            </h4>
 
-                                    </c:otherwise>
+                                        </c:when>
 
-                                </c:choose>
+                                        <c:otherwise>
 
-                            </p>
+                                            <h4 class="text-secondary">
 
+                                                Contact
 
-                            <!-- Button -->
+                                            </h4>
 
-                            <button class="btn">
+                                        </c:otherwise>
 
-                                View Details
+                                    </c:choose>
 
-                            </button>
+                                </div>
 
+                                <!-- FOOTER -->
+
+                                <div class="card-footer bg-white border-0">
+
+                                    <button
+                                        class="btn btn-danger w-100">
+
+                                        View Details
+
+                                    </button>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
@@ -407,21 +509,110 @@
             </c:if>
 
 
-            <!-- No Product -->
+            <!-- EMPTY PRODUCT -->
 
             <c:if test="${empty products}">
 
-                <div class="empty-message">
+                <div class="text-center py-5">
 
-                    No products found.
+                    <i class="fa-solid fa-box-open fa-4x text-secondary"></i>
+
+                    <h3 class="mt-4">
+
+                        No Products Found
+
+                    </h3>
+
+                    <p class="text-secondary">
+
+                        Please try another keyword.
+
+                    </p>
 
                 </div>
 
             </c:if>
 
-
         </div>
 
+        <!-- FOOTER -->
+
+        <footer class="bg-dark text-white mt-5">
+
+            <div class="container py-5">
+
+                <div class="row">
+
+                    <div class="col-md-4">
+
+                        <h4>
+
+                            Clothing Sale
+
+                        </h4>
+
+                        <p class="text-light">
+
+                            Modern fashion for everyone.
+
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <h5>
+
+                            Categories
+
+                        </h5>
+
+                        <ul class="list-unstyled">
+
+                            <li>T-Shirts</li>
+                            <li>Hoodies</li>
+                            <li>Jeans</li>
+                            <li>Sneakers</li>
+
+                        </ul>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <h5>
+
+                            Contact
+
+                        </h5>
+
+                        <p>
+
+                            Email: support@clothingsale.com
+                        </p>
+
+                        <p>
+
+                            Phone: +84 123 456 789
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <div class="text-center">
+
+                    © 2026 Clothing Sale. All Rights Reserved.
+
+                </div>
+
+            </div>
+
+        </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     </body>
 

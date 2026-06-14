@@ -8,14 +8,15 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomerProductDAO { 
+public class CustomerProductDAO {
 
     public List<Product> getProducts(
             String keyword,
             Integer categoryId,
             Integer brandId,
             Double minPrice,
-            Double maxPrice) {
+            Double maxPrice,
+            String sort) {
 
         List<Product> list = new ArrayList<>();
 
@@ -67,17 +68,14 @@ public class CustomerProductDAO {
 
         sql.append("ORDER BY p.created_at DESC");
 
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             // Gán tham số
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
 
-
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
 
@@ -108,28 +106,22 @@ public class CustomerProductDAO {
         return list;
     }
 
-
     // Lấy các Variant của một Product
     public List<ProductVariant> getVariantsByProductId(int productId) {
 
         List<ProductVariant> list = new ArrayList<>();
 
-        String sql =
-                "SELECT id, product_id, sku, cost_price, "
+        String sql
+                = "SELECT id, product_id, sku, cost_price, "
                 + "sale_price, stock_quantity, status "
                 + "FROM Product_Variant "
                 + "WHERE product_id = ?";
 
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
-
-            try (ResultSet rs = ps.executeQuery()) {
-
+            try ( ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
 
@@ -151,7 +143,6 @@ public class CustomerProductDAO {
                             rs.getString("status")
                     );
 
-
                     list.add(variant);
                 }
 
@@ -160,12 +151,11 @@ public class CustomerProductDAO {
         } catch (SQLException e) {
 
             System.err.println(
-                "❌ Lỗi lấy Product Variant:"
+                    "❌ Lỗi lấy Product Variant:"
             );
 
             e.printStackTrace();
         }
-
 
         return list;
     }

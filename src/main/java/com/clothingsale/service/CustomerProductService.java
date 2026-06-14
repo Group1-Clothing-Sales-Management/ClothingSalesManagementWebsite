@@ -10,37 +10,33 @@ public class CustomerProductService {
 
     private final CustomerProductDAO productDAO = new CustomerProductDAO();
 
-
     public List<Product> getProducts(
             String keyword,
             Integer categoryId,
             Integer brandId,
             Double minPrice,
-            Double maxPrice) {
+            Double maxPrice,
+            String sort) {
 
-        // Lấy danh sách Product từ DAO
         List<Product> products = productDAO.getProducts(
                 keyword,
                 categoryId,
                 brandId,
                 minPrice,
-                maxPrice
+                maxPrice,
+                sort
         );
 
-
-        // Gắn danh sách Variant vào từng Product
         for (Product product : products) {
 
-            List<ProductVariant> variants =
-                    productDAO.getVariantsByProductId(product.getId());
+            List<ProductVariant> variants
+                    = productDAO.getVariantsByProductId(product.getId());
 
             product.setVariants(variants);
         }
 
-
         return products;
     }
-
 
     public List<ProductVariant> getVariantsByProductId(int productId) {
 

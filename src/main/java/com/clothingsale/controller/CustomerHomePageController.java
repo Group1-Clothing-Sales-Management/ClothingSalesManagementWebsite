@@ -37,7 +37,8 @@ public class CustomerHomePageController extends HttpServlet {
 
         String minPriceStr = request.getParameter("minPrice");
         String maxPriceStr = request.getParameter("maxPrice");
-
+        String sort = request.getParameter("sort");
+        
         Integer categoryId = null;
         Integer brandId = null;
         Double minPrice = null;
@@ -66,7 +67,8 @@ public class CustomerHomePageController extends HttpServlet {
                     categoryId,
                     brandId,
                     minPrice,
-                    maxPrice
+                    maxPrice,
+                    sort
             );
 
             request.setAttribute("products", products);
