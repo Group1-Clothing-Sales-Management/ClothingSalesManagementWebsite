@@ -140,7 +140,7 @@ public class CartController extends HttpServlet {
 
 				LOGGER.log(Level.FINE, "[CartController] Cart after add: {0}", cartSummary(cart));
 
-				Object authUserIdObj = session.getAttribute("authUserId");
+				authUserIdObj = session.getAttribute("authUserId");
 				if (authUserIdObj instanceof Integer) {
 					int userId = (Integer) authUserIdObj;
 					try {
