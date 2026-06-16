@@ -63,7 +63,7 @@
 
             <div class="main-content">
                 <div class="container-fluid">
-                    
+
                     <c:if test="${param.status == 'success'}">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <strong>Thành công!</strong> Thao tác xử lý dữ liệu sản phẩm hoàn tất.
@@ -138,17 +138,28 @@
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td class="text-center action-btns">
-                                                <button class="btn btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editProductModal${p.id}" title="Edit">
-                                                    <i class="fa-solid fa-pen"></i>
-                                                </button>
+                                            <td class="text-center">
+                                                <div class="d-inline-flex gap-2">
+                                                    <a href="${pageContext.request.contextPath}/admin/manage-product?action=view&id=${prod.id}" 
+                                                       class="btn btn-sm btn-outline-info d-flex align-items-center" 
+                                                       title="View Details">
+                                                        <i class="fa-solid fa-eye me-1"></i>View
+                                                    </a>
 
-                                                <form action="${pageContext.request.contextPath}/admin/manage-product?action=DELETE" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="margin:0;">
-                                                    <input type="hidden" name="productId" value="${p.id}">
-                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                    <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${prod.id}" 
+                                                       class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                                                        <i class="fa-solid fa-pen me-1"></i>Edit
+                                                    </a>
+
+                                                    <form action="${pageContext.request.contextPath}/admin/manage-product" method="post" 
+                                                          onsubmit="return confirm('Are you sure you want to delete this product?');" class="m-0">
+                                                        <input type="hidden" name="action" value="DELETE">
+                                                        <input type="hidden" name="productId" value="${prod.id}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger d-flex align-items-center">
+                                                            <i class="fa-solid fa-trash me-1"></i>Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     </c:forEach>

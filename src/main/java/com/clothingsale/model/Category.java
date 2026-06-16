@@ -5,6 +5,7 @@ public class Category {
     private int id;
     private String categoryName;
     private String slug;
+    private int status; // Thêm trường này theo đúng thực tế DB đang check
 
     public Category() {
     }
@@ -31,5 +32,13 @@ public class Category {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }
