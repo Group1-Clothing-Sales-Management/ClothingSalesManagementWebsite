@@ -33,11 +33,69 @@ public class CustomerRegister extends HttpServlet {
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
 
-        request.setAttribute("username", username != null ? username : "");
+        // normalize
+        username = username == null ? "" : username.trim();
+        password = password == null ? "" : password;
+        fullName = fullName == null ? "" : fullName.trim();
+        email = email == null ? "" : email.trim();
+        phone = phone == null ? "" : phone.trim();
 
-        if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()
-                || fullName == null || fullName.trim().isEmpty() || email == null || email.trim().isEmpty()) {
+        request.setAttribute("username", username);
+
+        // basic validation
+        if (username.isEmpty() || password.isEmpty() || fullName.isEmpty() || email.isEmpty()) {
             request.setAttribute("errorMessage", "Please fill required fields.");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (username.length() > 50) {
+            request.setAttribute("errorMessage", "Username is too long (max 50 chars).");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (password.length() < 6) {
+            request.setAttribute("errorMessage", "Password must be at least 6 characters.");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (password.length() > 255) {
+            request.setAttribute("errorMessage", "Password is too long.");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (fullName.length() > 255) {
+            request.setAttribute("errorMessage", "Full name is too long.");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
+        // basic email format check
+        String emailRegex = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
+        if (!email.matches(emailRegex)) {
+            request.setAttribute("errorMessage", "Invalid email format.");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
+        // phone optional but if provided must be 10 digits
+            if (!phone.isEmpty() && !phone.matches("\\d{10}")) {
+                request.setAttribute("errorMessage", "Invalid phone number. Expect 10 digits.");
+                request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+                return;
+        }
+
+        // check duplicates
+        if (userDAO.findByUsername(username) != null) {
+            request.setAttribute("errorMessage", "Username already exists.");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+        if (userDAO.findByUsernameOrEmail(email) != null) {
+            request.setAttribute("errorMessage", "Email already in use.");
             request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
             return;
         }
