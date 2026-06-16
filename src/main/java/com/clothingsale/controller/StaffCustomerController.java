@@ -30,6 +30,7 @@ public class StaffCustomerController extends HttpServlet {
 
         switch (action) {
             case "add":
+                req.setAttribute("pageMode", "add");
                 req.getRequestDispatcher("/StaffManageCustomers.jsp").forward(req, resp);
                 break;
 
