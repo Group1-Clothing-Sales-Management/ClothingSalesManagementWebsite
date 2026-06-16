@@ -73,6 +73,14 @@ public class CustomerRegister extends HttpServlet {
             return;
         }
 
+        // fullName must contain only letters and spaces (no digits or special characters)
+        // allow Unicode letters for Vietnamese names
+        if (!fullName.matches("^[\\p{L} ]+$")) {
+            request.setAttribute("errorMessage", "Full name must contain only letters and spaces (no digits or special characters). Example: Nguyễn Văn A");
+            request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
+            return;
+        }
+
         // basic email format check
         String emailRegex = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
         if (!email.matches(emailRegex)) {
@@ -81,11 +89,13 @@ public class CustomerRegister extends HttpServlet {
             return;
         }
 
-        // phone optional but if provided must be 10 digits
-            if (!phone.isEmpty() && !phone.matches("\\d{10}")) {
-                request.setAttribute("errorMessage", "Invalid phone number. Expect 10 digits.");
+        // phone optional but if provided must be 10 digits, start with single 0 (not '00'), e.g. 0123456789
+        if (!phone.isEmpty()) {
+            if (!phone.matches("^0[1-9]\\d{8}$")) {
+                request.setAttribute("errorMessage", "Invalid phone number. Expect 10 digits starting with single 0 (e.g. 0123456789), not 00...");
                 request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
                 return;
+            }
         }
 
         // check duplicates
