@@ -33,15 +33,41 @@ public class CustomerLogin extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()) {
+        if (username != null) username = username.trim();
+        if (password == null) password = "";
+
+        HttpSession session = request.getSession(true);
+        // simple session-based rate limit: lock after 5 failed attempts for 5 minutes
+        Object lockedObj = session.getAttribute("loginLockedUntil");
+        if (lockedObj instanceof Long) {
+            long until = (Long) lockedObj;
+            if (System.currentTimeMillis() < until) {
+                request.setAttribute("errorMessage", "Account temporarily locked. Please try again later.");
+                request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
+                return;
+            } else {
+                session.removeAttribute("loginLockedUntil");
+                session.removeAttribute("loginAttempts");
+            }
+        }
+
+        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             request.setAttribute("errorMessage", "Please enter username and password.");
             request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
             return;
         }
-
-        User user = userDAO.findByUsernameOrEmail(username.trim());
+        User user = userDAO.findByUsernameOrEmail(username);
         if (user == null) {
-            request.setAttribute("errorMessage", "Invalid credentials.");
+            // increment attempts
+            Integer at = (Integer) session.getAttribute("loginAttempts");
+            at = (at == null) ? 1 : at + 1;
+            session.setAttribute("loginAttempts", at);
+            if (at >= 5) {
+                session.setAttribute("loginLockedUntil", System.currentTimeMillis() + 5 * 60 * 1000);
+                request.setAttribute("errorMessage", "Account temporarily locked due to multiple failed attempts.");
+            } else {
+                request.setAttribute("errorMessage", "Tài khoản không tồn tại");
+            }
             request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
             return;
         }
@@ -56,17 +82,26 @@ public class CustomerLogin extends HttpServlet {
         try {
             boolean ok = com.clothingsale.util.SecurityUtil.checkPassword(password, user.getPassword());
             if (!ok) {
-                request.setAttribute("errorMessage", "Invalid credentials.");
+                Integer at = (Integer) session.getAttribute("loginAttempts");
+                at = (at == null) ? 1 : at + 1;
+                session.setAttribute("loginAttempts", at);
+                if (at >= 5) {
+                    session.setAttribute("loginLockedUntil", System.currentTimeMillis() + 5 * 60 * 1000);
+                    request.setAttribute("errorMessage", "Account temporarily locked due to multiple failed attempts.");
+                } else {
+                    request.setAttribute("errorMessage", "Sai mật khẩu");
+                }
                 request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
                 return;
             }
+            // successful login -> clear attempts
+            session.removeAttribute("loginAttempts");
+            session.removeAttribute("loginLockedUntil");
         } catch (IllegalArgumentException ex) {
             request.setAttribute("errorMessage", "Invalid credentials.");
             request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
             return;
         }
-
-        HttpSession session = request.getSession(true);
         // Set both customer-specific and unified auth attributes so filters/controllers work consistently
         session.setAttribute("customerId", user.getId());
         session.setAttribute("customerUsername", user.getUsername());

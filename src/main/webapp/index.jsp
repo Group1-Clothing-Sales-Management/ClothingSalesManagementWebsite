@@ -314,6 +314,12 @@
             }
         }
     </style>
+    <style>
+        .icon-add-cart{
+            width:46px;height:46px;border-radius:10px;border:2px solid #f1f1f1;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:#e74c3c;font-size:20px;box-shadow:0 6px 18px rgba(231,76,60,0.08);transition:transform .12s,box-shadow .12s}
+        .icon-add-cart:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(231,76,60,0.12)}
+        .icon-add-cart i{pointer-events:none}
+    </style>
 </head>
 <body>
     <div class="page-shell">
@@ -495,7 +501,19 @@
                                     <p class="text-secondary small mb-3">Chất vải mềm, form gọn, phối được với nhiều phong cách.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="fw-bold fs-5 text-dark">₫<%= moneyFormat.format(150000) %></span>
-                                        <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                        <div class="d-flex align-items-center" style="gap:8px">
+                                            <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                            <form action="<%= ctx %>/cart/add" method="post" style="margin:0">
+                                                <input type="hidden" name="variantId" value="22" />
+                                                <input type="hidden" name="productId" value="22" />
+                                                <input type="hidden" name="productName" value="Áo thun basic" />
+                                                <input type="hidden" name="attributes" value="" />
+                                                <input type="hidden" name="price" value="150000" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <input type="hidden" name="imageUrl" value="<%= ctx %>/uploads/product/prod22-main.jpg" />
+                                                <button type="submit" class="icon-add-cart" title="Thêm vào giỏ"><i class="fa-solid fa-cart-plus"></i></button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -515,7 +533,19 @@
                                     <p class="text-secondary small mb-3">Dáng đẹp, dễ mặc, phù hợp đi làm lẫn đi chơi.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="fw-bold fs-5 text-dark">₫<%= moneyFormat.format(350000) %></span>
-                                        <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                        <div class="d-flex align-items-center" style="gap:8px">
+                                            <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                            <form action="<%= ctx %>/cart/add" method="post" style="margin:0">
+                                                <input type="hidden" name="variantId" value="17" />
+                                                <input type="hidden" name="productId" value="17" />
+                                                <input type="hidden" name="productName" value="Quần jeans" />
+                                                <input type="hidden" name="attributes" value="" />
+                                                <input type="hidden" name="price" value="350000" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <input type="hidden" name="imageUrl" value="<%= ctx %>/uploads/product/prod17-main.jpg" />
+                                                <button type="submit" class="icon-add-cart" title="Thêm vào giỏ"><i class="fa-solid fa-cart-plus"></i></button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -535,7 +565,19 @@
                                     <p class="text-secondary small mb-3">Thiết kế tối giản, dễ layer, hợp thời tiết chuyển mùa.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="fw-bold fs-5 text-dark">₫<%= moneyFormat.format(420000) %></span>
-                                        <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                        <div class="d-flex align-items-center" style="gap:8px">
+                                            <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                            <form action="<%= ctx %>/cart/add" method="post" style="margin:0">
+                                                <input type="hidden" name="variantId" value="16" />
+                                                <input type="hidden" name="productId" value="16" />
+                                                <input type="hidden" name="productName" value="Áo khoác nhẹ" />
+                                                <input type="hidden" name="attributes" value="" />
+                                                <input type="hidden" name="price" value="420000" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <input type="hidden" name="imageUrl" value="<%= ctx %>/uploads/product/prod16-main.jpg" />
+                                                <button type="submit" class="icon-add-cart" title="Thêm vào giỏ"><i class="fa-solid fa-cart-plus"></i></button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -555,7 +597,19 @@
                                     <p class="text-secondary small mb-3">Mềm mại, tôn dáng, phù hợp đi tiệc nhẹ hoặc hẹn hò.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="fw-bold fs-5 text-dark">₫<%= moneyFormat.format(280000) %></span>
-                                        <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                        <div class="d-flex align-items-center" style="gap:8px">
+                                            <a class="btn btn-sm btn-primary-soft rounded-pill" href="<%= primaryHref %>">Mua ngay</a>
+                                            <form action="<%= ctx %>/cart/add" method="post" style="margin:0">
+                                                <input type="hidden" name="variantId" value="15" />
+                                                <input type="hidden" name="productId" value="15" />
+                                                <input type="hidden" name="productName" value="Váy nữ" />
+                                                <input type="hidden" name="attributes" value="" />
+                                                <input type="hidden" name="price" value="280000" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <input type="hidden" name="imageUrl" value="<%= ctx %>/uploads/product/prod15-main.jpg" />
+                                                <button type="submit" class="icon-add-cart" title="Thêm vào giỏ"><i class="fa-solid fa-cart-plus"></i></button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

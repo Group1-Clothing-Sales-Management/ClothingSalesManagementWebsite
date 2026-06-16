@@ -487,15 +487,18 @@
 
                                 <!-- FOOTER -->
 
-                                <div class="card-footer bg-white border-0">
-
-                                    <button
-                                        class="btn btn-danger w-100">
-
-                                        View Details
-
-                                    </button>
-
+                                <div class="card-footer bg-white border-0 d-flex gap-2">
+                                    <a href="${pageContext.request.contextPath}/product?id=${p.id}" class="btn btn-outline-dark flex-grow-1">Mua ngay</a>
+                                    <form action="${pageContext.request.contextPath}/cart/add" method="post" style="margin:0">
+                                        <input type="hidden" name="variantId" value="${not empty p.variants ? p.variants[0].id : 0}" />
+                                        <input type="hidden" name="productId" value="${p.id}" />
+                                        <input type="hidden" name="productName" value="${p.productName}" />
+                                        <input type="hidden" name="attributes" value="" />
+                                        <input type="hidden" name="price" value="${not empty p.variants ? p.variants[0].salePrice : 0}" />
+                                        <input type="hidden" name="quantity" value="1" />
+                                        <input type="hidden" name="imageUrl" value="${p.mainImageUrl}" />
+                                        <button type="submit" class="icon-add-cart" title="Thêm vào giỏ"><i class="fa-solid fa-cart-plus"></i></button>
+                                    </form>
                                 </div>
 
                             </div>
