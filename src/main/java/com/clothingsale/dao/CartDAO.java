@@ -87,13 +87,19 @@ public class CartDAO {
     }
 
     public boolean clearCart(int userId) {
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(DELETE_CART_SQL)) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
             if (conn == null) return false;
-            ps.setInt(1, userId);
-            return ps.executeUpdate() > 0;
+            try (PreparedStatement ps = conn.prepareStatement(DELETE_CART_SQL)) {
+                ps.setInt(1, userId);
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            DBConnection.closeConnection(conn);
         }
     }
 }
