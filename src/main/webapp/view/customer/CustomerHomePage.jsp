@@ -238,7 +238,8 @@
     </head>
 
     <body>
-
+        <c:set var="loggedIn"
+               value="${not empty sessionScope.authUserId}"/>
         <!-- NAVBAR -->
 
         <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
@@ -254,11 +255,45 @@
 
                 <div class="d-flex gap-2">
 
-                    <button class="btn btn-outline-dark">
+                    <c:choose>
 
-                        Cart
+                        <c:when test="${loggedIn}">
 
-                    </button>
+                            <a href="${pageContext.request.contextPath}/cart"
+                               class="btn btn-outline-dark position-relative">
+
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                Cart
+
+                                <c:if test="${sessionScope.cartCount > 0}">
+                                    <span class="position-absolute
+                                          top-0 start-100
+                                          translate-middle
+                                          badge rounded-pill bg-danger">
+
+                                        ${sessionScope.cartCount}
+
+                                    </span>
+                                </c:if>
+
+                            </a>
+
+                        </c:when>
+
+
+                        <c:otherwise>
+
+                            <a href="${pageContext.request.contextPath}/customer/login"
+                               class="btn btn-outline-dark">
+
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                Cart
+
+                            </a>
+
+                        </c:otherwise>
+
+                    </c:choose>
 
                     <a href="${pageContext.request.contextPath}/customer/login"
                        class="btn btn-danger">
@@ -434,11 +469,13 @@
 
                                 <!-- IMAGE -->
 
-                                <img
-                                    src="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}"
-                                    alt="${p.productName}"
-                                    class="card-img-top product-image">
+                                <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
 
+                                    <img
+                                        src="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}"
+                                        class="card-img-top product-image">
+
+                                </a>
                                 <!-- BODY -->
 
                                 <div class="card-body">
@@ -449,7 +486,13 @@
 
                                     <h5 class="fw-bold">
 
-                                        ${p.productName}
+                                        <a 
+                                            href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
+                                            class="text-decoration-none">
+
+                                            ${p.productName}
+
+                                        </a>
 
                                     </h5>
 
@@ -489,13 +532,49 @@
 
                                 <div class="card-footer bg-white border-0">
 
-                                    <button
+
+                                    <a 
+                                        href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
                                         class="btn btn-danger w-100">
 
                                         View Details
 
-                                    </button>
+                                    </a>
+                                    <c:if test="${not empty p.variants}">
 
+                                        <c:choose>
+
+                                            <c:when test="${loggedIn}">
+
+                                                <a 
+                                                    href="${pageContext.request.contextPath}/cart?action=add&variantId=${p.variants[0].id}"
+                                                    class="btn btn-danger w-100">
+
+                                                    <i class="fa-solid fa-cart-plus"></i>
+                                                    Add To Cart
+
+                                                </a>
+
+                                            </c:when>
+
+
+                                            <c:otherwise>
+
+                                                <a 
+                                                    href="${pageContext.request.contextPath}/customer/login"
+                                                    class="btn btn-danger w-100">
+
+                                                    <i class="fa-solid fa-cart-plus"></i>
+                                                    Add To Cart
+
+                                                </a>
+
+                                            </c:otherwise>
+
+
+                                        </c:choose>
+
+                                    </c:if>
                                 </div>
 
                             </div>
@@ -588,7 +667,7 @@
 
                         <p>
 
-                            Email: support@clothingsale.com
+                            Email: supportclothingsale@gmail.com
                         </p>
 
                         <p>

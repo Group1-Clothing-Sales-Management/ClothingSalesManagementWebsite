@@ -38,6 +38,12 @@ public class CustomerProductService {
         return products;
     }
 
+    public Product getProductById(int id) {
+
+        return productDAO.getProductById(id);
+
+    }
+
     public List<ProductVariant> getVariantsByProductId(int productId) {
 
         return productDAO.getVariantsByProductId(productId);

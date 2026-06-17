@@ -106,6 +106,58 @@ public class CustomerProductDAO {
         return list;
     }
 
+    public Product getProductById(int id) {
+
+        String sql
+                = "SELECT p.id, p.product_name, p.short_description, "
+                + "p.long_description, p.created_at, img.image_url "
+                + "FROM Product p "
+                + "LEFT JOIN Product_Image img "
+                + "ON p.id = img.product_id AND img.is_main = 1 "
+                + "WHERE p.id = ? "
+                + "AND p.status = 'ACTIVE'";
+        Product product = null;
+
+        try (
+                 Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                product = new Product();
+
+                product.setId(rs.getInt("id"));
+                product.setProductName(
+                        rs.getString("product_name"));
+
+                product.setShortDescription(
+                        rs.getString("short_description"));
+
+                product.setLongDescription(
+                        rs.getString("long_description"));
+
+                product.setCreatedAt(
+                        rs.getTimestamp("created_at"));
+
+                product.setMainImageUrl(
+                        rs.getString("image_url"));
+
+                // Load danh sách variant
+                product.setVariants(
+                        getVariantsByProductId(id));
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return product;
+    }
+
     // Lấy các Variant của một Product
     public List<ProductVariant> getVariantsByProductId(int productId) {
 

@@ -91,6 +91,8 @@ public class AuthFilter extends HttpFilter {
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
                 || lowerPath.startsWith("/home") 
+                || lowerPath.startsWith("/product")
+                || lowerPath.startsWith("/product/detail")
                 || lowerPath.startsWith("/customer")
                 || lowerPath.startsWith("/cart")
                 || lowerPath.startsWith("/admin/login")
