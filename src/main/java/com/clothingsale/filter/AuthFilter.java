@@ -104,6 +104,7 @@ public class AuthFilter extends HttpFilter {
                 || lowerPath.startsWith("/cart/add")
                 || lowerPath.startsWith("/cart/update")
                 || lowerPath.startsWith("/cart/remove")
+                || lowerPath.startsWith("/customer/address")
                 || lowerPath.startsWith("/uploads/")
                 || lowerPath.startsWith("/css/")
                 || lowerPath.startsWith("/js/")
