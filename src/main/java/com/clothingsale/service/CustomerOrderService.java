@@ -2,6 +2,7 @@ package com.clothingsale.service;
 
 import com.clothingsale.dao.CustomerOrderDAO;
 import com.clothingsale.model.CartItem;
+import com.clothingsale.model.Order;
 import com.clothingsale.model.UserAddress;
 import java.math.BigDecimal;
 
@@ -55,6 +56,12 @@ public class CustomerOrderService {
     }
 
     //===============Order===================
+    public List<Order> getOrdersByUserId(
+            int userId) {
+
+        return dao.getOrdersByUserId(userId);
+    }
+
     public List<CartItem> getCartItems(
             int userId) {
 
@@ -72,6 +79,15 @@ public class CustomerOrderService {
                 addressId,
                 voucherCode,
                 note);
+    }
+
+    public boolean cancelOrder(
+            int orderId,
+            int userId) {
+
+        return dao.cancelOrder(
+                orderId,
+                userId);
     }
 
     public BigDecimal getCartTotal(

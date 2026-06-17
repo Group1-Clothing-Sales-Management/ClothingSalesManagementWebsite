@@ -56,6 +56,61 @@ public class CustomerOrderDAO {
         return BigDecimal.ZERO;
     }
 
+    public List<Order> getOrdersByUserId(
+            int userId) {
+
+        List<Order> list
+                = new ArrayList<>();
+
+        String sql = "SELECT *"
+                + "FROM [Order]"
+                + "WHERE user_id = ?"
+                + "ORDER BY created_at DESC";
+
+        try (
+                 Connection con
+                = DBConnection.getConnection();  PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            ResultSet rs
+                    = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Order o
+                        = new Order();
+
+                o.setId(
+                        rs.getInt("id"));
+
+                o.setOrderCode(
+                        rs.getString("order_code"));
+
+                o.setTotalPayment(
+                        rs.getBigDecimal(
+                                "total_payment"));
+
+                o.setOrderStatus(
+                        rs.getString(
+                                "order_status"));
+
+                o.setCreatedAt(
+                        rs.getTimestamp(
+                                "created_at"));
+
+                list.add(o);
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
     public int createOrder(
             Connection con,
             Order order)
@@ -492,6 +547,35 @@ public class CustomerOrderDAO {
                 item.getPrice());
 
         ps.executeUpdate();
+    }
+
+    public boolean cancelOrder(
+            int orderId,
+            int userId) {
+
+        String sql
+                = "UPDATE [Order] "
+                + "SET order_status='CANCELLED' "
+                + "WHERE id=? "
+                + "AND user_id=? "
+                + "AND order_status='PENDING'";
+
+        try (
+                 Connection con
+                = DBConnection.getConnection();  PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, orderId);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     public void decreaseStock(
