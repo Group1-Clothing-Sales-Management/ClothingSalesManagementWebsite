@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
     <style>
-        /* Khoa chieu cao trang de sidebar va noi dung co thanh cuon rieng. */
         html, body {
             height: 100%;
             overflow: hidden;
@@ -168,9 +167,6 @@
                                                     <a href="${pageContext.request.contextPath}/staff/customers?action=edit&id=${c.id}" class="btn btn-sm btn-outline-primary px-2 py-1" title="Edit">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
-                                                    <a href="${pageContext.request.contextPath}/staff/customers?action=view&id=${c.id}" class="btn btn-sm btn-outline-secondary px-2 py-1" title="View details">
-                                                        <i class="bi bi-eye-fill"></i>
-                                                    </a>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -217,12 +213,18 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Password <span class="required-star">*</span></label>
-                                <div class="input-group">
-                                    <input type="password" name="password" id="addPassword" class="form-control" placeholder="Enter password"/>
-                                    <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('addPassword', this)">
+                                <div class="input-group ${not empty errors.password ? 'is-invalid' : ''}">
+                                    <input type="password" name="password" id="addPassword"
+                                           class="form-control ${not empty errors.password ? 'is-invalid' : ''}"
+                                           placeholder="Enter password"/>
+                                    <button type="button" class="btn btn-outline-secondary ${not empty errors.password ? 'is-invalid' : ''}"
+                                            onclick="togglePassword('addPassword', this)">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                 </div>
+                                <c:if test="${not empty errors.password}">
+                                    <div class="invalid-feedback d-block">${errors.password}</div>
+                                </c:if>
                             </div>
                         </div>
 

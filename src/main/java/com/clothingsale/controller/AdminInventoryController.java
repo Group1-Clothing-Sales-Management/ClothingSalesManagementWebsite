@@ -28,7 +28,8 @@ public class AdminInventoryController extends HttpServlet {
 
         switch (action) {
             case "new":
-                // Chuyển tới form nhập kho tiếng Anh độc lập của admin
+                List<com.clothingsale.model.ProductVariant> activeVariants = inventoryDAO.getAllActiveVariantsForImport();
+                request.setAttribute("activeVariants", activeVariants);
                 request.getRequestDispatcher("/view/admin/import_stock.jsp").forward(request, response);
                 break;
             case "list":

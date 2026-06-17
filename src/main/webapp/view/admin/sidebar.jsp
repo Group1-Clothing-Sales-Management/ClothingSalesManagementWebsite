@@ -173,6 +173,7 @@
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
                     <i class="fa-solid fa-box me-2"></i>Stock
                 </a>
+                <a href="${pageContext.request.contextPath}/admin/manage-category">Manage Category</a>    
             </c:otherwise>
         </c:choose>
 

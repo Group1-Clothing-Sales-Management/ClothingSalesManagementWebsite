@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <title>Product Management</title>
@@ -56,23 +56,24 @@
     <body>
 
         <div class="wrapper">
-            <%-- Sidebar được cố định theo chiều dọc để không kéo trôi khi cuộn danh sách --%>
+            <%-- Sidebar Component --%>
             <jsp:include page="sidebar.jsp">
                 <jsp:param name="activeTab" value="products" />
             </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
-                    
+
+                    <%-- Notification Alerts --%>
                     <c:if test="${param.status == 'success'}">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <strong>Thành công!</strong> Thao tác xử lý dữ liệu sản phẩm hoàn tất.
+                            <strong>Success!</strong> Product operation completed successfully.
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     </c:if>
                     <c:if test="${param.status == 'error'}">
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>Thất bại!</strong> Hệ thống hoặc tệp tin hình ảnh tải lên gặp lỗi ngầm.
+                            <strong>Error!</strong> The system encountered an error processing the product or image upload.
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     </c:if>
@@ -96,21 +97,18 @@
                                         <th>Category ID</th>
                                         <th>Brand ID</th>
                                         <th class="text-center">Status</th>
-                                        <th class="text-center" style="width: 220px;">Actions</th>
+                                        <th class="text-center" style="width: 260px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <c:forEach var="p" items="${products}">
                                         <tr>
                                             <td class="text-center">
-                                                <%-- Ảnh sản phẩm được bảo vệ bằng fallback để tránh hiện icon bị hỏng khi file ảnh không tồn tại --%>
                                                 <c:choose>
                                                     <c:when test="${not empty p.mainImageUrl}">
-                                                        <img
-                                                            src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
-                                                            class="product-img border"
-                                                            alt="product"
-                                                            onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                                        <img src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
+                                                             class="product-img border" alt="product"
+                                                             onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
                                                         <div class="product-img-fallback border bg-light text-muted d-none d-flex align-items-center justify-content-center text-center px-1">
                                                             No Img
                                                         </div>
@@ -126,8 +124,16 @@
                                                 <div class="fw-bold text-dark">${p.productName}</div>
                                                 <small class="text-muted">Slug: <code>${p.slug}</code></small>
                                             </td>
-                                            <td><span class="badge bg-light text-dark border">ID: ${p.categoryId}</span></td>
-                                            <td><span class="badge bg-light text-dark border">ID: ${p.brandId}</span></td>
+                                            <td>
+                                                <c:forEach var="cat" items="${categories}">
+                                                    <c:if test="${cat.id == p.categoryId}"><span class="badge bg-light text-dark border">${cat.categoryName}</span></c:if>
+                                                </c:forEach>
+                                            </td>
+                                            <td>
+                                                <c:forEach var="br" items="${brands}">
+                                                    <c:if test="${br.id == p.brandId}"><span class="badge bg-light text-dark border">${br.brandName}</span></c:if>
+                                                </c:forEach>
+                                            </td>
                                             <td class="text-center">
                                                 <c:choose>
                                                     <c:when test="${p.status == 'ACTIVE'}">
@@ -139,11 +145,16 @@
                                                 </c:choose>
                                             </td>
                                             <td class="text-center action-btns">
+                                                <a href="${pageContext.request.contextPath}/admin/manage-product?action=view&id=${p.id}" class="btn btn-outline-info me-1" title="View Details">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
+
                                                 <button class="btn btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editProductModal${p.id}" title="Edit">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
 
-                                                <form action="${pageContext.request.contextPath}/admin/manage-product?action=DELETE" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="margin:0;">
+                                                <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');" style="m-0">
+                                                    <input type="hidden" name="action" value="DELETE">
                                                     <input type="hidden" name="productId" value="${p.id}">
                                                     <button type="submit" class="btn btn-outline-danger" title="Delete">
                                                         <i class="fa-solid fa-trash"></i>
@@ -160,6 +171,7 @@
             </div>
         </div>
 
+        <%-- Modals Chỉnh sửa sản phẩm --%>
         <c:forEach var="p" items="${products}">
             <div class="modal fade" id="editProductModal${p.id}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -168,7 +180,8 @@
                             <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Product #${p.id}</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form action="${pageContext.request.contextPath}/admin/manage-product?action=UPDATE" method="POST" enctype="multipart/form-data">
+                        <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="action" value="UPDATE">
                             <input type="hidden" name="productId" value="${p.id}">
                             <div class="modal-body text-start p-4">
                                 <div class="row g-3">
@@ -181,12 +194,20 @@
                                         <input type="text" class="form-control" name="slug" value="${p.slug}" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Brand ID</label>
-                                        <input type="number" class="form-control" name="brandId" value="${p.brandId}" required>
+                                        <label class="form-label fw-semibold">Brand</label>
+                                        <select class="form-select" name="brandId" required>
+                                            <c:forEach var="br" items="${brands}">
+                                                <option value="${br.id}" ${br.id == p.brandId ? 'selected' : ''}>${br.brandName}</option>
+                                            </c:forEach>
+                                        </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Category ID</label>
-                                        <input type="number" class="form-control" name="categoryId" value="${p.categoryId}" required>
+                                        <label class="form-label fw-semibold">Category</label>
+                                        <select class="form-select" name="categoryId" required>
+                                            <c:forEach var="cat" items="${categories}">
+                                                <option value="${cat.id}" ${cat.id == p.categoryId ? 'selected' : ''}>${cat.categoryName}</option>
+                                            </c:forEach>
+                                        </select>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label fw-semibold">Product Image (Leave blank to keep current)</label>
@@ -219,6 +240,7 @@
             </div>
         </c:forEach>
 
+        <%-- Modal Thêm mới sản phẩm --%>
         <div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-0 shadow">
@@ -226,7 +248,8 @@
                         <h5 class="modal-title fw-bold"><i class="fa-solid fa-box-open me-2"></i>Add New Master Product</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form action="${pageContext.request.contextPath}/admin/manage-product?action=ADD" method="POST" enctype="multipart/form-data">
+                    <form action="${pageContext.request.contextPath}/admin/manage-product" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="ADD">
                         <div class="modal-body p-4">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -238,12 +261,22 @@
                                     <input type="text" class="form-control" name="slug" placeholder="premium-t-shirt" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Brand ID</label>
-                                    <input type="number" class="form-control" name="brandId" required>
+                                    <label class="form-label fw-semibold">Brand</label>
+                                    <select class="form-select" name="brandId" required>
+                                        <option value="">-- Select Brand --</option>
+                                        <c:forEach var="br" items="${brands}">
+                                            <option value="${br.id}">${br.brandName}</option>
+                                        </c:forEach>
+                                    </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Category ID</label>
-                                    <input type="number" class="form-control" name="categoryId" required>
+                                    <label class="form-label fw-semibold">Category</label>
+                                    <select class="form-select" name="categoryId" required>
+                                        <option value="">-- Select Category --</option>
+                                        <c:forEach var="cat" items="${categories}">
+                                            <option value="${cat.id}">${cat.categoryName}</option>
+                                        </c:forEach>
+                                    </select>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">Product Image</label>

@@ -3,9 +3,14 @@ package com.clothingsale.service;
 import com.clothingsale.dao.StaffCustomerDAO;
 import com.clothingsale.model.StaffCustomer;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.mindrot.jbcrypt.BCrypt;
 
 public class StaffCustomerService {
 
@@ -20,7 +25,7 @@ public class StaffCustomerService {
     }
 
     public Map<String, String> addCustomer(StaffCustomer c, String rawPassword) {
-        Map<String, String> errors = validateNewCustomer(c);
+        Map<String, String> errors = validateNewCustomer(c, rawPassword);
         if (!errors.isEmpty()) {
             return errors;
         }
@@ -44,13 +49,20 @@ public class StaffCustomerService {
         return errors;
     }
 
-    private Map<String, String> validateNewCustomer(StaffCustomer c) {
+    private Map<String, String> validateNewCustomer(StaffCustomer c, String rawPassword) {
         Map<String, String> errors = new HashMap<>();
 
         if (isBlank(c.getUsername())) {
             errors.put("username", "Username cannot be empty.");
         } else if (dao.isUsernameExists(c.getUsername())) {
             errors.put("username", "Username already exists.");
+        }
+
+        // Validate password
+        if (isBlank(rawPassword)) {
+            errors.put("password", "Password cannot be empty.");
+        } else if (rawPassword.length() < 6) {
+            errors.put("password", "Password must be at least 6 characters.");
         }
 
         if (isBlank(c.getFullName())) {
@@ -119,6 +131,6 @@ public class StaffCustomerService {
     }
 
     private String hashPassword(String raw) {
-        return raw;
+        return BCrypt.hashpw(raw, BCrypt.gensalt(12));
     }
 }

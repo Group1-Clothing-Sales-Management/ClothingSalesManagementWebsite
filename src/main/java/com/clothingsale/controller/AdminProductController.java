@@ -14,7 +14,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import java.util.ArrayList;
 
 @WebServlet(
         name = "AdminManageProduct",
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 public class AdminProductController extends HttpServlet {
 
     private final AdminManageProductService productService = new AdminManageProductService();
-
     private final AdminManageProductDAO productDAO = new AdminManageProductDAO();
 
     @Override
@@ -42,6 +40,17 @@ public class AdminProductController extends HttpServlet {
         switch (action) {
             case "view":
                 showProductDetails(request, response);
+                break;
+            case "edit":
+                // Đọc thông tin sản phẩm cần sửa để hiển thị lên form gộp nếu cần
+                try {
+                    int id = Integer.parseInt(request.getParameter("id"));
+                    Product product = productDAO.getProductById(id);
+                    request.setAttribute("productToEdit", product);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+                listProducts(request, response);
                 break;
             case "list":
             default:
@@ -129,20 +138,18 @@ public class AdminProductController extends HttpServlet {
                     statusRedirect = "error";
                 }
 
-            } else {
-                // Mặc định thực hiện tính năng THÊM MỚI (ADD)
+            } else if ("ADD".equals(action)) {
+                // Thực hiện tính năng THÊM MỚI (ADD) dựa trên logic gốc của bạn
                 Product product = extractProductFromRequest(request);
                 Part filePart = request.getPart("productImage");
                 String savedFileName = handleImageUpload(filePart);
 
-                // Ràng buộc điều kiện nếu thêm mới thất bại
                 boolean isAdded = productService.addProduct(product, savedFileName);
                 if (!isAdded) {
                     statusRedirect = "error";
                 }
             }
         } catch (Exception e) {
-            // Ghi nhận lỗi chi tiết vào hệ thống logs của máy chủ để bạn dễ trace lỗi hình ảnh
             System.err.println("❌ Lỗi nghiêm trọng tại AdminManageProduct.doPost: " + e.getMessage());
             e.printStackTrace();
             statusRedirect = "error";
@@ -157,11 +164,9 @@ public class AdminProductController extends HttpServlet {
             String originalFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
             String savedFileName = System.currentTimeMillis() + "_" + originalFileName;
 
-            // Khắc phục an toàn lỗi null path của hệ thống ảo Tomcat
             String baseRealPath = getServletContext().getRealPath("");
             String uploadPath;
             if (baseRealPath == null) {
-                // Nếu chạy local bị null, ghi trực tiếp vào thư mục tạm của hệ thống hoặc thư mục project
                 uploadPath = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "product";
             } else {
                 uploadPath = baseRealPath + File.separator + "uploads" + File.separator + "product";
@@ -169,7 +174,7 @@ public class AdminProductController extends HttpServlet {
 
             File uploadDir = new File(uploadPath);
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs(); // Tự động tạo thư mục nếu chưa có, tránh sập luồng dữ liệu
+                uploadDir.mkdirs();
             }
             filePart.write(uploadPath + File.separator + savedFileName);
             return savedFileName;
@@ -206,18 +211,12 @@ public class AdminProductController extends HttpServlet {
             throws ServletException, IOException {
         try {
             int productId = Integer.parseInt(request.getParameter("id"));
-
-            // Lấy thông tin cốt lõi của sản phẩm
             Product product = productDAO.getProductById(productId);
 
             if (product != null) {
-                // Lấy danh sách các biến thể (Kích cỡ, màu sắc, giá bán, số lượng) của sản phẩm này
                 List<ProductVariant> variants = productDAO.getVariantsByProductId(productId);
-
                 request.setAttribute("product", product);
                 request.setAttribute("variants", variants);
-
-                // Chuyển hướng tới trang chi tiết mới thay vì dùng bảng đổ xuống rối rắm
                 request.getRequestDispatcher("/view/admin/product_detail.jsp").forward(request, response);
             } else {
                 response.sendRedirect(request.getContextPath() + "/admin/products?error=ProductNotFound");

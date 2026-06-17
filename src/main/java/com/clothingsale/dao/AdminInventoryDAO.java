@@ -122,4 +122,50 @@ public class AdminInventoryDAO {
         return isSuccess;
     }
 
+    public List<com.clothingsale.model.ProductVariant> getAllActiveVariantsForImport() {
+    List<com.clothingsale.model.ProductVariant> list = new ArrayList<>();
+    // Câu lệnh SQL nâng cao kết hợp bảng Product và bóc tách Color/Size tự động từ Variant_Attribute_Value
+    String sql = "SELECT pv.id, pv.sku, p.product_name, "
+               + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') as color, "
+               + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') as size "
+               + "FROM Product_Variant pv "
+               + "JOIN Product p ON pv.product_id = p.id "
+               + "WHERE pv.status <> 'DELETED' AND p.status <> 'DELETED' "
+               + "ORDER BY p.product_name ASC";
+
+    try (Connection conn = DBConnection.getConnection(); 
+         PreparedStatement ps = conn.prepareStatement(sql); 
+         ResultSet rs = ps.executeQuery()) {
+        
+        while (rs.next()) {
+            com.clothingsale.model.ProductVariant v = new com.clothingsale.model.ProductVariant();
+            v.setId(rs.getInt("id"));
+            v.setSku(rs.getString("sku"));
+            
+            // Xử lý chuỗi thông tin chi tiết Variant trực quan: [Tên sản phẩm] - Color: Red / Size: L
+            String prodName = rs.getString("product_name");
+            String color = rs.getString("color");
+            String size = rs.getString("size");
+            StringBuilder sb = new StringBuilder(prodName);
+            
+            if ((color != null && !color.isEmpty()) || (size != null && !size.isEmpty())) {
+                sb.append(" (");
+                if (color != null && !color.isEmpty()) sb.append("Color: ").append(color);
+                if (size != null && !size.isEmpty()) {
+                    if (color != null && !color.isEmpty()) sb.append(" / ");
+                    sb.append("Size: ").append(size);
+                }
+                sb.append(")");
+            }
+            
+            // Mượn tạm trường attributeDetails làm nhãn hiển thị text trên Dropdown UI
+            v.setAttributeDetails(sb.toString());
+            list.add(v);
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return list;
+}
+
 }
