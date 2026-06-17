@@ -88,7 +88,7 @@
                             <div class="fw-bold">₫<%= total %></div>
                         </div>
                         <div class="mt-3">
-                            <a href="<%= request.getContextPath() %>/checkout" class="btn btn-primary w-100">Mua hàng</a>
+                            <a href="<%= request.getContextPath() %>/customer/checkout" class="btn btn-primary w-100">Mua hàng</a>
                         </div>
                         <div class="mt-2">
                             <a href="<%= request.getContextPath() %>/" class="btn btn-link w-100">Tiếp tục mua sắm</a>
