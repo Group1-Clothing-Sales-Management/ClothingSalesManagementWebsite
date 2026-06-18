@@ -474,17 +474,19 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="${ordersBasePath}" method="post">
+            <form action="${ordersBasePath}" method="post" id="createStoreOrderForm" novalidate>
                 <input type="hidden" name="action" value="createStoreOrder">
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Recipient name</label>
-                            <input type="text" name="recipientName" class="form-control" required>
+                            <input type="text" name="recipientName" id="storeRecipientName" class="form-control" required maxlength="100" minlength="2" placeholder="Enter recipient name">
+                            <div class="invalid-feedback">Recipient name is required and must be at least 2 characters.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Recipient phone</label>
-                            <input type="text" name="recipientPhone" class="form-control" required>
+                            <input type="tel" name="recipientPhone" id="storeRecipientPhone" class="form-control" required inputmode="numeric" maxlength="10" pattern="[0-9]{1,10}" placeholder="Enter up to 10 digits">
+                            <div class="invalid-feedback">Recipient phone is required and must contain up to 10 digits.</div>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Product variant</label>
@@ -512,18 +514,21 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Quantity</label>
-                            <input type="number" name="quantity" id="storeQuantity" class="form-control" min="1" value="1" required>
+                            <input type="number" name="quantity" id="storeQuantity" class="form-control" min="1" step="1" value="1" required>
+                            <div class="invalid-feedback" id="storeQuantityFeedback">Quantity must be at least 1.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Payment method</label>
-                            <select name="paymentMethod" class="form-select">
+                            <select name="paymentMethod" id="storePaymentMethod" class="form-select" required>
                                 <option value="CASH">CASH</option>
                                 <option value="CARD">CARD</option>
                             </select>
+                            <div class="invalid-feedback">Please select a payment method.</div>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Note</label>
-                            <textarea name="note" class="form-control" rows="3" placeholder="Optional internal note for the order"></textarea>
+                            <textarea name="note" id="storeNote" class="form-control" rows="3" maxlength="500" placeholder="Optional internal note for the order"></textarea>
+                            <div class="form-text">Optional. Maximum 500 characters.</div>
                         </div>
                         <div class="col-12">
                             <div class="alert alert-light border mb-0">
@@ -531,6 +536,7 @@
                                 <div id="storeOrderPreview" class="small text-muted">
                                     Select a product variant to see the estimated total.
                                 </div>
+                                <div id="storeStockHint" class="small text-danger mt-2 d-none"></div>
                             </div>
                         </div>
                     </div>
@@ -558,9 +564,16 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Keep the modal summary in sync with the selected variant and quantity.
+    const storeOrderForm = document.getElementById('createStoreOrderForm');
+    const recipientNameInput = document.getElementById('storeRecipientName');
+    const recipientPhoneInput = document.getElementById('storeRecipientPhone');
     const variantSelect = document.getElementById('storeVariantId');
     const quantityInput = document.getElementById('storeQuantity');
+    const paymentMethodSelect = document.getElementById('storePaymentMethod');
+    const noteInput = document.getElementById('storeNote');
     const previewBox = document.getElementById('storeOrderPreview');
+    const quantityFeedback = document.getElementById('storeQuantityFeedback');
+    const stockHint = document.getElementById('storeStockHint');
 
     function updateStoreOrderPreview() {
         if (!variantSelect || !quantityInput || !previewBox) {
@@ -570,6 +583,10 @@
         const selectedOption = variantSelect.options[variantSelect.selectedIndex];
         if (!selectedOption || !selectedOption.value) {
             previewBox.textContent = 'Select a product variant to see the estimated total.';
+            if (stockHint) {
+                stockHint.classList.add('d-none');
+                stockHint.textContent = '';
+            }
             return;
         }
 
@@ -580,6 +597,27 @@
         const qty = Math.max(parseInt(quantityInput.value, 10) || 1, 1);
         const total = price * qty;
 
+        quantityInput.max = String(stock > 0 ? stock : 1);
+        if (qty > stock) {
+            quantityInput.setCustomValidity('Quantity cannot exceed available stock.');
+            if (quantityFeedback) {
+                quantityFeedback.textContent = 'Quantity cannot exceed available stock (' + stock + ').';
+            }
+            if (stockHint) {
+                stockHint.textContent = 'Available stock for this variant: ' + stock + '.';
+                stockHint.classList.remove('d-none');
+            }
+        } else {
+            quantityInput.setCustomValidity('');
+            if (quantityFeedback) {
+                quantityFeedback.textContent = 'Quantity must be at least 1.';
+            }
+            if (stockHint) {
+                stockHint.textContent = 'Available stock for this variant: ' + stock + '.';
+                stockHint.classList.remove('d-none');
+            }
+        }
+
         previewBox.innerHTML =
             '<div><strong>' + productName + '</strong>' + (brandName ? ' - ' + brandName : '') + '</div>' +
             '<div>Unit price: <strong>' + price.toLocaleString('en-US') + ' VND</strong></div>' +
@@ -587,11 +625,97 @@
             '<div>Estimated total: <strong>' + total.toLocaleString('en-US') + ' VND</strong></div>';
     }
 
+    function validateTextInput(input, minLength, message) {
+        if (!input) {
+            return;
+        }
+        const value = (input.value || '').trim();
+        if (value.length < minLength) {
+            input.setCustomValidity(message);
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validatePhoneInput() {
+        if (!recipientPhoneInput) {
+            return;
+        }
+        const value = (recipientPhoneInput.value || '').trim();
+        const phonePattern = /^[0-9]{1,10}$/;
+        if (!value) {
+            recipientPhoneInput.setCustomValidity('Recipient phone is required.');
+        } else if (!phonePattern.test(value)) {
+            recipientPhoneInput.setCustomValidity('Enter up to 10 digits only.');
+        } else {
+            recipientPhoneInput.setCustomValidity('');
+        }
+    }
+
+    function validatePaymentMethod() {
+        if (!paymentMethodSelect) {
+            return;
+        }
+        const value = (paymentMethodSelect.value || '').trim().toUpperCase();
+        if (value !== 'CASH' && value !== 'CARD') {
+            paymentMethodSelect.setCustomValidity('Please select a payment method.');
+        } else {
+            paymentMethodSelect.setCustomValidity('');
+        }
+    }
+
     if (variantSelect) {
         variantSelect.addEventListener('change', updateStoreOrderPreview);
     }
     if (quantityInput) {
         quantityInput.addEventListener('input', updateStoreOrderPreview);
+    }
+    if (recipientNameInput) {
+        recipientNameInput.addEventListener('input', function () {
+            validateTextInput(recipientNameInput, 2, 'Recipient name is required and must be at least 2 characters.');
+        });
+    }
+    if (recipientPhoneInput) {
+        recipientPhoneInput.addEventListener('input', function () {
+            const digitsOnly = (recipientPhoneInput.value || '').replace(/\D/g, '').slice(0, 10);
+            if (recipientPhoneInput.value !== digitsOnly) {
+                recipientPhoneInput.value = digitsOnly;
+            }
+            validatePhoneInput();
+        });
+    }
+    if (paymentMethodSelect) {
+        paymentMethodSelect.addEventListener('change', validatePaymentMethod);
+    }
+    if (noteInput) {
+        noteInput.addEventListener('input', function () {
+            if ((noteInput.value || '').length > 500) {
+                noteInput.setCustomValidity('Note cannot exceed 500 characters.');
+            } else {
+                noteInput.setCustomValidity('');
+            }
+        });
+    }
+    if (storeOrderForm) {
+        storeOrderForm.addEventListener('submit', function (event) {
+            validateTextInput(recipientNameInput, 2, 'Recipient name is required and must be at least 2 characters.');
+            validatePhoneInput();
+            validatePaymentMethod();
+            updateStoreOrderPreview();
+
+            if (noteInput && (noteInput.value || '').length > 500) {
+                noteInput.setCustomValidity('Note cannot exceed 500 characters.');
+            } else if (noteInput) {
+                noteInput.setCustomValidity('');
+            }
+
+            if (!storeOrderForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            storeOrderForm.classList.add('was-validated');
+        });
     }
     updateStoreOrderPreview();
 
