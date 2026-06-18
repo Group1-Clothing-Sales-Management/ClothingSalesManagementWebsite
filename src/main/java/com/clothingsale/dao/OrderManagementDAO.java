@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -154,6 +156,104 @@ public class OrderManagementDAO {
     }
 
     /**
+     * Create a direct in-store order.
+     * This path is separate from the online checkout flow because the shop sale
+     * does not rely on a cart or a saved customer account.
+     */
+    public String createInStoreOrder(String recipientName,
+            String recipientPhone,
+            int variantId,
+            int quantity,
+            String paymentMethod,
+            String note) {
+
+        if (recipientName == null || recipientName.trim().isEmpty()) {
+            return "Recipient name is required.";
+        }
+        if (recipientPhone == null || recipientPhone.trim().isEmpty()) {
+            return "Recipient phone is required.";
+        }
+        if (quantity <= 0) {
+            return "Quantity must be greater than zero.";
+        }
+
+        Connection conn = null;
+
+        try {
+            conn = DBConnection.getConnection();
+            if (conn == null) {
+                return "Database connection is not available.";
+            }
+            conn.setAutoCommit(false);
+
+            StoreOrderItem item = loadStoreOrderItem(conn, variantId);
+            if (item == null) {
+                conn.rollback();
+                return "Selected product variant was not found.";
+            }
+
+            if (!"ACTIVE".equalsIgnoreCase(item.status)) {
+                conn.rollback();
+                return "Selected product variant is not available.";
+            }
+
+            if (item.salePrice == null) {
+                conn.rollback();
+                return "Selected product variant has no sale price.";
+            }
+
+            if (item.stockQuantity < quantity) {
+                conn.rollback();
+                return "Not enough stock for the selected product.";
+            }
+
+            // The order stores the price collected at the counter so later price
+            // changes do not rewrite the receipt.
+            BigDecimal subtotal = item.salePrice.multiply(BigDecimal.valueOf(quantity));
+            BigDecimal shippingFee = BigDecimal.ZERO;
+            BigDecimal totalPayment = subtotal;
+
+            String orderCode = "ORD" + System.currentTimeMillis();
+            int orderId = insertStoreOrder(
+                    conn,
+                    orderCode,
+                    recipientName.trim(),
+                    recipientPhone.trim(),
+                    subtotal,
+                    shippingFee,
+                    totalPayment,
+                    note);
+
+            insertStoreOrderDetail(conn, orderId, item, quantity);
+            insertStorePayment(conn, orderId, paymentMethod, totalPayment);
+
+            // Stock must drop immediately because the product has already been
+            // handed to the customer at the store.
+            decreaseStock(conn, variantId, quantity);
+
+            conn.commit();
+            return "SUCCESS";
+        } catch (Exception e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (Exception ignore) {
+            }
+
+            e.printStackTrace();
+            return "Failed to create the store order. Please try again.";
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    /**
      * Lấy trạng thái hiện tại của đơn hàng trước khi cập nhật.
      */
     public String getCurrentOrderStatus(int orderId) {
@@ -264,6 +364,171 @@ public class OrderManagementDAO {
     /**
      * Chuyển trạng thái đơn sang trạng thái shipment tương ứng.
      */
+    /**
+     * Load the minimal product and variant data needed to sell an item at the
+     * counter and freeze the snapshot into the order details table.
+     */
+    private StoreOrderItem loadStoreOrderItem(Connection conn, int variantId) throws SQLException {
+        String sql = "SELECT pv.id, pv.sale_price, pv.stock_quantity, pv.status, "
+                + "       p.product_name, "
+                + "       MAX(CASE WHEN a.attribute_name = 'Color' THEN vav.attribute_value END) AS color, "
+                + "       MAX(CASE WHEN a.attribute_name = 'Size' THEN vav.attribute_value END) AS size "
+                + "FROM Product_Variant pv "
+                + "JOIN Product p ON pv.product_id = p.id "
+                + "LEFT JOIN Variant_Attribute_Value vav ON pv.id = vav.variant_id "
+                + "LEFT JOIN Attribute a ON vav.attribute_id = a.id "
+                + "WHERE pv.id = ? "
+                + "GROUP BY pv.id, pv.sale_price, pv.stock_quantity, pv.status, p.product_name";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, variantId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+
+                StoreOrderItem item = new StoreOrderItem();
+                item.variantId = rs.getInt("id");
+                item.productName = rs.getString("product_name");
+                item.salePrice = rs.getBigDecimal("sale_price");
+                item.stockQuantity = rs.getInt("stock_quantity");
+                item.status = rs.getString("status");
+
+                String color = rs.getString("color");
+                String size = rs.getString("size");
+                StringBuilder attributes = new StringBuilder();
+                if (color != null && !color.trim().isEmpty()) {
+                    attributes.append("Color: ").append(color.trim());
+                }
+                if (size != null && !size.trim().isEmpty()) {
+                    if (attributes.length() > 0) {
+                        attributes.append(" / ");
+                    }
+                    attributes.append("Size: ").append(size.trim());
+                }
+                if (attributes.length() == 0) {
+                    attributes.append("Standard");
+                }
+                item.attributeSnapshot = attributes.toString();
+                return item;
+            }
+        }
+    }
+
+    /**
+     * Insert the order header for a walk-in purchase.
+     * user_id, voucher_id, and shipment_id are left NULL because this is a
+     * counter sale, not an online checkout.
+     */
+    private int insertStoreOrder(Connection conn,
+            String orderCode,
+            String recipientName,
+            String recipientPhone,
+            BigDecimal subtotal,
+            BigDecimal shippingFee,
+            BigDecimal totalPayment,
+            String note) throws SQLException {
+
+        String sql = "INSERT INTO [Order] "
+                + "(order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, "
+                + " ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, "
+                + " order_status, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, orderCode);
+            ps.setNull(2, Types.INTEGER);
+            ps.setNull(3, Types.INTEGER);
+            ps.setNull(4, Types.INTEGER);
+            ps.setString(5, recipientName);
+            ps.setString(6, recipientPhone);
+            ps.setNull(7, Types.VARCHAR);
+            ps.setString(8, "In-store purchase");
+            ps.setBigDecimal(9, subtotal);
+            ps.setBigDecimal(10, BigDecimal.ZERO);
+            ps.setBigDecimal(11, shippingFee);
+            ps.setBigDecimal(12, totalPayment);
+            ps.setString(13, "CONFIRMED");
+            ps.setString(14, note);
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        }
+
+        throw new SQLException("Failed to create store order header.");
+    }
+
+    /**
+     * Insert the sold item as a frozen order line so later product edits do not
+     * change the historical receipt.
+     */
+    private void insertStoreOrderDetail(Connection conn,
+            int orderId,
+            StoreOrderItem item,
+            int quantity) throws SQLException {
+
+        String sql = "INSERT INTO Order_Detail "
+                + "(order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, item.variantId);
+            ps.setString(3, item.productName);
+            ps.setString(4, item.attributeSnapshot);
+            ps.setInt(5, quantity);
+            ps.setBigDecimal(6, item.salePrice);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Record payment immediately because a counter sale is treated as paid at
+     * the moment the order is created.
+     */
+    private void insertStorePayment(Connection conn,
+            int orderId,
+            String paymentMethod,
+            BigDecimal amount) throws SQLException {
+
+        String sql = "INSERT INTO Payment "
+                + "(order_id, payment_method, payment_status, amount, transaction_reference, payment_date) "
+                + "VALUES (?, ?, ?, ?, ?, GETDATE())";
+
+        String method = paymentMethod == null || paymentMethod.trim().isEmpty()
+                ? "CASH"
+                : paymentMethod.trim().toUpperCase();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setString(2, method);
+            ps.setString(3, "PAID");
+            ps.setBigDecimal(4, amount);
+            // A counter sale does not need an external transaction reference.
+            ps.setNull(5, Types.VARCHAR);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Reduce stock after the store order is committed in the same transaction.
+     * Keeping this helper local avoids depending on the customer checkout DAO.
+     */
+    private void decreaseStock(Connection conn, int variantId, int quantity) throws SQLException {
+        String sql = "UPDATE Product_Variant SET stock_quantity = stock_quantity - ? WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, variantId);
+            ps.executeUpdate();
+        }
+    }
+
     private String mapShipmentStatus(String orderStatus) {
         if ("CONFIRMED".equalsIgnoreCase(orderStatus)) {
             return "PENDING_PICKUP";
@@ -334,6 +599,14 @@ public class OrderManagementDAO {
         order.setDistrictName(rs.getString("district_name"));
         order.setWardName(rs.getString("ward_name"));
 
+        // Walk-in orders do not have a linked online customer account, so we
+        // give them an explicit label instead of leaving the UI empty.
+        if (rs.getObject("user_id") == null) {
+            order.setCustomerUsername("Walk-in");
+            order.setCustomerFullName("Walk-in customer");
+            order.setCustomerEmail("N/A");
+        }
+
         return order;
     }
 
@@ -353,5 +626,18 @@ public class OrderManagementDAO {
                 ps.setObject(index, value);
             }
         }
+    }
+
+    /**
+     * Small private DTO so the shop-sale flow can reuse one helper query
+     * without adding another public model class.
+     */
+    private static class StoreOrderItem {
+        int variantId;
+        String productName;
+        String attributeSnapshot;
+        BigDecimal salePrice;
+        int stockQuantity;
+        String status;
     }
 }

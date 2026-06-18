@@ -38,6 +38,26 @@ public class OrderManagementService {
     }
 
     /**
+     * Create a walk-in order for a purchase made directly at the shop.
+     * The controller passes a small set of fields and the DAO handles the
+     * transaction, stock deduction, order detail insert, and payment record.
+     */
+    public String createStoreOrder(String recipientName,
+            String recipientPhone,
+            int variantId,
+            int quantity,
+            String paymentMethod,
+            String note) {
+        return dao.createInStoreOrder(
+                recipientName,
+                recipientPhone,
+                variantId,
+                quantity,
+                paymentMethod,
+                note);
+    }
+
+    /**
      * Status options used in the list filter dropdown.
      */
     public List<String> getStatusOptions() {

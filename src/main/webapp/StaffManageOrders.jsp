@@ -87,7 +87,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-2">
                         <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/orders">Order Management</a></li>
+                        <li class="breadcrumb-item"><a href="${ordersBasePath}">Order Management</a></li>
                         <li class="breadcrumb-item active">Order Details</li>
                     </ol>
                 </nav>
@@ -99,7 +99,7 @@
                             Customer: <strong>${not empty order.customerFullName ? order.customerFullName : order.customerUsername}</strong>
                         </div>
                     </div>
-                    <a href="${pageContext.request.contextPath}/staff/orders" class="btn btn-outline-secondary btn-sm px-3">
+                    <a href="${ordersBasePath}" class="btn btn-outline-secondary btn-sm px-3">
                         <i class="bi bi-arrow-left me-1"></i>Back to list
                     </a>
                 </div>
@@ -240,7 +240,7 @@
 
                                 <div class="d-flex flex-wrap gap-2 mb-3">
                                     <c:if test="${order.orderStatus eq 'PENDING'}">
-                                        <form action="${pageContext.request.contextPath}/staff/orders" method="post" class="m-0">
+                                        <form action="${ordersBasePath}" method="post" class="m-0">
                                             <input type="hidden" name="action" value="confirm">
                                             <input type="hidden" name="id" value="${order.id}">
                                             <input type="hidden" name="returnMode" value="detail">
@@ -250,7 +250,7 @@
                                         </form>
                                     </c:if>
                                     <c:if test="${order.orderStatus eq 'PENDING' or order.orderStatus eq 'CONFIRMED'}">
-                                        <form action="${pageContext.request.contextPath}/staff/orders" method="post" class="m-0">
+                                        <form action="${ordersBasePath}" method="post" class="m-0">
                                             <input type="hidden" name="action" value="cancel">
                                             <input type="hidden" name="id" value="${order.id}">
                                             <input type="hidden" name="returnMode" value="detail">
@@ -266,7 +266,7 @@
                                         <div class="alert alert-light border mb-0">This is the final status in the order lifecycle.</div>
                                     </c:when>
                                     <c:otherwise>
-                                        <form action="${pageContext.request.contextPath}/staff/orders" method="post">
+                                        <form action="${ordersBasePath}" method="post">
                                             <input type="hidden" name="action" value="updateStatus">
                                             <input type="hidden" name="id" value="${order.id}">
                                             <input type="hidden" name="returnMode" value="detail">
@@ -323,11 +323,14 @@
                         <h1 class="page-title"><i class="bi bi-receipt"></i>Order Management</h1>
                         <div class="text-muted mt-1">View orders, confirm orders, cancel orders, and update status across the order lifecycle.</div>
                     </div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStoreOrderModal">
+                        <i class="bi bi-bag-plus me-1"></i>Create store order
+                    </button>
                 </div>
 
                 <div class="card card-main mb-4">
                     <div class="card-body p-4">
-                        <form class="row g-3 align-items-end" method="get" action="${pageContext.request.contextPath}/staff/orders">
+                        <form class="row g-3 align-items-end" method="get" action="${ordersBasePath}">
                             <div class="col-lg-5">
                                 <label class="form-label fw-semibold">Keyword</label>
                                 <input type="text" name="keyword" class="form-control" value="${keyword}" placeholder="Order code, customer name, phone number...">
@@ -344,7 +347,7 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-search me-1"></i>Search
                                 </button>
-                                <a href="${pageContext.request.contextPath}/staff/orders" class="btn btn-outline-secondary">
+                                <a href="${ordersBasePath}" class="btn btn-outline-secondary">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
                                 </a>
                             </div>
@@ -423,11 +426,11 @@
                                                 </td>
                                                 <td class="pe-4">
                                                     <div class="d-flex justify-content-end flex-wrap gap-2">
-                                                        <a class="btn btn-sm btn-outline-primary" href="${pageContext.request.contextPath}/staff/orders?action=view&id=${o.id}">
+                                                        <a class="btn btn-sm btn-outline-primary" href="${ordersBasePath}?action=view&id=${o.id}">
                                                             <i class="bi bi-eye me-1"></i>View
                                                         </a>
                                                         <c:if test="${o.orderStatus eq 'PENDING'}">
-                                                            <form action="${pageContext.request.contextPath}/staff/orders" method="post" class="m-0">
+                                                            <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="confirm">
                                                                 <input type="hidden" name="id" value="${o.id}">
                                                                 <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Confirm order ${o.orderCode}?');">
@@ -436,7 +439,7 @@
                                                             </form>
                                                         </c:if>
                                                         <c:if test="${o.orderStatus eq 'PENDING' or o.orderStatus eq 'CONFIRMED'}">
-                                                            <form action="${pageContext.request.contextPath}/staff/orders" method="post" class="m-0">
+                                                            <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="cancel">
                                                                 <input type="hidden" name="id" value="${o.id}">
                                                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel order ${o.orderCode}?');">
@@ -460,8 +463,138 @@
     </div>
 </div>
 
+<!-- This modal creates a walk-in order directly from the order screen so staff
+     can complete a shop purchase without opening customer checkout. -->
+<div class="modal fade" id="createStoreOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-bag-plus me-2"></i>Create store order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="${ordersBasePath}" method="post">
+                <input type="hidden" name="action" value="createStoreOrder">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Recipient name</label>
+                            <input type="text" name="recipientName" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Recipient phone</label>
+                            <input type="text" name="recipientPhone" class="form-control" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Product variant</label>
+                            <select name="variantId" id="storeVariantId" class="form-select" required>
+                                <c:choose>
+                                    <c:when test="${not hasSellableProducts}">
+                                        <option value="">No sellable variants available</option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="item" items="${storeProducts}">
+                                            <c:if test="${item.stockQuantity gt 0}">
+                                                <option value="${item.variantId}"
+                                                        data-name="${item.productName}"
+                                                        data-brand="${item.brandName}"
+                                                        data-price="${item.salePrice}"
+                                                        data-stock="${item.stockQuantity}"
+                                                        data-attr="${item.color} ${item.size}">
+                                                    ${item.productName} - ${item.brandName} | ${empty item.color ? 'No color' : item.color} - ${empty item.size ? 'No size' : item.size}
+                                                </option>
+                                            </c:if>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Quantity</label>
+                            <input type="number" name="quantity" id="storeQuantity" class="form-control" min="1" value="1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Payment method</label>
+                            <select name="paymentMethod" class="form-select">
+                                <option value="CASH">CASH</option>
+                                <option value="CARD">CARD</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Note</label>
+                            <textarea name="note" class="form-control" rows="3" placeholder="Optional internal note for the order"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-light border mb-0">
+                                <div class="fw-semibold mb-1">Preview</div>
+                                <div id="storeOrderPreview" class="small text-muted">
+                                    Select a product variant to see the estimated total.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <c:choose>
+                        <c:when test="${not hasSellableProducts}">
+                            <button type="submit" class="btn btn-primary" disabled>
+                                <i class="bi bi-check2-circle me-1"></i>Create order
+                            </button>
+                        </c:when>
+                        <c:otherwise>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check2-circle me-1"></i>Create order
+                            </button>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Keep the modal summary in sync with the selected variant and quantity.
+    const variantSelect = document.getElementById('storeVariantId');
+    const quantityInput = document.getElementById('storeQuantity');
+    const previewBox = document.getElementById('storeOrderPreview');
+
+    function updateStoreOrderPreview() {
+        if (!variantSelect || !quantityInput || !previewBox) {
+            return;
+        }
+
+        const selectedOption = variantSelect.options[variantSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            previewBox.textContent = 'Select a product variant to see the estimated total.';
+            return;
+        }
+
+        const productName = selectedOption.getAttribute('data-name') || 'Unknown product';
+        const brandName = selectedOption.getAttribute('data-brand') || '';
+        const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+        const stock = parseInt(selectedOption.getAttribute('data-stock'), 10) || 0;
+        const qty = Math.max(parseInt(quantityInput.value, 10) || 1, 1);
+        const total = price * qty;
+
+        previewBox.innerHTML =
+            '<div><strong>' + productName + '</strong>' + (brandName ? ' - ' + brandName : '') + '</div>' +
+            '<div>Unit price: <strong>' + price.toLocaleString('en-US') + ' VND</strong></div>' +
+            '<div>Stock available: <strong>' + stock + '</strong></div>' +
+            '<div>Estimated total: <strong>' + total.toLocaleString('en-US') + ' VND</strong></div>';
+    }
+
+    if (variantSelect) {
+        variantSelect.addEventListener('change', updateStoreOrderPreview);
+    }
+    if (quantityInput) {
+        quantityInput.addEventListener('input', updateStoreOrderPreview);
+    }
+    updateStoreOrderPreview();
+
     document.querySelectorAll('.alert').forEach(function (el) {
         setTimeout(function () {
             const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
