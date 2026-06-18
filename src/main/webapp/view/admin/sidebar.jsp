@@ -18,7 +18,6 @@
     }
 
     // Tự xác định mục đang mở nếu trang cha chưa truyền activeTab.
-    // Cách này giúp sidebar vẫn highlight đúng ngay cả khi JSP include bị thiếu tham số.
     String activeTab = request.getParameter("activeTab");
     if (activeTab == null || activeTab.isBlank()) {
         String path = request.getRequestURI();
@@ -41,6 +40,9 @@
                 activeTab = "discounts";
             } else if (path.startsWith("/admin/orders") || path.startsWith("/staff/orders")) {
                 activeTab = "orders";
+            } else if (path.startsWith("/admin/shipments") || path.startsWith("/staff/shipments")) {
+                // BỔ SUNG: Tự động nhận diện highlight mục vận chuyển
+                activeTab = "shipments";
             } else if (path.startsWith("/admin/customers") || path.startsWith("/staff/customers")) {
                 activeTab = "customers";
             } else if (path.startsWith("/staff/products")) {
@@ -159,7 +161,6 @@
             <i class="fa-solid fa-chart-line me-2"></i>Dashboard
         </a>
 
-        <%-- ĐÃ SỬA: Đồng bộ toàn bộ link điều hướng sản phẩm về cấu trúc tổng hợp quản lý của AdminDashboard Servlet --%>
         <c:choose>
             <c:when test="${sessionScope.authRoleName == 'STAFF'}">
                 <a href="${pageContext.request.contextPath}/staff/products" class="${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
@@ -179,6 +180,10 @@
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="${requestScope.sidebarActiveTab == 'orders' ? 'active' : ''}">
             <i class="fa-solid fa-receipt me-2"></i>Orders
+        </a>
+
+        <a href="${pageContext.request.contextPath}${rolePrefix}/shipments" class="${requestScope.sidebarActiveTab == 'shipments' ? 'active' : ''}">
+            <i class="fa-solid fa-truck me-2"></i>Shipments
         </a>
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}">
