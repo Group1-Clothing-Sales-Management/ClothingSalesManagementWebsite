@@ -59,12 +59,16 @@ public class AdminCategoryController extends HttpServlet {
                 String name = request.getParameter("categoryName");
                 String slug = request.getParameter("slug");
 
-                Category c = new Category();
-                c.setCategoryName(name);
-                c.setSlug(slug);
+                if (categoryDAO.isCategoryNameExists(name)) {
+                    statusRedirect = "duplicate"; // Gán trạng thái trùng lặp dữ liệu
+                } else {
+                    Category c = new Category();
+                    c.setCategoryName(name);
+                    c.setSlug(slug);
 
-                if (!categoryDAO.insertCategory(c)) {
-                    statusRedirect = "error";
+                    if (!categoryDAO.insertCategory(c)) {
+                        statusRedirect = "error";
+                    }
                 }
 
             } else if ("UPDATE".equals(action)) {

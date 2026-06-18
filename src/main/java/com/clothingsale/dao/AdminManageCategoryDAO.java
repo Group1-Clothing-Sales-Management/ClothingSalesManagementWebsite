@@ -88,4 +88,21 @@ public class AdminManageCategoryDAO {
             return false;
         }
     }
+
+    public boolean isCategoryNameExists(String categoryName) {
+        // Kiểm tra trùng tên với các danh mục đang hoạt động (status = 1)
+        String sql = "SELECT COUNT(*) FROM Category WHERE category_name = ? AND status = 1";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, categoryName.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0; // Trả về true nếu số lượng tìm thấy > 0
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
