@@ -78,6 +78,15 @@ public class CartController extends HttpServlet {
 				}
 			}
 
+			// flash message support: move from session to request
+			HttpSession sess = request.getSession(false);
+			if (sess != null) {
+				Object msg = sess.getAttribute("cartMessage");
+				if (msg != null) {
+					request.setAttribute("cartMessage", msg.toString());
+					sess.removeAttribute("cartMessage");
+				}
+			}
 			Collection<CartItem> items = cart.values();
 			request.setAttribute("items", items);
 			request.getRequestDispatcher("/view/cart.jsp").forward(request, response);
@@ -133,20 +142,55 @@ public class CartController extends HttpServlet {
 				BigDecimal price = BigDecimal.ZERO;
 				try { price = new BigDecimal(priceStr); } catch (Exception e) {}
 
-				CartItem item = cart.get(variantId);
-				if (item == null) {
-					item = new CartItem();
-					item.setVariantId(variantId);
-					item.setProductId(productId);
-					item.setProductName(productName);
-					item.setAttributes(attributes);
-					item.setPrice(price);
-					item.setQuantity(quantity);
-					item.setImageUrl(imageUrl);
-					cart.put(variantId, item);
-				} else {
-					item.setQuantity(item.getQuantity() + quantity);
-				}
+CartDAO dao = new CartDAO();
+
+int stock = dao.getAvailableStock(variantId);
+
+if (stock <= 0) {
+    session.setAttribute("cartMessage",
+            "Sản phẩm đã hết hàng.");
+    response.sendRedirect(request.getContextPath() + "/cart");
+    return;
+}
+
+CartItem item = cart.get(variantId);
+
+if (item == null) {
+
+    if (quantity > stock) {
+        session.setAttribute("cartMessage",
+                "Chỉ còn " + stock + " sản phẩm trong kho.");
+        response.sendRedirect(request.getContextPath() + "/cart");
+        return;
+    }
+
+    item = new CartItem();
+    item.setVariantId(variantId);
+    item.setProductId(productId);
+    item.setProductName(productName);
+    item.setAttributes(attributes);
+    item.setPrice(price);
+    item.setQuantity(quantity);
+    item.setImageUrl(imageUrl);
+
+    cart.put(variantId, item);
+
+} else {
+
+    int newQty = item.getQuantity() + quantity;
+
+    if (newQty > stock) {
+        session.setAttribute("cartMessage",
+                "Chỉ còn " + stock + " sản phẩm trong kho.");
+        response.sendRedirect(request.getContextPath() + "/cart");
+        return;
+    }
+
+    item.setQuantity(newQty);
+}
+
+session.setAttribute("cartMessage",
+        "Thêm vào giỏ hàng thành công.");
 
 				LOGGER.log(Level.FINE, "[CartController] Cart after add: {0}", cartSummary(cart));
 
@@ -175,14 +219,40 @@ public class CartController extends HttpServlet {
 				int quantity = 1;
 				try { quantity = Integer.parseInt(qtyStr); } catch (Exception e) {}
 
-				CartItem item = cart.get(variantId);
-				if (item != null) {
-					if (quantity <= 0) {
-						cart.remove(variantId);
-					} else {
-						item.setQuantity(quantity);
-					}
-				}
+				CartDAO dao = new CartDAO();
+
+int stock = dao.getAvailableStock(variantId);
+
+CartItem item = cart.get(variantId);
+
+if (item != null) {
+
+    if (quantity <= 0) {
+
+        cart.remove(variantId);
+
+        session.setAttribute("cartMessage",
+                "Xóa sản phẩm khỏi giỏ hàng thành công.");
+
+    } else {
+
+        if (quantity > stock) {
+
+            session.setAttribute("cartMessage",
+                    "Chỉ còn " + stock + " sản phẩm trong kho.");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/cart");
+
+            return;
+        }
+
+        item.setQuantity(quantity);
+
+        session.setAttribute("cartMessage",
+                "Cập nhật giỏ hàng thành công.");
+    }
+}
 
 				LOGGER.log(Level.FINE, "[CartController] Cart after update: {0}", cartSummary(cart));
 
@@ -207,6 +277,9 @@ public class CartController extends HttpServlet {
 				String variantIdStr = request.getParameter("variantId");
 				int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
 				cart.remove(variantId);
+
+                                session.setAttribute("cartMessage",
+                                    "Xóa sản phẩm khỏi giỏ hàng thành công.");
 
 				LOGGER.log(Level.FINE, "[CartController] Cart after remove: {0}", cartSummary(cart));
 

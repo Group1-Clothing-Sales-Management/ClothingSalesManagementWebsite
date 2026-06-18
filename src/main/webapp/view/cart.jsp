@@ -29,6 +29,9 @@
 
     <div class="container py-4">
         <h2 class="mb-4">Giỏ hàng của bạn</h2>
+        <% if (request.getAttribute("cartMessage") != null) { %>
+            <div class="alert alert-info"><%= request.getAttribute("cartMessage") %></div>
+        <% } %>
         <% if (items == null || items.isEmpty()) { %>
             <div class="text-center my-5">
                 <div class="mb-3">
