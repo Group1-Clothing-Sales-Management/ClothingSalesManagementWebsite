@@ -16,105 +16,34 @@
 
             <div class="container-fluid p-4" style="flex: 1;">
 
-                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                    <h2 class="text-secondary fw-semibold">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                    <h2 class="text-secondary fw-semibold m-0">
                         <i class="fa-solid fa-tags me-2"></i>Product Category Management
                     </h2>
+                    <button type="button" class="btn btn-success d-flex align-items-center" 
+                            data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openAddModal()">
+                        <i class="fa-solid fa-plus-circle me-2"></i>Add New Category
+                    </button>
                 </div>
 
                 <c:if test="${param.status == 'success'}">
-                    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
-                        <i class="fa-solid fa-circle-check me-2"></i>
-                        <div>Action executed successfully!</div>
-                        <button type="button" class="btn-close" data-vis="alert" aria-label="Close" onclick="this.parentElement.style.display = 'none';"></button>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-circle-check me-2"></i> Action executed successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 </c:if>
                 <c:if test="${param.status == 'error'}">
-                    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
-                        <i class="fa-solid fa-circle-exclamation me-2"></i>
-                        <div>An error occurred. Please check your data input and try again!</div>
-                        <button type="button" class="btn-close" data-vis="alert" aria-label="Close" onclick="this.parentElement.style.display = 'none';"></button>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-circle-exclamation me-2"></i> An error occurred. Please try again!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 </c:if>
                 <c:if test="${param.status == 'duplicate'}">
-                    <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center" role="alert">
-                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                        <div><strong>Duplicate errors!</strong> This category name or URL (Slug) already exists in the system..</div>
-                        <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.style.display = 'none';"></button>
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> <strong>Duplicate Name!</strong> This category already exists.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 </c:if>
-
-                <div class="card shadow-sm mb-4">
-                    <c:choose>
-                        <%-- CASE 1: IN EDIT MODE --%>
-                        <c:when test="${not empty category}">
-                            <div class="card-header bg-primary text-white d-flex align-items-center">
-                                <i class="fa-solid fa-pen-to-square me-2"></i>
-                                <h5 class="card-title mb-0">Edit Category: <span class="badge bg-light text-primary">${category.categoryName}</span></h5>
-                            </div>
-                            <div class="card-body bg-light-subtle">
-                                <form action="${pageContext.request.contextPath}/admin/manage-category" method="post" class="row g-3 align-items-end">
-                                    <input type="hidden" name="action" value="UPDATE">
-                                    <input type="hidden" name="categoryId" value="${category.id}">
-
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold text-muted">Category Name</label>
-                                        <input type="text" name="categoryName" class="form-control" value="${category.categoryName}" required>
-                                    </div>
-
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold text-muted">Slug URL</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-secondary-subtle text-muted"><i class="fa-solid fa-link"></i></span>
-                                            <input type="text" name="slug" class="form-control" value="${category.slug}" required>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-2 d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary w-100">
-                                            <i class="fa-solid fa-floppy-disk me-1"></i>Save
-                                        </button>
-                                        <a href="${pageContext.request.contextPath}/admin/manage-category" class="btn btn-outline-secondary w-100">
-                                            Cancel
-                                        </a>
-                                    </div>
-                                </form>
-                            </div>
-                        </c:when>
-
-                        <%-- CASE 2: DEFAULT MODE (ADD NEW CATEGORY) --%>
-                        <c:otherwise>
-                            <div class="card-header bg-success text-white d-flex align-items-center">
-                                <i class="fa-solid fa-plus-circle me-2"></i>
-                                <h5 class="card-title mb-0">Create New Category</h5>
-                            </div>
-                            <div class="card-body">
-                                <form action="${pageContext.request.contextPath}/admin/manage-category" method="post" class="row g-3 align-items-end">
-                                    <input type="hidden" name="action" value="ADD">
-
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold text-muted">Category Name</label>
-                                        <input type="text" name="categoryName" class="form-control" required placeholder="e.g., Men T-Shirt">
-                                    </div>
-
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold text-muted">Slug URL</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-secondary-subtle text-muted"><i class="fa-solid fa-link"></i></span>
-                                            <input type="text" name="slug" class="form-control" required placeholder="e.g., men-t-shirt">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <button type="submit" class="btn btn-success w-100">
-                                            <i class="fa-solid fa-plus me-1"></i>Add New
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
 
                 <div class="card shadow-sm">
                     <div class="card-header bg-dark text-white d-flex align-items-center">
@@ -134,26 +63,22 @@
                                 </thead>
                                 <tbody>
                                     <c:forEach var="cat" items="${categories}">
-                                        <tr class="${category.id == cat.id ? 'table-warning fw-semibold' : ''}">
+                                        <tr>
                                             <td class="text-center text-muted fw-bold">${cat.id}</td>
-                                            <td>
-                                                <span class="text-dark">${cat.categoryName}</span>
-                                            </td>
-                                            <td>
-                                                <code class="text-danger bg-danger-subtle px-2 py-1 rounded">${cat.slug}</code>
-                                            </td>
+                                            <td><span class="text-dark fw-medium">${cat.categoryName}</span></td>
+                                            <td><code class="text-danger bg-danger-subtle px-2 py-1 rounded">${cat.slug}</code></td>
                                             <td class="text-center">
                                                 <div class="d-inline-flex gap-2">
-                                                    <a href="${pageContext.request.contextPath}/admin/manage-category?action=edit&id=${cat.id}" 
-                                                       class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                            data-bs-toggle="modal" data-bs-target="#categoryModal"
+                                                            onclick="openEditModal('${cat.id}', '${cat.categoryName}', '${cat.slug}')">
                                                         <i class="fa-solid fa-pen me-1"></i>Edit
-                                                    </a>
-
+                                                    </button>
                                                     <form action="${pageContext.request.contextPath}/admin/manage-category" method="post" 
-                                                          onsubmit="return confirm('Are you sure you want to delete this category? This action cannot be undone.');" class="m-0">
+                                                          onsubmit="return confirm('Are you sure you want to delete this category?');" class="m-0">
                                                         <input type="hidden" name="action" value="DELETE">
                                                         <input type="hidden" name="categoryId" value="${cat.id}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger d-flex align-items-center">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
                                                             <i class="fa-solid fa-trash me-1"></i>Delete
                                                         </button>
                                                     </form>
@@ -170,6 +95,88 @@
             </div>
         </div>
 
+        <div class="modal fade" id="categoryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow">
+                    <form action="${pageContext.request.contextPath}/admin/manage-category" method="post">
+                        
+                        <input type="hidden" name="action" id="modalAction" value="ADD">
+                        <input type="hidden" name="categoryId" id="modalCategoryId" value="">
+
+                        <div class="modal-header bg-dark text-white">
+                            <h5 class="modal-title" id="categoryModalLabel">
+                                <i class="fa-solid fa-tag me-2"></i><span id="modalTitleText">Add New Category</span>
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Category Name</label>
+                                <input type="text" name="categoryName" id="modalCategoryName" class="form-control" required placeholder="e.g., Spring Collection">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Slug URL</label>
+                                <input type="text" name="slug" id="modalSlug" class="form-control" required placeholder="e.g., spring-collection">
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success" id="modalSubmitBtn">
+                                <i class="fa-solid fa-floppy-disk me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <script>
+            const modalTitleText = document.getElementById('modalTitleText');
+            const modalAction = document.getElementById('modalAction');
+            const modalCategoryId = document.getElementById('modalCategoryId');
+            const modalCategoryName = document.getElementById('modalCategoryName');
+            const modalSlug = document.getElementById('modalSlug');
+            const modalSubmitBtn = document.getElementById('modalSubmitBtn');
+
+            // Cấu hình khi mở chế độ THÊM MỚI
+            function openAddModal() {
+                modalTitleText.innerText = "Add New Category";
+                modalAction.value = "ADD";
+                modalCategoryId.value = "";
+                modalCategoryName.value = "";
+                modalSlug.value = "";
+                
+                modalSubmitBtn.className = "btn btn-success";
+                modalSubmitBtn.innerHTML = '<i class="fa-solid fa-plus me-1"></i>Add New';
+            }
+
+            // Cấu hình khi mở chế độ CHỈNH SỬA
+            function openEditModal(id, name, slug) {
+                modalTitleText.innerText = "Edit Category: " + name;
+                modalAction.value = "UPDATE";
+                modalCategoryId.value = id;
+                modalCategoryName.value = name;
+                modalSlug.value = slug;
+                
+                modalSubmitBtn.className = "btn btn-primary";
+                modalSubmitBtn.innerHTML = '<i class="fa-solid fa-rotate me-1"></i>Update Changes';
+            }
+
+            // Tự động sinh Slug mượt mà từ Category Name khi gõ
+            modalCategoryName.addEventListener('input', function() {
+                let text = this.value.toLowerCase();
+                text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Bỏ dấu tiếng Việt
+                text = text.replace(/[đĐ]/g, 'd');
+                text = text.replace(/([^0-9a-z-\s])/g, ''); // Xóa kí tự đặc biệt
+                text = text.replace(/(\s+)/g, '-'); // Đổi khoảng trắng sang dấu gạch ngang
+                text = text.replace(/-+/g, '-');
+                text = text.trim().replace(/^-+|-+$/g, ''); 
+                modalSlug.value = text;
+            });
+        </script>
     </body>
 </html>
