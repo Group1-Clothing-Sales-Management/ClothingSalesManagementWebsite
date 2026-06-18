@@ -24,7 +24,6 @@ public class AdminCategoryController extends HttpServlet {
             action = "list";
         }
 
-        // Luồng hiển thị danh sách luôn chạy để đảm bảo bảng dữ liệu luôn có data
         List<Category> categories = categoryDAO.getAllCategories();
         request.setAttribute("categories", categories);
 

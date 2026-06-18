@@ -171,9 +171,9 @@
                     <i class="fa-solid fa-box me-2"></i>Manage Products
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
-                    <i class="fa-solid fa-box me-2"></i>Stock
+                    <i class="fa-solid fa-warehouse me-2"></i>Stock
                 </a>
-                <a href="${pageContext.request.contextPath}/admin/manage-category">Manage Category</a>    
+                <a href="${pageContext.request.contextPath}/admin/manage-category"><i class="fa-solid fa-tags me-2"></i>Manage Category</a>    
             </c:otherwise>
         </c:choose>
 
