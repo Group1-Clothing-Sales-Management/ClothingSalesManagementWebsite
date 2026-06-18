@@ -167,14 +167,36 @@ public class OrderManagementDAO {
             String paymentMethod,
             String note) {
 
-        if (recipientName == null || recipientName.trim().isEmpty()) {
+        String normalizedName = recipientName == null ? "" : recipientName.trim();
+        String normalizedPhone = recipientPhone == null ? "" : recipientPhone.trim();
+        String normalizedPaymentMethod = paymentMethod == null ? "" : paymentMethod.trim().toUpperCase();
+        String normalizedNote = note == null ? "" : note.trim();
+
+        if (normalizedName.isEmpty()) {
             return "Recipient name is required.";
         }
-        if (recipientPhone == null || recipientPhone.trim().isEmpty()) {
+        if (normalizedName.length() < 2) {
+            return "Recipient name must be at least 2 characters.";
+        }
+        if (normalizedPhone.isEmpty()) {
             return "Recipient phone is required.";
+        }
+        if (!normalizedPhone.matches("\\d{1,10}")) {
+            return "Recipient phone must contain up to 10 digits.";
+        }
+        if (variantId <= 0) {
+            return "Please select a product variant.";
         }
         if (quantity <= 0) {
             return "Quantity must be greater than zero.";
+        }
+        if (!normalizedPaymentMethod.isEmpty()
+                && !"CASH".equals(normalizedPaymentMethod)
+                && !"CARD".equals(normalizedPaymentMethod)) {
+            return "Payment method must be CASH or CARD.";
+        }
+        if (normalizedNote.length() > 500) {
+            return "Note cannot exceed 500 characters.";
         }
 
         Connection conn = null;
@@ -217,15 +239,15 @@ public class OrderManagementDAO {
             int orderId = insertStoreOrder(
                     conn,
                     orderCode,
-                    recipientName.trim(),
-                    recipientPhone.trim(),
+                    normalizedName,
+                    normalizedPhone,
                     subtotal,
                     shippingFee,
                     totalPayment,
-                    note);
+                    normalizedNote);
 
             insertStoreOrderDetail(conn, orderId, item, quantity);
-            insertStorePayment(conn, orderId, paymentMethod, totalPayment);
+            insertStorePayment(conn, orderId, normalizedPaymentMethod, totalPayment);
 
             // Stock must drop immediately because the product has already been
             // handed to the customer at the store.
