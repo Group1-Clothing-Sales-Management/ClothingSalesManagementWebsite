@@ -125,7 +125,7 @@ public class Login extends HttpServlet {
     }
     // Customer -> front page
     else if ("CUSTOMER".equalsIgnoreCase(roleName)) {
-        response.sendRedirect(contextPath + "/");
+        response.sendRedirect(contextPath + "/home");
     } else {
         session.invalidate();
         response.sendRedirect(contextPath + "/admin/login?error=unauthorized");
