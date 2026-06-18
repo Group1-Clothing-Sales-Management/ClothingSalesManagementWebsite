@@ -14,7 +14,13 @@ public class CartDAO {
 
     private static final String SELECT_CART_SQL =
             "SELECT c.variant_id, c.quantity, pv.product_id, pv.sale_price, "
-            + "p.product_name, img.image_url AS main_image "
+            + "p.product_name, img.image_url AS main_image, "
+            + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav "
+            + "JOIN Attribute a ON vav.attribute_id = a.id "
+            + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') AS color, "
+            + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav "
+            + "JOIN Attribute a ON vav.attribute_id = a.id "
+            + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') AS size "
             + "FROM Cart c "
             + "LEFT JOIN Product_Variant pv ON c.variant_id = pv.id "
             + "LEFT JOIN Product p ON pv.product_id = p.id "
@@ -57,6 +63,18 @@ public class CartDAO {
                         BigDecimal price = rs.getBigDecimal("sale_price");
                         String productName = rs.getString("product_name");
                         String imageUrl = rs.getString("main_image");
+                        String color = rs.getString("color");
+                        String size = rs.getString("size");
+                        StringBuilder attributes = new StringBuilder();
+                        if (color != null && !color.trim().isEmpty()) {
+                            attributes.append("Color: ").append(color.trim());
+                        }
+                        if (size != null && !size.trim().isEmpty()) {
+                            if (attributes.length() > 0) {
+                                attributes.append(" / ");
+                            }
+                            attributes.append("Size: ").append(size.trim());
+                        }
 
                         CartItem item = new CartItem();
 
@@ -68,6 +86,8 @@ public class CartDAO {
                                 price != null ? price : BigDecimal.ZERO);
                         item.setQuantity(quantity);
                         item.setImageUrl(imageUrl);
+                        item.setAttributes(
+                                attributes.length() > 0 ? attributes.toString() : "Standard");
 
                         result.put(variantId, item);
                     }

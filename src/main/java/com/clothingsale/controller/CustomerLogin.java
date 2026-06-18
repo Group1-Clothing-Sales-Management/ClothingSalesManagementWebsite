@@ -114,6 +114,6 @@ public class CustomerLogin extends HttpServlet {
         session.setAttribute("authRoleId", user.getRoleId());
         session.setAttribute("authRoleName", user.getRoleName());
 
-        response.sendRedirect(request.getContextPath() + "/");
+        response.sendRedirect(request.getContextPath() + "/home");
     }
 }

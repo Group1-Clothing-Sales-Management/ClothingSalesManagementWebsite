@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(
         name = "CustomerHomePageController",
-        urlPatterns = {"/home"}
+        urlPatterns = {"/Home", "/home"}
 )
 public class CustomerHomePageController extends HttpServlet {
 

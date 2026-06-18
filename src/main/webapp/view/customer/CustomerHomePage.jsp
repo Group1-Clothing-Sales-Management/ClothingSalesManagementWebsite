@@ -546,12 +546,20 @@
 
                                             <c:when test="${loggedIn}">
 
-                                                <form action="${pageContext.request.contextPath}/cart" method="post" style="margin:0">
-                                                    <input type="hidden" name="variantId" value="${p.variants[0].id}" />
+                                                <form action="${pageContext.request.contextPath}/cart" method="post" class="add-cart-form" style="margin:0">
+                                                    <select name="variantId" class="form-select form-select-sm mb-2 variant-select">
+                                                        <c:forEach items="${p.variants}" var="v">
+                                                            <option value="${v.id}"
+                                                                    data-price="${v.salePrice}"
+                                                                    data-attributes="${v.attributeDetails}">
+                                                                ${v.attributeDetails} - ${v.salePrice} $
+                                                            </option>
+                                                        </c:forEach>
+                                                    </select>
                                                     <input type="hidden" name="productId" value="${p.id}" />
                                                     <input type="hidden" name="productName" value="${p.productName}" />
-                                                    <input type="hidden" name="attributes" value="" />
-                                                    <input type="hidden" name="price" value="${p.variants[0].salePrice}" />
+                                                    <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
+                                                    <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
                                                     <input type="hidden" name="quantity" value="1" />
                                                     <input type="hidden" name="imageUrl" value="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}" />
                                                     <button type="submit" class="btn btn-danger w-100">
@@ -697,7 +705,46 @@
 
         </footer>
 
+        <div class="modal fade" id="cartMessageModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Giỏ hàng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="cartMessageText">
+                        Đã thêm sản phẩm vào giỏ hàng.
+                    </div>
+                    <div class="modal-footer">
+                        <a href="${pageContext.request.contextPath}/cart" class="btn btn-outline-dark">Xem giỏ hàng</a>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Tiếp tục mua sắm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.querySelectorAll('.variant-select').forEach(function(select) {
+                function syncVariant() {
+                    var form = select.closest('.add-cart-form');
+                    var option = select.options[select.selectedIndex];
+                    form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
+                    form.querySelector('.price-input').value = option.dataset.price || '0';
+                }
+                select.addEventListener('change', syncVariant);
+                syncVariant();
+            });
+
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('cartAdded') || params.has('cartError')) {
+                var message = params.has('cartAdded')
+                    ? 'Đã thêm sản phẩm vào giỏ hàng.'
+                    : 'Không thể thêm sản phẩm vào giỏ hàng. Vui lòng kiểm tra tồn kho.';
+                document.getElementById('cartMessageText').textContent = message;
+                new bootstrap.Modal(document.getElementById('cartMessageModal')).show();
+            }
+        </script>
 
     </body>
 

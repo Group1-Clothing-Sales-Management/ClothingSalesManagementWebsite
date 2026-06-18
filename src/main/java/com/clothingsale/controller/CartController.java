@@ -1,11 +1,14 @@
 package com.clothingsale.controller;
 
 import com.clothingsale.dao.CartDAO;
+import com.clothingsale.dao.CustomerProductDAO;
 import com.clothingsale.model.CartItem;
+import com.clothingsale.model.ProductVariant;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.logging.Level;
@@ -88,7 +91,18 @@ public class CartController extends HttpServlet {
 				}
 			}
 			Collection<CartItem> items = cart.values();
+			Map<Integer, List<ProductVariant>> variantsByProductId = new HashMap<>();
+			CustomerProductDAO productDAO = new CustomerProductDAO();
+			for (CartItem item : items) {
+				if (item != null && item.getProductId() > 0
+						&& !variantsByProductId.containsKey(item.getProductId())) {
+					variantsByProductId.put(
+							item.getProductId(),
+							productDAO.getVariantsByProductId(item.getProductId()));
+				}
+			}
 			request.setAttribute("items", items);
+			request.setAttribute("variantsByProductId", variantsByProductId);
 			request.getRequestDispatcher("/view/cart.jsp").forward(request, response);
 			return;
 		}
@@ -149,7 +163,7 @@ int stock = dao.getAvailableStock(variantId);
 if (stock <= 0) {
     session.setAttribute("cartMessage",
             "Sản phẩm đã hết hàng.");
-    response.sendRedirect(request.getContextPath() + "/cart");
+    response.sendRedirect(buildAddToCartRedirect(request, false));
     return;
 }
 
@@ -160,7 +174,7 @@ if (item == null) {
     if (quantity > stock) {
         session.setAttribute("cartMessage",
                 "Chỉ còn " + stock + " sản phẩm trong kho.");
-        response.sendRedirect(request.getContextPath() + "/cart");
+        response.sendRedirect(buildAddToCartRedirect(request, false));
         return;
     }
 
@@ -182,11 +196,15 @@ if (item == null) {
     if (newQty > stock) {
         session.setAttribute("cartMessage",
                 "Chỉ còn " + stock + " sản phẩm trong kho.");
-        response.sendRedirect(request.getContextPath() + "/cart");
+        response.sendRedirect(buildAddToCartRedirect(request, false));
         return;
     }
 
     item.setQuantity(newQty);
+    item.setProductName(productName);
+    item.setAttributes(attributes);
+    item.setPrice(price);
+    item.setImageUrl(imageUrl);
 }
 
 session.setAttribute("cartMessage",
@@ -208,20 +226,34 @@ session.setAttribute("cartMessage",
 					writeAnonCartCookie(response, cart);
 				}
 
-				response.sendRedirect(request.getContextPath() + "/cart?skipMerge=1");
+				response.sendRedirect(buildAddToCartRedirect(request, true));
 				break;
 			}
 
 			case "update": {
 				String variantIdStr = request.getParameter("variantId");
+				String newVariantIdStr = request.getParameter("newVariantId");
 				String qtyStr = request.getParameter("quantity");
 				int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
+				int newVariantId = Integer.parseInt(
+						newVariantIdStr != null && !newVariantIdStr.isEmpty()
+								? newVariantIdStr
+								: (variantIdStr != null ? variantIdStr : "0"));
 				int quantity = 1;
 				try { quantity = Integer.parseInt(qtyStr); } catch (Exception e) {}
+				String productIdStr = request.getParameter("productId");
+				String productName = request.getParameter("productName");
+				String attributes = request.getParameter("attributes");
+				String priceStr = request.getParameter("price");
+				String imageUrl = request.getParameter("imageUrl");
+				int productId = 0;
+				try { productId = Integer.parseInt(productIdStr); } catch (Exception e) {}
+				BigDecimal price = BigDecimal.ZERO;
+				try { price = new BigDecimal(priceStr); } catch (Exception e) {}
 
 				CartDAO dao = new CartDAO();
 
-int stock = dao.getAvailableStock(variantId);
+int stock = dao.getAvailableStock(newVariantId);
 
 CartItem item = cart.get(variantId);
 
@@ -247,7 +279,45 @@ if (item != null) {
             return;
         }
 
-        item.setQuantity(quantity);
+        if (newVariantId != variantId) {
+            CartItem target = cart.get(newVariantId);
+            if (target != null) {
+                int mergedQty = target.getQuantity() + quantity;
+                if (mergedQty > stock) {
+                    session.setAttribute("cartMessage",
+                            "Chá»‰ cÃ²n " + stock + " sáº£n pháº©m trong kho.");
+
+                    response.sendRedirect(
+                            request.getContextPath() + "/cart");
+
+                    return;
+                }
+                target.setQuantity(mergedQty);
+                target.setProductId(productId > 0 ? productId : target.getProductId());
+                target.setProductName(productName != null ? productName : target.getProductName());
+                target.setAttributes(attributes != null ? attributes : target.getAttributes());
+                target.setPrice(price);
+                target.setImageUrl(imageUrl != null ? imageUrl : target.getImageUrl());
+                cart.remove(variantId);
+            } else {
+                cart.remove(variantId);
+                item.setVariantId(newVariantId);
+                item.setProductId(productId > 0 ? productId : item.getProductId());
+                item.setProductName(productName != null ? productName : item.getProductName());
+                item.setAttributes(attributes != null ? attributes : item.getAttributes());
+                item.setPrice(price);
+                item.setImageUrl(imageUrl != null ? imageUrl : item.getImageUrl());
+                item.setQuantity(quantity);
+                cart.put(newVariantId, item);
+            }
+        } else {
+            item.setQuantity(quantity);
+            item.setProductId(productId > 0 ? productId : item.getProductId());
+            item.setProductName(productName != null ? productName : item.getProductName());
+            item.setAttributes(attributes != null ? attributes : item.getAttributes());
+            item.setPrice(price);
+            item.setImageUrl(imageUrl != null ? imageUrl : item.getImageUrl());
+        }
 
         session.setAttribute("cartMessage",
                 "Cập nhật giỏ hàng thành công.");
@@ -314,6 +384,16 @@ if (item != null) {
 			joiner.add("v:" + it.getVariantId() + ", p:" + it.getProductId() + ", q:" + it.getQuantity() + ", name:" + name + ", img:" + img);
 		}
 		return "[" + joiner.toString() + "]";
+	}
+
+	private String buildAddToCartRedirect(HttpServletRequest request, boolean success) {
+		String referer = request.getHeader("Referer");
+		String contextPath = request.getContextPath();
+		String target = (referer != null && !referer.trim().isEmpty())
+				? referer
+				: contextPath + "/home";
+		String separator = target.contains("?") ? "&" : "?";
+		return target + separator + (success ? "cartAdded=1" : "cartError=1");
 	}
 
 	// Anonymous cart cookie helpers

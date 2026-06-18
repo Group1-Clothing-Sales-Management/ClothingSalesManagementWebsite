@@ -164,10 +164,16 @@ public class CustomerProductDAO {
         List<ProductVariant> list = new ArrayList<>();
 
         String sql
-                = "SELECT id, product_id, sku, cost_price, "
-                + "sale_price, stock_quantity, status "
-                + "FROM Product_Variant "
-                + "WHERE product_id = ?";
+                = "SELECT pv.id, pv.product_id, pv.sku, pv.cost_price, "
+                + "pv.sale_price, pv.stock_quantity, pv.status, "
+                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav "
+                + "JOIN Attribute a ON vav.attribute_id = a.id "
+                + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') AS color, "
+                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav "
+                + "JOIN Attribute a ON vav.attribute_id = a.id "
+                + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') AS size "
+                + "FROM Product_Variant pv "
+                + "WHERE pv.product_id = ? AND pv.status = 'ACTIVE'";
 
         try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -193,6 +199,21 @@ public class CustomerProductDAO {
                     );
                     variant.setStatus(
                             rs.getString("status")
+                    );
+                    String color = rs.getString("color");
+                    String size = rs.getString("size");
+                    StringBuilder details = new StringBuilder();
+                    if (color != null && !color.trim().isEmpty()) {
+                        details.append("Color: ").append(color.trim());
+                    }
+                    if (size != null && !size.trim().isEmpty()) {
+                        if (details.length() > 0) {
+                            details.append(" / ");
+                        }
+                        details.append("Size: ").append(size.trim());
+                    }
+                    variant.setAttributeDetails(
+                            details.length() > 0 ? details.toString() : "Standard"
                     );
 
                     list.add(variant);
