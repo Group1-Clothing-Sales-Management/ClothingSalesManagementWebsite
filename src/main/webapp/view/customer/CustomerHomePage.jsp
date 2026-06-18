@@ -546,14 +546,19 @@
 
                                             <c:when test="${loggedIn}">
 
-                                                <a 
-                                                    href="${pageContext.request.contextPath}/cart?action=add&variantId=${p.variants[0].id}"
-                                                    class="btn btn-danger w-100">
-
-                                                    <i class="fa-solid fa-cart-plus"></i>
-                                                    Add To Cart
-
-                                                </a>
+                                                <form action="${pageContext.request.contextPath}/cart" method="post" style="margin:0">
+                                                    <input type="hidden" name="variantId" value="${p.variants[0].id}" />
+                                                    <input type="hidden" name="productId" value="${p.id}" />
+                                                    <input type="hidden" name="productName" value="${p.productName}" />
+                                                    <input type="hidden" name="attributes" value="" />
+                                                    <input type="hidden" name="price" value="${p.variants[0].salePrice}" />
+                                                    <input type="hidden" name="quantity" value="1" />
+                                                    <input type="hidden" name="imageUrl" value="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}" />
+                                                    <button type="submit" class="btn btn-danger w-100">
+                                                        <i class="fa-solid fa-cart-plus"></i>
+                                                        Add To Cart
+                                                    </button>
+                                                </form>
 
                                             </c:when>
 
