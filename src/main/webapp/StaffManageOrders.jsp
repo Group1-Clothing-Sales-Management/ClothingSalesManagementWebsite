@@ -52,6 +52,21 @@
         .detail-label { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; font-weight: 700; margin-bottom: 6px; }
         .detail-value { font-weight: 600; color: #111827; word-break: break-word; }
         .item-title { font-weight: 700; color: #111827; }
+        .variant-results {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .variant-option {
+            text-align: left;
+        }
+        .variant-option.is-selected {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .variant-option .variant-meta {
+            font-size: .8rem;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
@@ -490,27 +505,88 @@
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Product variant</label>
-                            <select name="variantId" id="storeVariantId" class="form-select" required>
-                                <c:choose>
-                                    <c:when test="${not hasSellableProducts}">
-                                        <option value="">No sellable variants available</option>
-                                    </c:when>
-                                    <c:otherwise>
+                            <input type="hidden" name="variantId" id="storeVariantId" value="">
+                            <c:choose>
+                                <c:when test="${not hasSellableProducts}">
+                                    <input type="search"
+                                           id="storeVariantSearch"
+                                           class="form-control"
+                                           placeholder="No sellable variants available"
+                                           autocomplete="off"
+                                           disabled>
+                                    <div class="form-text text-danger mt-2">
+                                        No sellable product variants are available right now.
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <input type="search"
+                                           id="storeVariantSearch"
+                                           class="form-control"
+                                           placeholder="Search by product, brand, color, size, or SKU"
+                                           autocomplete="off">
+                                    <div class="form-text">
+                                        Type to search, then click one result to select the exact product variant.
+                                    </div>
+                                    <div id="storeVariantSelected" class="small text-muted mt-2">
+                                        No product variant selected yet.
+                                    </div>
+                                    <div id="storeVariantResults" class="list-group variant-results mt-2">
                                         <c:forEach var="item" items="${storeProducts}">
                                             <c:if test="${item.stockQuantity gt 0}">
-                                                <option value="${item.variantId}"
-                                                        data-name="${item.productName}"
-                                                        data-brand="${item.brandName}"
-                                                        data-price="${item.salePrice}"
-                                                        data-stock="${item.stockQuantity}"
-                                                        data-attr="${item.color} ${item.size}">
-                                                    ${item.productName} - ${item.brandName} | ${empty item.color ? 'No color' : item.color} - ${empty item.size ? 'No size' : item.size}
-                                                </option>
+                                                <c:set var="variantProductName" value="${item.productName}" />
+                                                <c:set var="variantBrandName" value="${item.brandName}" />
+                                                <c:set var="variantColor" value="${empty item.color ? 'No color' : item.color}" />
+                                                <c:set var="variantSize" value="${empty item.size ? 'No size' : item.size}" />
+                                                <c:set var="variantSku" value="${item.sku}" />
+                                                <button type="button"
+                                                        class="list-group-item list-group-item-action variant-option"
+                                                        data-store-variant="true"
+                                                        data-variant-id="${item.variantId}"
+                                                        data-product-name="${fn:escapeXml(variantProductName)}"
+                                                        data-brand-name="${fn:escapeXml(variantBrandName)}"
+                                                        data-color="${fn:escapeXml(variantColor)}"
+                                                        data-size="${fn:escapeXml(variantSize)}"
+                                                        data-sku="${fn:escapeXml(variantSku)}"
+                                                        data-sale-price="${item.salePrice}"
+                                                        data-stock-quantity="${item.stockQuantity}">
+                                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                                        <div class="me-2">
+                                                            <div class="fw-semibold text-dark">
+                                                                <c:out value="${variantProductName}"/>
+                                                                <c:if test="${not empty variantBrandName}"> - <c:out value="${variantBrandName}"/></c:if>
+                                                            </div>
+                                                            <div class="variant-meta">
+                                                                <span>
+                                                                    Color: <c:out value="${variantColor}"/>
+                                                                </span>
+                                                                <span class="mx-1">|</span>
+                                                                <span>
+                                                                    Size: <c:out value="${variantSize}"/>
+                                                                </span>
+                                                                <c:if test="${not empty variantSku}">
+                                                                    <span class="mx-1">|</span>
+                                                                    <span>SKU: <c:out value="${variantSku}"/></span>
+                                                                </c:if>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-semibold text-primary">
+                                                                Stock: <c:out value="${item.stockQuantity}"/>
+                                                            </div>
+                                                            <div class="variant-meta">
+                                                                <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> VND
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </button>
                                             </c:if>
                                         </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </select>
+                                        <div id="storeVariantNoResults" class="list-group-item text-muted d-none">
+                                            No variants matched your search.
+                                        </div>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Quantity</label>
@@ -534,7 +610,7 @@
                             <div class="alert alert-light border mb-0">
                                 <div class="fw-semibold mb-1">Preview</div>
                                 <div id="storeOrderPreview" class="small text-muted">
-                                    Select a product variant to see the estimated total.
+                                    Search and select a product variant to see the estimated total.
                                 </div>
                                 <div id="storeStockHint" class="small text-danger mt-2 d-none"></div>
                             </div>
@@ -563,37 +639,230 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Keep the modal summary in sync with the selected variant and quantity.
+    // This script keeps the store-order modal simple:
+    // - staff search a variant instead of browsing a long <select> menu;
+    // - the chosen variant is copied into a hidden field named variantId;
+    // - the preview and quantity validation always use the selected variant data.
     const storeOrderForm = document.getElementById('createStoreOrderForm');
     const recipientNameInput = document.getElementById('storeRecipientName');
     const recipientPhoneInput = document.getElementById('storeRecipientPhone');
-    const variantSelect = document.getElementById('storeVariantId');
+    const variantHiddenInput = document.getElementById('storeVariantId');
+    const variantSearchInput = document.getElementById('storeVariantSearch');
+    const variantResults = document.getElementById('storeVariantResults');
+    const variantNoResults = document.getElementById('storeVariantNoResults');
+    const variantSelectedText = document.getElementById('storeVariantSelected');
+    const variantOptions = Array.from(document.querySelectorAll('[data-store-variant="true"]'));
     const quantityInput = document.getElementById('storeQuantity');
     const paymentMethodSelect = document.getElementById('storePaymentMethod');
     const noteInput = document.getElementById('storeNote');
     const previewBox = document.getElementById('storeOrderPreview');
     const quantityFeedback = document.getElementById('storeQuantityFeedback');
     const stockHint = document.getElementById('storeStockHint');
+    let selectedVariantButton = null;
 
-    function updateStoreOrderPreview() {
-        if (!variantSelect || !quantityInput || !previewBox) {
+    /**
+     * Build a readable label for one variant.
+     * This label is reused in the search field, the selected summary, and the preview.
+     */
+    function buildVariantLabel(variantButton) {
+        if (!variantButton) {
+            return '';
+        }
+
+        const productName = variantButton.dataset.productName || 'Unknown product';
+        const brandName = variantButton.dataset.brandName || '';
+        const colorName = variantButton.dataset.color || 'No color';
+        const sizeName = variantButton.dataset.size || 'No size';
+        const sku = variantButton.dataset.sku || '';
+
+        const parts = [productName];
+        if (brandName) {
+            parts.push(brandName);
+        }
+
+        let label = parts.join(' - ');
+        label += ' | ' + colorName + ' | ' + sizeName;
+        if (sku) {
+            label += ' | SKU: ' + sku;
+        }
+        return label;
+    }
+
+    /**
+     * Build a searchable string from one variant.
+     * The search box matches against this lower-cased text so staff can find a
+     * variant using product name, brand, color, size, SKU, or ID.
+     */
+    function buildVariantSearchText(variantButton) {
+        if (!variantButton) {
+            return '';
+        }
+
+        return [
+            variantButton.dataset.variantId || '',
+            variantButton.dataset.productName || '',
+            variantButton.dataset.brandName || '',
+            variantButton.dataset.color || '',
+            variantButton.dataset.size || '',
+            variantButton.dataset.sku || ''
+        ].join(' ').toLowerCase();
+    }
+
+    /**
+     * Return the variant button that is currently selected.
+     * The hidden input is the source of truth because that is what gets posted to the server.
+     */
+    function getSelectedVariantButton() {
+        if (selectedVariantButton && variantHiddenInput && selectedVariantButton.dataset.variantId === variantHiddenInput.value) {
+            return selectedVariantButton;
+        }
+
+        if (!variantHiddenInput) {
+            return null;
+        }
+
+        const currentVariantId = (variantHiddenInput.value || '').trim();
+        if (!currentVariantId) {
+            return null;
+        }
+
+        return variantOptions.find(function (button) {
+            return (button.dataset.variantId || '').trim() === currentVariantId;
+        }) || null;
+    }
+
+    /**
+     * Clear the current variant choice.
+     * We do this when the staff edits the search field, because the typed text no
+     * longer guarantees the hidden variant ID still matches the visible label.
+     */
+    function clearVariantSelection() {
+        selectedVariantButton = null;
+
+        variantOptions.forEach(function (variantButton) {
+            variantButton.classList.remove('is-selected');
+        });
+
+        if (variantHiddenInput) {
+            variantHiddenInput.value = '';
+        }
+
+        if (variantSelectedText) {
+            variantSelectedText.textContent = 'No product variant selected yet.';
+        }
+
+        if (variantSearchInput) {
+            variantSearchInput.setCustomValidity('');
+        }
+
+        updateStoreOrderPreview();
+    }
+
+    /**
+     * Copy one clicked variant into the hidden input and the preview.
+     * This is the only moment where the order form receives the actual variant ID.
+     */
+    function selectVariant(variantButton) {
+        if (!variantButton || !variantHiddenInput || !variantSearchInput) {
             return;
         }
 
-        const selectedOption = variantSelect.options[variantSelect.selectedIndex];
-        if (!selectedOption || !selectedOption.value) {
-            previewBox.textContent = 'Select a product variant to see the estimated total.';
+        selectedVariantButton = variantButton;
+        variantOptions.forEach(function (button) {
+            button.classList.toggle('is-selected', button === variantButton);
+        });
+        variantHiddenInput.value = (variantButton.dataset.variantId || '').trim();
+        variantSearchInput.value = buildVariantLabel(variantButton);
+        variantSearchInput.setCustomValidity('');
+
+        if (variantSelectedText) {
+            variantSelectedText.textContent = 'Selected variant: ' + buildVariantLabel(variantButton);
+        }
+
+        if (variantResults) {
+            variantResults.classList.add('d-none');
+        }
+
+        updateStoreOrderPreview();
+    }
+
+    /**
+     * Filter the variant list according to the current search text.
+     * This keeps the modal usable even when many sellable variants exist.
+     */
+    function filterVariantOptions() {
+        if (!variantSearchInput || !variantResults || variantOptions.length === 0) {
+            return;
+        }
+
+        const searchText = variantSearchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        variantOptions.forEach(function (variantButton) {
+            const matches = searchText === '' || buildVariantSearchText(variantButton).includes(searchText);
+            variantButton.classList.toggle('d-none', !matches);
+            if (matches) {
+                visibleCount++;
+            }
+        });
+
+        if (variantNoResults) {
+            const showNoResults = searchText !== '' && visibleCount === 0;
+            variantNoResults.classList.toggle('d-none', !showNoResults);
+        }
+
+        const shouldShowResults = searchText !== '' || document.activeElement === variantSearchInput;
+        variantResults.classList.toggle('d-none', !shouldShowResults);
+    }
+
+    /**
+     * Validate that the visible search text still maps to one concrete variant.
+     * The hidden input is the field that actually gets submitted, so the search box
+     * must not be allowed to submit by itself.
+     */
+    function validateVariantSelection() {
+        if (!variantSearchInput || !variantHiddenInput) {
+            return true;
+        }
+
+        const selectedVariant = getSelectedVariantButton();
+        if (!selectedVariant) {
+            variantSearchInput.setCustomValidity('Please select a product variant from the search results.');
+            return false;
+        }
+
+        variantSearchInput.setCustomValidity('');
+        return true;
+    }
+
+    /**
+     * Keep the order preview aligned with the currently selected variant and quantity.
+     * The preview is intentionally small and direct so staff can confirm the sale quickly.
+     */
+    function updateStoreOrderPreview() {
+        if (!quantityInput || !previewBox) {
+            return;
+        }
+
+        const selectedOption = getSelectedVariantButton();
+        if (!selectedOption) {
+            previewBox.textContent = 'Search and select a product variant to see the estimated total.';
             if (stockHint) {
                 stockHint.classList.add('d-none');
                 stockHint.textContent = '';
             }
+            quantityInput.removeAttribute('max');
+            quantityInput.setCustomValidity('');
+            if (quantityFeedback) {
+                quantityFeedback.textContent = 'Quantity must be at least 1.';
+            }
             return;
         }
 
-        const productName = selectedOption.getAttribute('data-name') || 'Unknown product';
-        const brandName = selectedOption.getAttribute('data-brand') || '';
-        const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
-        const stock = parseInt(selectedOption.getAttribute('data-stock'), 10) || 0;
+        const productName = selectedOption.dataset.productName || 'Unknown product';
+        const brandName = selectedOption.dataset.brandName || '';
+        const price = parseFloat(selectedOption.dataset.salePrice) || 0;
+        const stock = parseInt(selectedOption.dataset.stockQuantity, 10) || 0;
         const qty = Math.max(parseInt(quantityInput.value, 10) || 1, 1);
         const total = price * qty;
 
@@ -664,9 +933,47 @@
         }
     }
 
-    if (variantSelect) {
-        variantSelect.addEventListener('change', updateStoreOrderPreview);
+    if (variantSearchInput) {
+        variantSearchInput.addEventListener('focus', filterVariantOptions);
+        variantSearchInput.addEventListener('blur', function () {
+            setTimeout(function () {
+                if (!variantSearchInput) {
+                    return;
+                }
+
+                if (document.activeElement !== variantSearchInput && !getSelectedVariantButton() && variantResults) {
+                    variantResults.classList.add('d-none');
+                }
+            }, 120);
+        });
+        variantSearchInput.addEventListener('input', function () {
+            if (selectedVariantButton) {
+                const selectedLabel = buildVariantLabel(selectedVariantButton);
+                if (variantSearchInput.value !== selectedLabel) {
+                    clearVariantSelection();
+                }
+            }
+
+            filterVariantOptions();
+        });
+        variantSearchInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                const visibleVariants = variantOptions.filter(function (button) {
+                    return !button.classList.contains('d-none');
+                });
+                if (visibleVariants.length === 1) {
+                    event.preventDefault();
+                    selectVariant(visibleVariants[0]);
+                }
+            }
+        });
     }
+
+    variantOptions.forEach(function (variantButton) {
+        variantButton.addEventListener('click', function () {
+            selectVariant(variantButton);
+        });
+    });
     if (quantityInput) {
         quantityInput.addEventListener('input', updateStoreOrderPreview);
     }
@@ -701,6 +1008,7 @@
             validateTextInput(recipientNameInput, 2, 'Recipient name is required and must be at least 2 characters.');
             validatePhoneInput();
             validatePaymentMethod();
+            validateVariantSelection();
             updateStoreOrderPreview();
 
             if (noteInput && (noteInput.value || '').length > 500) {
