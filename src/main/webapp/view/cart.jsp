@@ -133,7 +133,7 @@
 
         .cart-item {
             position:relative;
-            padding:1.15rem 1.15rem 1.15rem 3.75rem;
+            padding:1.15rem 4.75rem 1.15rem 3.75rem;
             border:1px solid var(--cart-line);
             border-radius:8px;
             background:#fff;
@@ -219,6 +219,65 @@
             outline:none;
             box-shadow:0 0 0 .22rem rgba(220, 38, 38, .16),
                        0 10px 22px rgba(220, 38, 38, .22);
+        }
+
+        .cart-select-label {
+            position:absolute;
+            top:.85rem;
+            right:.85rem;
+            width:34px;
+            height:34px;
+            z-index:2;
+            margin:0;
+            cursor:pointer;
+        }
+
+        .cart-select-input {
+            position:absolute;
+            opacity:0;
+            inset:0;
+            margin:0;
+            cursor:pointer;
+        }
+
+        .cart-select-box {
+            width:34px;
+            height:34px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border:1px solid #cbd5e1;
+            border-radius:8px;
+            background:#fff;
+            box-shadow:0 8px 18px rgba(15, 23, 42, .08);
+            transition:background .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .cart-select-box::after {
+            content:"";
+            width:9px;
+            height:15px;
+            border:solid #fff;
+            border-width:0 2px 2px 0;
+            opacity:0;
+            transform:rotate(45deg) scale(.72);
+            transition:opacity .18s ease, transform .18s ease;
+        }
+
+        .cart-select-input:checked + .cart-select-box {
+            background:var(--cart-success);
+            border-color:var(--cart-success);
+            box-shadow:0 10px 22px rgba(4, 120, 87, .22);
+        }
+
+        .cart-select-input:checked + .cart-select-box::after {
+            opacity:1;
+            transform:rotate(45deg) scale(1);
+        }
+
+        .cart-select-input:focus-visible + .cart-select-box {
+            box-shadow:0 0 0 .22rem rgba(4, 120, 87, .16),
+                       0 10px 22px rgba(4, 120, 87, .2);
         }
 
         .product-summary {
@@ -435,6 +494,11 @@
                 left:.75rem;
             }
 
+            .cart-select-label {
+                top:.75rem;
+                right:.75rem;
+            }
+
             .cart-row {
                 align-items:flex-start!important;
             }
@@ -542,6 +606,18 @@
                                         aria-label="Xóa sản phẩm">
                                 </button>
                             </form>
+                            <label class="cart-select-label" title="Chọn sản phẩm để thanh toán">
+                                <input type="checkbox"
+                                       class="cart-select-input"
+                                       name="selectedVariantId"
+                                       value="<%= it.getVariantId() %>"
+                                       form="cartCheckoutForm"
+                                       data-line-quantity="<%= qty %>"
+                                       data-line-total="<%= itemTotal %>"
+                                       checked>
+                                <span class="cart-select-box" aria-hidden="true"></span>
+                                <span class="visually-hidden">Chọn sản phẩm để thanh toán</span>
+                            </label>
                             <div class="d-flex cart-row align-items-start">
                                 <img src="<%= imageUrl %>"
                                      alt="<%= it.getProductName() %>"
@@ -632,20 +708,23 @@
                     <div class="summary-panel">
                         <h2 class="summary-title">Tóm tắt đơn hàng</h2>
                         <div class="summary-line">
-                            <span>Số lượng</span>
-                            <strong><%= totalQuantity %></strong>
+                            <span>Đã chọn</span>
+                            <strong id="selectedQuantity"><%= totalQuantity %></strong>
                         </div>
                         <div class="summary-line">
                             <span>Tạm tính</span>
-                            <strong><%= currencyFormat.format(total) %></strong>
+                            <strong id="selectedSubtotal"><%= currencyFormat.format(total) %></strong>
                         </div>
                         <div class="summary-line total">
                             <span>Tổng cộng</span>
-                            <strong><%= currencyFormat.format(total) %></strong>
+                            <strong id="selectedTotal"><%= currencyFormat.format(total) %></strong>
                         </div>
-                        <div class="mt-3">
-                            <a href="<%= ctx %>/customer/checkout" class="btn btn-primary w-100 checkout-btn">Thanh toán</a>
-                        </div>
+                        <form id="cartCheckoutForm" action="<%= ctx %>/customer/checkout" method="get" class="mt-3">
+                            <input type="hidden" name="selectionMode" value="1">
+                            <button id="checkoutSelectedButton" type="submit" class="btn btn-primary w-100 checkout-btn">
+                                Thanh toán
+                            </button>
+                        </form>
                         <div class="mt-2">
                             <a href="<%= ctx %>/home" class="continue-link w-100">Tiếp tục mua sắm</a>
                         </div>
@@ -719,6 +798,76 @@
                 }, 320);
             }, 5000);
         }
+
+        var cartSelectInputs = document.querySelectorAll('.cart-select-input');
+        var selectedQuantity = document.getElementById('selectedQuantity');
+        var selectedSubtotal = document.getElementById('selectedSubtotal');
+        var selectedTotal = document.getElementById('selectedTotal');
+        var checkoutSelectedButton = document.getElementById('checkoutSelectedButton');
+        var cartCheckoutForm = document.getElementById('cartCheckoutForm');
+
+        function formatVnd(value) {
+            try {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                }).format(value);
+            } catch (error) {
+                return value.toLocaleString('vi-VN') + ' đ';
+            }
+        }
+
+        function updateSelectedSummary() {
+            var quantity = 0;
+            var total = 0;
+
+            cartSelectInputs.forEach(function(input) {
+                if (!input.checked) {
+                    return;
+                }
+
+                quantity += Number(input.dataset.lineQuantity || 0);
+                total += Number(input.dataset.lineTotal || 0);
+            });
+
+            if (selectedQuantity) {
+                selectedQuantity.textContent = quantity;
+            }
+
+            if (selectedSubtotal) {
+                selectedSubtotal.textContent = formatVnd(total);
+            }
+
+            if (selectedTotal) {
+                selectedTotal.textContent = formatVnd(total);
+            }
+
+            if (checkoutSelectedButton) {
+                checkoutSelectedButton.disabled = quantity === 0;
+            }
+        }
+
+        cartSelectInputs.forEach(function(input) {
+            input.addEventListener('change', updateSelectedSummary);
+        });
+
+        if (cartCheckoutForm) {
+            cartCheckoutForm.addEventListener('submit', function(event) {
+                var hasSelectedItem = false;
+
+                cartSelectInputs.forEach(function(input) {
+                    if (input.checked) {
+                        hasSelectedItem = true;
+                    }
+                });
+
+                if (!hasSelectedItem) {
+                    event.preventDefault();
+                }
+            });
+        }
+
+        updateSelectedSummary();
     </script>
 </body>
 </html>

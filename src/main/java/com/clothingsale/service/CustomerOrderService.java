@@ -7,6 +7,7 @@ import com.clothingsale.model.UserAddress;
 import java.math.BigDecimal;
 
 import java.util.List;
+import java.util.Set;
 
 public class CustomerOrderService {
 
@@ -68,6 +69,15 @@ public class CustomerOrderService {
         return dao.getCartItems(userId);
     }
 
+    public List<CartItem> getCartItems(
+            int userId,
+            Set<Integer> selectedVariantIds) {
+
+        return dao.getCartItems(
+                userId,
+                selectedVariantIds);
+    }
+
     public boolean placeOrder(
             int userId,
             int addressId,
@@ -79,6 +89,21 @@ public class CustomerOrderService {
                 addressId,
                 voucherCode,
                 note);
+    }
+
+    public boolean placeOrder(
+            int userId,
+            int addressId,
+            String voucherCode,
+            String note,
+            Set<Integer> selectedVariantIds) {
+
+        return dao.placeOrder(
+                userId,
+                addressId,
+                voucherCode,
+                note,
+                selectedVariantIds);
     }
 
     public boolean cancelOrder(
@@ -96,6 +121,15 @@ public class CustomerOrderService {
         return dao.getCartTotal(userId);
     }
 
+    public BigDecimal getCartTotal(
+            int userId,
+            Set<Integer> selectedVariantIds) {
+
+        return dao.getCartTotal(
+                userId,
+                selectedVariantIds);
+    }
+
     public String generateOrderCode() {
 
         return "ORD"
@@ -105,11 +139,22 @@ public class CustomerOrderService {
     public boolean validateCheckout(
             int userId) {
 
+        return validateCheckout(
+                userId,
+                null);
+    }
+
+    public boolean validateCheckout(
+            int userId,
+            Set<Integer> selectedVariantIds) {
+
         UserAddress address
                 = dao.getDefaultAddress(userId);
 
         BigDecimal total
-                = dao.getCartTotal(userId);
+                = dao.getCartTotal(
+                        userId,
+                        selectedVariantIds);
 
         return address != null
                 && total.compareTo(BigDecimal.ZERO) > 0;

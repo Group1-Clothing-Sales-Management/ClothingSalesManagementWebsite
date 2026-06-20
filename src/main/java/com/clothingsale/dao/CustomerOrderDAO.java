@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class CustomerOrderDAO {
 
@@ -22,6 +23,30 @@ public class CustomerOrderDAO {
         return new ArrayList<>(
                 cartDAO.loadCart(userId)
                         .values());
+    }
+
+    public List<CartItem> getCartItems(
+            int userId,
+            Set<Integer> selectedVariantIds) {
+
+        List<CartItem> items = getCartItems(userId);
+
+        if (selectedVariantIds == null) {
+            return items;
+        }
+
+        List<CartItem> filtered = new ArrayList<>();
+
+        for (CartItem item : items) {
+            if (item != null
+                    && selectedVariantIds.contains(
+                            item.getVariantId())) {
+
+                filtered.add(item);
+            }
+        }
+
+        return filtered;
     }
 
     //=====================Order==========================
@@ -54,6 +79,35 @@ public class CustomerOrderDAO {
         }
 
         return BigDecimal.ZERO;
+    }
+
+    public BigDecimal getCartTotal(
+            int userId,
+            Set<Integer> selectedVariantIds) {
+
+        if (selectedVariantIds == null) {
+            return getCartTotal(userId);
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (CartItem item : getCartItems(
+                userId,
+                selectedVariantIds)) {
+
+            if (item == null
+                    || item.getPrice() == null) {
+                continue;
+            }
+
+            total = total.add(
+                    item.getPrice()
+                            .multiply(
+                                    BigDecimal.valueOf(
+                                            item.getQuantity())));
+        }
+
+        return total;
     }
 
     public List<Order> getOrdersByUserId(
@@ -226,6 +280,21 @@ public class CustomerOrderDAO {
             String voucherCode,
             String note) {
 
+        return placeOrder(
+                userId,
+                addressId,
+                voucherCode,
+                note,
+                null);
+    }
+
+    public boolean placeOrder(
+            int userId,
+            int addressId,
+            String voucherCode,
+            String note,
+            Set<Integer> selectedVariantIds) {
+
         Connection con = null;
 
         try {
@@ -235,7 +304,9 @@ public class CustomerOrderDAO {
             con.setAutoCommit(false);
 
             List<CartItem> cartItems
-                    = getCartItems(userId);
+                    = getCartItems(
+                            userId,
+                            selectedVariantIds);
 
             if (cartItems.isEmpty()) {
                 return false;
@@ -301,9 +372,16 @@ public class CustomerOrderDAO {
                         item.getQuantity());
             }
 
-            clearCart(
-                    con,
-                    userId);
+            if (selectedVariantIds == null) {
+                clearCart(
+                        con,
+                        userId);
+            } else {
+                clearCartItems(
+                        con,
+                        userId,
+                        selectedVariantIds);
+            }
 
             con.commit();
 
@@ -613,6 +691,39 @@ public class CustomerOrderDAO {
         ps.setInt(1, userId);
 
         ps.executeUpdate();
+    }
+
+    public void clearCartItems(
+            Connection con,
+            int userId,
+            Set<Integer> selectedVariantIds)
+            throws SQLException {
+
+        if (selectedVariantIds == null
+                || selectedVariantIds.isEmpty()) {
+            return;
+        }
+
+        String sql
+                = "DELETE FROM Cart "
+                + "WHERE user_id=? "
+                + "AND variant_id=?";
+
+        try (PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            for (Integer variantId : selectedVariantIds) {
+                if (variantId == null) {
+                    continue;
+                }
+
+                ps.setInt(1, userId);
+                ps.setInt(2, variantId);
+                ps.addBatch();
+            }
+
+            ps.executeBatch();
+        }
     }
 
     //=====================Address========================

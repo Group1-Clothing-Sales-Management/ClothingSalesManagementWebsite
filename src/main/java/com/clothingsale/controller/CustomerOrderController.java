@@ -1,5 +1,6 @@
 package com.clothingsale.controller;
 
+import com.clothingsale.model.CartItem;
 import com.clothingsale.model.UserAddress;
 import com.clothingsale.service.CustomerOrderService;
 
@@ -9,7 +10,10 @@ import jakarta.servlet.http.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @WebServlet("/customer/checkout")
 public class CustomerOrderController
@@ -40,8 +44,47 @@ public class CustomerOrderController
         int userId
                 = (Integer) session.getAttribute(
                         "authUserId");
+
+        boolean selectionMode
+                = "1".equals(
+                        request.getParameter(
+                                "selectionMode"));
+
+        Set<Integer> selectedVariantIds
+                = selectionMode
+                        ? parseSelectedVariantIds(
+                                request.getParameterValues(
+                                        "selectedVariantId"))
+                        : getCheckoutSelectedVariantIds(session);
+
+        List<CartItem> cartItems
+                = service.getCartItems(
+                        userId,
+                        selectedVariantIds);
+
+        if (cartItems.isEmpty()) {
+            session.removeAttribute(
+                    "checkoutSelectedVariantIds");
+            session.setAttribute(
+                    "cartMessage",
+                    "Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/cart?skipMerge=1");
+
+            return;
+        }
+
+        if (selectionMode) {
+            session.setAttribute(
+                    "checkoutSelectedVariantIds",
+                    selectedVariantIds);
+        }
+
         BigDecimal total
-                = service.getCartTotal(userId);
+                = service.getCartTotal(
+                        userId,
+                        selectedVariantIds);
 
         List<UserAddress> addresses
                 = service.getAddressesByUserId(userId);
@@ -51,7 +94,7 @@ public class CustomerOrderController
                 addresses);
         request.setAttribute(
                 "cartItems",
-                service.getCartItems(userId));
+                cartItems);
 
         request.setAttribute(
                 "cartTotal",
@@ -70,10 +113,6 @@ public class CustomerOrderController
 
         HttpSession session
                 = request.getSession(false);
-        int addressId
-                = Integer.parseInt(
-                        request.getParameter(
-                                "addressId"));
         if (session == null
                 || session.getAttribute("authUserId") == null) {
 
@@ -87,7 +126,26 @@ public class CustomerOrderController
                 = (Integer) session.getAttribute(
                         "authUserId");
 
-        if (!service.validateCheckout(userId)) {
+        int addressId;
+
+        try {
+            addressId = Integer.parseInt(
+                    request.getParameter(
+                            "addressId"));
+        } catch (Exception ex) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/customer/checkout?error=invalid");
+
+            return;
+        }
+
+        Set<Integer> selectedVariantIds
+                = getCheckoutSelectedVariantIds(session);
+
+        if (!service.validateCheckout(
+                userId,
+                selectedVariantIds)) {
 
             response.sendRedirect(
                     request.getContextPath()
@@ -107,9 +165,15 @@ public class CustomerOrderController
                         userId,
                         addressId,
                         voucherCode,    
-                        note);
+                        note,
+                        selectedVariantIds);
 
         if (success) {
+            pruneSessionCart(
+                    session,
+                    selectedVariantIds);
+            session.removeAttribute(
+                    "checkoutSelectedVariantIds");
 
             response.sendRedirect(
                     request.getContextPath()
@@ -119,6 +183,92 @@ public class CustomerOrderController
             response.sendRedirect(
                     request.getContextPath()
                     + "/customer/checkout?error=1");
+        }
+    }
+
+    private Set<Integer> parseSelectedVariantIds(
+            String[] values) {
+
+        Set<Integer> ids = new HashSet<>();
+
+        if (values == null) {
+            return ids;
+        }
+
+        for (String value : values) {
+            try {
+                int id = Integer.parseInt(value);
+
+                if (id > 0) {
+                    ids.add(id);
+                }
+            } catch (NumberFormatException ex) {
+                // Ignore malformed checkbox values.
+            }
+        }
+
+        return ids;
+    }
+
+    private Set<Integer> getCheckoutSelectedVariantIds(
+            HttpSession session) {
+
+        if (session == null) {
+            return null;
+        }
+
+        Object value = session.getAttribute(
+                "checkoutSelectedVariantIds");
+
+        if (!(value instanceof Iterable<?>)) {
+            return null;
+        }
+
+        Set<Integer> ids = new HashSet<>();
+
+        for (Object item : (Iterable<?>) value) {
+            if (item instanceof Integer) {
+                ids.add((Integer) item);
+                continue;
+            }
+
+            if (item != null) {
+                try {
+                    ids.add(
+                            Integer.parseInt(
+                                    item.toString()));
+                } catch (NumberFormatException ex) {
+                    // Ignore malformed session values.
+                }
+            }
+        }
+
+        return ids;
+    }
+
+    private void pruneSessionCart(
+            HttpSession session,
+            Set<Integer> selectedVariantIds) {
+
+        if (session == null) {
+            return;
+        }
+
+        Object cartObject = session.getAttribute("cart");
+
+        if (!(cartObject instanceof Map<?, ?>)) {
+            return;
+        }
+
+        Map<?, ?> cart = (Map<?, ?>) cartObject;
+
+        if (selectedVariantIds == null) {
+            cart.clear();
+            return;
+        }
+
+        for (Integer variantId : selectedVariantIds) {
+            cart.remove(variantId);
         }
     }
 }
