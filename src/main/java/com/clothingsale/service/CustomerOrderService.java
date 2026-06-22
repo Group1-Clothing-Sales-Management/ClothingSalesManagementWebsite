@@ -60,7 +60,11 @@ public class CustomerOrderService {
     public List<Order> getOrdersByUserId(
             int userId) {
 
-        return dao.getOrdersByUserId(userId);
+        List<Order> orders = dao.getOrdersByUserId(userId);
+        for (Order order : orders) {
+            enrichOrder(order);
+        }
+        return orders;
     }
 
     public List<CartItem> getCartItems(
@@ -158,5 +162,18 @@ public class CustomerOrderService {
 
         return address != null
                 && total.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private void enrichOrder(Order order) {
+        if (order == null) {
+            return;
+        }
+
+        String displayStatus = OrderStatusHelper.resolveDisplayStatus(order);
+        order.setDisplayStatus(displayStatus);
+        order.setDisplayStatusLabel(OrderStatusHelper.getDisplayLabel(displayStatus));
+        order.setDisplayStatusBadgeClass(OrderStatusHelper.getBadgeClass(displayStatus));
+        order.setShippingStatusLabel(OrderStatusHelper.resolveShippingLabel(order.getShippingStatus()));
+        order.setShippingStatusBadgeClass(OrderStatusHelper.resolveShippingBadgeClass(order.getShippingStatus()));
     }
 }

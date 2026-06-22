@@ -5,8 +5,9 @@ import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service layer for the order management screen.
@@ -20,14 +21,31 @@ public class OrderManagementService {
      * Fetch orders by keyword and status filter.
      */
     public List<Order> getOrders(String keyword, String statusFilter) {
-        return dao.getOrders(keyword, statusFilter);
+        List<Order> orders = dao.getOrders(keyword, null);
+        List<Order> enriched = new ArrayList<>();
+        String normalizedFilter = normalizeStatus(statusFilter);
+
+        for (Order order : orders) {
+            Order item = enrichOrder(order);
+            if (item == null) {
+                continue;
+            }
+            if (!"ALL".equals(normalizedFilter)
+                    && !normalizedFilter.isEmpty()
+                    && !normalizedFilter.equals(item.getDisplayStatus())) {
+                continue;
+            }
+            enriched.add(item);
+        }
+
+        return enriched;
     }
 
     /**
      * Fetch order details by order ID.
      */
     public Order getOrderById(int orderId) {
-        return dao.getOrderById(orderId);
+        return enrichOrder(dao.getOrderById(orderId));
     }
 
     /**
@@ -48,20 +66,33 @@ public class OrderManagementService {
             int quantity,
             String paymentMethod,
             String note) {
+        return createStoreOrder(recipientName, recipientPhone, variantId, quantity, paymentMethod, note, false, null);
+    }
+
+    public String createStoreOrder(String recipientName,
+            String recipientPhone,
+            int variantId,
+            int quantity,
+            String paymentMethod,
+            String note,
+            boolean deliveryOrder,
+            String deliveryAddress) {
         return dao.createInStoreOrder(
                 recipientName,
                 recipientPhone,
                 variantId,
                 quantity,
                 paymentMethod,
-                note);
+                note,
+                deliveryOrder,
+                deliveryAddress);
     }
 
     /**
      * Status options used in the list filter dropdown.
      */
-    public List<String> getStatusOptions() {
-        return Arrays.asList("ALL", "PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED", "RETURNED");
+    public Map<String, String> getStatusOptions() {
+        return new LinkedHashMap<>(OrderStatusHelper.getStatusOptions());
     }
 
     /**
@@ -74,12 +105,6 @@ public class OrderManagementService {
         switch (normalized) {
             case "PENDING":
                 return Arrays.asList("CONFIRMED", "CANCELLED");
-            case "CONFIRMED":
-                return Arrays.asList("SHIPPING", "CANCELLED");
-            case "SHIPPING":
-                return Arrays.asList("DELIVERED", "RETURNED");
-            case "DELIVERED":
-                return Collections.singletonList("RETURNED");
             default:
                 return new ArrayList<>();
         }
@@ -93,7 +118,7 @@ public class OrderManagementService {
             return "Invalid order ID.";
         }
 
-        String targetStatus = normalizeStatus(requestedStatus);
+        String targetStatus = OrderStatusHelper.resolveRawStatusFromDisplay(requestedStatus);
         if (!isAllowedOrderStatus(targetStatus)) {
             return "Invalid order status.";
         }
@@ -104,34 +129,51 @@ public class OrderManagementService {
         }
 
         currentStatus = normalizeStatus(currentStatus);
-        if (currentStatus.equals(targetStatus)) {
-            return "The order is already in " + targetStatus + " status.";
+        if (OrderStatusHelper.RAW_CONFIRMED.equals(targetStatus)) {
+            if (OrderStatusHelper.RAW_CONFIRMED.equals(currentStatus)) {
+                return "The order is already approved.";
+            }
+
+            if (!OrderStatusHelper.RAW_PENDING.equals(currentStatus)) {
+                return "Only pending orders can be approved.";
+            }
+
+            return dao.approveOrder(orderId) ? "SUCCESS" : "Failed to approve the order. Please try again.";
         }
 
-        if (!canTransition(currentStatus, targetStatus)) {
-            return "Cannot transition the order from " + currentStatus + " to " + targetStatus + ".";
+        if (OrderStatusHelper.RAW_CANCELLED.equals(targetStatus)) {
+            if (OrderStatusHelper.RAW_CANCELLED.equals(currentStatus)) {
+                return "The order is already cancelled.";
+            }
+
+            if (!OrderStatusHelper.RAW_PENDING.equals(currentStatus)) {
+                return "Only pending orders can be cancelled from the order screen.";
+            }
+
+            return dao.cancelOrderByStaff(orderId) ? "SUCCESS" : "Failed to cancel the order. Please try again.";
         }
 
-        boolean updated = dao.updateOrderStatus(orderId, targetStatus);
-        if (updated) {
-            return "SUCCESS";
-        }
-
-        return "Failed to update the order status. Please try again.";
+        return "Invalid order status.";
     }
 
     /**
      * Normalize a status value so comparisons stay consistent.
      */
     private String normalizeStatus(String status) {
-        return status == null ? "" : status.trim().toUpperCase();
+        return OrderStatusHelper.normalize(status);
     }
 
     /**
      * Check whether a status is supported by the order lifecycle.
      */
     private boolean isAllowedOrderStatus(String status) {
-        return Arrays.asList("PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED", "RETURNED")
+        return Arrays.asList(
+                OrderStatusHelper.RAW_PENDING,
+                OrderStatusHelper.RAW_CONFIRMED,
+                OrderStatusHelper.RAW_SHIPPING,
+                OrderStatusHelper.RAW_DELIVERED,
+                OrderStatusHelper.RAW_CANCELLED,
+                OrderStatusHelper.RAW_RETURNED)
                 .contains(status);
     }
 
@@ -151,5 +193,19 @@ public class OrderManagementService {
             default:
                 return false;
         }
+    }
+
+    private Order enrichOrder(Order order) {
+        if (order == null) {
+            return null;
+        }
+
+        String displayStatus = OrderStatusHelper.resolveDisplayStatus(order);
+        order.setDisplayStatus(displayStatus);
+        order.setDisplayStatusLabel(OrderStatusHelper.getDisplayLabel(displayStatus));
+        order.setDisplayStatusBadgeClass(OrderStatusHelper.getBadgeClass(displayStatus));
+        order.setShippingStatusLabel(OrderStatusHelper.resolveShippingLabel(order.getShippingStatus()));
+        order.setShippingStatusBadgeClass(OrderStatusHelper.resolveShippingBadgeClass(order.getShippingStatus()));
+        return order;
     }
 }

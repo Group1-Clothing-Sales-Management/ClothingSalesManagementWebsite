@@ -3,6 +3,7 @@ package com.clothingsale.dao;
 import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
 import com.clothingsale.util.DBConnection;
+import com.clothingsale.service.OrderStatusHelper;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -166,11 +167,28 @@ public class OrderManagementDAO {
             int quantity,
             String paymentMethod,
             String note) {
+        return createInStoreOrder(recipientName, recipientPhone, variantId, quantity, paymentMethod, note, false, null);
+    }
+
+    /**
+     * Create a direct staff order.
+     * Pickup orders stay shipment-free. Delivery orders create a shipment
+     * record immediately so the Shipment module can take over.
+     */
+    public String createInStoreOrder(String recipientName,
+            String recipientPhone,
+            int variantId,
+            int quantity,
+            String paymentMethod,
+            String note,
+            boolean deliveryOrder,
+            String deliveryAddress) {
 
         String normalizedName = recipientName == null ? "" : recipientName.trim();
         String normalizedPhone = recipientPhone == null ? "" : recipientPhone.trim();
         String normalizedPaymentMethod = paymentMethod == null ? "" : paymentMethod.trim().toUpperCase();
         String normalizedNote = note == null ? "" : note.trim();
+        String normalizedDeliveryAddress = deliveryAddress == null ? "" : deliveryAddress.trim();
 
         if (normalizedName.isEmpty()) {
             return "Recipient name is required.";
@@ -197,6 +215,9 @@ public class OrderManagementDAO {
         }
         if (normalizedNote.length() > 500) {
             return "Note cannot exceed 500 characters.";
+        }
+        if (deliveryOrder && normalizedDeliveryAddress.isEmpty()) {
+            return "Delivery address is required for delivery orders.";
         }
 
         Connection conn = null;
@@ -232,8 +253,11 @@ public class OrderManagementDAO {
             // The order stores the price collected at the counter so later price
             // changes do not rewrite the receipt.
             BigDecimal subtotal = item.salePrice.multiply(BigDecimal.valueOf(quantity));
-            BigDecimal shippingFee = BigDecimal.ZERO;
+            BigDecimal shippingFee = deliveryOrder ? BigDecimal.valueOf(30000) : BigDecimal.ZERO;
             BigDecimal totalPayment = subtotal;
+            if (deliveryOrder) {
+                totalPayment = subtotal.add(shippingFee);
+            }
 
             String orderCode = "ORD" + System.currentTimeMillis();
             int orderId = insertStoreOrder(
@@ -244,10 +268,21 @@ public class OrderManagementDAO {
                     subtotal,
                     shippingFee,
                     totalPayment,
-                    normalizedNote);
+                    normalizedNote,
+                    deliveryOrder ? normalizedDeliveryAddress : "In-store purchase",
+                    deliveryOrder);
 
             insertStoreOrderDetail(conn, orderId, item, quantity);
             insertStorePayment(conn, orderId, normalizedPaymentMethod, totalPayment);
+
+            if (deliveryOrder) {
+                int shipmentId = insertShipment(
+                        conn,
+                        "Internal Delivery",
+                        "PENDING_PICKUP",
+                        shippingFee);
+                linkShipmentToOrder(conn, orderId, shipmentId);
+            }
 
             // Stock must drop immediately because the product has already been
             // handed to the customer at the store.
@@ -298,85 +333,125 @@ public class OrderManagementDAO {
     }
 
     /**
-     * Cập nhật trạng thái đơn hàng và đồng bộ trạng thái shipment/payment liên quan.
+     * Approve a pending order and hand it over to shipment when needed.
      */
-    public boolean updateOrderStatus(int orderId, String newStatus) {
-        String loadSql = "SELECT o.order_status, o.shipment_id, p.id AS payment_id, "
-                + "       p.payment_status, p.payment_method "
-                + "FROM [Order] o "
-                + "LEFT JOIN Payment p ON o.id = p.order_id "
-                + "WHERE o.id = ?";
+    public boolean approveOrder(int orderId) {
+        String loadSql = "SELECT o.order_status, o.shipment_id, o.shipping_fee "
+                + "FROM [Order] o WHERE o.id = ?";
         String updateOrderSql = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() WHERE id = ?";
-        String updateShipmentSql = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
-        String updatePaymentSql = "UPDATE Payment SET payment_status = ?, payment_date = GETDATE() WHERE id = ?";
+        String updateShipmentLinkSql = "UPDATE [Order] SET shipment_id = ?, updated_at = GETDATE() WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
+            String currentStatus = null;
+            int shipmentId = 0;
+            BigDecimal shippingFee = BigDecimal.ZERO;
+
             try (PreparedStatement psLoad = conn.prepareStatement(loadSql)) {
                 psLoad.setInt(1, orderId);
-
-                String currentStatus = null;
-                int shipmentId = 0;
-                int paymentId = 0;
-                String paymentStatus = null;
-                String paymentMethod = null;
-
                 try (ResultSet rs = psLoad.executeQuery()) {
-                    if (rs.next()) {
-                        currentStatus = rs.getString("order_status");
-                        shipmentId = rs.getInt("shipment_id");
-                        paymentId = rs.getInt("payment_id");
-                        paymentStatus = rs.getString("payment_status");
-                        paymentMethod = rs.getString("payment_method");
-                    } else {
+                    if (!rs.next()) {
                         conn.rollback();
                         return false;
                     }
-                }
 
-                if (currentStatus == null) {
+                    currentStatus = rs.getString("order_status");
+                    shipmentId = rs.getInt("shipment_id");
+                    shippingFee = rs.getBigDecimal("shipping_fee");
+                }
+            }
+
+            if (currentStatus == null || !OrderStatusHelper.RAW_PENDING.equalsIgnoreCase(currentStatus.trim())) {
+                conn.rollback();
+                return false;
+            }
+
+            int linkedShipmentId = shipmentId;
+            if (linkedShipmentId <= 0 && shippingFee != null && shippingFee.compareTo(BigDecimal.ZERO) > 0) {
+                linkedShipmentId = insertShipment(
+                        conn,
+                        "Internal Delivery",
+                        "PENDING_PICKUP",
+                        shippingFee);
+            }
+
+            try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
+                psOrder.setString(1, OrderStatusHelper.RAW_CONFIRMED);
+                psOrder.setInt(2, orderId);
+                if (psOrder.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
                 }
+            }
 
-                try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
-                    psOrder.setString(1, newStatus);
-                    psOrder.setInt(2, orderId);
-                    if (psOrder.executeUpdate() == 0) {
+            if (linkedShipmentId > 0 && shipmentId <= 0) {
+                try (PreparedStatement psLink = conn.prepareStatement(updateShipmentLinkSql)) {
+                    psLink.setInt(1, linkedShipmentId);
+                    psLink.setInt(2, orderId);
+                    psLink.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Cancel a pending order without touching the Shipment module unless a
+     * shipment row already exists.
+     */
+    public boolean cancelOrderByStaff(int orderId) {
+        String loadSql = "SELECT o.order_status, o.shipment_id FROM [Order] o WHERE o.id = ?";
+        String updateOrderSql = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() WHERE id = ?";
+        String updateShipmentSql = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            String currentStatus = null;
+            int shipmentId = 0;
+
+            try (PreparedStatement psLoad = conn.prepareStatement(loadSql)) {
+                psLoad.setInt(1, orderId);
+                try (ResultSet rs = psLoad.executeQuery()) {
+                    if (!rs.next()) {
                         conn.rollback();
                         return false;
                     }
+                    currentStatus = rs.getString("order_status");
+                    shipmentId = rs.getInt("shipment_id");
                 }
-
-                if (shipmentId > 0) {
-                    String shipmentStatus = mapShipmentStatus(newStatus);
-                    if (shipmentStatus != null) {
-                        try (PreparedStatement psShipment = conn.prepareStatement(updateShipmentSql)) {
-                            psShipment.setString(1, shipmentStatus);
-                            psShipment.setInt(2, shipmentId);
-                            psShipment.executeUpdate();
-                        }
-                    }
-                }
-
-                if (paymentId > 0) {
-                    String paymentStatusUpdate = mapPaymentStatus(newStatus, paymentStatus, paymentMethod);
-                    if (paymentStatusUpdate != null) {
-                        try (PreparedStatement psPayment = conn.prepareStatement(updatePaymentSql)) {
-                            psPayment.setString(1, paymentStatusUpdate);
-                            psPayment.setInt(2, paymentId);
-                            psPayment.executeUpdate();
-                        }
-                    }
-                }
-
-                conn.commit();
-                return true;
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
             }
+
+            if (currentStatus == null || !OrderStatusHelper.RAW_PENDING.equalsIgnoreCase(currentStatus.trim())) {
+                conn.rollback();
+                return false;
+            }
+
+            try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
+                psOrder.setString(1, OrderStatusHelper.RAW_CANCELLED);
+                psOrder.setInt(2, orderId);
+                if (psOrder.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            if (shipmentId > 0) {
+                try (PreparedStatement psShipment = conn.prepareStatement(updateShipmentSql)) {
+                    psShipment.setString(1, "FAILED");
+                    psShipment.setInt(2, shipmentId);
+                    psShipment.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -450,7 +525,9 @@ public class OrderManagementDAO {
             BigDecimal subtotal,
             BigDecimal shippingFee,
             BigDecimal totalPayment,
-            String note) throws SQLException {
+            String note,
+            String addressDetail,
+            boolean deliveryOrder) throws SQLException {
 
         String sql = "INSERT INTO [Order] "
                 + "(order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, "
@@ -466,7 +543,9 @@ public class OrderManagementDAO {
             ps.setString(5, recipientName);
             ps.setString(6, recipientPhone);
             ps.setNull(7, Types.VARCHAR);
-            ps.setString(8, "In-store purchase");
+            ps.setString(8, addressDetail == null || addressDetail.trim().isEmpty()
+                    ? (deliveryOrder ? "Delivery order" : "In-store purchase")
+                    : addressDetail.trim());
             ps.setBigDecimal(9, subtotal);
             ps.setBigDecimal(10, BigDecimal.ZERO);
             ps.setBigDecimal(11, shippingFee);
@@ -483,6 +562,42 @@ public class OrderManagementDAO {
         }
 
         throw new SQLException("Failed to create store order header.");
+    }
+
+    private int insertShipment(Connection conn,
+            String carrierName,
+            String shippingStatus,
+            BigDecimal shippingCost) throws SQLException {
+
+        String sql = "INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, carrierName);
+            ps.setString(2, shippingStatus);
+            ps.setNull(3, Types.VARCHAR);
+            ps.setBigDecimal(4, shippingCost == null ? BigDecimal.ZERO : shippingCost);
+            ps.setNull(5, Types.TIMESTAMP);
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        }
+
+        throw new SQLException("Failed to create shipment record.");
+    }
+
+    private void linkShipmentToOrder(Connection conn, int orderId, int shipmentId) throws SQLException {
+        String sql = "UPDATE [Order] SET shipment_id = ?, updated_at = GETDATE() WHERE id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, shipmentId);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+        }
     }
 
     /**
@@ -549,40 +664,6 @@ public class OrderManagementDAO {
             ps.setInt(2, variantId);
             ps.executeUpdate();
         }
-    }
-
-    private String mapShipmentStatus(String orderStatus) {
-        if ("CONFIRMED".equalsIgnoreCase(orderStatus)) {
-            return "PENDING_PICKUP";
-        }
-        if ("SHIPPING".equalsIgnoreCase(orderStatus)) {
-            return "SHIPPING";
-        }
-        if ("DELIVERED".equalsIgnoreCase(orderStatus)) {
-            return "DELIVERED";
-        }
-        if ("CANCELLED".equalsIgnoreCase(orderStatus) || "RETURNED".equalsIgnoreCase(orderStatus)) {
-            return "FAILED";
-        }
-        return null;
-    }
-
-    /**
-     * Chuyển payment về trạng thái phù hợp với lifecycle của đơn.
-     * Hiện tại chỉ đồng bộ các trường hợp chắc chắn để tránh can thiệp quá sâu vào quy trình thanh toán.
-     */
-    private String mapPaymentStatus(String orderStatus, String currentPaymentStatus, String paymentMethod) {
-        if ("CANCELLED".equalsIgnoreCase(orderStatus) && "PAID".equalsIgnoreCase(currentPaymentStatus)) {
-            return "REFUNDED";
-        }
-
-        if ("DELIVERED".equalsIgnoreCase(orderStatus)
-                && "COD".equalsIgnoreCase(paymentMethod)
-                && "UNPAID".equalsIgnoreCase(currentPaymentStatus)) {
-            return "PAID";
-        }
-
-        return null;
     }
 
     /**

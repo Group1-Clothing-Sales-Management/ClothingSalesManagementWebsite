@@ -20,9 +20,27 @@
                 overflow-x: hidden;
             }
 
+            .dashboard-shell {
+                display: flex;
+                min-height: 100vh;
+                width: 100%;
+            }
+
+            .dashboard-sidebar {
+                flex: 0 0 260px;
+                max-width: 260px;
+            }
+
+            .dashboard-sidebar > .col-md-2 {
+                width: 260px;
+                max-width: 260px;
+                flex: 0 0 260px;
+            }
+
             /* Cấu trúc Layout cân xứng */
             .main-content {
-                margin-left: 260px; /* Khớp với độ rộng chuẩn của Sidebar */
+                flex: 1;
+                min-width: 0;
                 padding: 40px;
                 min-height: 100vh;
                 transition: all 0.3s ease;
@@ -85,10 +103,12 @@
     </head>
     <body>
 
-        <div class="container-fluid p-0">
-            <jsp:include page="sidebar.jsp">
-                <jsp:param name="activeTab" value="dashboard" />
-            </jsp:include>
+        <div class="dashboard-shell">
+            <div class="dashboard-sidebar">
+                <jsp:include page="sidebar.jsp">
+                    <jsp:param name="activeTab" value="dashboard" />
+                </jsp:include>
+            </div>
 
             <div class="main-content">
 

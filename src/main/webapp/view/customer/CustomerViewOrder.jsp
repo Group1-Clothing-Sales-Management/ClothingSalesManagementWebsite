@@ -3,6 +3,8 @@
 
 <%@taglib prefix="c"
           uri="jakarta.tags.core"%>
+<%@taglib prefix="fmt"
+          uri="jakarta.tags.fmt"%>
 
 <!DOCTYPE html>
 <html>
@@ -46,6 +48,7 @@
                         <th>Code</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th>Shipping</th>
                         <th>Date</th>
                         <th>Action</th>
 
@@ -64,9 +67,24 @@
 
                         <td>${o.orderCode}</td>
 
-                        <td>${o.totalPayment}</td>
+                        <td><fmt:formatNumber value="${o.totalPayment}" pattern="#,##0"/> VND</td>
 
-                        <td>${o.orderStatus}</td>
+                        <td>
+                            <span class="badge bg-primary">
+                                <c:out value="${not empty o.displayStatusLabel ? o.displayStatusLabel : o.orderStatus}"/>
+                            </span>
+                        </td>
+
+                        <td>
+                            <c:choose>
+                                <c:when test="${not empty o.shippingStatusLabel}">
+                                    <span class="badge bg-info text-dark">${o.shippingStatusLabel}</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="text-muted">N/A</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
 
                         <td>${o.createdAt}</td>
 

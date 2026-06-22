@@ -44,10 +44,14 @@
         .status-pill { border-radius: 999px; padding: .35rem .65rem; font-size: .78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; }
         .status-pending { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
         .status-confirmed { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+        .status-preparing { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
         .status-shipping { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
         .status-delivered { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+        .status-completed { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-paid { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
         .status-cancelled { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .status-returned { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+        .status-unknown { background: #f9fafb; color: #4b5563; border-color: #e5e7eb; }
         .badge-soft { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
         .detail-label { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; font-weight: 700; margin-bottom: 6px; }
         .detail-value { font-weight: 600; color: #111827; word-break: break-word; }
@@ -126,14 +130,9 @@
                                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                                     <div>
                                         <div class="detail-label">Current status</div>
-                                        <c:choose>
-                                            <c:when test="${order.orderStatus eq 'PENDING'}"><span class="status-pill status-pending"><i class="bi bi-hourglass-split"></i>PENDING</span></c:when>
-                                            <c:when test="${order.orderStatus eq 'CONFIRMED'}"><span class="status-pill status-confirmed"><i class="bi bi-check2-circle"></i>CONFIRMED</span></c:when>
-                                            <c:when test="${order.orderStatus eq 'SHIPPING'}"><span class="status-pill status-shipping"><i class="bi bi-truck"></i>SHIPPING</span></c:when>
-                                            <c:when test="${order.orderStatus eq 'DELIVERED'}"><span class="status-pill status-delivered"><i class="bi bi-box-seam"></i>DELIVERED</span></c:when>
-                                            <c:when test="${order.orderStatus eq 'CANCELLED'}"><span class="status-pill status-cancelled"><i class="bi bi-x-circle"></i>CANCELLED</span></c:when>
-                                            <c:otherwise><span class="status-pill status-returned"><i class="bi bi-arrow-counterclockwise"></i>RETURNED</span></c:otherwise>
-                                        </c:choose>
+                                        <span class="status-pill ${not empty order.displayStatusBadgeClass ? order.displayStatusBadgeClass : 'status-unknown'}">
+                                            ${not empty order.displayStatusLabel ? order.displayStatusLabel : 'Không xác định'}
+                                        </span>
                                     </div>
                                     <div class="text-end">
                                         <div class="detail-label">Total payment</div>
@@ -176,7 +175,12 @@
                                         <div class="detail-label">Shipping</div>
                                         <div class="detail-value mb-1">${not empty order.shipmentCarrierName ? order.shipmentCarrierName : 'No shipping info'}</div>
                                         <div class="subtext">${not empty order.shipmentTrackingCode ? 'Tracking: ' : ''}${not empty order.shipmentTrackingCode ? order.shipmentTrackingCode : 'No tracking code yet'}</div>
-                                        <div class="subtext">Shipping status: ${not empty order.shippingStatus ? order.shippingStatus : 'N/A'}</div>
+                                        <div class="subtext">
+                                            Shipping status:
+                                            <span class="badge rounded-pill ${not empty order.shippingStatusBadgeClass ? order.shippingStatusBadgeClass : 'badge-soft'}">
+                                                ${not empty order.shippingStatusLabel ? order.shippingStatusLabel : 'N/A'}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="detail-label">Note</div>
@@ -264,7 +268,7 @@
                                             </button>
                                         </form>
                                     </c:if>
-                                    <c:if test="${order.orderStatus eq 'PENDING' or order.orderStatus eq 'CONFIRMED'}">
+                                    <c:if test="${order.orderStatus eq 'PENDING'}">
                                         <form action="${ordersBasePath}" method="post" class="m-0">
                                             <input type="hidden" name="action" value="cancel">
                                             <input type="hidden" name="id" value="${order.id}">
@@ -276,27 +280,9 @@
                                     </c:if>
                                 </div>
 
-                                <c:choose>
-                                    <c:when test="${empty allowedStatuses}">
-                                        <div class="alert alert-light border mb-0">This is the final status in the order lifecycle.</div>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <form action="${ordersBasePath}" method="post">
-                                            <input type="hidden" name="action" value="updateStatus">
-                                            <input type="hidden" name="id" value="${order.id}">
-                                            <input type="hidden" name="returnMode" value="detail">
-                                            <label class="form-label fw-semibold">Select next status</label>
-                                            <select name="newStatus" class="form-select mb-3" required>
-                                                <c:forEach var="nextStatus" items="${allowedStatuses}">
-                                                    <option value="${nextStatus}">${nextStatus}</option>
-                                                </c:forEach>
-                                            </select>
-                                            <button type="submit" class="btn btn-primary w-100">
-                                                <i class="bi bi-save2 me-1"></i>Update status
-                                            </button>
-                                        </form>
-                                    </c:otherwise>
-                                </c:choose>
+                                <div class="alert alert-light border mb-0">
+                                    Order status is tracked from the Order screen only. Shipment progress is synchronized automatically when Shipment updates.
+                                </div>
                             </div>
                         </div>
 
@@ -354,7 +340,7 @@
                                 <label class="form-label fw-semibold">Status</label>
                                 <select name="status" class="form-select">
                                     <c:forEach var="option" items="${statusOptions}">
-                                        <option value="${option}" ${selectedStatus eq option ? 'selected' : ''}>${option}</option>
+                                        <option value="${option.key}" ${selectedStatus eq option.key ? 'selected' : ''}>${option.value}</option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -424,16 +410,16 @@
                                                 <td>
                                                     <div class="fw-semibold">${not empty o.shipmentCarrierName ? o.shipmentCarrierName : 'N/A'}</div>
                                                     <div class="subtext">${not empty o.shipmentTrackingCode ? o.shipmentTrackingCode : 'No tracking code yet'}</div>
+                                                    <div class="subtext">
+                                                        <span class="badge rounded-pill ${not empty o.shippingStatusBadgeClass ? o.shippingStatusBadgeClass : 'badge-soft'}">
+                                                            ${not empty o.shippingStatusLabel ? o.shippingStatusLabel : 'N/A'}
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td>
-                                                    <c:choose>
-                                                        <c:when test="${o.orderStatus eq 'PENDING'}"><span class="status-pill status-pending">PENDING</span></c:when>
-                                                        <c:when test="${o.orderStatus eq 'CONFIRMED'}"><span class="status-pill status-confirmed">CONFIRMED</span></c:when>
-                                                        <c:when test="${o.orderStatus eq 'SHIPPING'}"><span class="status-pill status-shipping">SHIPPING</span></c:when>
-                                                        <c:when test="${o.orderStatus eq 'DELIVERED'}"><span class="status-pill status-delivered">DELIVERED</span></c:when>
-                                                        <c:when test="${o.orderStatus eq 'CANCELLED'}"><span class="status-pill status-cancelled">CANCELLED</span></c:when>
-                                                        <c:otherwise><span class="status-pill status-returned">RETURNED</span></c:otherwise>
-                                                    </c:choose>
+                                                    <span class="status-pill ${not empty o.displayStatusBadgeClass ? o.displayStatusBadgeClass : 'status-unknown'}">
+                                                        ${not empty o.displayStatusLabel ? o.displayStatusLabel : 'Không xác định'}
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <div class="fw-semibold"><fmt:formatDate value="${o.createdAt}" pattern="dd/MM/yyyy"/></div>
@@ -453,7 +439,7 @@
                                                                 </button>
                                                             </form>
                                                         </c:if>
-                                                        <c:if test="${o.orderStatus eq 'PENDING' or o.orderStatus eq 'CONFIRMED'}">
+                                                        <c:if test="${o.orderStatus eq 'PENDING'}">
                                                             <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="cancel">
                                                                 <input type="hidden" name="id" value="${o.id}">
@@ -502,6 +488,21 @@
                             <label class="form-label fw-semibold">Recipient phone</label>
                             <input type="tel" name="recipientPhone" id="storeRecipientPhone" class="form-control" required inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Enter 10 digits">
                             <div class="invalid-feedback">Recipient phone is required and must contain exactly 10 digits.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold d-block">Fulfillment type</label>
+                            <div class="btn-group" role="group" aria-label="Fulfillment type">
+                                <input type="radio" class="btn-check" name="fulfillmentType" id="storeFulfillmentPickup" value="PICKUP" checked>
+                                <label class="btn btn-outline-primary" for="storeFulfillmentPickup">Pickup in store</label>
+
+                                <input type="radio" class="btn-check" name="fulfillmentType" id="storeFulfillmentDelivery" value="DELIVERY">
+                                <label class="btn btn-outline-primary" for="storeFulfillmentDelivery">Delivery</label>
+                            </div>
+                        </div>
+                        <div class="col-12 d-none" id="storeDeliveryAddressGroup">
+                            <label class="form-label fw-semibold" for="storeDeliveryAddress">Delivery address</label>
+                            <textarea name="deliveryAddress" id="storeDeliveryAddress" class="form-control" rows="2" maxlength="255" placeholder="Enter delivery address for the shipment"></textarea>
+                            <div class="form-text">Required when delivery is selected.</div>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Product variant</label>
@@ -612,6 +613,7 @@
                                 <div id="storeOrderPreview" class="small text-muted">
                                     Search and select a product variant to see the estimated total.
                                 </div>
+                                <div id="storeDeliveryHint" class="small text-muted mt-2"></div>
                                 <div id="storeStockHint" class="small text-danger mt-2 d-none"></div>
                             </div>
                         </div>
@@ -655,6 +657,11 @@
     const quantityInput = document.getElementById('storeQuantity');
     const paymentMethodSelect = document.getElementById('storePaymentMethod');
     const noteInput = document.getElementById('storeNote');
+    const fulfillmentPickupRadio = document.getElementById('storeFulfillmentPickup');
+    const fulfillmentDeliveryRadio = document.getElementById('storeFulfillmentDelivery');
+    const deliveryAddressGroup = document.getElementById('storeDeliveryAddressGroup');
+    const deliveryAddressInput = document.getElementById('storeDeliveryAddress');
+    const deliveryHint = document.getElementById('storeDeliveryHint');
     const previewBox = document.getElementById('storeOrderPreview');
     const quantityFeedback = document.getElementById('storeQuantityFeedback');
     const stockHint = document.getElementById('storeStockHint');
@@ -864,7 +871,8 @@
         const price = parseFloat(selectedOption.dataset.salePrice) || 0;
         const stock = parseInt(selectedOption.dataset.stockQuantity, 10) || 0;
         const qty = Math.max(parseInt(quantityInput.value, 10) || 1, 1);
-        const total = price * qty;
+        const shippingFee = isDeliverySelected() ? 30000 : 0;
+        const total = (price * qty) + shippingFee;
 
         quantityInput.max = String(stock > 0 ? stock : 1);
         if (qty > stock) {
@@ -891,6 +899,7 @@
             '<div><strong>' + productName + '</strong>' + (brandName ? ' - ' + brandName : '') + '</div>' +
             '<div>Unit price: <strong>' + price.toLocaleString('en-US') + ' VND</strong></div>' +
             '<div>Stock available: <strong>' + stock + '</strong></div>' +
+            '<div>Shipping fee: <strong>' + shippingFee.toLocaleString('en-US') + ' VND</strong></div>' +
             '<div>Estimated total: <strong>' + total.toLocaleString('en-US') + ' VND</strong></div>';
     }
 
@@ -931,6 +940,53 @@
         } else {
             paymentMethodSelect.setCustomValidity('');
         }
+    }
+
+    function validateDeliveryAddress() {
+        if (!deliveryAddressInput) {
+            return;
+        }
+
+        if (!isDeliverySelected()) {
+            deliveryAddressInput.setCustomValidity('');
+            return;
+        }
+
+        const value = (deliveryAddressInput.value || '').trim();
+        if (value.length < 10) {
+            deliveryAddressInput.setCustomValidity('Please enter a detailed delivery address.');
+        } else {
+            deliveryAddressInput.setCustomValidity('');
+        }
+    }
+
+    function isDeliverySelected() {
+        return !!(fulfillmentDeliveryRadio && fulfillmentDeliveryRadio.checked);
+    }
+
+    function updateFulfillmentFields() {
+        const deliverySelected = isDeliverySelected();
+
+        if (deliveryAddressGroup) {
+            deliveryAddressGroup.classList.toggle('d-none', !deliverySelected);
+        }
+
+        if (deliveryAddressInput) {
+            if (deliverySelected) {
+                deliveryAddressInput.setAttribute('required', 'required');
+            } else {
+                deliveryAddressInput.removeAttribute('required');
+                deliveryAddressInput.setCustomValidity('');
+            }
+        }
+
+        if (deliveryHint) {
+            deliveryHint.textContent = deliverySelected
+                ? 'Delivery orders add a fixed shipping fee of 30,000 VND and create a Shipment record.'
+                : 'Pickup orders stay inside the store and do not create a Shipment record.';
+        }
+
+        updateStoreOrderPreview();
     }
 
     if (variantSearchInput) {
@@ -994,6 +1050,15 @@
     if (paymentMethodSelect) {
         paymentMethodSelect.addEventListener('change', validatePaymentMethod);
     }
+    if (fulfillmentPickupRadio) {
+        fulfillmentPickupRadio.addEventListener('change', updateFulfillmentFields);
+    }
+    if (fulfillmentDeliveryRadio) {
+        fulfillmentDeliveryRadio.addEventListener('change', updateFulfillmentFields);
+    }
+    if (deliveryAddressInput) {
+        deliveryAddressInput.addEventListener('input', validateDeliveryAddress);
+    }
     if (noteInput) {
         noteInput.addEventListener('input', function () {
             if ((noteInput.value || '').length > 500) {
@@ -1008,6 +1073,7 @@
             validateTextInput(recipientNameInput, 2, 'Recipient name is required and must be at least 2 characters.');
             validatePhoneInput();
             validatePaymentMethod();
+            validateDeliveryAddress();
             validateVariantSelection();
             updateStoreOrderPreview();
 
@@ -1025,6 +1091,7 @@
             storeOrderForm.classList.add('was-validated');
         });
     }
+    updateFulfillmentFields();
     updateStoreOrderPreview();
 
     document.querySelectorAll('.alert').forEach(function (el) {

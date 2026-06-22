@@ -34,6 +34,11 @@ public class Order {
     private String shipmentCarrierName;
     private String shipmentTrackingCode;
     private String shippingStatus;
+    private String displayStatus;
+    private String displayStatusLabel;
+    private String displayStatusBadgeClass;
+    private String shippingStatusLabel;
+    private String shippingStatusBadgeClass;
     private String paymentMethod;
     private String paymentStatus;
     private int detailCount;
@@ -251,6 +256,46 @@ public class Order {
 
     public void setShippingStatus(String shippingStatus) {
         this.shippingStatus = shippingStatus;
+    }
+
+    public String getDisplayStatus() {
+        return displayStatus;
+    }
+
+    public void setDisplayStatus(String displayStatus) {
+        this.displayStatus = displayStatus;
+    }
+
+    public String getDisplayStatusLabel() {
+        return displayStatusLabel;
+    }
+
+    public void setDisplayStatusLabel(String displayStatusLabel) {
+        this.displayStatusLabel = displayStatusLabel;
+    }
+
+    public String getDisplayStatusBadgeClass() {
+        return displayStatusBadgeClass;
+    }
+
+    public void setDisplayStatusBadgeClass(String displayStatusBadgeClass) {
+        this.displayStatusBadgeClass = displayStatusBadgeClass;
+    }
+
+    public String getShippingStatusLabel() {
+        return shippingStatusLabel;
+    }
+
+    public void setShippingStatusLabel(String shippingStatusLabel) {
+        this.shippingStatusLabel = shippingStatusLabel;
+    }
+
+    public String getShippingStatusBadgeClass() {
+        return shippingStatusBadgeClass;
+    }
+
+    public void setShippingStatusBadgeClass(String shippingStatusBadgeClass) {
+        this.shippingStatusBadgeClass = shippingStatusBadgeClass;
     }
 
     public String getPaymentMethod() {

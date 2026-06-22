@@ -116,10 +116,16 @@ public class CustomerOrderDAO {
         List<Order> list
                 = new ArrayList<>();
 
-        String sql = "SELECT *"
-                + "FROM [Order]"
-                + "WHERE user_id = ?"
-                + "ORDER BY created_at DESC";
+        String sql = "SELECT o.id, o.order_code, o.user_id, o.voucher_id, o.shipment_id, "
+                + "       o.recipient_name, o.recipient_phone, o.ward_id, o.address_detail, "
+                + "       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, "
+                + "       o.order_status, o.note, o.created_at, o.updated_at, "
+                + "       s.shipping_status, p.payment_status, p.payment_method "
+                + "FROM [Order] o "
+                + "LEFT JOIN Shipment s ON o.shipment_id = s.id "
+                + "LEFT JOIN Payment p ON o.id = p.order_id "
+                + "WHERE o.user_id = ? "
+                + "ORDER BY o.created_at DESC";
 
         try (
                  Connection con
@@ -149,6 +155,15 @@ public class CustomerOrderDAO {
                 o.setOrderStatus(
                         rs.getString(
                                 "order_status"));
+
+                o.setShipmentId(
+                        rs.getInt("shipment_id"));
+                o.setShippingStatus(
+                        rs.getString("shipping_status"));
+                o.setPaymentStatus(
+                        rs.getString("payment_status"));
+                o.setPaymentMethod(
+                        rs.getString("payment_method"));
 
                 o.setCreatedAt(
                         rs.getTimestamp(

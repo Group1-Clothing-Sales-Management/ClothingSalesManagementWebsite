@@ -131,7 +131,6 @@ public class StaffManageOrders extends HttpServlet {
         List<OrderDetail> details = service.getOrderDetails(orderId);
         request.setAttribute("order", order);
         request.setAttribute("orderDetails", details);
-        request.setAttribute("allowedStatuses", service.getAllowedNextStatuses(order.getOrderStatus()));
         request.setAttribute("ordersBasePath", buildOrdersBasePath(request));
         request.setAttribute("pageMode", "detail");
         request.getRequestDispatcher("/StaffManageOrders.jsp").forward(request, response);
@@ -173,8 +172,11 @@ public class StaffManageOrders extends HttpServlet {
         String recipientPhone = trimToEmpty(request.getParameter("recipientPhone"));
         String note = trimToEmpty(request.getParameter("note"));
         String paymentMethod = trimToEmpty(request.getParameter("paymentMethod"));
+        String fulfillmentType = trimToEmpty(request.getParameter("fulfillmentType"));
+        String deliveryAddress = trimToEmpty(request.getParameter("deliveryAddress"));
         int variantId = parseId(request.getParameter("variantId"));
         int quantity = parseId(request.getParameter("quantity"));
+        boolean deliveryOrder = "DELIVERY".equalsIgnoreCase(fulfillmentType);
 
         String result = service.createStoreOrder(
                 recipientName,
@@ -182,7 +184,9 @@ public class StaffManageOrders extends HttpServlet {
                 variantId,
                 quantity,
                 paymentMethod,
-                note);
+                note,
+                deliveryOrder,
+                deliveryAddress);
 
         if ("SUCCESS".equals(result)) {
             request.getSession().setAttribute("successMsg", "Store order created successfully.");
