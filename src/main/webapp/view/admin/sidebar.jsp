@@ -45,6 +45,8 @@
                 activeTab = "shipments";
             } else if (path.startsWith("/admin/customers") || path.startsWith("/staff/customers")) {
                 activeTab = "customers";
+            } else if (path.startsWith("/admin/feedback") || path.startsWith("/staff/feedback")) {
+                activeTab = "feedback";
             } else if (path.startsWith("/staff/products")) {
                 activeTab = "products";
             }
@@ -188,6 +190,10 @@
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}">
             <i class="fa-solid fa-users me-2"></i>Customers
+        </a>
+
+        <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
+            <i class="fa-solid fa-comments me-2"></i>Feedback
         </a>
 
         <c:if test="${sessionScope.authRoleName != 'STAFF'}">

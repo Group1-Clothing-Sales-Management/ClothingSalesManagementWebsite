@@ -269,6 +269,9 @@ CREATE TABLE Feedback (
     rating INT CHECK (rating >= 1 AND rating <= 5),
     comment NVARCHAR(MAX),
     status BIT DEFAULT 1, -- 1: Hiện, 0: Ẩn (nếu dính comment thô tục/spam)
+    admin_response NVARCHAR(MAX) NULL, -- Phần trả lời từ Staff/Admin
+    response_by INT NULL FOREIGN KEY REFERENCES [User](id) ON DELETE SET NULL, -- Ai trả lời feedback này
+    responded_at DATETIME NULL, -- Thời gian trả lời gần nhất
     created_at DATETIME DEFAULT GETDATE()
 );
 GO
