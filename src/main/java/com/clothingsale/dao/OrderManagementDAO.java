@@ -181,8 +181,8 @@ public class OrderManagementDAO {
         if (normalizedPhone.isEmpty()) {
             return "Recipient phone is required.";
         }
-        if (!normalizedPhone.matches("\\d{1,10}")) {
-            return "Recipient phone must contain up to 10 digits.";
+        if (!normalizedPhone.matches("\\d{10}")) {
+            return "Recipient phone must contain exactly 10 digits.";
         }
         if (variantId <= 0) {
             return "Please select a product variant.";

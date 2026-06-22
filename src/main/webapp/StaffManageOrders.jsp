@@ -500,8 +500,8 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Recipient phone</label>
-                            <input type="tel" name="recipientPhone" id="storeRecipientPhone" class="form-control" required inputmode="numeric" maxlength="10" pattern="[0-9]{1,10}" placeholder="Enter up to 10 digits">
-                            <div class="invalid-feedback">Recipient phone is required and must contain up to 10 digits.</div>
+                            <input type="tel" name="recipientPhone" id="storeRecipientPhone" class="form-control" required inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Enter 10 digits">
+                            <div class="invalid-feedback">Recipient phone is required and must contain exactly 10 digits.</div>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Product variant</label>
@@ -911,11 +911,11 @@
             return;
         }
         const value = (recipientPhoneInput.value || '').trim();
-        const phonePattern = /^[0-9]{1,10}$/;
+        const phonePattern = /^[0-9]{10}$/;
         if (!value) {
             recipientPhoneInput.setCustomValidity('Recipient phone is required.');
         } else if (!phonePattern.test(value)) {
-            recipientPhoneInput.setCustomValidity('Enter up to 10 digits only.');
+            recipientPhoneInput.setCustomValidity('Enter exactly 10 digits.');
         } else {
             recipientPhoneInput.setCustomValidity('');
         }
