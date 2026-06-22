@@ -170,7 +170,7 @@
                 </a>
             </c:when>
             <c:otherwise>
-                <a href="${pageContext.request.contextPath}/admin/dashboard?tab=products" class="${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}${rolePrefix}/products" class="nav-link ${activeTab == 'products' ? 'active' : ''}">
                     <i class="fa-solid fa-box me-2"></i>Manage Products
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">

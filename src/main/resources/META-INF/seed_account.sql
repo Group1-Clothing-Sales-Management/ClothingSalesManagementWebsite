@@ -507,3 +507,100 @@ INSERT INTO Inventory_Log (variant_id, user_id, change_quantity, transaction_typ
 INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status) VALUES
 (5, 1, NULL, 5, N'Áo mặc mát lắm, giặt không bị xù lông, sẽ ủng hộ shop tiếp!', 1);
 GO
+
+-- =========================================================================
+-- BỔ SUNG DỮ LIỆU 
+-- =========================================================================
+
+USE ClothesShopDB;
+GO
+
+-- 1. Bổ sung một số Voucher mẫu đúng chuẩn 'PERCENT' hoặc 'FIXED_AMOUNT'
+INSERT INTO Voucher (code, title, discount_type, discount_value, max_discount_amount, min_order_value, start_date, end_date, usage_limit, used_count)
+VALUES 
+('VOUCHER10', N'Giảm 10% cho đơn hàng từ 500k', 'PERCENT', 10.00, 50000.00, 500000.00, '2026-01-01', '2026-12-31', 100, 15),
+('FIXED50', N'Giảm thẳng 50k cho thành viên mới', 'FIXED_AMOUNT', 50000.00, NULL, 200000.00, '2026-01-01', '2026-12-31', 200, 30);
+
+-- 2. Bổ sung một số đơn vị vận chuyển (Shipment)
+INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time)
+VALUES 
+(N'Giao Hàng Nhanh (GHN)', 'DELIVERED', 'GHN123456789', 30000.00, '2026-02-15'),
+(N'Giao Hàng Tiết Kiệm (GHTK)', 'DELIVERED', 'GHTK987654321', 30000.00, '2026-03-20'),
+(N'Viettel Post', 'SHIPPING', 'VT777888999', 30000.00, '2026-06-25');
+
+-- 3. Bổ sung đơn hàng mẫu (Mã ORD + chuỗi số, Phí ship cố định 30,000đ)
+-- Giả định hệ thống của bạn đã có user_id = 1 (hoặc thay bằng id khách hàng hợp lệ trong DB của bạn)
+-- Đơn hàng tháng 1/2026 (Thành công -> Tính vào doanh thu)
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES ('ORD1768234100001', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Đường Lê Lợi', 450000.00, 0.00, 30000.00, 480000.00, 'DELIVERED', N'Đơn hàng tháng 1', '2026-01-15 10:30:00', '2026-01-17 15:00:00');
+
+-- Đơn hàng tháng 2/2026 (Thành công)
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES ('ORD1768234200002', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Đường Lê Lợi', 780000.00, 0.00, 30000.00, 810000.00, 'DELIVERED', N'Đơn hàng tháng 2', '2026-02-20 14:15:00', '2026-02-22 16:30:00');
+
+-- Đơn hàng tháng 3/2026 (Thành công)
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES ('ORD1768234300003', 1, 1, 2, N'Nguyễn Văn A', '0912345678', NULL, N'123 Đường Lê Lợi', 600000.00, 50000.00, 30000.00, 580000.00, 'DELIVERED', N'Đơn hàng tháng 3 áp dụng voucher', '2026-03-10 09:00:00', '2026-03-12 11:00:00');
+
+-- Đơn hàng tháng 4/2026 (Thành công)
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES ('ORD1768234400004', 1, NULL, 2, N'Trần Thị B', '0988888888', NULL, N'456 Trần Hưng Đạo', 1200000.00, 0.00, 30000.00, 1230000.00, 'DELIVERED', N'Đơn hàng lớn tháng 4', '2026-04-05 18:20:00', '2026-04-07 20:00:00');
+
+-- Đơn hàng tháng 5/2026 (Thành công)
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES ('ORD1768234500005', 1, 2, 2, N'Trần Thị B', '0988888888', NULL, N'456 Trần Hưng Đạo', 950000.00, 50000.00, 30000.00, 930000.00, 'DELIVERED', N'Đơn hàng tháng 5', '2026-05-18 11:10:00', '2026-05-20 14:00:00');
+
+-- Các đơn hàng tháng 6/2026 (Tháng hiện tại - Gồm cả đơn đã xong và đơn PENDING mới nhận)
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES 
+('ORD1768234600006', 1, NULL, 1, N'Lê Hoàng C', '0901112222', NULL, N'789 Nguyễn Trãi', 350000.00, 0.00, 30000.00, 380000.00, 'DELIVERED', N'Đơn hoàn thành tháng 6', '2026-06-02 08:30:00', '2026-06-04 10:00:00'),
+('ORD1768234600007', 1, NULL, 3, N'Phạm Minh D', '0933344455', NULL, N'321 Điện Biên Phủ', 500000.00, 0.00, 30000.00, 530000.00, 'PENDING', N'Đơn hàng MỚI CHỜ DUYỆT 1', '2026-06-21 15:45:00', '2026-06-21 15:45:00'),
+('ORD1768234600008', 1, NULL, NULL, N'Hoàng Thúy E', '0944555666', NULL, N'15 Ba Tháng Hai', 280000.00, 0.00, 30000.00, 310000.00, 'PENDING', N'Đơn hàng MỚI CHỜ DUYỆT 2', '2026-06-22 10:00:00', '2026-06-22 10:00:00'),
+('ORD1768234600009', 1, NULL, NULL, N'Đỗ Tiến F', '0955666777', NULL, N'99 Cộng Hòa', 620000.00, 0.00, 30000.00, 650000.00, 'CANCELLED', N'Đơn hàng khách hủy', '2026-06-10 13:00:00', '2026-06-10 13:30:00');
+
+-- 4. Chi tiết đơn hàng mẫu (Liên kết đến các đơn hàng vừa tạo thông qua ID tự tăng)
+-- Đơn 1
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 2, 225000.00);
+
+-- Đơn 2
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234200002'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 2, 390000.00);
+
+-- Đơn 3
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 2, 200000.00),
+       ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 1, 200000.00);
+
+-- Đơn 4
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234400004'), 3, N'Váy Nữ Dáng Xòe Elegant', N'Size: S, Color: Red', 3, 400000.00);
+
+-- Đơn 5
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 1, 450000.00),
+       ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Váy Nữ Dáng Xòe Elegant', N'Size: S, Color: Red', 1, 500000.00);
+
+-- Đơn 6 (Đơn hoàn thành trong tháng 6)
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 1, 350000.00);
+
+-- Đơn 7, 8 (Các đơn hàng mới đang chờ xử lý)
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 1, 500000.00);
+
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 1, 280000.00);
+
+-- 5. Đồng bộ bảng thanh toán (Payment) tương ứng cho các đơn thành công
+INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date)
+VALUES 
+((SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 'BANK_TRANSFER', 'PAID', 480000.00, 'TXN2026011501', '2026-01-15 10:35:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234200002'), 'VNPAY', 'PAID', 810000.00, 'TXN2026022002', '2026-02-20 14:20:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 'COD', 'PAID', 580000.00, NULL, '2026-03-12 11:05:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234400004'), 'VNPAY', 'PAID', 1230000.00, 'TXN2026040504', '2026-04-05 18:22:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 'BANK_TRANSFER', 'PAID', 930000.00, 'TXN2026051805', '2026-05-18 11:15:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 'COD', 'PAID', 380000.00, NULL, '2026-06-04 10:05:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 'COD', 'UNPAID', 530000.00, NULL, NULL),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 'VNPAY', 'UNPAID', 310000.00, NULL, NULL);
+GO
