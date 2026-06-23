@@ -16,26 +16,20 @@ public class StaffShipmentManagementService {
     }
 
     public String confirmDeliveryOutcome(int shipmentId, String outcome, String remarks) {
-        // BR3: Bắt buộc nhân viên phải chọn kết quả giao hàng (Thành công / Thất bại)
-        if (outcome == null || (!"DELIVERED".equalsIgnoreCase(outcome) && !"FAILED".equalsIgnoreCase(outcome))) {
-            return "Please select a valid delivery outcome (Success or Failure).";
+        if (outcome == null || outcome.trim().isEmpty()) {
+            return "Vui lòng lựa chọn trạng thái vận chuyển hợp lệ.";
         }
 
         StaffShipment shipment = dao.getShipmentById(shipmentId);
         if (shipment == null) {
-            return "Shipment record not found.";
-        }
-
-        // E2: Chỉ cho phép xác nhận khi trạng thái hiện tại là 'SHIPPING' (In Transit)
-        if (!"SHIPPING".equalsIgnoreCase(shipment.getShippingStatus())) {
-            return "Only shipments with 'In Transit' status can be confirmed.";
+            return "Không tìm thấy thông tin vận chuyển của đơn hàng này.";
         }
 
         boolean success = dao.updateDeliveryOutcome(shipmentId, outcome.toUpperCase(), remarks);
         if (success) {
             return "SUCCESS";
         } else {
-            return "System connection error or data updated by another process.";
+            return "Lỗi kết nối hệ thống, không thể cập nhật trạng thái.";
         }
     }
 }

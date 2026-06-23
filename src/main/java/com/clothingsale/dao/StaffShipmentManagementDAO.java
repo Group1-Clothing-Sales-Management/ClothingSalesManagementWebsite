@@ -8,16 +8,15 @@ import java.util.List;
 
 public class StaffShipmentManagementDAO {
 
-    /**
-     * UC-09.1: Lấy danh sách thông tin vận chuyển kèm bộ lọc tìm kiếm và trạng thái
-     */
     public List<StaffShipment> getAllShipments(String keyword, String statusFilter) {
         List<StaffShipment> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT s.id AS shipment_id, o.id AS order_id, o.order_code, o.recipient_name, o.recipient_phone, " +
-                        "o.address_detail + ', ' + w.ward_name + ', ' + d.district_name + ', ' + pr.province_name AS delivery_address, "
-                        +
-                        "s.carrier_name, s.shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
+                        "ISNULL(o.address_detail, '') + " +
+                        "ISNULL(', ' + w.ward_name, '') + " +
+                        "ISNULL(', ' + d.district_name, '') + " +
+                        "ISNULL(', ' + pr.province_name, '') AS delivery_address, " +
+                        "s.carrier_name, UPPER(TRIM(s.shipping_status)) AS shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
                         +
                         "FROM Shipment s " +
                         "JOIN [Order] o ON o.shipment_id = s.id " +
@@ -73,15 +72,14 @@ public class StaffShipmentManagementDAO {
         return list;
     }
 
-    /**
-     * Lấy chi tiết bản ghi vận chuyển theo ID
-     */
     public StaffShipment getShipmentById(int shipmentId) {
         String sql = "SELECT s.id AS shipment_id, o.id AS order_id, o.order_code, o.recipient_name, o.recipient_phone, "
                 +
-                "o.address_detail + ', ' + w.ward_name + ', ' + d.district_name + ', ' + pr.province_name AS delivery_address, "
-                +
-                "s.carrier_name, s.shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
+                "ISNULL(o.address_detail, '') + " +
+                "ISNULL(', ' + w.ward_name, '') + " +
+                "ISNULL(', ' + d.district_name, '') + " +
+                "ISNULL(', ' + pr.province_name, '') AS delivery_address, " +
+                "s.carrier_name, UPPER(TRIM(s.shipping_status)) AS shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
                 +
                 "FROM Shipment s " +
                 "JOIN [Order] o ON o.shipment_id = s.id " +
@@ -116,53 +114,48 @@ public class StaffShipmentManagementDAO {
         return null;
     }
 
-    /**
-     * UC-09.2: Cập nhật kết quả giao hàng (Thành công / Thất bại) và đồng bộ trạng
-     * thái liên quan
-     */
-    public boolean updateDeliveryOutcome(int shipmentId, String outcomeStatus, String remarks) {
-        String queryShipment = "SELECT s.shipping_status, o.id AS order_id, p.payment_method, p.payment_status " +
+    public boolean updateDeliveryOutcome(int shipmentId, String newShippingStatus, String remarks) {
+        String queryShipment = "SELECT o.id AS order_id, p.payment_method, p.payment_status " +
                 "FROM Shipment s JOIN [Order] o ON o.shipment_id = s.id " +
                 "LEFT JOIN Payment p ON p.order_id = o.id WHERE s.id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-
             try (PreparedStatement psCheck = conn.prepareStatement(queryShipment)) {
                 psCheck.setInt(1, shipmentId);
-                String currentShippingStatus = null;
                 int orderId = 0;
                 String paymentMethod = null;
                 String paymentStatus = null;
-
                 try (ResultSet rs = psCheck.executeQuery()) {
                     if (rs.next()) {
-                        currentShippingStatus = rs.getString("shipping_status");
                         orderId = rs.getInt("order_id");
                         paymentMethod = rs.getString("payment_method");
                         paymentStatus = rs.getString("payment_status");
+                    } else {
+                        conn.rollback();
+                        return false;
                     }
                 }
 
-                // Ràng buộc: Chỉ xử lý đơn có trạng thái SHIPPING (In Transit)
-                if (currentShippingStatus == null || !"SHIPPING".equalsIgnoreCase(currentShippingStatus)) {
-                    conn.rollback();
-                    return false;
-                }
-
-                // 1. Cập nhật bảng Shipment
+                // 1. Update Shipment table with exact values: SUCCESS or FAILURE
                 String updateShipment = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
                 try (PreparedStatement psS = conn.prepareStatement(updateShipment)) {
-                    psS.setString(1, outcomeStatus);
+                    psS.setString(1, newShippingStatus); // Lưu chuỗi "SUCCESS" hoặc "FAILURE" vào cột shipping_status
                     psS.setInt(2, shipmentId);
                     psS.executeUpdate();
                 }
 
-                // 2. Cập nhật bảng Order tương ứng
-                String orderStatus = "DELIVERED".equalsIgnoreCase(outcomeStatus) ? "DELIVERED" : "CANCELLED";
+                // 2. Synchronize and map accurately to [Order] status
+                String mappedOrderStatus = "SHIPPING";
+                if ("SUCCESS".equalsIgnoreCase(newShippingStatus)) {
+                    mappedOrderStatus = "SUCCESS"; // Nếu VC thành công -> Đơn hàng chuyển thành DELIVERED
+                } else if ("FAILURE".equalsIgnoreCase(newShippingStatus)) {
+                    mappedOrderStatus = "FAILURE"; // Nếu VC thất bại -> Đơn hàng chuyển thành CANCELLED
+                }
+
                 String updateOrder = "UPDATE [Order] SET order_status = ?, note = ISNULL(note, '') + ?, updated_at = GETDATE() WHERE id = ?";
                 try (PreparedStatement psO = conn.prepareStatement(updateOrder)) {
-                    psO.setString(1, orderStatus);
+                    psO.setString(1, mappedOrderStatus);
                     psO.setString(2,
                             remarks != null && !remarks.trim().isEmpty() ? " [Staff Note: " + remarks.trim() + "]"
                                     : "");
@@ -170,9 +163,8 @@ public class StaffShipmentManagementDAO {
                     psO.executeUpdate();
                 }
 
-                // 3. Đồng bộ trạng thái Payment dựa theo Lifecycle của hệ thống (Nếu giao thành
-                // công qua COD)
-                if ("DELIVERED".equalsIgnoreCase(outcomeStatus) && "COD".equalsIgnoreCase(paymentMethod)
+                // 3. Update Payment if payment_method is COD and status is SUCCESS
+                if ("SUCCESS".equalsIgnoreCase(newShippingStatus) && "COD".equalsIgnoreCase(paymentMethod)
                         && "UNPAID".equalsIgnoreCase(paymentStatus)) {
                     String updatePayment = "UPDATE Payment SET payment_status = 'PAID', payment_date = GETDATE() WHERE order_id = ?";
                     try (PreparedStatement psP = conn.prepareStatement(updatePayment)) {

@@ -1,10 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Quản Lý Trạng Thế Giao Hàng</title>
+    <title>Shipment Status Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -16,8 +16,8 @@
 
         <div class="col-md-10 py-5 px-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-dark fw-bold">Quản Lý Trạng Thái Giao Hàng</h2>
-                <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary">Quay lại Dashboard</a>
+                <h2 class="text-dark fw-bold">Shipment Status Management</h2>
+                <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary">Dashboard</a>
             </div>
 
             <c:if test="${not empty sessionScope.successMsg}">
@@ -27,31 +27,24 @@
                 </div>
                 <% session.removeAttribute("successMsg"); %>
             </c:if>
-            <c:if test="${not empty sessionScope.errorMsg}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ${sessionScope.errorMsg}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <% session.removeAttribute("errorMsg"); %>
-            </c:if>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <form action="${pageContext.request.contextPath}/staff/shipments" method="GET" class="row g-3">
                         <div class="col-md-5">
-                            <input type="text" name="keyword" class="form-control" value="${keyword}" placeholder="Tìm kiếm theo mã đơn, tên khách hàng...">
+                            <input type="text" name="keyword" class="form-control" value="${keyword}" placeholder="Search by order code, recipient name...">
                         </div>
                         <div class="col-md-4">
                             <select name="status" class="form-select">
-                                <option value="ALL" ${selectedStatus == 'ALL' ? 'selected' : ''}>-- Tất cả trạng thái giao dịch --</option>
-                                <option value="PENDING_PICKUP" ${selectedStatus == 'PENDING_PICKUP' ? 'selected' : ''}>Chờ lấy hàng</option>
-                                <option value="SHIPPING" ${selectedStatus == 'SHIPPING' ? 'selected' : ''}>Đang giao hàng</option>
-                                <option value="DELIVERED" ${selectedStatus == 'DELIVERED' ? 'selected' : ''}>Giao thành công</option>
-                                <option value="FAILED" ${selectedStatus == 'FAILED' ? 'selected' : ''}>Giao thất bại</option>
+                                <option value="ALL" ${selectedStatus == 'ALL' ? 'selected' : ''}>-- All Statuses --</option>
+                                <option value="PENDING_PICKUP" ${selectedStatus == 'PENDING_PICKUP' ? 'selected' : ''}>Pending Pickup</option>
+                                <option value="SHIPPING" ${selectedStatus == 'SHIPPING' ? 'selected' : ''}>In Transit</option>
+                                <option value="SUCCESS" ${selectedStatus == 'SUCCESS' ? 'selected' : ''}>Success</option>
+                                <option value="FAILURE" ${selectedStatus == 'FAILURE' ? 'selected' : ''}>Failure</option>
                             </select>
                         </div>
                         <div class="col-md-3 d-grid">
-                            <button type="submit" class="btn btn-primary">Tìm kiếm & Lọc</button>
+                            <button type="submit" class="btn btn-primary">Search & Filter</button>
                         </div>
                     </form>
                 </div>
@@ -63,23 +56,22 @@
                         <table class="table table-hover table-striped mb-0 align-middle">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Mã Đơn Hàng</th>
-                                    <th>Người Nhận</th>
-                                    <th>Địa Chỉ Giao Hàng</th>
-                                    <th>Đơn Vị VC</th>
-                                    <th>Ngày Giao Dự Kiến</th>
-                                    <th>Trạng Thái</th>
-                                    <th class="text-center">Hành Động</th>
+                                    <th>Order Code</th>
+                                    <th>Recipient</th>
+                                    <th>Delivery Address</th>
+                                    <th>Carrier</th>
+                                    <th>Est. Delivery Time</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty shipments}">
                                         <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">Không tìm thấy bản ghi vận chuyển nào phù hợp.</td>
+                                            <td colspan="7" class="text-center py-4 text-muted">No shipment records found.</td>
                                         </tr>
                                     </c:when>
-                                    
                                     <c:otherwise>
                                         <c:forEach var="s" items="${shipments}">
                                             <tr>
@@ -90,22 +82,22 @@
                                                 <td>${s.estimatedDeliveryTime}</td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${s.shippingStatus == 'DELIVERED'}"><span class="badge bg-success">Thành công</span></c:when>
-                                                        <c:when test="${s.shippingStatus == 'SHIPPING'}"><span class="badge bg-primary">Đang giao</span></c:when>
-                                                        <c:when test="${s.shippingStatus == 'PENDING_PICKUP'}"><span class="badge bg-warning text-dark">Chờ lấy hàng</span></c:when>
-                                                        <c:otherwise><span class="badge bg-danger">Thất bại</span></c:otherwise>
+                                                        <c:when test="${s.shippingStatus == 'PENDING_PICKUP'}"><span class="badge bg-warning text-dark">Pending Pickup</span></c:when>
+                                                        <c:when test="${s.shippingStatus == 'SHIPPING'}"><span class="badge bg-primary">In Transit</span></c:when>
+                                                        <c:when test="${s.shippingStatus == 'SUCCESS'}"><span class="badge bg-success">Success</span></c:when>
+                                                        <c:otherwise><span class="badge bg-danger">Failure</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="text-center">
-                                                    <c:choose>
-                                                        <c:when test="${s.shippingStatus == 'SHIPPING'}">
-                                                            <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${s.shipmentId}" class="btn btn-sm btn-success">Xác nhận kết quả</a>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <button class="btn btn-sm btn-secondary" disabled>Đã hoàn thành</button>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </td>
+    <c:choose>
+        <c:when test="${s.shippingStatus == 'SUCCESS' || s.shippingStatus == 'SUCCESSFUL' || s.shippingStatus == 'Success' || s.shippingStatus == 'FAILURE' || s.shippingStatus == 'Failure' || s.shippingStatus == 'FAILED'}">
+            <button class="btn btn-sm btn-secondary" disabled>Completed</button>
+        </c:when>
+        <c:otherwise>
+            <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${s.shipmentId}" class="btn btn-sm btn-success">Update Status</a>
+        </c:otherwise>
+    </c:choose>
+</td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
