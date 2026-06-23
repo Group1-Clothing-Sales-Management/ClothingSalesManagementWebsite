@@ -781,7 +781,6 @@
         document.querySelectorAll('.quantity-input').forEach(function(input) {
             input.addEventListener('change', function() {
                 var value = parseInt(input.value, 10);
-                if (isNaN(value) || value < 1) {
                     input.value = '1';
                 }
 

@@ -126,6 +126,26 @@
                     Xem giỏ hàng
 
                 </a>
+
+                <c:if test="${loggedIn}">
+                    <span class="text-secondary small">
+                        <i class="fa-solid fa-user"></i>
+                        <c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}"/>
+                    </span>
+                    <a
+                        href="${pageContext.request.contextPath}/customer/profile"
+                        class="btn btn-outline-dark">
+                        <i class="fa-solid fa-id-card"></i>
+                        Profile
+                    </a>
+                    <a
+                        href="${pageContext.request.contextPath}/customer/logout"
+                        class="btn btn-outline-danger"
+                        onclick="return confirm('Are you sure you want to logout?');">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        Logout
+                    </a>
+                </c:if>
             </div>
 
 

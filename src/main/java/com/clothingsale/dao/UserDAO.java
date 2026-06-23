@@ -67,6 +67,97 @@ public class UserDAO {
         return null;
     }
 
+    public User findById(int id) {
+        if (id <= 0) {
+            return null;
+        }
+
+        String sql = "SELECT u.id, u.username, u.password, u.full_name, u.email, u.phone, u.avatar_url, "
+                + "u.status, u.created_at, u.updated_at, u.role_id, r.role_name "
+                + "FROM [User] u "
+                + "LEFT JOIN Role r ON u.role_id = r.id "
+                + "WHERE u.id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return null;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapUser(rs);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean isEmailUsedByOtherUser(String email, int currentUserId) {
+        if (email == null || email.trim().isEmpty() || currentUserId <= 0) {
+            return false;
+        }
+
+        String sql = "SELECT COUNT(*) FROM [User] WHERE email = ? AND id <> ?";
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return false;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, email.trim());
+                ps.setInt(2, currentUserId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next() && rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateCustomerProfile(User user) {
+        if (user == null || user.getId() <= 0
+                || user.getFullName() == null || user.getFullName().trim().isEmpty()
+                || user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            return false;
+        }
+
+        String sql = "UPDATE [User] "
+                + "SET full_name = ?, email = ?, phone = ?, avatar_url = ?, updated_at = GETDATE() "
+                + "WHERE id = ? AND role_id = (SELECT id FROM Role WHERE role_name = 'CUSTOMER')";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return false;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, user.getFullName().trim());
+                ps.setString(2, user.getEmail().trim());
+                ps.setString(3, normalizeNullable(user.getPhone()));
+                ps.setString(4, normalizeNullable(user.getAvatarUrl()));
+                ps.setInt(5, user.getId());
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    private String normalizeNullable(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
+    }
+
     public User authenticateInternalAccount(String username, String plainPassword) {
         User user = findByUsername(username);
         if (user == null || plainPassword == null) {

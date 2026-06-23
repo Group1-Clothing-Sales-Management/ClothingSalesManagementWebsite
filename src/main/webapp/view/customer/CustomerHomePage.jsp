@@ -253,7 +253,7 @@
 
                 </a>
 
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
 
                     <c:choose>
 
@@ -295,10 +295,31 @@
 
                     </c:choose>
 
-                    <a href="${pageContext.request.contextPath}/customer/login"
-                       class="btn btn-danger">
-                        Login
-                    </a>
+                    <c:choose>
+                        <c:when test="${loggedIn}">
+                            <span class="text-secondary small d-none d-md-inline">
+                                <i class="fa-solid fa-user"></i>
+                                <c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}"/>
+                            </span>
+                            <a href="${pageContext.request.contextPath}/customer/profile"
+                               class="btn btn-outline-dark">
+                                <i class="fa-solid fa-id-card"></i>
+                                Profile
+                            </a>
+                            <a href="${pageContext.request.contextPath}/customer/logout"
+                               class="btn btn-danger"
+                               onclick="return confirm('Are you sure you want to logout?');">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                Logout
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="${pageContext.request.contextPath}/customer/login"
+                               class="btn btn-danger">
+                                Login
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
 
                 </div>
 
