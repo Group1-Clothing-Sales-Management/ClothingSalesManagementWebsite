@@ -17,19 +17,19 @@ public class StaffShipmentManagementService {
 
     public String confirmDeliveryOutcome(int shipmentId, String outcome, String remarks) {
         if (outcome == null || outcome.trim().isEmpty()) {
-            return "Vui lòng lựa chọn trạng thái vận chuyển hợp lệ.";
+            return "Please select a valid shipment status.";
         }
 
         StaffShipment shipment = dao.getShipmentById(shipmentId);
         if (shipment == null) {
-            return "Không tìm thấy thông tin vận chuyển của đơn hàng này.";
+            return "Shipment record not found for this order.";
         }
 
         boolean success = dao.updateDeliveryOutcome(shipmentId, outcome.toUpperCase(), remarks);
         if (success) {
             return "SUCCESS";
         } else {
-            return "Lỗi kết nối hệ thống, không thể cập nhật trạng thái.";
+            return "System connection error, unable to update status.";
         }
     }
 }

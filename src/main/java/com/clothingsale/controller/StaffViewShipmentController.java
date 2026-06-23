@@ -34,7 +34,6 @@ public class StaffViewShipmentController extends HttpServlet {
             request.setAttribute("shipment", shipment);
             request.getRequestDispatcher("/StaffConfirmShipment.jsp").forward(request, response);
         } else {
-            // UC-09.1: Hiển thị danh sách mặc định kết hợp lọc và tra cứu dữ liệu
             String keyword = request.getParameter("keyword");
             String status = request.getParameter("status");
 
@@ -75,9 +74,6 @@ public class StaffViewShipmentController extends HttpServlet {
         }
     }
 
-    /**
-     * BR1: Kiểm tra quyền truy cập của nhân viên hệ thống
-     */
     private boolean isStaffOrAdmin(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("authUserId") == null) {

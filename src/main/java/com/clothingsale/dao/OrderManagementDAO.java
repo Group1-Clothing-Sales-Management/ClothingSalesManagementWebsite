@@ -16,7 +16,8 @@ import java.util.List;
 
 /**
  * DAO chịu trách nhiệm đọc và cập nhật dữ liệu quản lý đơn hàng.
- * Tất cả truy vấn ở đây đều bám theo schema hiện có để tránh phá vỡ dữ liệu sẵn có.
+ * Tất cả truy vấn ở đây đều bám theo schema hiện có để tránh phá vỡ dữ liệu sẵn
+ * có.
  */
 public class OrderManagementDAO {
 
@@ -32,10 +33,13 @@ public class OrderManagementDAO {
         sql.append("       o.recipient_name, o.recipient_phone, o.ward_id, o.address_detail, ");
         sql.append("       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, ");
         sql.append("       o.order_status, o.note, o.created_at, o.updated_at, ");
-        sql.append("       u.username AS customer_username, u.full_name AS customer_full_name, u.email AS customer_email, ");
-        sql.append("       s.carrier_name AS shipment_carrier_name, s.tracking_code AS shipment_tracking_code, s.shipping_status, ");
+        sql.append(
+                "       u.username AS customer_username, u.full_name AS customer_full_name, u.email AS customer_email, ");
+        sql.append(
+                "       s.carrier_name AS shipment_carrier_name, s.tracking_code AS shipment_tracking_code, s.shipping_status, ");
         sql.append("       p.payment_method, p.payment_status, ");
-        sql.append("       ISNULL((SELECT COUNT(*) FROM Order_Detail od WHERE od.order_id = o.id), 0) AS detail_count, ");
+        sql.append(
+                "       ISNULL((SELECT COUNT(*) FROM Order_Detail od WHERE od.order_id = o.id), 0) AS detail_count, ");
         sql.append("       pr.province_name, d.district_name, w.ward_name ");
         sql.append("FROM [Order] o ");
         sql.append("LEFT JOIN [User] u ON o.user_id = u.id ");
@@ -332,9 +336,6 @@ public class OrderManagementDAO {
         return null;
     }
 
-    /**
-     * Approve a pending order and hand it over to shipment when needed.
-     */
     public boolean approveOrder(int orderId) {
         String loadSql = "SELECT o.order_status, o.shipment_id, o.shipping_fee "
                 + "FROM [Order] o WHERE o.id = ?";
@@ -714,7 +715,8 @@ public class OrderManagementDAO {
     }
 
     /**
-     * Gán lần lượt các tham số cho PreparedStatement theo đúng thứ tự đã build ở query.
+     * Gán lần lượt các tham số cho PreparedStatement theo đúng thứ tự đã build ở
+     * query.
      */
     private void bindParameters(PreparedStatement ps, List<Object> parameters) throws SQLException {
         for (int i = 0; i < parameters.size(); i++) {

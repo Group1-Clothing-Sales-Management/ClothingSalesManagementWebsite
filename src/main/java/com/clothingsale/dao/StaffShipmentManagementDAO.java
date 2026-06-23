@@ -74,19 +74,17 @@ public class StaffShipmentManagementDAO {
 
     public StaffShipment getShipmentById(int shipmentId) {
         String sql = "SELECT s.id AS shipment_id, o.id AS order_id, o.order_code, o.recipient_name, o.recipient_phone, "
-                +
-                "ISNULL(o.address_detail, '') + " +
-                "ISNULL(', ' + w.ward_name, '') + " +
-                "ISNULL(', ' + d.district_name, '') + " +
-                "ISNULL(', ' + pr.province_name, '') AS delivery_address, " +
-                "s.carrier_name, UPPER(TRIM(s.shipping_status)) AS shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
-                +
-                "FROM Shipment s " +
-                "JOIN [Order] o ON o.shipment_id = s.id " +
-                "LEFT JOIN Ward w ON o.ward_id = w.id " +
-                "LEFT JOIN District d ON w.district_id = d.id " +
-                "LEFT JOIN Province pr ON d.province_id = pr.id " +
-                "WHERE s.id = ?";
+                + "ISNULL(o.address_detail, '') + "
+                + "ISNULL(', ' + w.ward_name, '') + "
+                + "ISNULL(', ' + d.district_name, '') + "
+                + "ISNULL(', ' + pr.province_name, '') AS delivery_address, "
+                + "s.carrier_name, UPPER(TRIM(s.shipping_status)) AS shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
+                + "FROM Shipment s "
+                + "JOIN [Order] o ON o.shipment_id = s.id "
+                + "LEFT JOIN Ward w ON o.ward_id = w.id "
+                + "LEFT JOIN District d ON w.district_id = d.id "
+                + "LEFT JOIN Province pr ON d.province_id = pr.id "
+                + "WHERE s.id = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, shipmentId);
@@ -137,33 +135,30 @@ public class StaffShipmentManagementDAO {
                     }
                 }
 
-                // 1. Update Shipment table with exact values: SUCCESS or FAILURE
                 String updateShipment = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
                 try (PreparedStatement psS = conn.prepareStatement(updateShipment)) {
-                    psS.setString(1, newShippingStatus); // Lưu chuỗi "SUCCESS" hoặc "FAILURE" vào cột shipping_status
+                    psS.setString(1, newShippingStatus);
                     psS.setInt(2, shipmentId);
                     psS.executeUpdate();
                 }
 
-                // 2. Synchronize and map accurately to [Order] status
                 String mappedOrderStatus = "SHIPPING";
                 if ("SUCCESS".equalsIgnoreCase(newShippingStatus)) {
-                    mappedOrderStatus = "SUCCESS"; // Nếu VC thành công -> Đơn hàng chuyển thành DELIVERED
+                    mappedOrderStatus = "SUCCESS";
                 } else if ("FAILURE".equalsIgnoreCase(newShippingStatus)) {
-                    mappedOrderStatus = "FAILURE"; // Nếu VC thất bại -> Đơn hàng chuyển thành CANCELLED
+                    mappedOrderStatus = "FAILURE";
                 }
 
-                String updateOrder = "UPDATE [Order] SET order_status = ?, note = ISNULL(note, '') + ?, updated_at = GETDATE() WHERE id = ?";
+                String updateOrder = "UPDATE [Order] SET order_status = ?, note = ?, updated_at = GETDATE() WHERE id = ?";
                 try (PreparedStatement psO = conn.prepareStatement(updateOrder)) {
                     psO.setString(1, mappedOrderStatus);
                     psO.setString(2,
-                            remarks != null && !remarks.trim().isEmpty() ? " [Staff Note: " + remarks.trim() + "]"
-                                    : "");
+                            remarks != null && !remarks.trim().isEmpty() ? "[Staff Note: " + remarks.trim() + "]" : "");
+
                     psO.setInt(3, orderId);
                     psO.executeUpdate();
                 }
 
-                // 3. Update Payment if payment_method is COD and status is SUCCESS
                 if ("SUCCESS".equalsIgnoreCase(newShippingStatus) && "COD".equalsIgnoreCase(paymentMethod)
                         && "UNPAID".equalsIgnoreCase(paymentStatus)) {
                     String updatePayment = "UPDATE Payment SET payment_status = 'PAID', payment_date = GETDATE() WHERE order_id = ?";
