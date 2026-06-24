@@ -45,6 +45,11 @@
 
                 <c:otherwise>
 
+                    <a href="${pageContext.request.contextPath}/products"
+                       class="btn btn-outline-dark">
+                        <i class="fa-solid fa-id-card"></i>
+                        Products
+                    </a>
                     <a href="${pageContext.request.contextPath}/customer/login"
                        class="btn btn-outline-dark">
 
@@ -68,7 +73,6 @@
                         <c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}"/>
 
                     </span>
-
                     <a href="${pageContext.request.contextPath}/customer/profile"
                        class="btn btn-outline-dark">
 
