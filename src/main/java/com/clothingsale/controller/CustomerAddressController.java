@@ -86,6 +86,10 @@ public class CustomerAddressController extends HttpServlet {
 
         request.setAttribute("addresses", addresses);
 
+        String from = request.getParameter("from");
+
+        request.setAttribute("from", from);
+
         request.getRequestDispatcher(
                 "/view/customer/CustomerManageAddress.jsp")
                 .forward(request, response);

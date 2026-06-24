@@ -36,11 +36,22 @@
                         <!-- ADDRESS -->
 
                         <div class="card mb-3">
-
                             <div class="card-header">
-                                Shipping Address
-                            </div>
 
+                                <div class="d-flex justify-content-between align-items-center">
+
+                                    <span>Shipping Address</span>
+
+                                    <a href="${pageContext.request.contextPath}/customer/address?from=checkout"
+                                       class="btn btn-light btn-sm">
+
+                                        Manage Address
+
+                                    </a>
+
+                                </div>
+
+                            </div>
                             <div class="card-body">
 
                                 <c:forEach items="${addresses}" var="a">

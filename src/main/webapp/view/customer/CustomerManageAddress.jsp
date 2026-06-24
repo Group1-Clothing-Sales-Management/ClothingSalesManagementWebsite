@@ -16,8 +16,18 @@
         <div class="container mt-4">
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>My Addresses</h2>
 
+                <h2>My Addresses</h2>
+                <c:if test="${from eq 'checkout'}">
+
+                    <a href="${pageContext.request.contextPath}/customer/checkout"
+                       class="btn btn-success">
+
+                        ← Back To Checkout
+
+                    </a>
+
+                </c:if>
                 <button class="btn btn-primary"
                         data-bs-toggle="modal"
                         data-bs-target="#addAddressModal">
