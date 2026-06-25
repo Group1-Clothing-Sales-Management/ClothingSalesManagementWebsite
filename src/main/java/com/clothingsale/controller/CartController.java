@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -45,6 +46,7 @@ public class CartController extends HttpServlet {
 				cart = new HashMap<>();
 				session.setAttribute("cart", cart);
 			}
+			CartDAO cartDAO = new CartDAO();
 
 			LOGGER.log(Level.FINE, "[CartController] GET view - session cart before merge: {0}", cartSummary(cart));
 
@@ -55,7 +57,7 @@ public class CartController extends HttpServlet {
 			if (authUserIdObj instanceof Integer) {
 				int userId = (Integer) authUserIdObj;
 				try {
-					Map<Integer, CartItem> dbCart = new CartDAO().loadCart(userId);
+					Map<Integer, CartItem> dbCart = cartDAO.loadCart(userId);
 					LOGGER.log(Level.FINE, "[CartController] Loaded persisted cart for user {0}: {1}", new Object[]{userId, cartSummary(dbCart)});
 					if (!shouldSkipMerge && dbCart != null && !dbCart.isEmpty()) {
 					for (CartItem dbItem : dbCart.values()) {
@@ -69,7 +71,7 @@ public class CartController extends HttpServlet {
 						}
 					}
 						try {
-							new CartDAO().saveCart(userId, cart);
+							cartDAO.saveCart(userId, cart);
 							LOGGER.log(Level.FINE, "[CartController] Persisted merged cart for user {0}: {1}", new Object[]{userId, cartSummary(cart)});
 						} catch (Exception ex) {
 							LOGGER.log(Level.WARNING, "[CartController] Failed saving merged cart for user " + userId, ex);
@@ -79,6 +81,16 @@ public class CartController extends HttpServlet {
 				} catch (Exception ex) {
 					LOGGER.log(Level.WARNING, "[CartController] Error loading persisted cart for user " + userId, ex);
 				}
+			}
+
+			boolean adjustedToStock = syncCartWithStock(cart, cartDAO);
+			if (adjustedToStock) {
+				persistCart(session, response, cart, authUserIdObj);
+				if (session.getAttribute("cartMessage") == null) {
+					session.setAttribute("cartMessage",
+							"Some cart quantities were adjusted to match available stock.");
+				}
+				session.setAttribute("cart", cart);
 			}
 
 			// flash message support: move from session to request
@@ -153,6 +165,9 @@ public class CartController extends HttpServlet {
 				int productId = Integer.parseInt(productIdStr != null ? productIdStr : "0");
 				int quantity = 1;
 				try { quantity = Integer.parseInt(qtyStr); } catch (Exception e) {}
+				if (quantity < 1) {
+					quantity = 1;
+				}
 				BigDecimal price = BigDecimal.ZERO;
 				try { price = new BigDecimal(priceStr); } catch (Exception e) {}
 
@@ -162,7 +177,7 @@ int stock = dao.getAvailableStock(variantId);
 
 if (stock <= 0) {
     session.setAttribute("cartMessage",
-            "Sản phẩm đã hết hàng.");
+            "This item is out of stock.");
     response.sendRedirect(buildAddToCartRedirect(request, false));
     return;
 }
@@ -173,7 +188,7 @@ if (item == null) {
 
     if (quantity > stock) {
         session.setAttribute("cartMessage",
-                "Chỉ còn " + stock + " sản phẩm trong kho.");
+                "Only " + stock + " item(s) are available in stock.");
         response.sendRedirect(buildAddToCartRedirect(request, false));
         return;
     }
@@ -191,11 +206,11 @@ if (item == null) {
 
 } else {
 
-    int newQty = item.getQuantity() + quantity;
+    int newQty = Math.max(0, item.getQuantity()) + quantity;
 
     if (newQty > stock) {
         session.setAttribute("cartMessage",
-                "Chỉ còn " + stock + " sản phẩm trong kho.");
+                "Only " + stock + " item(s) are available in stock.");
         response.sendRedirect(buildAddToCartRedirect(request, false));
         return;
     }
@@ -208,7 +223,7 @@ if (item == null) {
 }
 
 session.setAttribute("cartMessage",
-        "Thêm vào giỏ hàng thành công.");
+        "Item added to your cart.");
 
 				LOGGER.log(Level.FINE, "[CartController] Cart after add: {0}", cartSummary(cart));
 
@@ -264,14 +279,14 @@ if (item != null) {
         cart.remove(variantId);
 
         session.setAttribute("cartMessage",
-                "Xóa sản phẩm khỏi giỏ hàng thành công.");
+                "Item removed from your cart.");
 
     } else {
 
         if (quantity > stock) {
 
             session.setAttribute("cartMessage",
-                    "Chỉ còn " + stock + " sản phẩm trong kho.");
+                    "Only " + stock + " item(s) are available in stock.");
 
             response.sendRedirect(
                     request.getContextPath() + "/cart");
@@ -285,7 +300,7 @@ if (item != null) {
                 int mergedQty = target.getQuantity() + quantity;
                 if (mergedQty > stock) {
                     session.setAttribute("cartMessage",
-                            "Chá»‰ cÃ²n " + stock + " sáº£n pháº©m trong kho.");
+                            "Only " + stock + " item(s) are available in stock.");
 
                     response.sendRedirect(
                             request.getContextPath() + "/cart");
@@ -320,7 +335,7 @@ if (item != null) {
         }
 
         session.setAttribute("cartMessage",
-                "Cập nhật giỏ hàng thành công.");
+                "Cart updated successfully.");
     }
 }
 
@@ -349,7 +364,7 @@ if (item != null) {
 				cart.remove(variantId);
 
                                 session.setAttribute("cartMessage",
-                                    "Xóa sản phẩm khỏi giỏ hàng thành công.");
+                                    "Item removed from your cart.");
 
 				LOGGER.log(Level.FINE, "[CartController] Cart after remove: {0}", cartSummary(cart));
 
@@ -384,6 +399,58 @@ if (item != null) {
 			joiner.add("v:" + it.getVariantId() + ", p:" + it.getProductId() + ", q:" + it.getQuantity() + ", name:" + name + ", img:" + img);
 		}
 		return "[" + joiner.toString() + "]";
+	}
+
+	private boolean syncCartWithStock(Map<Integer, CartItem> cart, CartDAO dao) {
+		if (cart == null || cart.isEmpty()) {
+			return false;
+		}
+
+		boolean changed = false;
+		Iterator<Map.Entry<Integer, CartItem>> iterator = cart.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<Integer, CartItem> entry = iterator.next();
+			CartItem item = entry.getValue();
+			if (item == null) {
+				iterator.remove();
+				changed = true;
+				continue;
+			}
+
+			int stock = dao.getAvailableStock(item.getVariantId());
+			if (stock <= 0) {
+				iterator.remove();
+				changed = true;
+				continue;
+			}
+
+			if (item.getQuantity() < 1) {
+				item.setQuantity(1);
+				changed = true;
+			}
+
+			if (item.getQuantity() > stock) {
+				item.setQuantity(stock);
+				changed = true;
+			}
+		}
+
+		return changed;
+	}
+
+	private void persistCart(HttpSession session, HttpServletResponse response,
+			Map<Integer, CartItem> cart, Object authUserIdObj) {
+		if (authUserIdObj instanceof Integer) {
+			int userId = (Integer) authUserIdObj;
+			try {
+				new CartDAO().saveCart(userId, cart);
+			} catch (Exception ex) {
+				LOGGER.log(Level.WARNING, "[CartController] Failed saving stock-adjusted cart for user " + userId, ex);
+			}
+			return;
+		}
+
+		writeAnonCartCookie(response, cart);
 	}
 
 	private String buildAddToCartRedirect(HttpServletRequest request, boolean success) {
