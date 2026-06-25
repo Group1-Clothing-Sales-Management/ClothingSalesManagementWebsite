@@ -6,10 +6,10 @@
     java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Giỏ hàng</title>
+    <title>Cart</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -528,17 +528,17 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="<%= ctx %>/home">Clothing Sale</a>
-            <a class="btn btn-outline-dark" href="<%= ctx %>/home">Tiếp tục mua sắm</a>
+            <a class="btn btn-outline-dark" href="<%= ctx %>/home">Continue Shopping</a>
         </div>
     </nav>
 
     <div class="container cart-page py-4 py-lg-5">
         <div class="page-heading">
             <div>
-                <div class="page-kicker">Giỏ hàng</div>
-                <h1 class="cart-title">Giỏ hàng của bạn</h1>
+                <div class="page-kicker">Cart</div>
+                <h1 class="cart-title">Your Cart</h1>
                 <% if (items != null && !items.isEmpty()) { %>
-                    <p class="page-subtitle">Có <%= items.size() %> sản phẩm trong giỏ</p>
+                    <p class="page-subtitle"><%= items.size() %> item(s) in your cart</p>
                 <% } %>
             </div>
         </div>
@@ -550,9 +550,9 @@
         <% if (items == null || items.isEmpty()) { %>
             <div class="empty-state">
                 <div class="empty-mark">0</div>
-                <h4>Giỏ hàng trống</h4>
-                <p class="text-muted">Bạn chưa có sản phẩm nào trong giỏ.</p>
-                <a href="<%= ctx %>/home" class="btn btn-primary">Quay lại mua sắm</a>
+                <h4>Your cart is empty</h4>
+                <p class="text-muted">You do not have any items in your cart yet.</p>
+                <a href="<%= ctx %>/home" class="btn btn-primary">Continue Shopping</a>
             </div>
         <% } else { %>
             <div class="row g-4 align-items-start">
@@ -596,17 +596,27 @@
                                java.util.List variants = variantsByProductId != null
                                        ? (java.util.List) variantsByProductId.get(it.getProductId())
                                        : null;
+                               int currentStock = qty;
+                               if (variants != null && !variants.isEmpty()) {
+                                   for (Object stockObject : variants) {
+                                       com.clothingsale.model.ProductVariant stockVariant = (com.clothingsale.model.ProductVariant) stockObject;
+                                       if (stockVariant.getId() == it.getVariantId()) {
+                                           currentStock = stockVariant.getStockQuantity();
+                                           break;
+                                       }
+                                   }
+                               }
                         %>
                         <div class="list-group-item cart-item">
                             <form action="<%= ctx %>/cart/remove" method="post" class="cart-remove-form">
                                 <input type="hidden" name="variantId" value="<%= it.getVariantId() %>">
                                 <button type="submit"
                                         class="cart-remove-btn"
-                                        title="Xóa sản phẩm"
-                                        aria-label="Xóa sản phẩm">
+                                        title="Remove item"
+                                        aria-label="Remove item">
                                 </button>
                             </form>
-                            <label class="cart-select-label" title="Chọn sản phẩm để thanh toán">
+                            <label class="cart-select-label" title="Select item for checkout">
                                 <input type="checkbox"
                                        class="cart-select-input"
                                        name="selectedVariantId"
@@ -616,7 +626,7 @@
                                        data-line-total="<%= itemTotal %>"
                                        checked>
                                 <span class="cart-select-box" aria-hidden="true"></span>
-                                <span class="visually-hidden">Chọn sản phẩm để thanh toán</span>
+                                <span class="visually-hidden">Select item for checkout</span>
                             </label>
                             <div class="d-flex cart-row align-items-start">
                                 <img src="<%= imageUrl %>"
@@ -631,7 +641,7 @@
                                                 <%= it.getProductName() %>
                                             </a>
                                             <div class="product-meta mt-1"><%= attributes %></div>
-                                            <div class="product-meta">Mã biến thể: <%= it.getVariantId() %></div>
+                                            <div class="product-meta">Variant ID: <%= it.getVariantId() %></div>
                                         </div>
                                         <div class="price-stack">
                                             <div class="item-price"><%= currencyFormat.format(price) %></div>
@@ -650,7 +660,7 @@
 
                                         <div class="row g-2 align-items-end">
                                             <div class="col-12 col-md-7">
-                                                <label class="form-label small control-label mb-1">Size / màu</label>
+                                                <label class="form-label small control-label mb-1">Size / Color</label>
                                                 <% if (variants != null && !variants.isEmpty()) { %>
                                                     <select name="newVariantId" class="form-select form-select-sm variant-select">
                                                        <% for (Object vo : variants) {
@@ -662,8 +672,10 @@
                                                             <option value="<%= v.getId() %>"
                                                                     data-price="<%= variantPrice %>"
                                                                     data-attributes="<%= detail %>"
+                                                                    data-stock="<%= v.getStockQuantity() %>"
+                                                                    <%= (v.getStockQuantity() <= 0 && !selected) ? "disabled" : "" %>
                                                                     <%= selected ? "selected" : "" %>>
-                                                                <%= detail %> - <%= currencyFormat.format(variantPrice) %> - còn <%= v.getStockQuantity() %>
+                                                                <%= detail %> - <%= currencyFormat.format(variantPrice) %> - <%= v.getStockQuantity() %> in stock
                                                             </option>
                                                         <% } %>
                                                     </select>
@@ -673,7 +685,7 @@
                                                 <% } %>
                                             </div>
                                             <div class="col-12 col-md-5">
-                                                <label class="form-label small control-label mb-1">Số lượng</label>
+                                                <label class="form-label small control-label mb-1">Quantity</label>
                                                 <div class="quantity-control">
                                                     <button type="button"
                                                             class="btn btn-sm btn-light quantity-step"
@@ -686,11 +698,14 @@
                                                            name="quantity"
                                                            value="<%= qty %>"
                                                            min="1"
+                                                           max="<%= currentStock %>"
+                                                           data-stock="<%= currentStock %>"
                                                            class="form-control form-control-sm quantity-input">
                                                     <button type="button"
                                                             class="btn btn-sm btn-light quantity-step"
                                                             data-step="1"
-                                                            aria-label="Increase quantity">
+                                                            aria-label="Increase quantity"
+                                                            <%= currentStock <= 0 || qty >= currentStock ? "disabled" : "" %>>
                                                         +
                                                     </button>
                                                 </div>
@@ -706,27 +721,27 @@
 
                 <div class="col-12 col-lg-4">
                     <div class="summary-panel">
-                        <h2 class="summary-title">Tóm tắt đơn hàng</h2>
+                        <h2 class="summary-title">Order Summary</h2>
                         <div class="summary-line">
-                            <span>Đã chọn</span>
+                            <span>Selected</span>
                             <strong id="selectedQuantity"><%= totalQuantity %></strong>
                         </div>
                         <div class="summary-line">
-                            <span>Tạm tính</span>
+                            <span>Subtotal</span>
                             <strong id="selectedSubtotal"><%= currencyFormat.format(total) %></strong>
                         </div>
                         <div class="summary-line total">
-                            <span>Tổng cộng</span>
+                            <span>Total</span>
                             <strong id="selectedTotal"><%= currencyFormat.format(total) %></strong>
                         </div>
                         <form id="cartCheckoutForm" action="<%= ctx %>/customer/checkout" method="get" class="mt-3">
                             <input type="hidden" name="selectionMode" value="1">
                             <button id="checkoutSelectedButton" type="submit" class="btn btn-primary w-100 checkout-btn">
-                                Thanh toán
+                                Checkout
                             </button>
                         </form>
                         <div class="mt-2">
-                            <a href="<%= ctx %>/home" class="continue-link w-100">Tiếp tục mua sắm</a>
+                            <a href="<%= ctx %>/home" class="continue-link w-100">Continue Shopping</a>
                         </div>
                     </div>
                 </div>
@@ -743,12 +758,66 @@
             }
         }
 
+        function getCurrentStock(form) {
+            var select = form.querySelector('.variant-select');
+            if (select && select.selectedIndex >= 0) {
+                var option = select.options[select.selectedIndex];
+                var optionStock = parseInt(option.dataset.stock, 10);
+                if (!isNaN(optionStock)) {
+                    return optionStock;
+                }
+            }
+
+            var input = form.querySelector('.quantity-input');
+            if (!input) {
+                return 0;
+            }
+
+            var inputStock = parseInt(input.dataset.stock || input.getAttribute('max'), 10);
+            return isNaN(inputStock) ? 0 : inputStock;
+        }
+
+        function normalizeQuantity(input, stock) {
+            var value = parseInt(input.value, 10);
+            if (isNaN(value) || value < 1) {
+                value = 1;
+            }
+
+            if (stock > 0 && value > stock) {
+                value = stock;
+            }
+
+            input.value = value;
+            return value;
+        }
+
+        function updateQuantityButtons(form) {
+            var input = form.querySelector('.quantity-input');
+            var buttons = form.querySelectorAll('.quantity-step');
+            if (!input || buttons.length < 2) {
+                return;
+            }
+
+            var stock = getCurrentStock(form);
+            var value = normalizeQuantity(input, stock);
+            buttons[0].disabled = value <= 1;
+            buttons[1].disabled = stock <= 0 || value >= stock;
+        }
+
         document.querySelectorAll('.variant-select').forEach(function(select) {
             function syncVariant() {
                 var form = select.closest('.cart-update-form');
                 var option = select.options[select.selectedIndex];
                 form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
                 form.querySelector('.price-input').value = option.dataset.price || '0';
+                var stock = parseInt(option.dataset.stock, 10);
+                var input = form.querySelector('.quantity-input');
+                if (input && !isNaN(stock)) {
+                    input.max = stock;
+                    input.dataset.stock = stock;
+                    normalizeQuantity(input, stock);
+                }
+                updateQuantityButtons(form);
             }
             select.addEventListener('change', function() {
                 syncVariant();
@@ -756,6 +825,8 @@
             });
             syncVariant();
         });
+
+        document.querySelectorAll('.cart-update-form').forEach(updateQuantityButtons);
 
         document.querySelectorAll('.quantity-step').forEach(function(button) {
             button.addEventListener('click', function() {
@@ -767,24 +838,30 @@
                 var input = form.querySelector('.quantity-input');
                 var current = parseInt(input.value, 10);
                 var step = parseInt(button.dataset.step, 10);
+                var stock = getCurrentStock(form);
                 var next = (isNaN(current) ? 1 : current) + (isNaN(step) ? 0 : step);
 
                 if (next < 1) {
                     return;
                 }
 
+                if (stock <= 0 || next > stock) {
+                    updateQuantityButtons(form);
+                    return;
+                }
+
                 input.value = next;
+                updateQuantityButtons(form);
                 submitCartForm(form);
             });
         });
 
         document.querySelectorAll('.quantity-input').forEach(function(input) {
             input.addEventListener('change', function() {
-                var value = parseInt(input.value, 10);
-                    input.value = '1';
-                }
-
-                submitCartForm(input.closest('.cart-update-form'));
+                var form = input.closest('.cart-update-form');
+                normalizeQuantity(input, getCurrentStock(form));
+                updateQuantityButtons(form);
+                submitCartForm(form);
             });
         });
 
@@ -812,7 +889,7 @@
                     currency: 'VND'
                 }).format(value);
             } catch (error) {
-                return value.toLocaleString('vi-VN') + ' đ';
+                return value.toLocaleString('vi-VN') + ' VND';
             }
         }
 

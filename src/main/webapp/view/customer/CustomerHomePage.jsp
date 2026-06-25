@@ -38,23 +38,6 @@
                 color:var(--text);
             }
 
-            /* NAVBAR */
-
-            .navbar{
-                background:rgba(255,255,255,.85)!important;
-                backdrop-filter:blur(12px);
-                box-shadow:0 5px 20px rgba(0,0,0,.05)!important;
-            }
-
-            .navbar-brand{
-                color:var(--navy)!important;
-                font-size:24px;
-            }
-
-            .navbar-brand i{
-                color:var(--teal);
-            }
-
             /* BUTTON */
 
             .btn-danger{
@@ -145,12 +128,26 @@
             /* PRODUCT CARD */
 
             .product-card{
-                border:none;
-                border-radius:24px;
+                border:1px solid #f0f0f0;
+                border-radius:4px;
                 overflow:hidden;
                 background:white;
-                transition:.3s;
-                box-shadow:0 8px 25px rgba(0,0,0,.05);
+                transition:.2s;
+            }
+
+            .product-card:hover{
+                transform:translateY(-2px);
+                border-color:#ee4d2d;
+                box-shadow:0 3px 10px rgba(0,0,0,.1);
+            }
+
+            .product-image{
+                height:260px;
+                object-fit:cover;
+            }
+
+            .text-danger{
+                color:#ee4d2d !important;
             }
 
             .product-card:hover{
@@ -192,28 +189,75 @@
                 color:var(--teal)!important;
             }
 
-            /* FOOTER */
-
-            footer{
-                background:linear-gradient(
-                    135deg,
-                    var(--navy),
-                    #1f2c45
-                    )!important;
+            .cart-message-modal .modal-dialog{
+                max-width:520px;
             }
 
-            footer h4,
-            footer h5{
-                color:white;
+            .cart-message-modal .modal-content{
+                border:0;
+                border-radius:18px;
+                overflow:hidden;
+                box-shadow:0 24px 70px rgba(15,23,42,.24);
             }
 
-            footer p,
-            footer li{
-                color:#d1d5db;
+            .cart-message-modal .modal-header{
+                border:0;
+                padding:28px 28px 12px;
+                align-items:center;
             }
 
-            hr{
-                border-color:rgba(255,255,255,.2);
+            .cart-message-modal .modal-body{
+                color:#64748b;
+                padding:8px 28px 20px;
+                font-size:1rem;
+            }
+
+            .cart-message-modal .modal-footer{
+                border:0;
+                gap:10px;
+                padding:0 28px 28px;
+            }
+
+            .cart-message-modal .modal-title{
+                display:flex;
+                align-items:center;
+                gap:12px;
+                color:var(--navy);
+                font-weight:800;
+            }
+
+            .cart-modal-mark{
+                width:42px;
+                height:42px;
+                border-radius:14px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                color:#fff;
+                background:linear-gradient(135deg,var(--navy),var(--teal));
+                box-shadow:0 12px 24px rgba(15,155,142,.24);
+            }
+
+            .cart-message-modal.is-error .cart-modal-mark{
+                background:linear-gradient(135deg,#7f1d1d,#ef4444);
+                box-shadow:0 12px 24px rgba(239,68,68,.22);
+            }
+
+            .cart-message-modal .modal-footer .btn{
+                border-radius:10px;
+                min-height:42px;
+                padding:9px 16px;
+                font-weight:700;
+            }
+
+            .cart-message-modal .modal-footer .btn-danger{
+                background:var(--teal)!important;
+                border-color:var(--teal)!important;
+            }
+
+            .cart-message-modal .modal-footer .btn-danger:hover{
+                background:#0d8278!important;
+                border-color:#0d8278!important;
             }
 
             /* RESPONSIVE */
@@ -231,6 +275,10 @@
                 .hero-image{
                     margin-top:30px;
                 }
+
+                .cart-message-modal .modal-footer .btn{
+                    width:100%;
+                }
             }
 
         </style>
@@ -238,94 +286,9 @@
     </head>
 
     <body>
+        <jsp:include page="/view/customer/common/header.jsp"/>
         <c:set var="loggedIn"
                value="${not empty sessionScope.authUserId}"/>
-        <!-- NAVBAR -->
-
-        <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
-
-            <div class="container">
-
-                <a class="navbar-brand fw-bold">
-
-                    <i class="fa-solid fa-shirt"></i>
-                    Clothing Sale
-
-                </a>
-
-                <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
-
-                    <c:choose>
-
-                        <c:when test="${loggedIn}">
-
-                            <a href="${pageContext.request.contextPath}/cart"
-                               class="btn btn-outline-dark position-relative">
-
-                                <i class="fa-solid fa-cart-shopping"></i>
-                                Cart
-
-                                <c:if test="${sessionScope.cartCount > 0}">
-                                    <span class="position-absolute
-                                          top-0 start-100
-                                          translate-middle
-                                          badge rounded-pill bg-danger">
-
-                                        ${sessionScope.cartCount}
-
-                                    </span>
-                                </c:if>
-
-                            </a>
-
-                        </c:when>
-
-
-                        <c:otherwise>
-
-                            <a href="${pageContext.request.contextPath}/customer/login"
-                               class="btn btn-outline-dark">
-
-                                <i class="fa-solid fa-cart-shopping"></i>
-                                Cart
-
-                            </a>
-
-                        </c:otherwise>
-
-                    </c:choose>
-
-                    <c:choose>
-                        <c:when test="${loggedIn}">
-                            <span class="text-secondary small d-none d-md-inline">
-                                <i class="fa-solid fa-user"></i>
-                                <c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}"/>
-                            </span>
-                            <a href="${pageContext.request.contextPath}/customer/profile"
-                               class="btn btn-outline-dark">
-                                <i class="fa-solid fa-id-card"></i>
-                                Profile
-                            </a>
-                            <a href="${pageContext.request.contextPath}/customer/logout"
-                               class="btn btn-danger"
-                               onclick="return confirm('Are you sure you want to logout?');">
-                                <i class="fa-solid fa-right-from-bracket"></i>
-                                Logout
-                            </a>
-                        </c:when>
-                        <c:otherwise>
-                            <a href="${pageContext.request.contextPath}/customer/login"
-                               class="btn btn-danger">
-                                Login
-                            </a>
-                        </c:otherwise>
-                    </c:choose>
-
-                </div>
-
-            </div>
-
-        </nav>
 
         <!-- HERO -->
 
@@ -337,40 +300,24 @@
 
                     <div class="col-lg-6">
 
-                        <h1 class="hero-title">
-
-                            Discover New Fashion Trends
-
-                        </h1>
+                        <h1 class="hero-title">Discover New Fashion Trends</h1>
 
                         <p class="hero-text mt-3">
-
                             Explore premium clothing, hoodies, sneakers,
                             jeans and accessories at affordable prices.
-
                         </p>
-
                         <a href="#products"
                            class="btn btn-danger btn-lg mt-3">
-
                             Shop Now
-
                         </a>
-
                     </div>
-
                     <div class="col-lg-6">
-
                         <img
                             src="https://images.unsplash.com/photo-1441986300917-64674bd600d8"
                             class="hero-image">
-
                     </div>
-
                 </div>
-
             </div>
-
         </section>
 
         <!-- MAIN -->
@@ -411,50 +358,27 @@
                         <select
                             name="sort"
                             class="form-select">
-
-                            <option value="">
-                                Sort By
-                            </option>
-
-                            <option value="priceAsc">
-                                Price ↑
-                            </option>
-
-                            <option value="priceDesc">
-                                Price ↓
-                            </option>
-
-                            <option value="newest">
-                                Newest
-                            </option>
-
+                            <option value=""> Sort By </option>
+                            <option value="priceAsc"> Price ↑ </option>
+                            <option value="priceDesc"> Price ↓ </option>
+                            <option value="newest"> Newest </option>
                         </select>
-
                     </div>
                     <div class="col-md-4">
-
                         <input
                             type="text"
                             name="keyword"
                             value="${param.keyword}"
                             class="form-control"
                             placeholder="Search products...">
-
                     </div>
-
                     <div class="col-md-2">
-
                         <button
                             class="btn btn-danger w-100">
-
                             Search
-
                         </button>
-
                     </div>
-
                 </div>
-
             </form>
 
             <!-- PRODUCT SECTION TITLE -->
@@ -493,65 +417,41 @@
                                 <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
 
                                     <img
-                                        src="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}"
-                                        class="card-img-top product-image">
+                                        src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
+                                        class="card-img-top product-image"
+                                        alt="${p.productName}">
 
-                                </a>
+                                </a>    
                                 <!-- BODY -->
 
                                 <div class="card-body">
 
-                                    <span class="badge bg-primary mb-2">
-                                        Trending
-                                    </span>
-
-                                    <h5 class="fw-bold">
-
-                                        <a 
-                                            href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
-                                            class="text-decoration-none">
-
-                                            ${p.productName}
-
-                                        </a>
-
-                                    </h5>
-
-                                    <p class="text-secondary small">
-
-                                        Premium fashion product
-
-                                    </p>
-
+                                    <h6 class="fw-bold text-truncate mb-2">
+                                        ${p.productName}
+                                    </h6>
                                     <c:choose>
-
                                         <c:when test="${not empty p.variants}">
-
-                                            <h4 class="text-danger fw-bold">
-
-                                                ${p.variants[0].salePrice} $
-
-                                            </h4>
-
+                                            <div class="text-danger fw-bold fs-5 mb-2">
+                                                ${p.variants[0].salePrice} đ
+                                            </div>
+                                            <div class="small text-muted mb-2">
+                                                <b>Color / Size:</b>
+                                                ${p.variants[0].attributeDetails}
+                                            </div>
+                                            <div class="small mb-2">
+                                                <b>Stock:</b>
+                                                ${p.variants[0].stockQuantity}
+                                            </div>
                                         </c:when>
-
                                         <c:otherwise>
-
-                                            <h4 class="text-secondary">
-
+                                            <div class="text-secondary">
                                                 Contact
-
-                                            </h4>
-
+                                            </div>
                                         </c:otherwise>
-
                                     </c:choose>
-
                                 </div>
-
                                 <!-- FOOTER -->
-
-                                <div class="card-footer bg-white border-0">
+                                <div class="card-footer bg-white">
 
 
                                     <a 
@@ -562,11 +462,8 @@
 
                                     </a>
                                     <c:if test="${not empty p.variants}">
-
                                         <c:choose>
-
                                             <c:when test="${loggedIn}">
-
                                                 <form action="${pageContext.request.contextPath}/cart" method="post" class="add-cart-form" style="margin:0">
                                                     <select name="variantId" class="form-select form-select-sm mb-2 variant-select">
                                                         <c:forEach items="${p.variants}" var="v">
@@ -582,7 +479,7 @@
                                                     <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
                                                     <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
                                                     <input type="hidden" name="quantity" value="1" />
-                                                    <input type="hidden" name="imageUrl" value="${pageContext.request.contextPath}/uploads/${p.mainImageUrl}" />
+                                                    <input type="hidden"name="imageUrl"value="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}" />
                                                     <button type="submit" class="btn btn-danger w-100">
                                                         <i class="fa-solid fa-cart-plus"></i>
                                                         Add To Cart
@@ -649,96 +546,24 @@
 
         </div>
 
-        <!-- FOOTER -->
-
-        <footer class="bg-dark text-white mt-5">
-
-            <div class="container py-5">
-
-                <div class="row">
-
-                    <div class="col-md-4">
-
-                        <h4>
-
-                            Clothing Sale
-
-                        </h4>
-
-                        <p class="text-light">
-
-                            Modern fashion for everyone.
-
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <h5>
-
-                            Categories
-
-                        </h5>
-
-                        <ul class="list-unstyled">
-
-                            <li>T-Shirts</li>
-                            <li>Hoodies</li>
-                            <li>Jeans</li>
-                            <li>Sneakers</li>
-
-                        </ul>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <h5>
-
-                            Contact
-
-                        </h5>
-
-                        <p>
-
-                            Email: supportclothingsale@gmail.com
-                        </p>
-
-                        <p>
-
-                            Phone: +84 123 456 789
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <hr>
-
-                <div class="text-center">
-
-                    © 2026 Clothing Sale. All Rights Reserved.
-
-                </div>
-
-            </div>
-
-        </footer>
-
-        <div class="modal fade" id="cartMessageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal fade cart-message-modal" id="cartMessageModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Giỏ hàng</h5>
+                        <h5 class="modal-title">
+                            <span class="cart-modal-mark">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+                            <span id="cartMessageTitle">Cart Updated</span>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" id="cartMessageText">
-                        Đã thêm sản phẩm vào giỏ hàng.
+                        Item added to your cart.
                     </div>
                     <div class="modal-footer">
-                        <a href="${pageContext.request.contextPath}/cart" class="btn btn-outline-dark">Xem giỏ hàng</a>
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Tiếp tục mua sắm</button>
+                        <a href="${pageContext.request.contextPath}/cart" class="btn btn-outline-dark">View Cart</a>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Continue Shopping</button>
                     </div>
                 </div>
             </div>
@@ -746,7 +571,7 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            document.querySelectorAll('.variant-select').forEach(function(select) {
+            document.querySelectorAll('.variant-select').forEach(function (select) {
                 function syncVariant() {
                     var form = select.closest('.add-cart-form');
                     var option = select.options[select.selectedIndex];
@@ -759,14 +584,25 @@
 
             var params = new URLSearchParams(window.location.search);
             if (params.has('cartAdded') || params.has('cartError')) {
+                var modalElement = document.getElementById('cartMessageModal');
+                var isError = params.has('cartError');
+                modalElement.classList.toggle('is-error', isError);
+                var icon = modalElement.querySelector('.cart-modal-mark i');
+                if (icon) {
+                    icon.className = isError
+                            ? 'fa-solid fa-triangle-exclamation'
+                            : 'fa-solid fa-check';
+                }
+                document.getElementById('cartMessageTitle').textContent =
+                        isError ? 'Could Not Add Item' : 'Cart Updated';
                 var message = params.has('cartAdded')
-                    ? 'Đã thêm sản phẩm vào giỏ hàng.'
-                    : 'Không thể thêm sản phẩm vào giỏ hàng. Vui lòng kiểm tra tồn kho.';
+                        ? 'Item added to your cart.'
+                        : 'Could not add this item to your cart. Please check available stock.';
                 document.getElementById('cartMessageText').textContent = message;
-                new bootstrap.Modal(document.getElementById('cartMessageModal')).show();
+                new bootstrap.Modal(modalElement).show();
             }
         </script>
-
+        <jsp:include page="/view/customer/common/footer.jsp"/>
     </body>
 
 </html>

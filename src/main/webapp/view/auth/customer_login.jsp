@@ -6,7 +6,7 @@
     String ctx = request.getContextPath();
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -383,7 +383,7 @@
             </a>
             <a class="home-link" href="<%= ctx %>/home">
                 <i class="fa-solid fa-arrow-left"></i>
-                Về trang chủ
+                Back to Home
             </a>
         </div>
 
@@ -391,8 +391,8 @@
             <section class="visual-panel" aria-label="Clothing Sale">
                 <div class="visual-copy">
                     <div class="eyebrow">Customer access</div>
-                    <h1 class="visual-title">Mua sắm gọn hơn, theo dõi đơn dễ hơn.</h1>
-                    <p class="visual-text">Đăng nhập để quay lại giỏ hàng, xem trạng thái đơn và tiếp tục lựa chọn những mẫu bạn thích.</p>
+                    <h1 class="visual-title">Shop faster. Track every order with ease.</h1>
+                    <p class="visual-text">Sign in to return to your cart, review order status, and keep shopping your favorite styles.</p>
                 </div>
 
                 <div class="lookbook">
@@ -404,16 +404,16 @@
                 </div>
 
                 <div class="benefit-row">
-                    <span><i class="fa-solid fa-lock"></i> Bảo mật</span>
-                    <span><i class="fa-solid fa-bag-shopping"></i> Giỏ hàng</span>
-                    <span><i class="fa-solid fa-truck-fast"></i> Đơn hàng</span>
+                    <span><i class="fa-solid fa-lock"></i> Secure</span>
+                    <span><i class="fa-solid fa-bag-shopping"></i> Cart</span>
+                    <span><i class="fa-solid fa-truck-fast"></i> Orders</span>
                 </div>
             </section>
 
             <section class="auth-card">
                 <div class="card-kicker">Customer</div>
-                <h2 class="auth-title">Chào mừng trở lại</h2>
-                <p class="auth-subtitle">Nhập tài khoản của bạn để tiếp tục mua sắm.</p>
+                <h2 class="auth-title">Welcome back</h2>
+                <p class="auth-subtitle">Enter your account details to continue shopping.</p>
 
                 <% if (errorMessage != null) { %>
                     <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
@@ -430,48 +430,48 @@
 
                 <form action="<%= ctx %>/customer/login" method="post" autocomplete="off">
                     <div class="mb-3">
-                        <label class="form-label" for="usernameField">Username hoặc email</label>
+                        <label class="form-label" for="usernameField">Username or email</label>
                         <div class="field-control">
                             <i class="fa-regular fa-user field-icon"></i>
                             <input type="text"
                                    name="username"
                                    id="usernameField"
                                    class="form-control"
-                                   placeholder="Nhập username hoặc email"
+                                   placeholder="Enter username or email"
                                    value="<%= usernameValue != null ? usernameValue : "" %>"
                                    required>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="passwordField">Mật khẩu</label>
+                        <label class="form-label" for="passwordField">Password</label>
                         <div class="field-control password-control">
                             <i class="fa-solid fa-lock field-icon"></i>
                             <input type="password"
                                    name="password"
                                    id="passwordField"
                                    class="form-control"
-                                   placeholder="Nhập mật khẩu"
+                                   placeholder="Enter password"
                                    required>
-                            <button class="password-toggle" type="button" data-toggle-password="passwordField" aria-label="Hiện mật khẩu">
+                            <button class="password-toggle" type="button" data-toggle-password="passwordField" aria-label="Show password">
                                 <i class="fa-regular fa-eye"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-end mb-4">
-                        <a href="<%= ctx %>/customer/register" class="link-accent">Tạo tài khoản</a>
+                        <a href="<%= ctx %>/customer/register" class="link-accent">Create account</a>
                     </div>
 
                     <button type="submit" class="btn btn-auth w-100">
                         <i class="fa-solid fa-right-to-bracket me-2"></i>
-                        Đăng nhập
+                        Sign in
                     </button>
                 </form>
 
                 <div class="switch-panel">
-                    Chưa có tài khoản?
-                    <a href="<%= ctx %>/customer/register" class="link-accent">Đăng ký ngay</a>
+                    Do not have an account?
+                    <a href="<%= ctx %>/customer/register" class="link-accent">Sign up now</a>
                 </div>
             </section>
         </div>
@@ -484,7 +484,7 @@
                 var icon = button.querySelector('i');
                 var showing = input.type === 'text';
                 input.type = showing ? 'password' : 'text';
-                button.setAttribute('aria-label', showing ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+                button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
                 icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
             });
         });
