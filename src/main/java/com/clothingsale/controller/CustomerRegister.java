@@ -76,7 +76,7 @@ public class CustomerRegister extends HttpServlet {
         // fullName must contain only letters and spaces (no digits or special characters)
         // allow Unicode letters for Vietnamese names
         if (!fullName.matches("^[\\p{L} ]+$")) {
-            request.setAttribute("errorMessage", "Full name must contain only letters and spaces (no digits or special characters). Example: Nguyễn Văn A");
+            request.setAttribute("errorMessage", "Full name must contain only letters and spaces (no digits or special characters). Example: John Smith");
             request.getRequestDispatcher("/view/auth/register.jsp").forward(request, response);
             return;
         }

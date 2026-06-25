@@ -5,7 +5,7 @@
     String ctx = request.getContextPath();
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -391,7 +391,7 @@
             </a>
             <a class="home-link" href="<%= ctx %>/home">
                 <i class="fa-solid fa-arrow-left"></i>
-                Về trang chủ
+                Back to Home
             </a>
         </div>
 
@@ -399,8 +399,8 @@
             <section class="visual-panel" aria-label="Clothing Sale">
                 <div class="visual-copy">
                     <div class="eyebrow">New account</div>
-                    <h1 class="visual-title">Tạo tài khoản cho trải nghiệm mua sắm riêng của bạn.</h1>
-                    <p class="visual-text">Lưu thông tin cá nhân, quản lý đơn hàng và quay lại giỏ hàng nhanh hơn trong những lần mua tiếp theo.</p>
+                    <h1 class="visual-title">Create your account for a smoother shopping experience.</h1>
+                    <p class="visual-text">Save your details, manage orders, and return to your cart faster next time.</p>
                 </div>
 
                 <div class="lookbook">
@@ -412,16 +412,16 @@
                 </div>
 
                 <div class="benefit-row">
-                    <span><i class="fa-solid fa-user-check"></i> Cá nhân hóa</span>
-                    <span><i class="fa-solid fa-receipt"></i> Lịch sử mua</span>
-                    <span><i class="fa-solid fa-bolt"></i> Nhanh gọn</span>
+                    <span><i class="fa-solid fa-user-check"></i> Personalized</span>
+                    <span><i class="fa-solid fa-receipt"></i> Order history</span>
+                    <span><i class="fa-solid fa-bolt"></i> Fast checkout</span>
                 </div>
             </section>
 
             <section class="auth-card">
                 <div class="card-kicker">Customer</div>
-                <h2 class="auth-title">Tạo tài khoản</h2>
-                <p class="auth-subtitle">Điền thông tin bên dưới để bắt đầu mua sắm.</p>
+                <h2 class="auth-title">Create account</h2>
+                <p class="auth-subtitle">Fill in your information below to start shopping.</p>
 
                 <% if (errorMessage != null) { %>
                     <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
@@ -439,35 +439,35 @@
                                    id="usernameField"
                                    name="username"
                                    value="<%= username != null ? username : "" %>"
-                                   placeholder="Tên đăng nhập"
+                                   placeholder="Username"
                                    required>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="passwordField">Mật khẩu</label>
+                        <label class="form-label" for="passwordField">Password</label>
                         <div class="field-control password-control">
                             <i class="fa-solid fa-lock field-icon"></i>
                             <input type="password"
                                    class="form-control"
                                    id="passwordField"
                                    name="password"
-                                   placeholder="Mật khẩu"
+                                   placeholder="Password"
                                    required>
-                            <button class="password-toggle" type="button" data-toggle-password="passwordField" aria-label="Hiện mật khẩu">
+                            <button class="password-toggle" type="button" data-toggle-password="passwordField" aria-label="Show password">
                                 <i class="fa-regular fa-eye"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="fullNameField">Họ và tên</label>
+                        <label class="form-label" for="fullNameField">Full name</label>
                         <div class="field-control">
                             <i class="fa-regular fa-id-card field-icon"></i>
                             <input class="form-control"
                                    id="fullNameField"
                                    name="fullName"
-                                   placeholder="Họ và tên"
+                                   placeholder="Full name"
                                    required>
                         </div>
                     </div>
@@ -486,23 +486,23 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="phoneField">Số điện thoại</label>
+                        <label class="form-label" for="phoneField">Phone number</label>
                         <div class="field-control">
                             <i class="fa-solid fa-phone field-icon"></i>
                             <input class="form-control"
                                    id="phoneField"
                                    name="phone"
-                                   placeholder="Số điện thoại">
+                                   placeholder="Phone number">
                         </div>
                     </div>
 
                     <div class="auth-actions d-flex gap-2">
                         <button class="btn btn-auth flex-grow-1" type="submit">
                             <i class="fa-solid fa-user-plus me-2"></i>
-                            Tạo tài khoản
+                            Create account
                         </button>
                         <a class="btn btn-switch" href="<%= ctx %>/customer/login">
-                            Đăng nhập
+                            Sign in
                         </a>
                     </div>
                 </form>
@@ -517,7 +517,7 @@
                 var icon = button.querySelector('i');
                 var showing = input.type === 'text';
                 input.type = showing ? 'password' : 'text';
-                button.setAttribute('aria-label', showing ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+                button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
                 icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
             });
         });

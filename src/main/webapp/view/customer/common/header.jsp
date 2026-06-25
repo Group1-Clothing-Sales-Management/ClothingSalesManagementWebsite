@@ -90,8 +90,8 @@
                     </a>
 
                     <a href="${pageContext.request.contextPath}/customer/logout"
-                       class="btn btn-danger"
-                       onclick="return confirm('Are you sure you want to logout?');">
+                       class="btn btn-danger js-customer-logout"
+                       data-logout-url="${pageContext.request.contextPath}/customer/logout">
 
                         <i class="fa-solid fa-right-from-bracket"></i>
                         Logout
@@ -118,3 +118,138 @@
     </div>
 
 </nav>
+
+<style>
+    .logout-confirm-modal .modal-dialog {
+        max-width: 460px;
+    }
+
+    .logout-confirm-modal .modal-content {
+        border: 0;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 26px 80px rgba(15, 23, 42, .26);
+    }
+
+    .logout-confirm-modal .modal-body {
+        padding: 28px;
+    }
+
+    .logout-confirm-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, #172033, #0f9b8e);
+        box-shadow: 0 14px 30px rgba(15, 155, 142, .24);
+        flex: 0 0 auto;
+        font-size: 22px;
+    }
+
+    .logout-confirm-title {
+        margin: 0 0 6px;
+        color: #172033;
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    .logout-confirm-text {
+        margin: 0;
+        color: #64748b;
+    }
+
+    .logout-confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 26px;
+        flex-wrap: wrap;
+    }
+
+    .logout-confirm-actions .btn {
+        min-height: 42px;
+        border-radius: 10px;
+        padding: 9px 16px;
+        font-weight: 700;
+    }
+
+    .logout-confirm-actions .btn-danger {
+        background: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .logout-confirm-actions .btn-danger:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+    }
+
+    @media (max-width: 576px) {
+        .logout-confirm-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="modal fade logout-confirm-modal" id="customerLogoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="logout-confirm-icon">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </div>
+                    <div class="pe-4">
+                        <h5 class="logout-confirm-title">Sign out?</h5>
+                        <p class="logout-confirm-text">
+                            You will leave your customer account and return to the store homepage.
+                        </p>
+                    </div>
+                    <button type="button"
+                            class="btn-close ms-auto"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="logout-confirm-actions">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <a id="confirmCustomerLogoutButton"
+                       href="${pageContext.request.contextPath}/customer/logout"
+                       class="btn btn-danger">
+                        Sign out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var logoutLink = document.querySelector('.js-customer-logout');
+        var logoutModalElement = document.getElementById('customerLogoutModal');
+        var confirmLogoutButton = document.getElementById('confirmCustomerLogoutButton');
+
+        if (!logoutLink || !logoutModalElement || !confirmLogoutButton) {
+            return;
+        }
+
+        logoutLink.addEventListener('click', function (event) {
+            event.preventDefault();
+            var logoutUrl = logoutLink.getAttribute('data-logout-url') || logoutLink.href;
+            confirmLogoutButton.href = logoutUrl;
+
+            if (window.bootstrap && window.bootstrap.Modal) {
+                bootstrap.Modal.getOrCreateInstance(logoutModalElement).show();
+            } else {
+                window.location.href = logoutUrl;
+            }
+        });
+    })();
+</script>

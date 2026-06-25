@@ -89,6 +89,93 @@
                 color:#666;
             }
 
+            .cart-message-modal .modal-dialog{
+                max-width:520px;
+            }
+
+            .cart-message-modal .modal-content{
+                border:0;
+                border-radius:18px;
+                overflow:hidden;
+                box-shadow:0 24px 70px rgba(15,23,42,.24);
+            }
+
+            .cart-message-modal .modal-body{
+                padding:8px 28px 20px;
+            }
+
+            .cart-message-modal .modal-header{
+                border:0;
+                padding:28px 28px 12px;
+                align-items:center;
+            }
+
+            .cart-message-modal .modal-footer{
+                border:0;
+                gap:10px;
+                padding:0 28px 28px;
+            }
+
+            .cart-message-modal .modal-title{
+                display:flex;
+                align-items:center;
+                gap:12px;
+                color:#172033;
+                font-weight:800;
+            }
+
+            .cart-modal-mark{
+                width:42px;
+                height:42px;
+                border-radius:14px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                color:#fff;
+                background:linear-gradient(135deg,#172033,#0f9b8e);
+                box-shadow:0 12px 24px rgba(15,155,142,.24);
+            }
+
+            .cart-message-modal.is-error .cart-modal-mark{
+                background:linear-gradient(135deg,#7f1d1d,#ef4444);
+                box-shadow:0 12px 24px rgba(239,68,68,.22);
+            }
+
+            .cart-modal-text{
+                color:#64748b;
+                margin:0;
+                font-size:1rem;
+            }
+
+            .cart-message-modal .modal-footer .btn{
+                border-radius:10px;
+                min-height:42px;
+                padding:9px 16px;
+                font-weight:700;
+            }
+
+            .cart-message-modal .modal-footer .btn-cart{
+                background:#0f9b8e;
+                border-color:#0f9b8e;
+                color:#fff;
+            }
+
+            .cart-message-modal .modal-footer .btn-cart:hover{
+                background:#0d8278;
+                border-color:#0d8278;
+                color:#fff;
+            }
+
+            @media(max-width:576px){
+                .cart-message-modal .modal-body{
+                    padding:24px 20px;
+                }
+
+                .cart-message-modal .modal-footer .btn{
+                    width:100%;
+                }
+            }
+
 
         </style>
 
@@ -276,25 +363,30 @@
 
         </div>
 
-        <div class="modal fade" id="cartMessageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal fade cart-message-modal" id="cartMessageModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Giỏ hàng</h5>
+                        <h5 class="modal-title">
+                            <span class="cart-modal-mark">
+                                <i class="fa-solid fa-check"></i>
+                            </span>
+                            <span id="cartMessageTitle">Cart Updated</span>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body" id="cartMessageText">
-                        Đã thêm sản phẩm vào giỏ hàng.
+                    <div class="modal-body cart-modal-text" id="cartMessageText">
+                        Item added to your cart.
                     </div>
                     <div class="modal-footer">
                         <a href="${pageContext.request.contextPath}/cart"
                            class="btn btn-outline-dark">
-                            Xem giỏ hàng
+                            View Cart
                         </a>
                         <button type="button"
                                 class="btn btn-cart"
                                 data-bs-dismiss="modal">
-                            Tiếp tục mua sắm
+                            Continue Shopping
                         </button>
                     </div>
                 </div>
@@ -316,11 +408,22 @@
 
             var params = new URLSearchParams(window.location.search);
             if (params.has('cartAdded') || params.has('cartError')) {
+                var modalElement = document.getElementById('cartMessageModal');
+                var isError = params.has('cartError');
+                modalElement.classList.toggle('is-error', isError);
+                var icon = modalElement.querySelector('.cart-modal-mark i');
+                if (icon) {
+                    icon.className = isError
+                            ? 'fa-solid fa-triangle-exclamation'
+                            : 'fa-solid fa-check';
+                }
+                document.getElementById('cartMessageTitle').textContent =
+                        isError ? 'Could Not Add Item' : 'Cart Updated';
                 var message = params.has('cartAdded')
-                        ? 'Đã thêm sản phẩm vào giỏ hàng.'
-                        : 'Không thể thêm sản phẩm vào giỏ hàng. Vui lòng kiểm tra tồn kho.';
+                        ? 'Item added to your cart.'
+                        : 'Could not add this item to your cart. Please check available stock.';
                 document.getElementById('cartMessageText').textContent = message;
-                new bootstrap.Modal(document.getElementById('cartMessageModal')).show();
+                new bootstrap.Modal(modalElement).show();
             }
         </script>
 

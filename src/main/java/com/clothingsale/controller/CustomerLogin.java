@@ -66,7 +66,7 @@ public class CustomerLogin extends HttpServlet {
                 session.setAttribute("loginLockedUntil", System.currentTimeMillis() + 5 * 60 * 1000);
                 request.setAttribute("errorMessage", "Account temporarily locked due to multiple failed attempts.");
             } else {
-                request.setAttribute("errorMessage", "Tài khoản không tồn tại");
+                request.setAttribute("errorMessage", "Account does not exist.");
             }
             request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
             return;
@@ -89,7 +89,7 @@ public class CustomerLogin extends HttpServlet {
                     session.setAttribute("loginLockedUntil", System.currentTimeMillis() + 5 * 60 * 1000);
                     request.setAttribute("errorMessage", "Account temporarily locked due to multiple failed attempts.");
                 } else {
-                    request.setAttribute("errorMessage", "Sai mật khẩu");
+                    request.setAttribute("errorMessage", "Incorrect password.");
                 }
                 request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
                 return;
