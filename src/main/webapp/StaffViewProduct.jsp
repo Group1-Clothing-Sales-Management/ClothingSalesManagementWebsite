@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
     <style>
-        /* Khoa chieu cao trang de sidebar va noi dung co thanh cuon rieng. */
         html, body {
             height: 100%;
             overflow: hidden;
@@ -33,12 +32,13 @@
         }
 
         .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
-        .page-title .bi { color: #5c6bc0; margin-right: 8px; }
+        .page-title .bi { color: #000000; margin-right: 8px; }
 
         .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
         .card-main .card-header {
-            background: #fff;
-            border-bottom: 1px solid #eef0f5;
+            background: #212529;
+            color: #ffffff;
+            border-bottom: none;
             border-radius: 14px 14px 0 0 !important;
             padding: 20px 24px;
         }
@@ -124,8 +124,8 @@
         <div class="card card-main" style="max-width: 960px; margin: 0 auto;">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <div>
-                    <div class="fw-bold text-dark" style="font-size:1rem;">Current detail data for the selected variant</div>
-                    <div class="text-muted mt-1" style="font-size:.82rem;">Read-only view — use Edit to make changes</div>
+                    <div class="fw-bold text-white" style="font-size:1rem;">Current detail data for the selected variant</div>
+                    <div class="text-white-50 mt-1" style="font-size:.82rem;">Read-only view — use Edit to make changes</div>
                 </div>
                 <span class="badge px-3 py-2 rounded-pill <%= statusClass %>">
                     <%= product.getStatus() %>

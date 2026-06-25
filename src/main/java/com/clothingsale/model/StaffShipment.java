@@ -7,11 +7,11 @@ public class StaffShipment {
     private int shipmentId;
     private int orderId;
     private String orderCode;
-    private String customerName; // tương ứng o.recipient_name
-    private String customerPhone; // tương ứng o.recipient_phone
-    private String deliveryAddress; // Địa chỉ gộp (Detail + Phường + Quận + Tỉnh)
+    private String customerName;
+    private String customerPhone;
+    private String deliveryAddress;
     private String carrierName;
-    private String shippingStatus; // PENDING_PICKUP, SHIPPING, DELIVERED, FAILED
+    private String shippingStatus;
     private String trackingCode;
     private BigDecimal shippingCost;
     private Timestamp estimatedDeliveryTime;
