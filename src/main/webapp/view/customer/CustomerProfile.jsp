@@ -3,64 +3,231 @@
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Customer Profile</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Customer Profile | Clothing Sale</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <style>
             :root {
                 --ink:#172033;
-                --muted:#64748b;
-                --line:#e2e8f0;
-                --accent:#0f9b8e;
-                --soft:#f4f8fb;
+                --muted:#667085;
+                --line:#e4e7ec;
+                --teal:#0f9b8e;
+                --teal-dark:#0d8278;
+                --blue:#2563eb;
+                --danger:#dc2626;
+            }
+
+            * {
+                box-sizing:border-box;
             }
 
             body {
                 min-height:100vh;
-                background:linear-gradient(180deg, #f7fbfd 0%, #fff 48%, #f4f8fb 100%);
+                margin:0;
                 color:var(--ink);
-                font-family:'Segoe UI', system-ui, sans-serif;
+                background:
+                    radial-gradient(circle at 8% 8%, rgba(15, 155, 142, .12), transparent 28%),
+                    radial-gradient(circle at 88% 12%, rgba(37, 99, 235, .10), transparent 24%),
+                    linear-gradient(180deg, #f7fbfd 0%, #ffffff 46%, #f4f8fb 100%);
+                font-family:"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             }
 
-            .navbar {
-                border-bottom:1px solid var(--line);
-                box-shadow:none!important;
-            }
-
-            .profile-shell {
-                max-width:980px;
-            }
-
-            .profile-card {
-                border:1px solid var(--line);
-                border-radius:8px;
-                background:#fff;
-                box-shadow:0 18px 45px rgba(15, 23, 42, .08);
+            body.profile-modal-open {
                 overflow:hidden;
             }
 
-            .profile-side {
-                height:100%;
-                padding:2rem;
-                background:var(--ink);
+            .profile-shell {
+                width:100%;
+                max-width:1120px;
+                margin:0 auto;
+                padding-left:18px;
+                padding-right:18px;
+            }
+
+            .profile-navbar {
+                position:sticky;
+                top:0;
+                z-index:20;
+                border-bottom:1px solid rgba(228, 231, 236, .9);
+                background:rgba(255, 255, 255, .9);
+                backdrop-filter:blur(14px);
+            }
+
+            .profile-nav-inner {
+                min-height:70px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:18px;
+            }
+
+            .brand-link {
+                display:inline-flex;
+                align-items:center;
+                gap:10px;
+                color:var(--ink);
+                text-decoration:none;
+                font-weight:900;
+            }
+
+            .brand-mark {
+                width:38px;
+                height:38px;
+                border-radius:8px;
+                display:grid;
+                place-items:center;
                 color:#fff;
+                background:linear-gradient(135deg, var(--ink), var(--teal));
+                box-shadow:0 12px 26px rgba(15, 155, 142, .22);
+            }
+
+            .nav-actions {
+                display:flex;
+                align-items:center;
+                justify-content:flex-end;
+                gap:10px;
+                flex-wrap:wrap;
+            }
+
+            .nav-action {
+                min-height:42px;
+                border-radius:8px;
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                padding:0 14px;
+                font-weight:800;
+                text-decoration:none;
+            }
+
+            .nav-action.home {
+                border:1px solid var(--line);
+                background:#fff;
+                color:var(--ink);
+            }
+
+            .nav-action.home:hover {
+                border-color:#b8d8d1;
+                color:var(--teal);
+            }
+
+            .nav-action.logout {
+                border:1px solid #fecdd3;
+                background:#fff;
+                color:var(--danger);
+            }
+
+            .nav-action.logout:hover {
+                background:#fff1f2;
+                color:#b91c1c;
+            }
+
+            .page-hero {
+                padding:42px 0 22px;
+                display:flex;
+                align-items:flex-end;
+                justify-content:space-between;
+                gap:18px;
+            }
+
+            .page-kicker {
+                width:max-content;
+                margin-bottom:12px;
+                padding:7px 11px;
+                border-radius:999px;
+                background:#dff7f1;
+                color:#0f766e;
+                font-size:.8rem;
+                font-weight:900;
+                text-transform:uppercase;
+                letter-spacing:.06em;
+            }
+
+            .page-title {
+                margin:0;
+                font-size:clamp(2.1rem, 4vw, 3.35rem);
+                line-height:1.02;
+                font-weight:950;
+            }
+
+            .page-subtitle {
+                max-width:620px;
+                margin:12px 0 0;
+                color:var(--muted);
+                font-size:1rem;
+            }
+
+            .status-pill {
+                min-height:42px;
+                border:1px solid #bbf7d0;
+                border-radius:999px;
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                padding:0 14px;
+                color:#047857;
+                background:#f0fdf4;
+                font-weight:800;
+                white-space:nowrap;
+            }
+
+            .alert {
+                border:0;
+                border-radius:8px;
+                display:flex;
+                align-items:center;
+                gap:10px;
+                font-weight:700;
+                box-shadow:0 14px 35px rgba(15, 23, 42, .08);
+            }
+
+            .profile-grid {
+                display:grid;
+                grid-template-columns:minmax(280px, .72fr) minmax(0, 1.28fr);
+                gap:22px;
+                align-items:start;
+                padding-bottom:54px;
+            }
+
+            .profile-summary,
+            .profile-form-panel {
+                border:1px solid rgba(228, 231, 236, .95);
+                border-radius:8px;
+                background:rgba(255, 255, 255, .92);
+                box-shadow:0 22px 60px rgba(15, 23, 42, .09);
+            }
+
+            .profile-summary {
+                overflow:hidden;
+            }
+
+            .summary-cover {
+                height:118px;
+                background:linear-gradient(135deg, rgba(23, 32, 51, .98), rgba(15, 155, 142, .88));
+            }
+
+            .summary-body {
+                padding:0 24px 26px;
             }
 
             .avatar-preview {
-                width:112px;
-                height:112px;
+                width:128px;
+                height:128px;
+                margin-top:-64px;
+                border:6px solid #fff;
                 border-radius:50%;
                 display:flex;
                 align-items:center;
                 justify-content:center;
                 overflow:hidden;
-                background:rgba(255,255,255,.12);
-                border:2px solid rgba(255,255,255,.18);
-                font-size:2rem;
-                font-weight:800;
+                color:#fff;
+                background:linear-gradient(135deg, var(--ink), var(--teal));
+                box-shadow:0 18px 38px rgba(15, 23, 42, .20);
+                font-size:2.35rem;
             }
 
             .avatar-preview img {
@@ -69,51 +236,283 @@
                 object-fit:cover;
             }
 
-            .form-control {
-                border-radius:8px;
-                border-color:#cbd5e1;
-                min-height:44px;
+            .profile-name {
+                margin:18px 0 4px;
+                font-size:1.45rem;
+                font-weight:900;
+                line-height:1.18;
             }
 
-            .form-control:focus {
-                border-color:var(--accent);
-                box-shadow:0 0 0 .2rem rgba(15, 155, 142, .14);
-            }
-
-            .btn-save {
-                min-height:44px;
-                border-radius:8px;
-                background:var(--accent);
-                border-color:var(--accent);
+            .profile-handle {
+                color:var(--muted);
                 font-weight:700;
             }
 
-            .btn-save:hover {
-                background:#0d8278;
-                border-color:#0d8278;
+            .contact-list {
+                display:grid;
+                gap:12px;
+                margin-top:22px;
+            }
+
+            .contact-row {
+                min-width:0;
+                display:flex;
+                align-items:center;
+                gap:12px;
+                color:#344054;
+            }
+
+            .contact-icon {
+                width:36px;
+                height:36px;
+                border-radius:8px;
+                display:grid;
+                place-items:center;
+                color:var(--teal);
+                background:#edf7f5;
+                flex:0 0 auto;
+            }
+
+            .contact-row span:last-child {
+                min-width:0;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            }
+
+            .summary-divider {
+                height:1px;
+                margin:24px 0;
+                background:var(--line);
+            }
+
+            .summary-note {
+                margin:0;
+                color:var(--muted);
+                font-size:.92rem;
+                line-height:1.55;
+            }
+
+            .profile-form-panel {
+                padding:28px;
+            }
+
+            .form-heading {
+                display:flex;
+                align-items:flex-start;
+                justify-content:space-between;
+                gap:16px;
+                margin-bottom:24px;
+            }
+
+            .form-heading h2 {
+                margin:0;
+                font-size:1.35rem;
+                font-weight:900;
+            }
+
+            .form-heading p {
+                margin:6px 0 0;
+                color:var(--muted);
+            }
+
+            .section-chip {
+                min-height:34px;
+                border-radius:999px;
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                padding:0 12px;
+                color:#1d4ed8;
+                background:#eff6ff;
+                font-weight:800;
+                white-space:nowrap;
+            }
+
+            .form-label {
+                margin-bottom:8px;
+                color:#344054;
+                font-size:.9rem;
+                font-weight:800;
+            }
+
+            .field-control {
+                position:relative;
+            }
+
+            .field-icon {
+                position:absolute;
+                left:15px;
+                top:50%;
+                transform:translateY(-50%);
+                color:#98a2b3;
+                pointer-events:none;
+            }
+
+            .form-control {
+                min-height:50px;
+                border:1px solid #d0d5dd;
+                border-radius:8px;
+                padding-left:44px;
+                background:#fff;
+                color:var(--ink);
+                box-shadow:0 1px 2px rgba(16, 24, 40, .04);
+            }
+
+            .form-control.readonly-control {
+                background:#f8fafc;
+                color:#475467;
+            }
+
+            .form-control:focus {
+                border-color:var(--teal);
+                box-shadow:0 0 0 .22rem rgba(15, 155, 142, .14);
+            }
+
+            .form-text {
+                color:var(--muted);
+            }
+
+            .form-actions {
+                display:flex;
+                justify-content:flex-end;
+                gap:10px;
+                padding-top:8px;
+                flex-wrap:wrap;
             }
 
             .btn {
                 border-radius:8px;
-                font-weight:700;
+                font-weight:800;
+            }
+
+            .btn-save {
+                min-height:46px;
+                border:0;
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                background:linear-gradient(135deg, var(--blue), var(--teal));
+                box-shadow:0 14px 24px rgba(15, 155, 142, .22);
+            }
+
+            .btn-save:hover,
+            .btn-save:focus {
+                background:linear-gradient(135deg, #1d4ed8, var(--teal-dark));
+                box-shadow:0 16px 28px rgba(15, 155, 142, .27);
+            }
+
+            .logout-dialog {
+                position:fixed;
+                inset:0;
+                z-index:1000;
+                display:none;
+                align-items:center;
+                justify-content:center;
+                padding:18px;
+                background:rgba(15, 23, 42, .46);
+                backdrop-filter:blur(4px);
+            }
+
+            .logout-dialog.is-open {
+                display:flex;
+            }
+
+            .logout-panel {
+                width:min(460px, 100%);
+                border-radius:8px;
+                background:#fff;
+                padding:28px;
+                box-shadow:0 26px 80px rgba(15, 23, 42, .28);
+            }
+
+            .logout-icon {
+                width:54px;
+                height:54px;
+                border-radius:16px;
+                display:grid;
+                place-items:center;
+                color:#fff;
+                background:linear-gradient(135deg, var(--ink), var(--teal));
+                box-shadow:0 14px 30px rgba(15, 155, 142, .24);
+                font-size:1.25rem;
+                flex:0 0 auto;
+            }
+
+            .logout-title {
+                margin:0 0 6px;
+                font-size:1.25rem;
+                font-weight:900;
+            }
+
+            .logout-text {
+                margin:0;
+                color:var(--muted);
+            }
+
+            .logout-actions {
+                display:flex;
+                justify-content:flex-end;
+                gap:10px;
+                margin-top:24px;
+                flex-wrap:wrap;
+            }
+
+            .logout-actions .btn {
+                min-height:42px;
+                padding:9px 16px;
+            }
+
+            @media (max-width: 991.98px) {
+                .profile-grid {
+                    grid-template-columns:1fr;
+                }
+
+                .page-hero {
+                    align-items:flex-start;
+                    flex-direction:column;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .profile-nav-inner {
+                    align-items:flex-start;
+                    flex-direction:column;
+                    padding:14px 0;
+                }
+
+                .nav-actions,
+                .nav-action,
+                .form-actions .btn,
+                .logout-actions .btn {
+                    width:100%;
+                }
+
+                .form-heading {
+                    flex-direction:column;
+                }
+
+                .profile-form-panel {
+                    padding:22px;
+                }
             }
         </style>
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg bg-white">
-            <div class="container profile-shell">
-                <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/home">
-                    <i class="fa-solid fa-shirt text-success"></i>
-                    Clothing Sale
+        <nav class="profile-navbar">
+            <div class="profile-shell profile-nav-inner">
+                <a class="brand-link" href="${pageContext.request.contextPath}/home">
+                    <span class="brand-mark"><i class="fa-solid fa-shirt"></i></span>
+                    <span>Clothing Sale</span>
                 </a>
-                <div class="d-flex gap-2 align-items-center">
-                    <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-dark">
+                <div class="nav-actions">
+                    <a href="${pageContext.request.contextPath}/home" class="nav-action home">
                         <i class="fa-solid fa-house"></i>
                         Home
                     </a>
                     <a href="${pageContext.request.contextPath}/customer/logout"
-                       class="btn btn-outline-danger"
-                       onclick="return confirm('Are you sure you want to logout?');">
+                       class="nav-action logout"
+                       id="openLogoutDialog">
                         <i class="fa-solid fa-right-from-bracket"></i>
                         Logout
                     </a>
@@ -121,80 +520,137 @@
             </div>
         </nav>
 
-        <main class="container profile-shell py-4 py-lg-5">
-            <div class="mb-4">
-                <h1 class="fw-bold mb-1">My Profile</h1>
-                <p class="text-secondary mb-0">View and update your customer account information.</p>
-            </div>
+        <main class="profile-shell">
+            <section class="page-hero">
+                <div>
+                    <div class="page-kicker">Account Settings</div>
+                    <h1 class="page-title">My Profile</h1>
+                    <p class="page-subtitle">
+                        Keep your account details up to date so checkout, delivery, and order updates stay smooth.
+                    </p>
+                </div>
+                <span class="status-pill">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Customer Account
+                </span>
+            </section>
 
             <c:if test="${param.updated == '1'}">
-                <div class="alert alert-success">
+                <div class="alert alert-success mb-4">
+                    <i class="fa-solid fa-circle-check"></i>
                     Profile updated successfully.
                 </div>
             </c:if>
 
             <c:if test="${not empty errorMessage}">
-                <div class="alert alert-danger">
+                <div class="alert alert-danger mb-4">
+                    <i class="fa-solid fa-circle-exclamation"></i>
                     <c:out value="${errorMessage}"/>
                 </div>
             </c:if>
 
-            <div class="profile-card">
-                <div class="row g-0">
-                    <div class="col-lg-4">
-                        <aside class="profile-side">
-                            <div class="avatar-preview mb-3">
-                                <c:choose>
-                                    <c:when test="${not empty profile.avatarUrl}">
-                                        <img src="${fn:escapeXml(profile.avatarUrl)}" alt="Avatar">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <i class="fa-solid fa-user"></i>
-                                    </c:otherwise>
-                                </c:choose>
+            <section class="profile-grid">
+                <aside class="profile-summary">
+                    <div class="summary-cover"></div>
+                    <div class="summary-body">
+                        <div class="avatar-preview">
+                            <c:choose>
+                                <c:when test="${not empty profile.avatarUrl}">
+                                    <img id="avatarImage"
+                                         src="${fn:escapeXml(profile.avatarUrl)}"
+                                         alt="Customer avatar"
+                                         onerror="this.style.display='none';document.getElementById('avatarFallback').style.display='';">
+                                    <i id="avatarFallback"
+                                       class="fa-solid fa-user"
+                                       style="display:none;"></i>
+                                </c:when>
+                                <c:otherwise>
+                                    <img id="avatarImage"
+                                         src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                         alt="Customer avatar"
+                                         style="display:none;">
+                                    <i id="avatarFallback" class="fa-solid fa-user"></i>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+
+                        <h2 class="profile-name">
+                            <c:out value="${profile.fullName}"/>
+                        </h2>
+                        <div class="profile-handle">
+                            @<c:out value="${profile.username}"/>
+                        </div>
+
+                        <div class="contact-list">
+                            <div class="contact-row">
+                                <span class="contact-icon"><i class="fa-solid fa-envelope"></i></span>
+                                <span><c:out value="${profile.email}"/></span>
                             </div>
-                            <h2 class="h4 fw-bold mb-1">
-                                <c:out value="${profile.fullName}"/>
-                            </h2>
-                            <p class="mb-3 text-white-50">
-                                @<c:out value="${profile.username}"/>
-                            </p>
-                            <div class="small text-white-50">
-                                <div class="mb-2">
-                                    <i class="fa-solid fa-envelope me-2"></i>
-                                    <c:out value="${profile.email}"/>
-                                </div>
-                                <c:if test="${not empty profile.phone}">
-                                    <div>
-                                        <i class="fa-solid fa-phone me-2"></i>
-                                        <c:out value="${profile.phone}"/>
-                                    </div>
-                                </c:if>
+                            <div class="contact-row">
+                                <span class="contact-icon"><i class="fa-solid fa-phone"></i></span>
+                                <span>
+                                    <c:choose>
+                                        <c:when test="${not empty profile.phone}">
+                                            <c:out value="${profile.phone}"/>
+                                        </c:when>
+                                        <c:otherwise>Phone not added</c:otherwise>
+                                    </c:choose>
+                                </span>
                             </div>
-                        </aside>
+                            <div class="contact-row">
+                                <span class="contact-icon"><i class="fa-solid fa-user-tag"></i></span>
+                                <span><c:out value="${profile.roleName}"/></span>
+                            </div>
+                        </div>
+
+                        <div class="summary-divider"></div>
+                        <p class="summary-note">
+                            Your profile information is used for order contact and account recovery.
+                            Review it before placing new orders.
+                        </p>
                     </div>
-                    <div class="col-lg-8">
-                        <form action="${pageContext.request.contextPath}/customer/profile"
-                              method="post"
-                              class="p-4 p-lg-5"
-                              autocomplete="off">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Username</label>
+                </aside>
+
+                <section class="profile-form-panel">
+                    <div class="form-heading">
+                        <div>
+                            <h2>Profile Details</h2>
+                            <p>Update your personal information and avatar.</p>
+                        </div>
+                        <span class="section-chip">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Private
+                        </span>
+                    </div>
+
+                    <form action="${pageContext.request.contextPath}/customer/profile"
+                          method="post"
+                          autocomplete="off">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Username</label>
+                                <div class="field-control">
+                                    <i class="fa-regular fa-user field-icon"></i>
                                     <input type="text"
-                                           class="form-control bg-light"
+                                           class="form-control readonly-control"
                                            value="${fn:escapeXml(profile.username)}"
                                            readonly>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Role</label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Role</label>
+                                <div class="field-control">
+                                    <i class="fa-solid fa-user-tag field-icon"></i>
                                     <input type="text"
-                                           class="form-control bg-light"
+                                           class="form-control readonly-control"
                                            value="${fn:escapeXml(profile.roleName)}"
                                            readonly>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold" for="fullName">Full name</label>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="fullName">Full name</label>
+                                <div class="field-control">
+                                    <i class="fa-regular fa-id-card field-icon"></i>
                                     <input type="text"
                                            id="fullName"
                                            name="fullName"
@@ -203,8 +659,11 @@
                                            value="${fn:escapeXml(profile.fullName)}"
                                            required>
                                 </div>
-                                <div class="col-md-7">
-                                    <label class="form-label fw-semibold" for="email">Email</label>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label" for="email">Email</label>
+                                <div class="field-control">
+                                    <i class="fa-regular fa-envelope field-icon"></i>
                                     <input type="email"
                                            id="email"
                                            name="email"
@@ -213,8 +672,11 @@
                                            value="${fn:escapeXml(profile.email)}"
                                            required>
                                 </div>
-                                <div class="col-md-5">
-                                    <label class="form-label fw-semibold" for="phone">Phone</label>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label" for="phone">Phone</label>
+                                <div class="field-control">
+                                    <i class="fa-solid fa-phone field-icon"></i>
                                     <input type="text"
                                            id="phone"
                                            name="phone"
@@ -224,14 +686,17 @@
                                            title="Phone must be 10 digits starting with single 0, for example 0123456789."
                                            placeholder="0123456789"
                                            value="${fn:escapeXml(profile.phone)}">
-                                    <c:if test="${not empty phoneError}">
-                                        <div class="invalid-feedback d-block">
-                                            <c:out value="${phoneError}"/>
-                                        </div>
-                                    </c:if>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold" for="avatarUrl">Avatar URL</label>
+                                <c:if test="${not empty phoneError}">
+                                    <div class="invalid-feedback d-block">
+                                        <c:out value="${phoneError}"/>
+                                    </div>
+                                </c:if>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="avatarUrl">Avatar URL</label>
+                                <div class="field-control">
+                                    <i class="fa-regular fa-image field-icon"></i>
                                     <input type="url"
                                            id="avatarUrl"
                                            name="avatarUrl"
@@ -239,23 +704,110 @@
                                            maxlength="255"
                                            value="${fn:escapeXml(profile.avatarUrl)}"
                                            placeholder="https://example.com/avatar.jpg">
-                                    <div class="form-text">Use an image URL. Leave blank to keep the default avatar.</div>
                                 </div>
-                                <div class="col-12 d-flex gap-2 justify-content-end mt-4">
-                                    <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-secondary px-4">
-                                        Cancel
-                                    </a>
-                                    <button type="submit" class="btn btn-primary btn-save px-4">
-                                        <i class="fa-solid fa-floppy-disk"></i>
-                                        Save changes
-                                    </button>
-                                </div>
+                                <div class="form-text">Use a direct image URL. Leave blank to keep the default avatar.</div>
                             </div>
-                        </form>
+                            <div class="col-12 form-actions">
+                                <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-secondary px-4">
+                                    Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-save px-4">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Save changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </section>
+        </main>
+
+        <div class="logout-dialog" id="logoutDialog" hidden>
+            <div class="logout-panel" role="dialog" aria-modal="true" aria-labelledby="logoutDialogTitle">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="logout-icon">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </div>
+                    <div class="flex-grow-1">
+                        <h2 class="logout-title" id="logoutDialogTitle">Sign out?</h2>
+                        <p class="logout-text">You will leave your customer account and return to the store homepage.</p>
+                    </div>
+                    <button type="button" class="btn-close" id="closeLogoutDialog" aria-label="Close"></button>
+                </div>
+                <div class="logout-actions">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelLogoutDialog">Cancel</button>
+                    <a href="${pageContext.request.contextPath}/customer/logout" class="btn btn-danger">Sign out</a>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <script>
+            (function() {
+                var openLogout = document.getElementById('openLogoutDialog');
+                var logoutDialog = document.getElementById('logoutDialog');
+                var closeLogout = document.getElementById('closeLogoutDialog');
+                var cancelLogout = document.getElementById('cancelLogoutDialog');
+
+                function showLogoutDialog(event) {
+                    if (event) {
+                        event.preventDefault();
+                    }
+                    logoutDialog.hidden = false;
+                    logoutDialog.classList.add('is-open');
+                    document.body.classList.add('profile-modal-open');
+                    if (closeLogout) {
+                        closeLogout.focus();
+                    }
+                }
+
+                function hideLogoutDialog() {
+                    logoutDialog.classList.remove('is-open');
+                    document.body.classList.remove('profile-modal-open');
+                    logoutDialog.hidden = true;
+                }
+
+                if (openLogout && logoutDialog && closeLogout && cancelLogout) {
+                    openLogout.addEventListener('click', showLogoutDialog);
+                    closeLogout.addEventListener('click', hideLogoutDialog);
+                    cancelLogout.addEventListener('click', hideLogoutDialog);
+                    logoutDialog.addEventListener('click', function(event) {
+                        if (event.target === logoutDialog) {
+                            hideLogoutDialog();
+                        }
+                    });
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape' && logoutDialog.classList.contains('is-open')) {
+                            hideLogoutDialog();
+                        }
+                    });
+                }
+
+                var avatarInput = document.getElementById('avatarUrl');
+                var avatarImage = document.getElementById('avatarImage');
+                var avatarFallback = document.getElementById('avatarFallback');
+
+                if (avatarInput && avatarImage && avatarFallback) {
+                    avatarInput.addEventListener('input', function() {
+                        var value = avatarInput.value.trim();
+                        if (!value) {
+                            avatarImage.style.display = 'none';
+                            avatarFallback.style.display = '';
+                            return;
+                        }
+
+                        avatarImage.src = value;
+                        avatarImage.style.display = '';
+                        avatarFallback.style.display = 'none';
+                    });
+
+                    avatarImage.addEventListener('error', function() {
+                        avatarImage.style.display = 'none';
+                        avatarFallback.style.display = '';
+                    });
+                }
+            })();
+        </script>
+
         <c:if test="${focusField == 'phone'}">
             <script>
                 var phoneInput = document.getElementById('phone');
