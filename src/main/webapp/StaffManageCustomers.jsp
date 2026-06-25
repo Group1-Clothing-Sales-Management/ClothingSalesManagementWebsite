@@ -22,7 +22,6 @@
         .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
         .card-main .card-header { background: #fff; border-bottom: 1px solid #eef0f5; border-radius: 14px 14px 0 0 !important; padding: 18px 24px; }
         
-        /* Cập nhật màu bảng sang đen */
         .table thead th { background: #212529; color: #fff; font-weight: 600; font-size: .85rem; border: none; white-space: nowrap; }
         .table tbody tr:hover { background: #f0f4ff; }
         .table td { vertical-align: middle; font-size: .9rem; }
@@ -40,7 +39,8 @@
 <div class="main-wrapper">
     <jsp:include page="/view/admin/sidebar.jsp"><jsp:param name="activeTab" value="customers"/></jsp:include>
 
-    <div class="content-area">
+    <div class="contentArea content-area">
+        <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
                 <i class="bi bi-check-circle-fill"></i> ${sessionScope.successMsg}
@@ -49,6 +49,15 @@
             <c:remove var="successMsg" scope="session"/>
         </c:if>
 
+        <%-- Thông báo lỗi tổng quan --%>
+        <c:if test="${not empty errors.general}">
+            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> ${errors.general}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
+
+        <%-- 1. GIAO DIỆN DANH SÁCH KHÁCH HÀNG --%>
         <c:if test="${empty pageMode or pageMode eq 'list'}">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
@@ -58,9 +67,9 @@
             </nav>
 
             <div class="page-header">
-                <h1 class="page-title"><i class="bi bi-people-fill"></i>Customer Management</h1>
+                <h1 class="page-title"><i class="bi bi-people-fill"></i> Customer Management</h1>
                 <a href="${pageContext.request.contextPath}/staff/customers?action=add" class="btn btn-primary btn-sm px-3">
-                    <i class="bi bi-person-plus-fill me-1"></i>Add Customer
+                     <i class="bi bi-person-plus-fill me-1"></i>Add Customer
                 </a>
             </div>
 
@@ -131,9 +140,112 @@
             </div>
         </c:if>
 
-        <%-- Phần Edit/Add giữ nguyên logic của bạn --%>
+        <%-- 2. GIAO DIỆN FORM THÊM MỚI / CHỈNH SỬA KHÁCH HÀNG --%>
         <c:if test="${pageMode eq 'add' or pageMode eq 'edit'}">
-            <%-- (Mã của phần Add/Edit bạn để nguyên ở đây) --%>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/customers">Customer Management</a></li>
+                    <li class="breadcrumb-item active">${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer'}</li>
+                </ol>
+            </nav>
+
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="bi ${pageMode eq 'add' ? 'bi-person-plus-fill' : 'bi-pencil-square'}"></i>
+                    ${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer Info'}
+                </h1>
+                <a href="${pageContext.request.contextPath}/staff/customers" class="btn btn-outline-secondary btn-sm px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+
+            <div class="card card-main mx-auto" style="max-width: 720px;">
+                <div class="card-body p-4">
+                    <form method="post" action="${pageContext.request.contextPath}/staff/customers">
+                        <input type="hidden" name="action" value="${pageMode eq 'add' ? 'add' : 'update'}"/>
+                        <c:if test="${pageMode eq 'edit'}">
+                            <input type="hidden" name="id" value="${customer.id}"/>
+                        </c:if>
+
+                        <div class="form-section-title">Account Information</div>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control ${not empty errors.username ? 'is-invalid' : ''}" 
+                                       name="username" 
+                                       value="${pageMode eq 'add' ? formData.username : customer.username}" 
+                                       placeholder="Enter username"
+                                       ${pageMode eq 'edit' ? 'readonly' : ''}/>
+                                <div class="invalid-feedback">${errors.username}</div>
+                                <c:if test="${pageMode eq 'edit'}">
+                                    <div class="form-text text-muted">Username cannot be changed.</div>
+                                </c:if>
+                            </div>
+
+                            <c:if test="${pageMode eq 'add'}">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control ${not empty errors.password ? 'is-invalid' : ''}" 
+                                           name="password" placeholder="Min 6 characters"/>
+                                    <div class="invalid-feedback">${errors.password}</div>
+                                </div>
+                            </c:if>
+
+                            <c:if test="${pageMode eq 'edit'}">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
+                                    <select class="form-select ${not empty errors.status ? 'is-invalid' : ''}" name="status">
+                                        <option value="ACTIVE" ${customer.status eq 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                                        <option value="INACTIVE" ${customer.status eq 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
+                                        <option value="LOCKED" ${customer.status eq 'LOCKED' ? 'selected' : ''}>LOCKED</option>
+                                    </select>
+                                    <div class="invalid-feedback">${errors.status}</div>
+                                </div>
+                            </c:if>
+                        </div>
+
+                        <div class="form-section-title">Personal Profile</div>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control ${not empty errors.fullName ? 'is-invalid' : ''}" 
+                                       name="fullName" 
+                                       value="${pageMode eq 'add' ? formData.fullName : customer.fullName}" 
+                                       placeholder="Enter client's full name"/>
+                                <div class="invalid-feedback">${errors.fullName}</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control ${not empty errors.email ? 'is-invalid' : ''}" 
+                                       name="email" 
+                                       value="${pageMode eq 'add' ? formData.email : customer.email}" 
+                                       placeholder="example@domain.com"/>
+                                <div class="invalid-feedback">${errors.email}</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Phone Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control ${not empty errors.phone ? 'is-invalid' : ''}" 
+                                       name="phone" 
+                                       value="${pageMode eq 'add' ? formData.phone : customer.phone}" 
+                                       placeholder="10 digits starting with 0"/>
+                                <div class="invalid-feedback">${errors.phone}</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                            <a href="${pageContext.request.contextPath}/staff/customers" class="btn btn-outline-secondary px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </c:if>
     </div>
 </div>
