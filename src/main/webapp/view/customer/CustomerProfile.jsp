@@ -499,26 +499,7 @@
         </style>
     </head>
     <body>
-        <nav class="profile-navbar">
-            <div class="profile-shell profile-nav-inner">
-                <a class="brand-link" href="${pageContext.request.contextPath}/home">
-                    <span class="brand-mark"><i class="fa-solid fa-shirt"></i></span>
-                    <span>Clothing Sale</span>
-                </a>
-                <div class="nav-actions">
-                    <a href="${pageContext.request.contextPath}/home" class="nav-action home">
-                        <i class="fa-solid fa-house"></i>
-                        Home
-                    </a>
-                    <a href="${pageContext.request.contextPath}/customer/logout"
-                       class="nav-action logout"
-                       id="openLogoutDialog">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        Logout
-                    </a>
-                </div>
-            </div>
-        </nav>
+        <jsp:include page="/view/customer/common/header.jsp"/>
 
         <main class="profile-shell">
             <section class="page-hero">

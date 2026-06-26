@@ -11,6 +11,7 @@
     <meta charset="UTF-8">
     <title>Cart</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --cart-ink:#0f172a;
@@ -525,12 +526,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="<%= ctx %>/home">Clothing Sale</a>
-            <a class="btn btn-outline-dark" href="<%= ctx %>/home">Continue Shopping</a>
-        </div>
-    </nav>
+    <jsp:include page="/view/customer/common/header.jsp"/>
 
     <div class="container cart-page py-4 py-lg-5">
         <div class="page-heading">
