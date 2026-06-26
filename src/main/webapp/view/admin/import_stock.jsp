@@ -4,16 +4,17 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Create Stock Import - Admin Area</title>
+        <title>Stock Batch Import - Admin Area</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
-        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <style>
             body {
                 background-color: #f8f9fa;
                 font-family: system-ui, -apple-system, sans-serif;
                 overflow-x: hidden;
             }
+            /* Cấu trúc wrapper đồng bộ giúp sidebar không bị vỡ */
             .wrapper {
                 display: flex;
                 width: 100%;
@@ -25,245 +26,261 @@
                 min-height: 100vh;
                 background-color: #f8f9fa;
             }
-            .form-label {
-                font-weight: 600;
-                color: #374151;
-                margin-bottom: 0.4rem;
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background-color: #cbd5e1;
+                border-radius: 4px;
             }
             .search-results-box {
                 position: absolute;
-                width: 100%;
+                left: 0;
+                right: 0;
+                z-index: 1050;
                 max-height: 250px;
                 overflow-y: auto;
-                z-index: 1050;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                border-radius: 0 0 6px 6px;
-                display: none;
-                background-color: #fff;
-            }
-            .search-results-box .list-group-item {
-                cursor: pointer;
-            }
-            .search-results-box .list-group-item:hover {
-                background-color: #f0f7ff;
+                background: white;
+                border: 1px solid #dee2e6;
+                border-radius: 0.375rem;
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             }
         </style>
     </head>
     <body>
+
         <div class="wrapper">
-            <%-- Sidebar Component --%>
+            <%-- Sidebar Component chuẩn cấu trúc --%>
             <jsp:include page="sidebar.jsp">
                 <jsp:param name="activeTab" value="inventory" />
             </jsp:include>
 
             <div class="main-content">
-                <div class="container-fluid">
+                <div class="container-fluid" style="max-w: 960px; margin: 0 auto;">
 
                     <div class="mb-4">
-                        <a href="${pageContext.request.contextPath}/admin/inventory" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-arrow-left me-2"></i>Back to Stock Logs
+                        <a href="${pageContext.request.contextPath}/admin/inventory?action=list" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-arrow-left me-2"></i>Back to Inventory List
                         </a>
                     </div>
 
-                    <%-- Alert Notifications --%>
+                    <%-- Status Notifications Banner --%>
                     <c:if test="${param.status eq 'error'}">
-                        <div class="alert alert-danger"><strong>Error!</strong> Transaction failed to commit database. Please try again.</div>
+                        <div class="alert alert-danger role="alert">
+                            <strong>System Error!</strong> Transaction failed to commit to database. Please try again.
+                        </div>
                     </c:if>
                     <c:if test="${param.status eq 'invalid'}">
-                        <div class="alert alert-warning"><strong>Invalid Input!</strong> Please check numeric formats or missing fields.</div>
-                    </c:if>
-                    <c:if test="${param.status eq 'success'}">
-                        <div class="alert alert-success"><strong>Success!</strong> Stock inflow has been imported successfully.</div>
-                    </c:if>
-
-                    <div class="row justify-content-center">
-                        <div class="col-xl-8 col-lg-10">
-                            <div class="card shadow-sm border-0 rounded-3 p-4">
-
-                                <div class="border-bottom pb-3 mb-4">
-                                    <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-square-plus me-2 text-success"></i>New Stock Inflow Import</h4>
-                                    <p class="text-muted small mb-0">Search and add physical inventory batches to a specific product variant item</p>
-                                </div>
-
-                                <form id="importStockForm" action="${pageContext.request.contextPath}/admin/inventory" method="POST" autocomplete="off">
-                                    <input type="hidden" name="action" value="create" />
-
-                                    <div class="mb-4 position-relative">
-                                        <label class="form-label">Search Product Variant Item *</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                            <input type="text" id="variantSearchInput" class="form-control fw-semibold" placeholder="Type product name, color, or size to search..." required />
-                                            <button class="btn btn-outline-secondary d-none" type="button" id="clearSearchBtn"><i class="fa-solid fa-xmark"></i></button>
-                                        </div>
-
-                                        <input type="hidden" id="hiddenVariantId" name="variantId" />
-
-                                        <div id="searchResults" class="list-group search-results-box border"></div>
-                                        <div class="form-text text-muted">Type to filter. This prevents misclicks when handling a massive catalog.</div>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="form-label">Batch Code *</label>
-                                        <input type="text" id="batchCode" name="batchCode" class="form-control bg-light fw-bold text-primary" readonly required />
-                                        <div class="form-text">This system auto-generates a unique code for tracking FIFO constraints.</div>
-                                    </div>
-
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Initial Quantity *</label>
-                                            <input type="number" name="quantity" class="form-control" placeholder="e.g., 100" min="1" required />
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="form-label">Cost Price ($) *</label>
-                                            <input type="number" name="costPrice" class="form-control" placeholder="e.g., 15.50" step="0.01" min="0" required />
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <label class="form-label">New Sale Price ($) *</label>
-                                            <input type="number" name="salePrice" class="form-control" placeholder="e.g., 29.99" step="0.01" min="0" required />
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="form-label">Transaction Note</label>
-                                            <input type="text" name="note" class="form-control" placeholder="e.g., Summer batch import from Supplier A" />
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex justify-content-end gap-2 border-top pt-3 mt-4">
-                                        <a href="${pageContext.request.contextPath}/admin/inventory" class="btn btn-light px-4">Cancel</a>
-                                        <button type="submit" class="btn btn-success px-4 fw-bold">Confirm & Process Import</button>
-                                    </div>
-
-                                </form>
-                            </div>
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Invalid Input!</strong> Data format parsing failed. Check numeric parameters.
                         </div>
-                    </div>
+                    </c:if>
 
+                    <div class="card shadow-sm border-0 p-4 bg-white rounded-3">
+                        <div class="border-b pb-3 mb-4">
+                            <h2 class="h5 fw-bold text-dark mb-1">
+                                <i class="fa-solid fa-square-plus me-2 text-success"></i>New Physical Stock Import Inflow
+                            </h2>
+                            <p class="text-muted small mb-0">Search and register structured inventory items to track FIFO batch logging constraints.</p>
+                        </div>
+
+                        <form id="importStockForm" action="${pageContext.request.contextPath}/admin/inventory" method="POST" autocomplete="off">
+                            <input type="hidden" name="action" value="IMPORT" />
+                            <input type="hidden" id="hiddenVariantId" name="variantId" />
+
+                            <div class="position-relative mb-4">
+                                <label class="form-label fw-bold text-secondary">Search Clothing Variant Item *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <input type="text" id="variantSearchInput" required
+                                           placeholder="Type to filter product variant by name, SKU, size, or color..."
+                                           class="form-control py-2">
+                                    <button type="button" id="clearSearchBtn" class="btn btn-outline-secondary d-none">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                                <div id="searchResults" class="search-results-box d-none custom-scrollbar"></div>
+                            </div>
+
+                            <div id="contextPricePanel" class="alert alert-info d-none align-items-center mb-4">
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                                <span><strong>Current Reference:</strong> Cost Price: <span id="refCost" class="fw-bold"></span>$ | Retail Selling Price: <span id="refSale" class="fw-bold"></span>$</span>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-secondary">Batch Code *</label>
+                                    <input type="text" id="batchCode" name="batchCode" readonly required class="form-control bg-light text-primary fw-bold">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-secondary">Inflow Quantity *</label>
+                                    <input type="number" name="quantity" min="1" required placeholder="e.g., 100" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-secondary">Cost Price ($) *</label>
+                                    <input type="number" id="costPrice" name="costPrice" step="0.01" min="0" required placeholder="e.g., 15.50" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary">New Sale Price ($) *</label>
+                                    <input type="number" id="salePrice" name="salePrice" step="0.01" min="0" required placeholder="e.g., 29.99" class="form-control">
+                                    <span class="text-muted d-block mt-1" style="font-size: 0.75rem;">Updating this value alters the general storefront listing price index.</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary">Transaction Note</label>
+                                    <input type="text" name="note" placeholder="e.g., Import batch from Supplier Alpha" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <a href="${pageContext.request.contextPath}/admin/inventory?action=list" class="btn btn-outline-secondary px-4">Cancel</a>
+                                <button type="submit" class="btn btn-success fw-bold px-4">Confirm & Process Import</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
 
         <script>
-            // FIX LỖI NULL: Kiểm tra điều kiện tồn tại dữ liệu trước khi thực hiện hàm xử lý chuỗi hệ thống
+            // Chuỗi dữ liệu biến thể JSON
             const variantData = [
-            <c:forEach var="v" items="${activeVariants}" varStatus="status">
+            <c:forEach items="${activeVariants}" var="v" varStatus="status">
             {
             id: "${v.id}",
-                    name: "${v.attributeDetails != null ? v.attributeDetails.replace('"', '\\"') : 'Standard Variant'}"
+                    sku: "${v.sku}",
+                    oldCost: "${v.costPrice}",
+                    oldSale: "${v.salePrice}",
+                    displayName: "<c:out value='${v.attributeDetails}' default='Standard Item Variant' />"
             }${!status.last ? ',' : ''}
             </c:forEach>
-            ];
-        </script>
+            ]; // ĐÃ SỬA: Xóa dấu đóng ngoặc vuông thừa lỗi cú pháp ở đây
 
-        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-        <script>
             document.addEventListener("DOMContentLoaded", function () {
-                // 1. Logic sinh mã Batch Code tự động
-                var now = new Date();
-                var year = now.getFullYear();
-                var month = String(now.getMonth() + 1).padStart(2, '0');
-                var day = String(now.getDate()).padStart(2, '0');
-                var hours = String(now.getHours()).padStart(2, '0');
-                var minutes = String(now.getMinutes()).padStart(2, '0');
-                var generatedCode = "BATCH-" + year + month + day + "-" + hours + minutes;
-
-                var batchField = document.getElementById("batchCode");
+                // 1. Tự động sinh mã Batch Code
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const batchField = document.getElementById("batchCode");
                 if (batchField) {
-                    batchField.value = generatedCode;
+                    batchField.value = "BATCH-" + year + month + day + "-" + hours + minutes;
                 }
 
-                // 2. Logic Tìm kiếm Autocomplete tối ưu UI
+                // 2. Logic Autocomplete tìm kiếm sản phẩm nâng cao
                 const searchInput = document.getElementById("variantSearchInput");
                 const hiddenIdInput = document.getElementById("hiddenVariantId");
                 const resultsBox = document.getElementById("searchResults");
                 const clearBtn = document.getElementById("clearSearchBtn");
+                const contextPricePanel = document.getElementById("contextPricePanel");
+                const refCost = document.getElementById("refCost");
+                const refSale = document.getElementById("refSale");
+                const costPriceInput = document.getElementById("costPrice");
+                const salePriceInput = document.getElementById("salePrice");
 
                 searchInput.addEventListener("input", function () {
                     const keyword = this.value.trim().toLowerCase();
                     resultsBox.innerHTML = "";
 
                     if (keyword.length === 0) {
-                        resultsBox.style.display = "none";
+                        resultsBox.classList.add("d-none");
                         clearBtn.classList.add("d-none");
                         return;
                     }
 
                     clearBtn.classList.remove("d-none");
-                    const filtered = variantData.filter(item => item.name.toLowerCase().includes(keyword));
+
+                    const filtered = variantData.filter(item =>
+                        item.displayName.toLowerCase().includes(keyword) || item.sku.toLowerCase().includes(keyword)
+                    );
 
                     if (filtered.length > 0) {
                         filtered.forEach(item => {
                             const btn = document.createElement("button");
                             btn.type = "button";
-                            btn.className = "list-group-item list-group-item-action text-start fw-semibold py-2.5";
-                            btn.innerHTML = `<i class="fa-solid fa-shirt me-2 text-secondary"></i>\${item.name}`;
+                            btn.className = "dropdown-item text-wrap py-2 border-bottom text-start";
+                            btn.innerHTML = `<i class="fa-solid fa-shirt me-2 text-secondary"></i> \${item.displayName} <span class="badge bg-light text-secondary font-mono ms-1">\${item.sku}</span>`;
 
                             btn.addEventListener("click", function () {
-                                searchInput.value = item.name;
+                                searchInput.value = item.displayName + " (" + item.sku + ")";
                                 hiddenIdInput.value = item.id;
-                                resultsBox.style.display = "none";
-                                searchInput.classList.add("is-valid");
+                                resultsBox.classList.add("d-none");
+
+                                if (refCost)
+                                    refCost.innerText = item.oldCost;
+                                if (refSale)
+                                    refSale.innerText = item.oldSale;
+                                if (costPriceInput)
+                                    costPriceInput.value = item.oldCost;
+                                if (salePriceInput)
+                                    salePriceInput.value = item.oldSale;
+                                if (contextPricePanel)
+                                    contextPricePanel.classList.replace("d-none", "d-flex");
                             });
                             resultsBox.appendChild(btn);
                         });
-                        resultsBox.style.display = "block";
+                        resultsBox.classList.remove("d-none");
                     } else {
-                        resultsBox.innerHTML = `<div class="list-group-item text-muted text-center py-3">No matching items found</div>`;
-                        resultsBox.style.display = "block";
+                        resultsBox.innerHTML = `<div class="p-3 text-center text-muted small">No matching variant configurations found</div>`;
+                        resultsBox.classList.remove("d-none");
                     }
                 });
 
-                clearBtn.addEventListener("click", function () {
-                    searchInput.value = "";
-                    hiddenIdInput.value = "";
-                    resultsBox.innerHTML = "";
-                    resultsBox.style.display = "none";
-                    this.classList.add("d-none");
-                    searchInput.classList.remove("is-valid");
-                });
+                if (clearBtn) {
+                    clearBtn.addEventListener("click", function () {
+                        searchInput.value = "";
+                        hiddenIdInput.value = "";
+                        resultsBox.innerHTML = "";
+                        resultsBox.classList.add("d-none");
+                        this.classList.add("d-none");
+                        if (contextPricePanel)
+                            contextPricePanel.classList.replace("d-flex", "d-none");
+                    });
+                }
 
                 document.addEventListener("click", function (e) {
                     if (e.target !== searchInput && e.target !== resultsBox) {
-                        resultsBox.style.display = "none";
+                        resultsBox.classList.add("d-none");
                     }
                 });
 
-                // 3. KIỂM TRA TRỰC QUAN KHI SUBMIT FORM (Thay thế cho required ẩn)
-                $('#importStockForm').on('submit', function (e) {
-                    e.preventDefault(); // Dừng luồng gửi mặc định
+                // 3. Logic Validate dữ liệu trước khi gửi Form
+                const form = document.getElementById("importStockForm");
+                if (form) {
+                    form.addEventListener("submit", function (e) {
+                        const selectedId = hiddenIdInput.value;
+                        const costVal = parseFloat(costPriceInput.value);
+                        const saleVal = parseFloat(salePriceInput.value);
 
-                    var selectedId = document.getElementById("hiddenVariantId").value;
-                    if (!selectedId) {
-                        Swal.fire({
-                            title: 'Product Selection Required!',
-                            text: 'Please type and select a valid product variant item from the list.',
-                            icon: 'warning',
-                            confirmButtonColor: '#3085d6'
-                        });
-                        return;
-                    }
+                        if (!selectedId) {
+                            e.preventDefault();
+                            Swal.fire({
+                                title: 'Product Variant Required!',
+                                text: 'Please search and select a specific configuration from the dynamic recommendation dropdown list.',
+                                icon: 'warning',
+                                confirmButtonColor: '#2563eb'
+                            });
+                            return;
+                        }
 
-                    // Hiện popup xác nhận lưu trữ mượt mà
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "Do you want to process this physical stock inflow batch?",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#198754',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Yes, process import!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.submit(); // Thực hiện gửi dữ liệu chính thức
+                        if (saleVal < costVal) {
+                            e.preventDefault();
+                            Swal.fire({
+                                title: 'Pricing Conflict Detected!',
+                                text: 'The newly specified Selling Price cannot fall below the base Stock Cost Price to maintain margin profitability.',
+                                icon: 'error',
+                                confirmButtonColor: '#dc2626'
+                            });
+                            return;
                         }
                     });
-                });
+                }
             });
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

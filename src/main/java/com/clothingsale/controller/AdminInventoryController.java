@@ -2,6 +2,7 @@ package com.clothingsale.controller;
 
 import com.clothingsale.dao.AdminInventoryDAO;
 import com.clothingsale.model.ProductBatch;
+import com.clothingsale.model.ProductVariant;
 import com.clothingsale.model.User;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -13,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "AdminInventoryController", urlPatterns = {"/AdminInventory","/admin/inventory"})
+@WebServlet(name = "AdminInventoryController", urlPatterns = {"/AdminInventory", "/admin/inventory"})
 public class AdminInventoryController extends HttpServlet {
 
     private final AdminInventoryDAO inventoryDAO = new AdminInventoryDAO();
@@ -21,75 +22,70 @@ public class AdminInventoryController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         String action = request.getParameter("action");
         if (action == null) {
-            action = "list";
+            action = "list"; // Thiết lập mặc định nếu tham số trống
         }
 
-        switch (action) {
-            case "IMPORT_PAGE": // Tải trang giao diện nhập kho lô hàng mới
-                List<com.clothingsale.model.ProductVariant> activeVariants = inventoryDAO.getAllActiveVariantsForImport();
-                List<ProductBatch> batchesLog = inventoryDAO.adminGetImportHistory();
+        if ("IMPORT_PAGE".equals(action)) {
+            // Tải dữ liệu tích hợp từ DAO để hiển thị lên Form nhập hàng
+            List<ProductVariant> activeVariants = inventoryDAO.getAllActiveVariantsForImport();
+            request.setAttribute("activeVariants", activeVariants);
 
-                // Đồng bộ tên danh sách với vòng lặp trong file import_stock.jsp
-                request.setAttribute("variants", activeVariants);
-                request.setAttribute("batches", batchesLog);
+            request.getRequestDispatcher("/view/admin/import_stock.jsp").forward(request, response);
+        } else if ("list".equals(action)) {
+            // Lấy lịch sử nhập kho để hiển thị ra trang danh sách (Khớp chuẩn logic gốc của bạn)
+            List<com.clothingsale.model.ProductBatch> history = inventoryDAO.adminGetImportHistory();
+            request.setAttribute("importHistory", history);
 
-                request.getRequestDispatcher("/view/admin/import_stock.jsp").forward(request, response);
-                break;
-
-            case "list":
-            default:
-                List<ProductBatch> history = inventoryDAO.adminGetImportHistory();
-                request.setAttribute("importHistory", history);
-                request.getRequestDispatcher("/view/admin/inventory_list.jsp").forward(request, response);
-                break;
+            request.getRequestDispatcher("/view/admin/inventory_list.jsp").forward(request, response);
+        } else {
+            // Trường hợp Admin gõ sai action, chuyển hướng an toàn về trang danh sách chuẩn để tránh lỗi lặp
+            response.sendRedirect(request.getContextPath() + "/admin/inventory?action=list");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
-        // Khớp 100% với thuộc tính action="... action=IMPORT" của Form import_stock.jsp
+        // Đồng bộ hóa chuỗi action khớp 100% với hidden input của Form
         if ("IMPORT".equals(action)) {
             HttpSession session = request.getSession();
             User loggedInUser = (User) session.getAttribute("user");
-
-            // Lấy ID của Admin đang thực hiện tác vụ nhập hàng
             int adminUserId = (loggedInUser != null) ? loggedInUser.getId() : 1;
 
             try {
-                // Trích xuất các tham số từ Form import_stock.jsp gửi lên
+                // Đọc chính xác bộ tham số tiếng Anh từ JSP gửi lên
                 int variantId = Integer.parseInt(request.getParameter("variantId"));
-                int qty = Integer.parseInt(request.getParameter("initialQuantity"));
+                int quantity = Integer.parseInt(request.getParameter("quantity"));
                 BigDecimal costPrice = new BigDecimal(request.getParameter("costPrice"));
-                String batchMemo = request.getParameter("batchMemo");
+                BigDecimal salePrice = new BigDecimal(request.getParameter("salePrice"));
+                String batchCode = request.getParameter("batchCode");
+                String note = request.getParameter("note");
 
-                // Tạo mã lô hàng tự động (Ví dụ: BATCH-171932312) để tránh việc Admin gõ tay trùng lặp
-                String generatedBatchCode = "BATCH-" + System.currentTimeMillis();
-
-                // Đóng gói mô hình đối tượng ProductBatch phục vụ mô hình FIFO
                 ProductBatch newBatch = new ProductBatch();
                 newBatch.setVariantId(variantId);
-                newBatch.setBatchCode(generatedBatchCode);
-                newBatch.setInitialQuantity(qty);
-                newBatch.setCurrentQuantity(qty); // Ban đầu lượng hiện tại bằng lượng nhập gốc
+                newBatch.setBatchCode(batchCode);
+                newBatch.setInitialQuantity(quantity);
                 newBatch.setCostPrice(costPrice);
+                newBatch.setSalePrice(salePrice);
 
-                // Thực thi ghi nhận lô hàng và kích hoạt nghiệp vụ tăng lũy tiến tồn kho tổng của Variant
-                boolean success = inventoryDAO.adminExecuteStockImport(newBatch, adminUserId, batchMemo);
+                boolean success = inventoryDAO.adminExecuteStockImport(newBatch, adminUserId, note);
 
+                // Tìm đoạn cuối của phương thức doPost trong AdminInventoryController.java
                 if (success) {
-                    // Thành công quay về chính trang nhập kho kèm theo trạng thái thông báo
-                    response.sendRedirect(request.getContextPath() + "/AdminInventory?action=IMPORT_PAGE&status=success");
+                    // SỬA: Thay /admin/inventory thành /AdminInventory để đồng bộ
+                    response.sendRedirect(request.getContextPath() + "/AdminInventory?action=list&status=success");
                 } else {
                     response.sendRedirect(request.getContextPath() + "/AdminInventory?action=IMPORT_PAGE&status=error");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/AdminInventory?action=IMPORT_PAGE&status=invalid");
+                response.sendRedirect(request.getContextPath() + "/admin/inventory?action=IMPORT_PAGE&status=invalid");
             }
         }
     }

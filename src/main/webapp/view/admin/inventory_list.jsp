@@ -61,8 +61,11 @@
                             <h2 class="h4 mb-1 fw-bold text-dark"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
                             <p class="text-muted small mb-0">Historical lists of physical inventory item batches imported to store variants</p>
                         </div>
-                        <a href="${pageContext.request.contextPath}/admin/inventory?action=new" class="btn btn-primary shadow-sm">
-                            <i class="fa-solid fa-plus me-2"></i>Import New Stock Batch
+
+
+                   
+                        <a href="${pageContext.request.contextPath}/AdminInventory?action=IMPORT_PAGE" class="btn btn-success fw-bold px-4 py-2 shadow-sm">
+                            <i class="fa-solid fa-square-plus me-2"></i>Import New Stock Batch
                         </a>
                     </div>
 
