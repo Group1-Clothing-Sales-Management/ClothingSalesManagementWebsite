@@ -10,8 +10,9 @@ import java.util.List;
 public class AdminInventoryDAO {
 
     /**
-     * HÀM XEM LỊCH SỬ NHẬP HÀNG (ĐÃ GIỮ LẠI VÀ ĐỒNG BỘ NGUYÊN BẢN)
-     * Câu lệnh JOIN đồng bộ chuẩn xác theo schema.sql: Product_Batch -> Product_Variant -> Product
+     * HÀM XEM LỊCH SỬ NHẬP HÀNG (ĐÃ GIỮ LẠI VÀ ĐỒNG BỘ NGUYÊN BẢN) Câu lệnh
+     * JOIN đồng bộ chuẩn xác theo schema.sql: Product_Batch -> Product_Variant
+     * -> Product
      */
     public java.util.List<ProductBatch> adminGetImportHistory() {
         java.util.List<ProductBatch> list = new java.util.ArrayList<>();
@@ -23,9 +24,7 @@ public class AdminInventoryDAO {
                 + "JOIN Product p ON pv.product_id = p.id "
                 + "ORDER BY pb.created_at DESC";
 
-        try (Connection conn = com.clothingsale.util.DBConnection.getConnection(); 
-             PreparedStatement ps = conn.prepareStatement(sql); 
-             java.sql.ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = com.clothingsale.util.DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); java.sql.ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 ProductBatch batch = new ProductBatch();
@@ -50,45 +49,47 @@ public class AdminInventoryDAO {
     }
 
     /**
-     * HÀM LẤY DANH SÁCH BIẾN THỂ ĐỂ PHỤC VỤ FORM NHẬP HÀNG
-     * Tích hợp gộp Tên SP + Size + Color vào trường attributeDetails duy nhất của Model gốc
+     * HÀM LẤY DANH SÁCH BIẾN THỂ ĐỂ PHỤC VỤ FORM NHẬP HÀNG Tích hợp gộp Tên SP
+     * + Size + Color vào trường attributeDetails duy nhất của Model gốc
      */
     public List<ProductVariant> getAllActiveVariantsForImport() {
         List<ProductVariant> list = new ArrayList<>();
         String sql = "SELECT pv.id, pv.sku, pv.cost_price, pv.sale_price, p.product_name, "
-                   + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') as color, "
-                   + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') as size "
-                   + "FROM Product_Variant pv "
-                   + "JOIN Product p ON pv.product_id = p.id "
-                   + "WHERE pv.status <> 'DELETED' AND p.status <> 'DELETED' "
-                   + "ORDER BY p.product_name ASC";
+                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') as color, "
+                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') as size "
+                + "FROM Product_Variant pv "
+                + "JOIN Product p ON pv.product_id = p.id "
+                + "WHERE pv.status <> 'DELETED' AND p.status <> 'DELETED' "
+                + "ORDER BY p.product_name ASC";
 
-        try (Connection conn = DBConnection.getConnection(); 
-             PreparedStatement ps = conn.prepareStatement(sql); 
-             ResultSet rs = ps.executeQuery()) {
-            
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 ProductVariant v = new ProductVariant();
                 v.setId(rs.getInt("id"));
                 v.setSku(rs.getString("sku"));
-                v.setCostPrice(rs.getBigDecimal("cost_price")); 
-                v.setSalePrice(rs.getBigDecimal("sale_price")); 
-                
+                v.setCostPrice(rs.getBigDecimal("cost_price"));
+                v.setSalePrice(rs.getBigDecimal("sale_price"));
+
                 String prodName = rs.getString("product_name");
                 String color = rs.getString("color");
                 String size = rs.getString("size");
                 StringBuilder sb = new StringBuilder(prodName);
-                
+
                 if ((color != null && !color.isEmpty()) || (size != null && !size.isEmpty())) {
                     sb.append(" [");
-                    if (color != null && !color.isEmpty()) sb.append("Color: ").append(color);
+                    if (color != null && !color.isEmpty()) {
+                        sb.append("Color: ").append(color);
+                    }
                     if (size != null && !size.isEmpty()) {
-                        if (color != null && !color.isEmpty()) sb.append(" | ");
+                        if (color != null && !color.isEmpty()) {
+                            sb.append(" | ");
+                        }
                         sb.append("Size: ").append(size);
                     }
                     sb.append("]");
                 }
-                
+
                 v.setAttributeDetails(sb.toString());
                 list.add(v);
             }
@@ -123,7 +124,7 @@ public class AdminInventoryDAO {
             psBatch.setBigDecimal(3, batch.getCostPrice());
             psBatch.setBigDecimal(4, batch.getSalePrice());
             psBatch.setInt(5, batch.getInitialQuantity());
-            psBatch.setInt(6, batch.getInitialQuantity()); 
+            psBatch.setInt(6, batch.getInitialQuantity());
             psBatch.executeUpdate();
 
             // 2. Thực thi bảng Inventory_Log
@@ -142,20 +143,115 @@ public class AdminInventoryDAO {
             psVariant.setInt(4, batch.getVariantId());
             psVariant.executeUpdate();
 
-            conn.commit(); 
+            conn.commit();
             isSuccess = true;
         } catch (Exception e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             e.printStackTrace();
         } finally {
             try {
-                if (psBatch != null) psBatch.close();
-                if (psLog != null) psLog.close();
-                if (psVariant != null) psVariant.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) { e.printStackTrace(); }
+                if (psBatch != null) {
+                    psBatch.close();
+                }
+                if (psLog != null) {
+                    psLog.close();
+                }
+                if (psVariant != null) {
+                    psVariant.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return isSuccess;
+    }
+
+    public boolean adminExecuteMultiStockImport(java.util.List<ProductBatch> batchList, int adminUserId, String note) {
+        Connection conn = null;
+        PreparedStatement psBatch = null;
+        PreparedStatement psLog = null;
+        PreparedStatement psVariant = null;
+        boolean isSuccess = false;
+
+        String insertBatchSQL = "INSERT INTO Product_Batch (variant_id, batch_code, cost_price, sale_price, initial_quantity, current_quantity, created_at) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+        String insertLogSQL = "INSERT INTO Inventory_Log (variant_id, user_id, change_quantity, transaction_type, note, created_at) VALUES (?, ?, ?, 'IMPORT', ?, GETDATE())";
+        String updateVariantSQL = "UPDATE Product_Variant SET stock_quantity = stock_quantity + ?, cost_price = ?, sale_price = ? WHERE id = ?";
+
+        try {
+            conn = com.clothingsale.util.DBConnection.getConnection();
+            conn.setAutoCommit(false); // Start Database Transaction
+
+            psBatch = conn.prepareStatement(insertBatchSQL);
+            psLog = conn.prepareStatement(insertLogSQL);
+            psVariant = conn.prepareStatement(updateVariantSQL);
+
+            for (ProductBatch batch : batchList) {
+                // 1. Add to Product_Batch list
+                psBatch.setInt(1, batch.getVariantId());
+                psBatch.setString(2, batch.getBatchCode());
+                psBatch.setBigDecimal(3, batch.getCostPrice());
+                psBatch.setBigDecimal(4, batch.getSalePrice());
+                psBatch.setInt(5, batch.getInitialQuantity());
+                psBatch.setInt(6, batch.getInitialQuantity());
+                psBatch.addBatch();
+
+                // 2. Add to Inventory_Log list
+                psLog.setInt(1, batch.getVariantId());
+                psLog.setInt(2, adminUserId);
+                psLog.setInt(3, batch.getInitialQuantity());
+                psLog.setString(4, note);
+                psLog.addBatch();
+
+                // 3. Add to Product_Variant update list
+                psVariant.setInt(1, batch.getInitialQuantity());
+                psVariant.setBigDecimal(2, batch.getCostPrice());
+                psVariant.setBigDecimal(3, batch.getSalePrice());
+                psVariant.setInt(4, batch.getVariantId());
+                psVariant.addBatch();
+            }
+
+            // Execute all queries in one single network round-trip
+            psBatch.executeBatch();
+            psLog.executeBatch();
+            psVariant.executeBatch();
+
+            conn.commit(); // Permanent transaction save
+            isSuccess = true;
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (psBatch != null) {
+                    psBatch.close();
+                }
+                if (psLog != null) {
+                    psLog.close();
+                }
+                if (psVariant != null) {
+                    psVariant.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return isSuccess;
     }

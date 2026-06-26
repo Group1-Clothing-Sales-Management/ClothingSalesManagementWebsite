@@ -52,36 +52,48 @@ public class AdminInventoryController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
-        // Đồng bộ hóa chuỗi action khớp 100% với hidden input của Form
         if ("IMPORT".equals(action)) {
             HttpSession session = request.getSession();
             User loggedInUser = (User) session.getAttribute("user");
             int adminUserId = (loggedInUser != null) ? loggedInUser.getId() : 1;
 
             try {
-                // Đọc chính xác bộ tham số tiếng Anh từ JSP gửi lên
-                int variantId = Integer.parseInt(request.getParameter("variantId"));
-                int quantity = Integer.parseInt(request.getParameter("quantity"));
-                BigDecimal costPrice = new BigDecimal(request.getParameter("costPrice"));
-                BigDecimal salePrice = new BigDecimal(request.getParameter("salePrice"));
+                // Read form parallel arrays from dynamic table inputs
+                String[] variantIds = request.getParameterValues("variantId[]");
+                String[] quantities = request.getParameterValues("quantity[]");
+                String[] costPrices = request.getParameterValues("costPrice[]");
+                String[] salePrices = request.getParameterValues("salePrice[]");
+
                 String batchCode = request.getParameter("batchCode");
                 String note = request.getParameter("note");
 
-                ProductBatch newBatch = new ProductBatch();
-                newBatch.setVariantId(variantId);
-                newBatch.setBatchCode(batchCode);
-                newBatch.setInitialQuantity(quantity);
-                newBatch.setCostPrice(costPrice);
-                newBatch.setSalePrice(salePrice);
+                // Guard clause against empty checklist submit
+                if (variantIds == null || variantIds.length == 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/inventory?action=IMPORT_PAGE&status=invalid");
+                    return;
+                }
 
-                boolean success = inventoryDAO.adminExecuteStockImport(newBatch, adminUserId, note);
+                java.util.List<ProductBatch> batchList = new java.util.ArrayList<>();
 
-                // Tìm đoạn cuối của phương thức doPost trong AdminInventoryController.java
+                // Loop and build objects list
+                for (int i = 0; i < variantIds.length; i++) {
+                    ProductBatch item = new ProductBatch();
+                    item.setVariantId(Integer.parseInt(variantIds[i]));
+                    item.setInitialQuantity(Integer.parseInt(quantities[i]));
+                    item.setCostPrice(new java.math.BigDecimal(costPrices[i]));
+                    item.setSalePrice(new java.math.BigDecimal(salePrices[i]));
+                    item.setBatchCode(batchCode); // All rows share the same Batch Header reference
+
+                    batchList.add(item);
+                }
+
+                // Trigger safe batch transaction service call
+                boolean success = inventoryDAO.adminExecuteMultiStockImport(batchList, adminUserId, note);
+
                 if (success) {
-                    // SỬA: Thay /admin/inventory thành /AdminInventory để đồng bộ
-                    response.sendRedirect(request.getContextPath() + "/AdminInventory?action=list&status=success");
+                    response.sendRedirect(request.getContextPath() + "/admin/inventory?action=list&status=success");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/AdminInventory?action=IMPORT_PAGE&status=error");
+                    response.sendRedirect(request.getContextPath() + "/admin/inventory?action=IMPORT_PAGE&status=error");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
