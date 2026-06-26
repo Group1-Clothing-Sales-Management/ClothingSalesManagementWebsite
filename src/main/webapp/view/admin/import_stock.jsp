@@ -7,6 +7,7 @@
         <title>Create Stock Import - Admin Area</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
         <style>
             body {
                 background-color: #f8f9fa;
@@ -29,7 +30,6 @@
                 color: #374151;
                 margin-bottom: 0.4rem;
             }
-            /* Thẩm mỹ cho danh sách tìm kiếm gợi ý */
             .search-results-box {
                 position: absolute;
                 width: 100%;
@@ -39,6 +39,7 @@
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                 border-radius: 0 0 6px 6px;
                 display: none;
+                background-color: #fff;
             }
             .search-results-box .list-group-item {
                 cursor: pointer;
@@ -71,16 +72,21 @@
                     <c:if test="${param.status eq 'invalid'}">
                         <div class="alert alert-warning"><strong>Invalid Input!</strong> Please check numeric formats or missing fields.</div>
                     </c:if>
+                    <c:if test="${param.status eq 'success'}">
+                        <div class="alert alert-success"><strong>Success!</strong> Stock inflow has been imported successfully.</div>
+                    </c:if>
 
                     <div class="row justify-content-center">
                         <div class="col-xl-8 col-lg-10">
                             <div class="card shadow-sm border-0 rounded-3 p-4">
+
                                 <div class="border-bottom pb-3 mb-4">
                                     <h4 class="fw-bold text-dark mb-1"><i class="fa-solid fa-square-plus me-2 text-success"></i>New Stock Inflow Import</h4>
                                     <p class="text-muted small mb-0">Search and add physical inventory batches to a specific product variant item</p>
                                 </div>
 
-                                <form action="${pageContext.request.contextPath}/admin/inventory?action=create" method="POST" autocomplete="off">
+                                <form id="importStockForm" action="${pageContext.request.contextPath}/admin/inventory" method="POST" autocomplete="off">
+                                    <input type="hidden" name="action" value="create" />
 
                                     <div class="mb-4 position-relative">
                                         <label class="form-label">Search Product Variant Item *</label>
@@ -90,7 +96,7 @@
                                             <button class="btn btn-outline-secondary d-none" type="button" id="clearSearchBtn"><i class="fa-solid fa-xmark"></i></button>
                                         </div>
 
-                                        <input type="hidden" id="hiddenVariantId" name="variantId" required />
+                                        <input type="hidden" id="hiddenVariantId" name="variantId" />
 
                                         <div id="searchResults" class="list-group search-results-box border"></div>
                                         <div class="form-text text-muted">Type to filter. This prevents misclicks when handling a massive catalog.</div>
@@ -141,15 +147,19 @@
         </div>
 
         <script>
+            // FIX LỖI NULL: Kiểm tra điều kiện tồn tại dữ liệu trước khi thực hiện hàm xử lý chuỗi hệ thống
             const variantData = [
             <c:forEach var="v" items="${activeVariants}" varStatus="status">
             {
             id: "${v.id}",
-                    name: "${v.attributeDetails.replace('"', '\\"')}"
+                    name: "${v.attributeDetails != null ? v.attributeDetails.replace('"', '\\"') : 'Standard Variant'}"
             }${!status.last ? ',' : ''}
             </c:forEach>
             ];
         </script>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
@@ -161,7 +171,11 @@
                 var hours = String(now.getHours()).padStart(2, '0');
                 var minutes = String(now.getMinutes()).padStart(2, '0');
                 var generatedCode = "BATCH-" + year + month + day + "-" + hours + minutes;
-                document.getElementById("batchCode").value = generatedCode;
+
+                var batchField = document.getElementById("batchCode");
+                if (batchField) {
+                    batchField.value = generatedCode;
+                }
 
                 // 2. Logic Tìm kiếm Autocomplete tối ưu UI
                 const searchInput = document.getElementById("variantSearchInput");
@@ -180,8 +194,6 @@
                     }
 
                     clearBtn.classList.remove("d-none");
-
-                    // Tiến hành lọc mảng dữ liệu mà không cần gửi request liên tục lên DB
                     const filtered = variantData.filter(item => item.name.toLowerCase().includes(keyword));
 
                     if (filtered.length > 0) {
@@ -191,7 +203,6 @@
                             btn.className = "list-group-item list-group-item-action text-start fw-semibold py-2.5";
                             btn.innerHTML = `<i class="fa-solid fa-shirt me-2 text-secondary"></i>\${item.name}`;
 
-                            // Hành động khi người dùng nhấp chọn sản phẩm gợi ý
                             btn.addEventListener("click", function () {
                                 searchInput.value = item.name;
                                 hiddenIdInput.value = item.id;
@@ -207,7 +218,6 @@
                     }
                 });
 
-                // Xóa nhanh thanh tìm kiếm
                 clearBtn.addEventListener("click", function () {
                     searchInput.value = "";
                     hiddenIdInput.value = "";
@@ -217,14 +227,43 @@
                     searchInput.classList.remove("is-valid");
                 });
 
-                // Đóng hộp kết quả khi nhấn chuột ra ngoài
                 document.addEventListener("click", function (e) {
                     if (e.target !== searchInput && e.target !== resultsBox) {
                         resultsBox.style.display = "none";
                     }
                 });
+
+                // 3. KIỂM TRA TRỰC QUAN KHI SUBMIT FORM (Thay thế cho required ẩn)
+                $('#importStockForm').on('submit', function (e) {
+                    e.preventDefault(); // Dừng luồng gửi mặc định
+
+                    var selectedId = document.getElementById("hiddenVariantId").value;
+                    if (!selectedId) {
+                        Swal.fire({
+                            title: 'Product Selection Required!',
+                            text: 'Please type and select a valid product variant item from the list.',
+                            icon: 'warning',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return;
+                    }
+
+                    // Hiện popup xác nhận lưu trữ mượt mà
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "Do you want to process this physical stock inflow batch?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, process import!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.submit(); // Thực hiện gửi dữ liệu chính thức
+                        }
+                    });
+                });
             });
         </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
