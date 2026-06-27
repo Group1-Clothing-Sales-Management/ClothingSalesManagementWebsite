@@ -176,7 +176,11 @@
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
                     <i class="fa-solid fa-warehouse me-2"></i>Stock
                 </a>
-                <a href="${pageContext.request.contextPath}/admin/manage-category"><i class="fa-solid fa-tags me-2"></i>Manage Category</a>    
+                <a href="${pageContext.request.contextPath}/admin/manage-category"><i class="fa-solid fa-tags me-2"></i>Manage Category</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/voucher?action=list">
+                    <i class="fas fa-ticket-alt"></i> 
+                    <span>Voucher Management</span>
+                </a>
             </c:otherwise>
         </c:choose>
 
