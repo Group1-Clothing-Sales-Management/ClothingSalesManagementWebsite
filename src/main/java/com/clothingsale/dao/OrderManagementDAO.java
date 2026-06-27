@@ -191,6 +191,11 @@ public class OrderManagementDAO {
         String normalizedName = recipientName == null ? "" : recipientName.trim();
         String normalizedPhone = recipientPhone == null ? "" : recipientPhone.trim();
         String normalizedPaymentMethod = paymentMethod == null ? "" : paymentMethod.trim().toUpperCase();
+        // Giữ tương thích ngược nếu dữ liệu cũ vẫn gửi CARD,
+        // nhưng các đơn mới sẽ được lưu với mã VNPay.
+        if ("CARD".equals(normalizedPaymentMethod)) {
+            normalizedPaymentMethod = "VNPAY";
+        }
         String normalizedNote = note == null ? "" : note.trim();
         String normalizedDeliveryAddress = deliveryAddress == null ? "" : deliveryAddress.trim();
 
@@ -214,8 +219,8 @@ public class OrderManagementDAO {
         }
         if (!normalizedPaymentMethod.isEmpty()
                 && !"CASH".equals(normalizedPaymentMethod)
-                && !"CARD".equals(normalizedPaymentMethod)) {
-            return "Payment method must be CASH or CARD.";
+                && !"VNPAY".equals(normalizedPaymentMethod)) {
+            return "Payment method must be CASH or VNPAY.";
         }
         if (normalizedNote.length() > 500) {
             return "Note cannot exceed 500 characters.";
@@ -702,14 +707,6 @@ public class OrderManagementDAO {
         order.setProvinceName(rs.getString("province_name"));
         order.setDistrictName(rs.getString("district_name"));
         order.setWardName(rs.getString("ward_name"));
-
-        // Walk-in orders do not have a linked online customer account, so we
-        // give them an explicit label instead of leaving the UI empty.
-        if (rs.getObject("user_id") == null) {
-            order.setCustomerUsername("Walk-in");
-            order.setCustomerFullName("Walk-in customer");
-            order.setCustomerEmail("N/A");
-        }
 
         return order;
     }

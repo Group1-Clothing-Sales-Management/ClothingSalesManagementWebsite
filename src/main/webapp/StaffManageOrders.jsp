@@ -81,21 +81,21 @@
 
     <div class="content-area">
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show flash-alert" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>${sessionScope.successMsg}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
         <c:if test="${not empty sessionScope.errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>${sessionScope.errorMsg}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <c:remove var="errorMsg" scope="session"/>
         </c:if>
         <c:if test="${not empty errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>${errorMsg}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -115,7 +115,18 @@
                     <div>
                         <h1 class="page-title"><i class="bi bi-receipt-cutoff"></i>Order ${order.orderCode}</h1>
                         <div class="text-muted mt-1">
-                            Customer: <strong>${not empty order.customerFullName ? order.customerFullName : order.customerUsername}</strong>
+                            Customer:
+                            <strong>
+                                <c:choose>
+                                    <c:when test="${not empty order.customerFullName}">
+                                        ${order.customerFullName}
+                                    </c:when>
+                                    <c:when test="${not empty order.customerUsername}">
+                                        ${order.customerUsername}
+                                    </c:when>
+                                    <c:otherwise>N/A</c:otherwise>
+                                </c:choose>
+                            </strong>
                         </div>
                     </div>
                     <a href="${ordersBasePath}" class="btn btn-outline-secondary btn-sm px-3">
@@ -257,56 +268,77 @@
                             <div class="card-body p-4">
                                 <h5 class="fw-bold text-dark mb-3"><i class="bi bi-shuffle me-2 text-primary"></i>Status actions</h5>
 
-                                <div class="d-flex flex-wrap gap-2 mb-3">
-                                    <c:if test="${order.orderStatus eq 'PENDING'}">
-                                        <form action="${ordersBasePath}" method="post" class="m-0">
-                                            <input type="hidden" name="action" value="confirm">
-                                            <input type="hidden" name="id" value="${order.id}">
-                                            <input type="hidden" name="returnMode" value="detail">
-                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirm this order?');">
-                                                <i class="bi bi-check2-circle me-1"></i>Confirm
-                                            </button>
-                                        </form>
-                                    </c:if>
-                                    <c:if test="${order.orderStatus eq 'PENDING'}">
-                                        <form action="${ordersBasePath}" method="post" class="m-0">
-                                            <input type="hidden" name="action" value="cancel">
-                                            <input type="hidden" name="id" value="${order.id}">
-                                            <input type="hidden" name="returnMode" value="detail">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel this order?');">
-                                                <i class="bi bi-x-circle me-1"></i>Cancel
-                                            </button>
-                                        </form>
-                                    </c:if>
-                                </div>
-
-                                <div class="alert alert-light border mb-0">
-                                    Order status is tracked from the Order screen only. Shipment progress is synchronized automatically when Shipment updates.
-                                </div>
+                                <c:choose>
+                                    <c:when test="${order.orderStatus eq 'PENDING'}">
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <form action="${ordersBasePath}" method="post" class="m-0">
+                                                <input type="hidden" name="action" value="confirm">
+                                                <input type="hidden" name="id" value="${order.id}">
+                                                <input type="hidden" name="returnMode" value="detail">
+                                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirm this order?');">
+                                                    <i class="bi bi-check2-circle me-1"></i>Confirm
+                                                </button>
+                                            </form>
+                                            <form action="${ordersBasePath}" method="post" class="m-0">
+                                                <input type="hidden" name="action" value="cancel">
+                                                <input type="hidden" name="id" value="${order.id}">
+                                                <input type="hidden" name="returnMode" value="detail">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel this order?');">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div class="alert alert-light border mb-0">
+                                            Chỉ đơn đang ở trạng thái chờ xử lý mới có thể xác nhận hoặc hủy trực tiếp từ màn hình này.
+                                        </div>
+                                    </c:when>
+                                    <c:when test="${order.shipmentId gt 0}">
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${order.shipmentId}"
+                                               class="btn btn-success btn-sm">
+                                                <i class="bi bi-truck me-1"></i>Update shipment
+                                            </a>
+                                        </div>
+                                        <div class="alert alert-light border mb-0">
+                                            Đơn này đã có phiếu giao hàng. Muốn cập nhật trạng thái tiếp theo thì chuyển sang màn hình Shipment.
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="alert alert-info border mb-0">
+                                            <div class="fw-semibold mb-1">No quick actions available</div>
+                                            <div>
+                                                Đơn này đang ở trạng thái <strong>${not empty order.displayStatusLabel ? order.displayStatusLabel : order.orderStatus}</strong>,
+                                                nên không còn nút xử lý nhanh trên màn hình chi tiết.
+                                            </div>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
 
-                        <div class="card card-main">
-                            <div class="card-body p-4">
-                                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-person-badge me-2 text-primary"></i>Customer information</h5>
-                                <div class="mb-3">
-                                    <div class="detail-label">Username</div>
-                                    <div class="detail-value">${not empty order.customerUsername ? order.customerUsername : 'N/A'}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="detail-label">Full name</div>
-                                    <div class="detail-value">${not empty order.customerFullName ? order.customerFullName : 'N/A'}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="detail-label">Email</div>
-                                    <div class="detail-value">${not empty order.customerEmail ? order.customerEmail : 'N/A'}</div>
-                                </div>
-                                <div class="mb-0">
-                                    <div class="detail-label">Item count</div>
-                                    <div class="detail-value">${order.detailCount}</div>
+                        <c:if test="${not empty order.customerUsername or not empty order.customerFullName or not empty order.customerEmail}">
+                            <div class="card card-main">
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-person-badge me-2 text-primary"></i>Customer information</h5>
+                                    <div class="mb-3">
+                                        <div class="detail-label">Username</div>
+                                        <div class="detail-value">${not empty order.customerUsername ? order.customerUsername : 'N/A'}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="detail-label">Full name</div>
+                                        <div class="detail-value">${not empty order.customerFullName ? order.customerFullName : 'N/A'}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="detail-label">Email</div>
+                                        <div class="detail-value">${not empty order.customerEmail ? order.customerEmail : 'N/A'}</div>
+                                    </div>
+                                    <div class="mb-0">
+                                        <div class="detail-label">Item count</div>
+                                        <div class="detail-value">${order.detailCount}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </c:if>
                     </div>
                 </div>
             </c:when>
@@ -372,7 +404,6 @@
                                         <thead>
                                         <tr>
                                             <th class="ps-4">Order</th>
-                                            <th>Customer</th>
                                             <th>Recipient</th>
                                             <th class="text-end">Total</th>
                                             <th>Payment</th>
@@ -382,16 +413,12 @@
                                             <th class="text-end pe-4" style="width: 220px;">Actions</th>
                                         </tr>
                                         </thead>
-                                        <tbody>
-                                        <c:forEach var="o" items="${orders}">
-                                            <tr>
+                                                <tbody>
+                                                <c:forEach var="o" items="${orders}">
+                                                    <tr>
                                                 <td class="ps-4">
                                                     <div class="order-code">${o.orderCode}</div>
                                                     <div class="subtext">${o.detailCount} items</div>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-semibold">${not empty o.customerFullName ? o.customerFullName : o.customerUsername}</div>
-                                                    <div class="subtext">${o.customerEmail}</div>
                                                 </td>
                                                 <td>
                                                     <div class="fw-semibold">${o.recipientName}</div>
@@ -500,9 +527,46 @@
                             </div>
                         </div>
                         <div class="col-12 d-none" id="storeDeliveryAddressGroup">
-                            <label class="form-label fw-semibold" for="storeDeliveryAddress">Delivery address</label>
-                            <textarea name="deliveryAddress" id="storeDeliveryAddress" class="form-control" rows="2" maxlength="255" placeholder="Enter delivery address for the shipment"></textarea>
-                            <div class="form-text">Required when delivery is selected.</div>
+                            <label class="form-label fw-semibold d-block">Delivery address</label>
+                            <div class="row g-2">
+                                <div class="col-md-12">
+                                    <label class="form-label small text-muted mb-1" for="storeAddressDetail">Address detail</label>
+                                    <input type="text"
+                                           id="storeAddressDetail"
+                                           class="form-control"
+                                           maxlength="255"
+                                           placeholder="Số nhà, tên đường, thôn/xóm">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1" for="storeProvinceSelect">Province / city</label>
+                                    <select id="storeProvinceSelect" class="form-select" disabled>
+                                        <option value="">Chọn tỉnh/thành</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1" for="storeDistrictSelect">District / county</label>
+                                    <select id="storeDistrictSelect" class="form-select" disabled>
+                                        <option value="">Chọn quận/huyện</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1" for="storeWardSelect">Ward / commune</label>
+                                    <select id="storeWardSelect" class="form-select" disabled>
+                                        <option value="">Chọn phường/xã</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small text-muted mb-1" for="storeDeliveryAddress">Full address preview</label>
+                                    <input type="text"
+                                           name="deliveryAddress"
+                                           id="storeDeliveryAddress"
+                                           class="form-control"
+                                           readonly
+                                           placeholder="Địa chỉ đầy đủ sẽ được ghép từ các lựa chọn ở trên">
+                                </div>
+                            </div>
+                            <div class="form-text">Chọn địa chỉ Việt Nam từ API công khai. Hệ thống sẽ tự ghép thành chuỗi địa chỉ đầy đủ.</div>
+                            <div class="form-text" id="storeAddressStatus">Đang tải danh sách địa chỉ Việt Nam...</div>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Product variant</label>
@@ -598,7 +662,7 @@
                             <label class="form-label fw-semibold">Payment method</label>
                             <select name="paymentMethod" id="storePaymentMethod" class="form-select" required>
                                 <option value="CASH">CASH</option>
-                                <option value="CARD">CARD</option>
+                                <option value="VNPAY">VNPay</option>
                             </select>
                             <div class="invalid-feedback">Please select a payment method.</div>
                         </div>
@@ -641,10 +705,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // This script keeps the store-order modal simple:
-    // - staff search a variant instead of browsing a long <select> menu;
-    // - the chosen variant is copied into a hidden field named variantId;
-    // - the preview and quantity validation always use the selected variant data.
+    // Đoạn script này giữ form tạo đơn tại quầy ở mức đơn giản:
+    // - nhân viên tìm sản phẩm bằng ô search thay vì một danh sách dài;
+    // - mã biến thể được lưu vào input ẩn tên variantId;
+    // - địa chỉ giao hàng được lấy từ API Việt Nam rồi ghép lại thành chuỗi dễ đọc.
     const storeOrderForm = document.getElementById('createStoreOrderForm');
     const recipientNameInput = document.getElementById('storeRecipientName');
     const recipientPhoneInput = document.getElementById('storeRecipientPhone');
@@ -660,11 +724,20 @@
     const fulfillmentPickupRadio = document.getElementById('storeFulfillmentPickup');
     const fulfillmentDeliveryRadio = document.getElementById('storeFulfillmentDelivery');
     const deliveryAddressGroup = document.getElementById('storeDeliveryAddressGroup');
+    const addressDetailInput = document.getElementById('storeAddressDetail');
+    const provinceSelect = document.getElementById('storeProvinceSelect');
+    const districtSelect = document.getElementById('storeDistrictSelect');
+    const wardSelect = document.getElementById('storeWardSelect');
     const deliveryAddressInput = document.getElementById('storeDeliveryAddress');
+    const addressStatus = document.getElementById('storeAddressStatus');
     const deliveryHint = document.getElementById('storeDeliveryHint');
     const previewBox = document.getElementById('storeOrderPreview');
     const quantityFeedback = document.getElementById('storeQuantityFeedback');
     const stockHint = document.getElementById('storeStockHint');
+    const vietnamAddressApiUrl = 'https://provinces.open-api.vn/api/v1/?depth=3';
+    let vietnamAddressData = [];
+    let vietnamAddressLoading = false;
+    let vietnamAddressLoaded = false;
     let selectedVariantButton = null;
 
     /**
@@ -935,7 +1008,7 @@
             return;
         }
         const value = (paymentMethodSelect.value || '').trim().toUpperCase();
-        if (value !== 'CASH' && value !== 'CARD') {
+        if (value !== 'CASH' && value !== 'VNPAY') {
             paymentMethodSelect.setCustomValidity('Please select a payment method.');
         } else {
             paymentMethodSelect.setCustomValidity('');
@@ -943,20 +1016,72 @@
     }
 
     function validateDeliveryAddress() {
-        if (!deliveryAddressInput) {
-            return;
-        }
-
         if (!isDeliverySelected()) {
-            deliveryAddressInput.setCustomValidity('');
             return;
         }
 
-        const value = (deliveryAddressInput.value || '').trim();
-        if (value.length < 10) {
-            deliveryAddressInput.setCustomValidity('Please enter a detailed delivery address.');
-        } else {
+        if (addressDetailInput) {
+            const detailValue = (addressDetailInput.value || '').trim();
+            if (detailValue.length < 3) {
+                addressDetailInput.setCustomValidity('Vui lòng nhập số nhà, tên đường hoặc ghi chú địa chỉ.');
+            } else {
+                addressDetailInput.setCustomValidity('');
+            }
+        }
+
+        if (provinceSelect) {
+            provinceSelect.setCustomValidity(provinceSelect.value ? '' : 'Vui lòng chọn tỉnh/thành.');
+        }
+
+        if (districtSelect) {
+            districtSelect.setCustomValidity(districtSelect.value ? '' : 'Vui lòng chọn quận/huyện.');
+        }
+
+        if (wardSelect) {
+            wardSelect.setCustomValidity(wardSelect.value ? '' : 'Vui lòng chọn phường/xã.');
+        }
+
+        if (deliveryAddressInput) {
+            const summaryValue = (deliveryAddressInput.value || '').trim();
+            if (summaryValue.length < 10) {
+                deliveryAddressInput.setCustomValidity('Vui lòng chọn đầy đủ địa chỉ giao hàng.');
+            } else {
+                deliveryAddressInput.setCustomValidity('');
+            }
+        }
+    }
+
+    function clearDeliveryAddressValidation() {
+        if (addressDetailInput) {
+            addressDetailInput.setCustomValidity('');
+        }
+        if (provinceSelect) {
+            provinceSelect.setCustomValidity('');
+        }
+        if (districtSelect) {
+            districtSelect.setCustomValidity('');
+        }
+        if (wardSelect) {
+            wardSelect.setCustomValidity('');
+        }
+        if (deliveryAddressInput) {
             deliveryAddressInput.setCustomValidity('');
+        }
+    }
+
+    function setAddressStatus(message, status) {
+        if (!addressStatus) {
+            return;
+        }
+
+        addressStatus.textContent = message;
+        addressStatus.classList.remove('text-danger', 'text-success', 'text-muted');
+        if (status === 'error') {
+            addressStatus.classList.add('text-danger');
+        } else if (status === 'success') {
+            addressStatus.classList.add('text-success');
+        } else {
+            addressStatus.classList.add('text-muted');
         }
     }
 
@@ -964,6 +1089,181 @@
         return !!(fulfillmentDeliveryRadio && fulfillmentDeliveryRadio.checked);
     }
 
+    // Tìm tỉnh/thành đang được chọn trong dữ liệu đã tải từ API.
+    function getProvinceByCode(code) {
+        return vietnamAddressData.find(function (province) {
+            return String(province.code) === String(code);
+        }) || null;
+    }
+
+    // Tìm quận/huyện tương ứng với tỉnh/thành đang chọn.
+    function getDistrictByCode(province, code) {
+        if (!province || !Array.isArray(province.districts)) {
+            return null;
+        }
+
+        return province.districts.find(function (district) {
+            return String(district.code) === String(code);
+        }) || null;
+    }
+
+    // Tìm phường/xã tương ứng với quận/huyện đang chọn.
+    function getWardByCode(district, code) {
+        if (!district || !Array.isArray(district.wards)) {
+            return null;
+        }
+
+        return district.wards.find(function (ward) {
+            return String(ward.code) === String(code);
+        }) || null;
+    }
+
+    // Đặt lại một select về trạng thái rỗng để tránh giữ dữ liệu cũ.
+    function resetSelect(selectElement, placeholderText) {
+        if (!selectElement) {
+            return;
+        }
+
+        selectElement.innerHTML = '<option value="">' + placeholderText + '</option>';
+        selectElement.value = '';
+        selectElement.disabled = true;
+    }
+
+    // Đổ danh sách tỉnh/thành từ dữ liệu API vào select đầu tiên.
+    function fillProvinceSelect() {
+        if (!provinceSelect) {
+            return;
+        }
+
+        resetSelect(provinceSelect, 'Chọn tỉnh/thành');
+        vietnamAddressData.forEach(function (province) {
+            const option = document.createElement('option');
+            option.value = String(province.code);
+            option.textContent = province.name || 'Không rõ';
+            provinceSelect.appendChild(option);
+        });
+    }
+
+    // Khi đổi tỉnh/thành thì chỉ nạp lại quận/huyện của tỉnh đó.
+    function fillDistrictSelect() {
+        if (!provinceSelect || !districtSelect) {
+            return;
+        }
+
+        const province = getProvinceByCode(provinceSelect.value);
+        resetSelect(districtSelect, 'Chọn quận/huyện');
+
+        if (!province || !Array.isArray(province.districts) || province.districts.length === 0) {
+            updateDeliveryAddressValue();
+            return;
+        }
+
+        province.districts.forEach(function (district) {
+            const option = document.createElement('option');
+            option.value = String(district.code);
+            option.textContent = district.name || 'Không rõ';
+            districtSelect.appendChild(option);
+        });
+
+        districtSelect.disabled = false;
+        updateDeliveryAddressValue();
+    }
+
+    // Khi đổi quận/huyện thì chỉ nạp lại phường/xã của quận đó.
+    function fillWardSelect() {
+        if (!provinceSelect || !districtSelect || !wardSelect) {
+            return;
+        }
+
+        const province = getProvinceByCode(provinceSelect.value);
+        const district = getDistrictByCode(province, districtSelect.value);
+        resetSelect(wardSelect, 'Chọn phường/xã');
+
+        if (!district || !Array.isArray(district.wards) || district.wards.length === 0) {
+            updateDeliveryAddressValue();
+            return;
+        }
+
+        district.wards.forEach(function (ward) {
+            const option = document.createElement('option');
+            option.value = String(ward.code);
+            option.textContent = ward.name || 'Không rõ';
+            wardSelect.appendChild(option);
+        });
+
+        wardSelect.disabled = false;
+        updateDeliveryAddressValue();
+    }
+
+    // Ghép địa chỉ chi tiết + phường/xã + quận/huyện + tỉnh/thành thành 1 chuỗi.
+    function updateDeliveryAddressValue() {
+        if (!deliveryAddressInput) {
+            return;
+        }
+
+        if (!isDeliverySelected()) {
+            deliveryAddressInput.value = '';
+            clearDeliveryAddressValidation();
+            return;
+        }
+
+        const detailValue = addressDetailInput ? (addressDetailInput.value || '').trim() : '';
+        const province = getProvinceByCode(provinceSelect ? provinceSelect.value : '');
+        const district = getDistrictByCode(province, districtSelect ? districtSelect.value : '');
+        const ward = getWardByCode(district, wardSelect ? wardSelect.value : '');
+
+        const parts = [];
+        if (detailValue) {
+            parts.push(detailValue);
+        }
+        if (ward && ward.name) {
+            parts.push(ward.name);
+        }
+        if (district && district.name) {
+            parts.push(district.name);
+        }
+        if (province && province.name) {
+            parts.push(province.name);
+        }
+
+        deliveryAddressInput.value = parts.join(', ');
+        validateDeliveryAddress();
+    }
+
+    // Tải danh sách địa chỉ Việt Nam từ API công khai một lần duy nhất.
+    function loadVietnamAddressData() {
+        if (vietnamAddressLoaded || vietnamAddressLoading || !provinceSelect) {
+            return;
+        }
+
+        vietnamAddressLoading = true;
+        setAddressStatus('Đang tải danh sách địa chỉ Việt Nam...', 'loading');
+
+        fetch(vietnamAddressApiUrl)
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Không thể tải dữ liệu địa chỉ.');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                vietnamAddressData = Array.isArray(data) ? data : [];
+                vietnamAddressLoaded = true;
+                fillProvinceSelect();
+                if (isDeliverySelected()) {
+                    provinceSelect.disabled = false;
+                }
+                setAddressStatus('Đã tải xong danh sách địa chỉ Việt Nam.', 'success');
+            })
+            .catch(function () {
+                setAddressStatus('Không tải được danh sách địa chỉ Việt Nam. Vui lòng thử lại sau.', 'error');
+            })
+            .finally(function () {
+                vietnamAddressLoading = false;
+            });
+    }
+
+    // Bật/tắt nhóm địa chỉ giao hàng và các field bắt buộc theo loại đơn.
     function updateFulfillmentFields() {
         const deliverySelected = isDeliverySelected();
 
@@ -971,13 +1271,65 @@
             deliveryAddressGroup.classList.toggle('d-none', !deliverySelected);
         }
 
-        if (deliveryAddressInput) {
-            if (deliverySelected) {
-                deliveryAddressInput.setAttribute('required', 'required');
+        if (deliverySelected) {
+            if (vietnamAddressLoaded) {
+                fillProvinceSelect();
             } else {
-                deliveryAddressInput.removeAttribute('required');
-                deliveryAddressInput.setCustomValidity('');
+                loadVietnamAddressData();
             }
+        }
+
+        if (addressDetailInput) {
+            if (deliverySelected) {
+                addressDetailInput.setAttribute('required', 'required');
+                addressDetailInput.disabled = false;
+            } else {
+                addressDetailInput.removeAttribute('required');
+                addressDetailInput.disabled = true;
+                addressDetailInput.value = '';
+                addressDetailInput.setCustomValidity('');
+            }
+        }
+
+        if (provinceSelect) {
+            if (deliverySelected) {
+                provinceSelect.setAttribute('required', 'required');
+                if (vietnamAddressLoaded) {
+                    provinceSelect.disabled = false;
+                } else {
+                    provinceSelect.disabled = true;
+                    resetSelect(provinceSelect, 'Chọn tỉnh/thành');
+                }
+            } else {
+                provinceSelect.removeAttribute('required');
+                resetSelect(provinceSelect, 'Chọn tỉnh/thành');
+            }
+        }
+
+        if (districtSelect) {
+            if (deliverySelected) {
+                districtSelect.setAttribute('required', 'required');
+                districtSelect.disabled = true;
+                resetSelect(districtSelect, 'Chọn quận/huyện');
+            } else {
+                districtSelect.removeAttribute('required');
+                resetSelect(districtSelect, 'Chọn quận/huyện');
+            }
+        }
+
+        if (wardSelect) {
+            if (deliverySelected) {
+                wardSelect.setAttribute('required', 'required');
+                wardSelect.disabled = true;
+                resetSelect(wardSelect, 'Chọn phường/xã');
+            } else {
+                wardSelect.removeAttribute('required');
+                resetSelect(wardSelect, 'Chọn phường/xã');
+            }
+        }
+
+        if (deliveryAddressInput) {
+            deliveryAddressInput.readOnly = true;
         }
 
         if (deliveryHint) {
@@ -986,6 +1338,8 @@
                 : 'Pickup orders stay inside the store and do not create a Shipment record.';
         }
 
+        clearDeliveryAddressValidation();
+        updateDeliveryAddressValue();
         updateStoreOrderPreview();
     }
 
@@ -1050,6 +1404,27 @@
     if (paymentMethodSelect) {
         paymentMethodSelect.addEventListener('change', validatePaymentMethod);
     }
+    if (addressDetailInput) {
+        addressDetailInput.addEventListener('input', updateDeliveryAddressValue);
+    }
+    if (provinceSelect) {
+        provinceSelect.addEventListener('change', function () {
+            fillDistrictSelect();
+            if (wardSelect) {
+                resetSelect(wardSelect, 'Chọn phường/xã');
+            }
+            updateDeliveryAddressValue();
+        });
+    }
+    if (districtSelect) {
+        districtSelect.addEventListener('change', function () {
+            fillWardSelect();
+            updateDeliveryAddressValue();
+        });
+    }
+    if (wardSelect) {
+        wardSelect.addEventListener('change', updateDeliveryAddressValue);
+    }
     if (fulfillmentPickupRadio) {
         fulfillmentPickupRadio.addEventListener('change', updateFulfillmentFields);
     }
@@ -1073,6 +1448,7 @@
             validateTextInput(recipientNameInput, 2, 'Recipient name is required and must be at least 2 characters.');
             validatePhoneInput();
             validatePaymentMethod();
+            updateDeliveryAddressValue();
             validateDeliveryAddress();
             validateVariantSelection();
             updateStoreOrderPreview();
@@ -1094,7 +1470,9 @@
     updateFulfillmentFields();
     updateStoreOrderPreview();
 
-    document.querySelectorAll('.alert').forEach(function (el) {
+    // Chỉ tự đóng các thông báo flash ở đầu trang.
+    // Không đóng alert nội dung trong card để người dùng còn đọc được.
+    document.querySelectorAll('.flash-alert').forEach(function (el) {
         setTimeout(function () {
             const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
             bsAlert.close();
