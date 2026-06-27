@@ -2,6 +2,7 @@ package com.clothingsale.dao;
 
 import com.clothingsale.model.CartItem;
 import com.clothingsale.model.Order;
+import com.clothingsale.model.Shipment;
 import com.clothingsale.model.UserAddress;
 import com.clothingsale.model.Voucher;
 import com.clothingsale.util.DBConnection;
@@ -180,16 +181,25 @@ public class CustomerOrderDAO {
         return list;
     }
 
-    public int createOrder(
+    private int createOrder(
             Connection con,
-            Order order)
+            int userId,
+            Voucher voucher,
+            UserAddress address,
+            BigDecimal subtotal,
+            BigDecimal discount,
+            BigDecimal shippingFee,
+            BigDecimal totalPayment,
+            String note,
+            Shipment shipment)
             throws SQLException {
 
-        String sql
-                = "INSERT INTO [Order]("
+        String sql = "INSERT INTO [Order] "
+                + "("
                 + "order_code,"
                 + "user_id,"
                 + "voucher_id,"
+                + "shipment_id," // 👈 THÊM
                 + "recipient_name,"
                 + "recipient_phone,"
                 + "ward_id,"
@@ -200,90 +210,78 @@ public class CustomerOrderDAO {
                 + "total_payment,"
                 + "order_status,"
                 + "note"
-                + ")"
-                + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-        PreparedStatement ps
-                = con.prepareStatement(
-                        sql,
-                        Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement ps = con.prepareStatement(
+                sql,
+                Statement.RETURN_GENERATED_KEYS
+        );
 
-        ps.setString(1, order.getOrderCode());
-        ps.setInt(2, order.getUserId());
+        String orderCode = "ORD" + System.currentTimeMillis();
 
-        if (order.getVoucherId() == 0) {
+        ps.setString(1, orderCode);
+        ps.setInt(2, userId);
+
+        if (voucher == null) {
             ps.setNull(3, Types.INTEGER);
         } else {
-            ps.setInt(3, order.getVoucherId());
+            ps.setInt(3, voucher.getId());
         }
 
-        ps.setString(4, order.getRecipientName());
-        ps.setString(5, order.getRecipientPhone());
-        ps.setString(6, order.getWardId());
-        ps.setString(7, order.getAddressDetail());
+        // SHIPMENT
+        if (shipment == null) {
+            ps.setNull(4, Types.INTEGER);
+        } else {
+            ps.setInt(4, shipment.getId());
+        }
 
-        ps.setBigDecimal(8, order.getTotalItemsPrice());
-        ps.setBigDecimal(9, order.getDiscountAmount());
-        ps.setBigDecimal(10, order.getShippingFee());
-        ps.setBigDecimal(11, order.getTotalPayment());
+        ps.setString(5, address.getRecipientName());
+        ps.setString(6, address.getRecipientPhone());
+        ps.setString(7, address.getWardId());
+        ps.setString(8, address.getAddressDetail());
 
-        ps.setString(12, order.getOrderStatus());
-        ps.setString(13, order.getNote());
+        ps.setBigDecimal(9, subtotal);
+        ps.setBigDecimal(10, discount);
+        ps.setBigDecimal(11, shippingFee);
+        ps.setBigDecimal(12, totalPayment);
+
+        ps.setString(13, "PENDING");
+        ps.setString(14, note);
 
         ps.executeUpdate();
 
         ResultSet rs = ps.getGeneratedKeys();
-
         if (rs.next()) {
             return rs.getInt(1);
         }
 
-        return 0;
+        throw new SQLException("Create order failed");
     }
 
-    private BigDecimal calculateDiscount(
-            Voucher voucher,
-            BigDecimal subtotal) {
+    private BigDecimal calculateDiscount(Voucher voucher, BigDecimal subtotal) {
 
         if (voucher == null) {
-
             return BigDecimal.ZERO;
         }
 
-        if (subtotal.compareTo(
-                voucher.getMinOrderValue())
-                < 0) {
-
+        if (subtotal.compareTo(voucher.getMinOrderValue()) < 0) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal discount
-                = BigDecimal.ZERO;
+        BigDecimal discount;
 
-        if ("PERCENT".equalsIgnoreCase(
-                voucher.getDiscountType())) {
+        if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())) {
 
-            discount
-                    = subtotal.multiply(
-                            voucher.getDiscountValue())
-                            .divide(
-                                    BigDecimal.valueOf(
-                                            100));
+            discount = subtotal.multiply(voucher.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100));
 
-            if (voucher.getMaxDiscountAmount()
-                    != null
-                    && discount.compareTo(
-                            voucher.getMaxDiscountAmount())
-                    > 0) {
-
-                discount
-                        = voucher.getMaxDiscountAmount();
+            if (voucher.getMaxDiscountAmount() != null
+                    && discount.compareTo(voucher.getMaxDiscountAmount()) > 0) {
+                discount = voucher.getMaxDiscountAmount();
             }
 
         } else {
-
-            discount
-                    = voucher.getDiscountValue();
+            discount = voucher.getDiscountValue();
         }
 
         return discount;
@@ -293,130 +291,94 @@ public class CustomerOrderDAO {
             int userId,
             int addressId,
             String voucherCode,
-            String note) {
-
-        return placeOrder(
-                userId,
-                addressId,
-                voucherCode,
-                note,
-                null);
-    }
-
-    public boolean placeOrder(
-            int userId,
-            int addressId,
-            String voucherCode,
             String note,
+            String paymentMethod,
+            String carrierName,
             Set<Integer> selectedVariantIds) {
 
         Connection con = null;
 
         try {
-
             con = DBConnection.getConnection();
-
             con.setAutoCommit(false);
 
-            List<CartItem> cartItems
-                    = getCartItems(
-                            userId,
-                            selectedVariantIds);
+            List<CartItem> cartItems = getCartItems(userId, selectedVariantIds);
 
             if (cartItems.isEmpty()) {
                 return false;
             }
 
-            UserAddress address
-                    = getAddressById(addressId);
-
+            UserAddress address = getAddressById(addressId);
             if (address == null) {
                 return false;
             }
 
-            BigDecimal subtotal
-                    = BigDecimal.ZERO;
-
+            // ===== SUBTOTAL =====
+            BigDecimal subtotal = BigDecimal.ZERO;
             for (CartItem item : cartItems) {
-
                 subtotal = subtotal.add(
-                        item.getPrice()
-                                .multiply(
-                                        BigDecimal.valueOf(
-                                                item.getQuantity())));
+                        item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
             }
 
-            Voucher voucher
-                    = applyVoucher(voucherCode);
+            // ===== VOUCHER =====
+            Voucher voucher = applyVoucher(voucherCode);
+            BigDecimal discount = calculateDiscount(voucher, subtotal);
 
-            BigDecimal discount
-                    = calculateDiscount(
-                            voucher,
-                            subtotal);
+            BigDecimal shippingFee = BigDecimal.valueOf(30000);
+            BigDecimal totalPayment = subtotal.subtract(discount).add(shippingFee);
 
-            BigDecimal shippingFee
-                    = BigDecimal.valueOf(30000);
+            // ===== 1. CREATE SHIPMENT (MỚI) =====
+            Shipment shipment = new Shipment();
+            shipment.setCarrierName(carrierName);
+            shipment.setShippingStatus("PENDING_PICKUP");
 
-            BigDecimal totalPayment
-                    = subtotal
-                            .subtract(discount)
-                            .add(shippingFee);
+            int shipmentId = createShipment(con, carrierName);
+            shipment.setId(shipmentId);
 
-            int orderId
-                    = createOrder(
-                            con,
-                            userId,
-                            voucher,
-                            address,
-                            subtotal,
-                            discount,
-                            shippingFee,
-                            totalPayment,
-                            note);
+            // ===== 2. CREATE ORDER (CÓ shipmentId) =====
+            int orderId = createOrder(
+                    con,
+                    userId,
+                    voucher,
+                    address,
+                    subtotal,
+                    discount,
+                    shippingFee,
+                    totalPayment,
+                    note,
+                    shipment
+            );
 
+            // ===== 3. ORDER DETAIL =====
             for (CartItem item : cartItems) {
-
-                createOrderDetail(
-                        con,
-                        orderId,
-                        item);
-
-                decreaseStock(
-                        con,
-                        item.getVariantId(),
-                        item.getQuantity());
+                createOrderDetail(con, orderId, item);
+                decreaseStock(con, item.getVariantId(), item.getQuantity());
             }
 
+            // ===== 4. PAYMENT =====
+            createPayment(con, orderId, paymentMethod, totalPayment);
+
+            // ===== 5. CLEAR CART =====
             if (selectedVariantIds == null) {
-                clearCart(
-                        con,
-                        userId);
+                clearCart(con, userId);
             } else {
-                clearCartItems(
-                        con,
-                        userId,
-                        selectedVariantIds);
+                clearCartItems(con, userId, selectedVariantIds);
             }
 
             con.commit();
-
             return true;
 
         } catch (Exception e) {
-
             try {
                 if (con != null) {
                     con.rollback();
                 }
             } catch (Exception ex) {
             }
-
             e.printStackTrace();
-
             return false;
 
         } finally {
-
             try {
                 if (con != null) {
                     con.close();
@@ -426,168 +388,84 @@ public class CustomerOrderDAO {
         }
     }
 
-    private int createOrder(
+    private void createPayment(
             Connection con,
-            int userId,
-            Voucher voucher,
-            UserAddress address,
-            BigDecimal subtotal,
-            BigDecimal discount,
-            BigDecimal shippingFee,
-            BigDecimal totalPayment,
-            String note)
-            throws SQLException {
+            int orderId,
+            String method,
+            BigDecimal amount) throws SQLException {
 
-        String sql = "INSERT INTO [Order] "
-                + "( "
-                + "    order_code, "
-                + "    user_id, "
-                + "    voucher_id, "
-                + "    recipient_name, "
-                + "    recipient_phone, "
-                + "    ward_id, "
-                + "    address_detail, "
-                + "    total_items_price, "
-                + "    discount_amount, "
-                + "    shipping_fee, "
-                + "    total_payment, "
-                + "    order_status, "
-                + "    note "
-                + ") "
-                + "VALUES "
-                + "( "
-                + "    ?,?,?,?,?,?,?,?,?,?,?,?,? "
-                + ")";
+        String sql = "INSERT INTO Payment(order_id, payment_method, payment_status, amount) "
+                + "VALUES(?,?,?,?)";
 
-        PreparedStatement ps
-                = con.prepareStatement(
-                        sql,
-                        Statement.RETURN_GENERATED_KEYS);
+        try ( PreparedStatement ps = con.prepareStatement(sql)) {
 
-        String orderCode
-                = "ORD"
-                + System.currentTimeMillis();
+            ps.setInt(1, orderId);
+            ps.setString(2, method);
 
-        ps.setString(1, orderCode);
+            if ("COD".equalsIgnoreCase(method)) {
+                ps.setString(3, "UNPAID");
+            } else {
+                ps.setString(3, "UNPAID"); // VNPAY pending
+            }
 
-        ps.setInt(2, userId);
+            ps.setBigDecimal(4, amount);
 
-        if (voucher == null) {
-            ps.setNull(3, Types.INTEGER);
-        } else {
-            ps.setInt(3, voucher.getId());
+            ps.executeUpdate();
         }
-
-        ps.setString(
-                4,
-                address.getRecipientName());
-
-        ps.setString(
-                5,
-                address.getRecipientPhone());
-
-        ps.setString(
-                6,
-                address.getWardId());
-
-        ps.setString(
-                7,
-                address.getAddressDetail());
-
-        ps.setBigDecimal(
-                8,
-                subtotal);
-
-        ps.setBigDecimal(
-                9,
-                discount);
-
-        ps.setBigDecimal(
-                10,
-                shippingFee);
-
-        ps.setBigDecimal(
-                11,
-                totalPayment);
-
-        ps.setString(
-                12,
-                "PENDING");
-
-        ps.setString(
-                13,
-                note);
-
-        ps.executeUpdate();
-
-        ResultSet rs
-                = ps.getGeneratedKeys();
-
-        if (rs.next()) {
-            return rs.getInt(1);
-        }
-
-        throw new SQLException();
     }
 
-    public Voucher applyVoucher(
-            String code) {
+    private int createShipment(Connection con, String carrierName) throws SQLException {
 
-        if (code == null
-                || code.trim().isEmpty()) {
+        String sql = "INSERT INTO Shipment("
+                + "carrier_name, shipping_status, tracking_code, shipping_cost"
+                + ") VALUES(?,?,?,?)";
 
+        try ( PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, carrierName);
+            ps.setString(2, "PENDING_PICKUP");
+            ps.setString(3, null);
+            ps.setBigDecimal(4, BigDecimal.ZERO);
+
+            ps.executeUpdate();
+
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+
+        return 0;
+    }
+
+    public Voucher applyVoucher(String code) {
+
+        if (code == null || code.trim().isEmpty()) {
             return null;
         }
 
-        String sql
-                = "SELECT * "
-                + "FROM Voucher "
-                + "WHERE code=? "
-                + "AND GETDATE() "
-                + "BETWEEN start_date "
-                + "AND end_date";
+        String sql = "SELECT * FROM Voucher WHERE code=? "
+                + "AND GETDATE() BETWEEN start_date AND end_date "
+                + "AND used_count < usage_limit";
 
-        try (
-                 Connection con
-                = DBConnection.getConnection();  PreparedStatement ps
-                = con.prepareStatement(sql)) {
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, code);
 
-            ResultSet rs
-                    = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
-                Voucher v
-                        = new Voucher();
-
-                v.setId(
-                        rs.getInt("id"));
-
-                v.setCode(
-                        rs.getString("code"));
-
-                v.setDiscountType(
-                        rs.getString("discount_type"));
-
-                v.setDiscountValue(
-                        rs.getBigDecimal(
-                                "discount_value"));
-
-                v.setMaxDiscountAmount(
-                        rs.getBigDecimal(
-                                "max_discount_amount"));
-
-                v.setMinOrderValue(
-                        rs.getBigDecimal(
-                                "min_order_value"));
-
+                Voucher v = new Voucher();
+                v.setId(rs.getInt("id"));
+                v.setCode(rs.getString("code"));
+                v.setDiscountType(rs.getString("discount_type"));
+                v.setDiscountValue(rs.getBigDecimal("discount_value"));
+                v.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
+                v.setMinOrderValue(rs.getBigDecimal("min_order_value"));
                 return v;
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
@@ -724,7 +602,7 @@ public class CustomerOrderDAO {
                 + "WHERE user_id=? "
                 + "AND variant_id=?";
 
-        try (PreparedStatement ps
+        try ( PreparedStatement ps
                 = con.prepareStatement(sql)) {
 
             for (Integer variantId : selectedVariantIds) {

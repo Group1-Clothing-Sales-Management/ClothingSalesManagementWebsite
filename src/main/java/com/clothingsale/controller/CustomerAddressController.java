@@ -149,9 +149,15 @@ public class CustomerAddressController extends HttpServlet {
 
         service.addAddress(address);
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/customer/address");
+        String from = request.getParameter("from");
+
+        String redirect = request.getContextPath() + "/customer/address";
+
+        if ("checkout".equals(from)) {
+            redirect += "?from=checkout";
+        }
+
+        response.sendRedirect(redirect);
     }
 
     private void updateAddress(HttpServletRequest request,
@@ -198,9 +204,15 @@ public class CustomerAddressController extends HttpServlet {
 
         service.updateAddress(address);
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/customer/address");
+        String from = request.getParameter("from");
+
+        String redirect = request.getContextPath() + "/customer/address";
+
+        if ("checkout".equals(from)) {
+            redirect += "?from=checkout";
+        }
+
+        response.sendRedirect(redirect);
     }
 
     private void deleteAddress(HttpServletRequest request,
@@ -220,9 +232,15 @@ public class CustomerAddressController extends HttpServlet {
             service.deleteAddress(id, id);
         }
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/customer/address");
+        String from = request.getParameter("from");
+
+        String redirect = request.getContextPath() + "/customer/address";
+
+        if ("checkout".equals(from)) {
+            redirect += "?from=checkout";
+        }
+
+        response.sendRedirect(redirect);
     }
 
     private void setDefaultAddress(HttpServletRequest request,
@@ -244,8 +262,14 @@ public class CustomerAddressController extends HttpServlet {
                     id);
         }
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/customer/address");
+        String from = request.getParameter("from");
+
+        String redirect = request.getContextPath() + "/customer/address";
+
+        if ("checkout".equals(from)) {
+            redirect += "?from=checkout";
+        }
+
+        response.sendRedirect(redirect);
     }
 }

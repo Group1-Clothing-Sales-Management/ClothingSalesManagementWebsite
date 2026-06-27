@@ -6,9 +6,84 @@
     <head>
         <meta charset="UTF-8">
         <title>Manage Address</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+              rel="stylesheet">
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
               rel="stylesheet">
+        <style>
+
+            body{
+                background:#f5f7fb;
+                font-family:'Segoe UI',sans-serif;
+            }
+
+            .page-title{
+                font-size:34px;
+                font-weight:700;
+                color:#212529;
+            }
+
+            .page-subtitle{
+                color:#6c757d;
+            }
+
+            .address-card{
+                background:white;
+                border-radius:18px;
+                padding:22px;
+                margin-bottom:20px;
+                box-shadow:0 5px 20px rgba(0,0,0,.06);
+                transition:.25s;
+            }
+
+            .address-card:hover{
+                transform:translateY(-3px);
+                box-shadow:0 10px 30px rgba(0,0,0,.12);
+            }
+
+            .user-name{
+                font-size:20px;
+                font-weight:700;
+            }
+
+            .info{
+                color:#6c757d;
+                margin-top:10px;
+            }
+
+            .badge-default{
+                background:#16a34a;
+                padding:8px 14px;
+                border-radius:30px;
+                color:white;
+                font-size:13px;
+            }
+
+            .action-btn{
+                border-radius:12px;
+                padding:8px 18px;
+            }
+
+            .btn-add{
+                border-radius:12px;
+                padding:10px 22px;
+            }
+
+            .modal-content{
+                border-radius:18px;
+                border:none;
+            }
+
+            .form-control{
+                border-radius:12px;
+            }
+
+            textarea{
+                resize:none;
+            }
+
+        </style>
     </head>
 
     <body>
@@ -17,7 +92,17 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3">
 
-                <h2>My Addresses</h2>
+                <div>
+
+                    <div class="page-title">
+                        My Addresses
+                    </div>
+
+                    <div class="page-subtitle">
+                        Manage your shipping addresses
+                    </div>
+
+                </div>
                 <c:if test="${from eq 'checkout'}">
 
                     <a href="${pageContext.request.contextPath}/customer/checkout"
@@ -35,70 +120,102 @@
                 </button>
             </div>
 
-            <table class="table table-bordered table-hover">
+            <div class="row">
 
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Recipient</th>
-                        <th>Phone</th>
-                        <th>Ward</th>
-                        <th>Address</th>
-                        <th>Default</th>
-                        <th width="250">Action</th>
-                    </tr>
-                </thead>
+                <c:forEach items="${addresses}" var="a">
 
-                <tbody>
+                    <div class="col-lg-6">
 
-                    <c:forEach items="${addresses}" var="a">
+                        <div class="address-card">
 
-                        <tr>
+                            <div class="d-flex justify-content-between">
 
-                            <td>${a.id}</td>
+                                <div>
 
-                            <td>${a.recipientName}</td>
+                                    <div class="user-name">
 
-                            <td>${a.recipientPhone}</td>
+                                        <i class="bi bi-person-circle"></i>
 
-                            <td>${a.wardId}</td>
+                                        ${a.recipientName}
 
-                            <td>${a.addressDetail}</td>
+                                    </div>
 
-                            <td>
+                                    <div class="info">
 
-                                <c:if test="${a['default']}">
-                                    <span class="badge bg-success">
-                                        Default
-                                    </span>
-                                </c:if>
+                                        <i class="bi bi-telephone-fill"></i>
 
-                                <c:if test="${!a['default']}">
-                                    <span class="badge bg-secondary">
-                                        Normal
-                                    </span>
-                                </c:if>
+                                        ${a.recipientPhone}
 
-                            </td>
+                                    </div>
 
-                            <td>
+                                    <div class="info">
 
-                                <button class="btn btn-warning btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editModal${a.id}">
+                                        <i class="bi bi-geo-alt-fill"></i>
+
+                                        ${a.addressDetail}
+
+                                    </div>
+
+                                    <div class="info">
+
+                                        Ward ID :
+                                        <b>${a.wardId}</b>
+
+                                    </div>
+
+                                </div>
+
+                                <div>
+
+                                    <c:if test="${a['default']}">
+
+                                        <span class="badge-default">
+
+                                            <i class="bi bi-check-circle-fill"></i>
+
+                                            Default
+
+                                        </span>
+
+                                    </c:if>
+
+                                </div>
+
+                            </div>
+
+                            <hr>
+
+                            <div class="d-flex gap-2 justify-content-end">
+
+                                <button
+                                    class="btn btn-warning action-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editModal${a.id}">
+
+                                    <i class="bi bi-pencil-square"></i>
+
                                     Edit
+
                                 </button>
 
-                                <a href="${pageContext.request.contextPath}/customer/address?action=delete&id=${a.id}"
-                                   class="btn btn-danger btn-sm"
-                                   onclick="return confirm('Delete this address?')">
+                                <a
+                                    href="${pageContext.request.contextPath}/customer/address?action=delete&id=${a.id}&from=${from}"
+                                    class="btn btn-danger action-btn"
+                                    onclick="return confirm('Delete address?')">
+
+                                    <i class="bi bi-trash"></i>
+
                                     Delete
+
                                 </a>
 
                                 <c:if test="${!a['default']}">
 
-                                    <a href="${pageContext.request.contextPath}/customer/address?action=setDefault&id=${a.id}"
-                                       class="btn btn-success btn-sm">
+                                    <a
+                                        href="${pageContext.request.contextPath}/customer/address?action=setDefault&id=${a.id}&from=${from}"
+                                        class="btn btn-success action-btn">
+
+                                        <i class="bi bi-star-fill"></i>
 
                                         Set Default
 
@@ -106,15 +223,15 @@
 
                                 </c:if>
 
-                            </td>
+                            </div>
 
-                        </tr>
+                        </div>
 
-                    </c:forEach>
+                    </div>
 
-                </tbody>
+                </c:forEach>
 
-            </table>
+            </div>
 
         </div>
 
@@ -132,6 +249,9 @@
 
                         <form method="post"
                               action="${pageContext.request.contextPath}/customer/address?action=update">
+                            <input type="hidden"
+                                   name="from"
+                                   value="${from}">
 
                             <div class="modal-header">
 
@@ -255,15 +375,24 @@
                     <form method="post"
                           action="${pageContext.request.contextPath}/customer/address?action=insert">
 
-                        <div class="modal-header">
+                        <input type="hidden"
+                               name="from"
+                               value="${from}">
 
-                            <h5 class="modal-title">
+                        <div class="modal-header border-0">
+
+                            <h4 class="fw-bold">
+
+                                <i class="bi bi-house-add-fill"></i>
+
                                 Add Address
-                            </h5>
 
-                            <button type="button"
-                                    class="btn-close"
-                                    data-bs-dismiss="modal">
+                            </h4>
+
+                            <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal">
                             </button>
 
                         </div>
@@ -335,12 +464,12 @@
 
                         </div>
 
-                        <div class="modal-footer">
+                        <div class="modal-footer border-0">
 
-                            <button type="submit"
-                                    class="btn btn-success">
+                            <button
+                                class="btn btn-success px-4">
 
-                                Save
+                                Save Address
 
                             </button>
 
