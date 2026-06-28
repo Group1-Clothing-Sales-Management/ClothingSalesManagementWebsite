@@ -346,11 +346,7 @@ public class AdminManageProductDAO {
         return list;
     }
 
-    /**
-     * THÊM MỚI TOÀN DIỆN: Lưu sản phẩm chính và tự động chèn đồng loạt ma trận
-     * biến thể Áp dụng Transaction để rollback nếu có bất kỳ lỗi xung đột dữ
-     * liệu nào xảy ra.
-     */
+
     public boolean insertProductWithMatrixVariants(Product p, String imageName, List<com.clothingsale.model.ProductVariant> variants) {
         String sqlProd = "INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String sqlImg = "INSERT INTO Product_Image (product_id, image_url, is_main) VALUES (?, ?, 1)";
@@ -358,31 +354,35 @@ public class AdminManageProductDAO {
         String sqlAttrValue = "INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES (?, ?, ?)";
 
         Connection conn = null;
+        PreparedStatement psProd = null;
+        PreparedStatement psImg = null;
+        PreparedStatement psVariant = null;
+        PreparedStatement psAttrValue = null;
+
         try {
             conn = DBConnection.getConnection();
-            conn.setAutoCommit(false); // Bật chế độ quản lý giao dịch thủ công
+            conn.setAutoCommit(false); // Kích hoạt cơ chế quản lý giao dịch thủ công
 
-            // BƯỚC 1: Chèn sản phẩm chính để sinh mã ID tự động tăng
+            // BƯỚC 1: Lưu thông tin sản phẩm chính để lấy ID tăng tự động
             int productId = 0;
-            try (PreparedStatement psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS)) {
-                psProd.setString(1, p.getProductName());
-                psProd.setString(2, p.getSlug());
-                psProd.setInt(3, p.getBrandId());
-                psProd.setInt(4, p.getCategoryId());
-                psProd.setString(5, p.getShortDescription());
-                psProd.setString(6, p.getLongDescription());
-                psProd.setString(7, p.getStatus());
+            psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS);
+            psProd.setString(1, p.getProductName());
+            psProd.setString(2, p.getSlug());
+            psProd.setInt(3, p.getBrandId());
+            psProd.setInt(4, p.getCategoryId());
+            psProd.setString(5, p.getShortDescription());
+            psProd.setString(6, p.getLongDescription());
+            psProd.setString(7, p.getStatus());
 
-                int affectedRows = psProd.executeUpdate();
-                if (affectedRows == 0) {
-                    conn.rollback();
-                    return false;
-                }
+            int affectedRows = psProd.executeUpdate();
+            if (affectedRows == 0) {
+                conn.rollback();
+                return false;
+            }
 
-                try (ResultSet generatedKeys = psProd.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        productId = generatedKeys.getInt(1);
-                    }
+            try (ResultSet generatedKeys = psProd.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    productId = generatedKeys.getInt(1);
                 }
             }
 
@@ -391,73 +391,73 @@ public class AdminManageProductDAO {
                 return false;
             }
 
-            // BƯỚC 2: Chèn ảnh đại diện chính (Main Image) nếu có upload file
-            if (imageName != null) {
-                try (PreparedStatement psImg = conn.prepareStatement(sqlImg)) {
-                    psImg.setInt(1, productId);
-                    psImg.setString(2, imageName);
-                    psImg.executeUpdate();
-                }
+            // BƯỚC 2: Lưu tệp tin hình ảnh đại diện chính nếu Admin có tải lên
+            if (imageName != null && !imageName.trim().isEmpty()) {
+                psImg = conn.prepareStatement(sqlImg);
+                psImg.setInt(1, productId);
+                psImg.setString(2, imageName);
+                psImg.executeUpdate();
             }
 
-            // Lấy ID định danh của các nhóm thuộc tính 'Color' và 'Size' sẵn có trong DB
+            // Truy vấn lấy khóa ngoại của 2 nhóm thuộc tính hệ thống 'Color' và 'Size'
             int colorAttrId = getAttributeIdByName(conn, "Color");
             int sizeAttrId = getAttributeIdByName(conn, "Size");
 
-            // BƯỚC 3: Duyệt mảng ma trận để chèn hàng loạt Variant & Thuộc tính chi tiết
-            try (PreparedStatement psVariant = conn.prepareStatement(sqlVariant, Statement.RETURN_GENERATED_KEYS); PreparedStatement psAttrValue = conn.prepareStatement(sqlAttrValue)) {
+            // BƯỚC 3: Duyệt mảng ma trận tổ hợp để thêm đồng bộ bản ghi Variant & Đặc tính chi tiết
+            psVariant = conn.prepareStatement(sqlVariant, Statement.RETURN_GENERATED_KEYS);
+            psAttrValue = conn.prepareStatement(sqlAttrValue);
 
-                for (com.clothingsale.model.ProductVariant v : variants) {
-                    // 3.1. Ghi dữ liệu biến thể vào Product_Variant
-                    psVariant.setInt(1, productId);
-                    psVariant.setString(2, v.getSku());
-                    psVariant.setBigDecimal(3, v.getCostPrice()); // Mặc định = 0.00
-                    psVariant.setBigDecimal(4, v.getSalePrice()); // Giá bán lẻ thiết lập từ UI
-                    psVariant.setInt(5, v.getStockQuantity());   // Mặc định = 0
-                    psVariant.setString(6, v.getStatus());
-                    psVariant.executeUpdate();
+            for (com.clothingsale.model.ProductVariant v : variants) {
+                // 3.1. Thêm bản ghi định danh biến thể vào Product_Variant
+                psVariant.setInt(1, productId);
+                psVariant.setString(2, v.getSku());
+                psVariant.setBigDecimal(3, v.getCostPrice());
+                psVariant.setBigDecimal(4, v.getSalePrice());
+                psVariant.setInt(5, v.getStockQuantity());
+                psVariant.setString(6, v.getStatus());
+                psVariant.executeUpdate();
 
-                    int variantId = 0;
-                    try (ResultSet gkVariant = psVariant.getGeneratedKeys()) {
-                        if (gkVariant.next()) {
-                            variantId = gkVariant.getInt(1);
-                        }
-                    }
-
-                    // 3.2. Bóc tách chuỗi Color|Size tạm thời ra để lưu bảng Variant_Attribute_Value
-                    if (variantId > 0 && v.getAttributeDetails() != null) {
-                        String[] tokens = v.getAttributeDetails().split("\\|");
-                        String colorValue = tokens.length > 0 ? tokens[0] : null;
-                        String sizeValue = tokens.length > 1 ? tokens[1] : null;
-
-                        // Chèn giá trị Màu sắc lẻ vào cầu nối m-n
-                        if (colorValue != null && !colorValue.isEmpty() && colorAttrId > 0) {
-                            psAttrValue.setInt(1, variantId);
-                            psAttrValue.setInt(2, colorAttrId);
-                            psAttrValue.setString(3, colorValue);
-                            psAttrValue.addBatch(); // Sử dụng Batch xử lý tăng tốc độ
-                        }
-
-                        // Chèn giá trị Kích cỡ lẻ vào cầu nối m-n
-                        if (sizeValue != null && !sizeValue.isEmpty() && sizeAttrId > 0) {
-                            psAttrValue.setInt(1, variantId);
-                            psAttrValue.setInt(2, sizeAttrId);
-                            psAttrValue.setString(3, sizeValue);
-                            psAttrValue.addBatch();
-                        }
+                int variantId = 0;
+                try (ResultSet gkVariant = psVariant.getGeneratedKeys()) {
+                    if (gkVariant.next()) {
+                        variantId = gkVariant.getInt(1);
                     }
                 }
-                // Thực thi đồng loạt các lệnh thêm thuộc tính
-                psAttrValue.executeBatch();
+
+                // 3.2. Bóc tách an toàn chuỗi gom "Color|Size" để phân bổ vào bảng trung gian cầu nối m-n
+                if (variantId > 0 && v.getAttributeDetails() != null) {
+                    String[] tokens = v.getAttributeDetails().split("\\|");
+                    String colorValue = tokens.length > 0 ? tokens[0].trim() : null;
+                    String sizeValue = tokens.length > 1 ? tokens[1].trim() : null;
+
+                    // Đẩy thuộc tính màu sắc tự do vào Batch
+                    if (colorValue != null && !colorValue.isEmpty() && colorAttrId > 0) {
+                        psAttrValue.setInt(1, variantId);
+                        psAttrValue.setInt(2, colorAttrId);
+                        psAttrValue.setString(3, colorValue);
+                        psAttrValue.addBatch();
+                    }
+
+                    // Đẩy kích cỡ tick chọn vào Batch
+                    if (sizeValue != null && !sizeValue.isEmpty() && sizeAttrId > 0) {
+                        psAttrValue.setInt(1, variantId);
+                        psAttrValue.setInt(2, sizeAttrId);
+                        psAttrValue.setString(3, sizeValue);
+                        psAttrValue.addBatch();
+                    }
+                }
             }
 
-            conn.commit(); // Đóng dấu thành công toàn bộ chuỗi giao dịch dữ liệu
+            // Thực thi chèn mảng đồng loạt (Batch Execution) để tối ưu hiệu năng
+            psAttrValue.executeBatch();
+
+            conn.commit(); // Hoàn tất thành công trọn vẹn chuỗi Transaction dữ liệu
             return true;
 
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    System.err.println("⚠️ Xảy ra sự cố SQL, hệ thống tự động Rollback dữ liệu!");
+                    System.err.println("❌ Critical SQL Error under Admin Action! System automatically rolled back.");
                     conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -466,12 +466,36 @@ public class AdminManageProductDAO {
             e.printStackTrace();
             return false;
         } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
+            // Đóng an toàn các tài nguyên để bảo vệ bộ nhớ hệ thống
+            try {
+                if (psAttrValue != null) {
+                    psAttrValue.close();
                 }
+            } catch (Exception e) {
+            }
+            try {
+                if (psVariant != null) {
+                    psVariant.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (psImg != null) {
+                    psImg.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (psProd != null) {
+                    psProd.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
             }
         }
     }

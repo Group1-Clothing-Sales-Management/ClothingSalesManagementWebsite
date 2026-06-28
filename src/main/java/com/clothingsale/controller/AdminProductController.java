@@ -62,14 +62,12 @@ public class AdminProductController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Đảm bảo đồng bộ hóa bảng mã hóa ký tự tiếng Việt
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        // GIẢI PHÁP 1: Lấy hành động 'action' từ Query String (URL) trước để tránh lỗi Multipart nuốt tham số
         String action = request.getParameter("action");
 
-        // GIẢI PHÁP 2: Nếu lấy từ URL vẫn null, tiến hành bóc tách thủ công từ Part text của Form dữ liệu
         if (action == null && request.getContentType() != null && request.getContentType().startsWith("multipart/form-data")) {
             try {
                 Part actionPart = request.getPart("action");
@@ -85,7 +83,6 @@ public class AdminProductController extends HttpServlet {
             }
         }
 
-        // Biến hỗ trợ thiết lập trạng thái phản hồi về giao diện (Success/Error)
         String statusRedirect = "success";
 
         try {
@@ -130,7 +127,7 @@ public class AdminProductController extends HttpServlet {
 
                 if (idRaw != null && !idRaw.trim().isEmpty()) {
                     int id = Integer.parseInt(idRaw.trim());
-                    boolean isDeleted = productService.deleteProductSmartly(id);
+                    boolean isDeleted = productDAO.softDeleteProduct(id);
                     if (!isDeleted) {
                         statusRedirect = "error";
                     }
@@ -139,47 +136,40 @@ public class AdminProductController extends HttpServlet {
                 }
 
             } else if ("ADD".equals(action)) {
-                // 1. Trích xuất thông tin Sản phẩm cốt lõi
                 Product product = extractProductFromRequest(request);
                 Part filePart = request.getPart("productImage");
                 String savedFileName = handleImageUpload(filePart);
 
-                // 2. Tạo một List để chứa danh sách biến thể bóc tách từ Ma trận form
                 java.util.List<com.clothingsale.model.ProductVariant> variantsList = new java.util.ArrayList<>();
-                
+
                 int index = 0;
                 while (true) {
-                    // Kiểm tra xem phần tử index hiện tại có tồn tại trong Request không
                     String skuParam = request.getParameter("variants[" + index + "].skuCode");
                     if (skuParam == null) {
-                        // Nếu null tức là đã duyệt qua hết tất cả các dòng biến thể được sinh từ ma trận JSP
-                        break; 
+                        break;
                     }
-                    
-                    String salePriceParam = request.getParameter("variants[" + index + "].salePrice");
+
                     String colorParam = request.getParameter("variants[" + index + "].color");
                     String sizeParam = request.getParameter("variants[" + index + "].size");
                     String statusParam = request.getParameter("variants[" + index + "].status");
 
-                    if (!skuParam.trim().isEmpty() && salePriceParam != null) {
+                    if (!skuParam.trim().isEmpty()) {
                         com.clothingsale.model.ProductVariant variant = new com.clothingsale.model.ProductVariant();
-                        variant.setSku(skuParam.trim());
-                        variant.setSalePrice(new java.math.BigDecimal(salePriceParam.trim()));
+                        variant.setSku(skuParam.trim().toUpperCase());
                         variant.setStatus(statusParam != null ? statusParam : "ACTIVE");
-                        
-                        // Set giá vốn ban đầu = 0 và số lượng tồn kho = 0 theo chuẩn FIFO đợt nhập hàng sau
+
+                        // THAY ĐỔI: Ép cứng cả giá bán lẻ và giá vốn khởi điểm = 0 (Giá thật sẽ cập nhật khi Admin nhập Lô hàng FIFO)
+                        variant.setSalePrice(java.math.BigDecimal.ZERO);
                         variant.setCostPrice(java.math.BigDecimal.ZERO);
                         variant.setStockQuantity(0);
-                        
-                        // Tận dụng thuộc tính attributeDetails để mang dữ liệu Color/Size tạm thời xuống DAO bóc tách
-                        variant.setAttributeDetails(colorParam + "|" + sizeParam);
-                        
+
+                        variant.setAttributeDetails(colorParam.trim() + "|" + sizeParam.trim());
+
                         variantsList.add(variant);
                     }
                     index++;
                 }
 
-                // 3. Gọi hàm DAO xử lý Transaction lồng nhau để lưu cả Product lẫn danh sách Variants
                 boolean isAdded = productDAO.insertProductWithMatrixVariants(product, savedFileName, variantsList);
                 if (!isAdded) {
                     statusRedirect = "error";
