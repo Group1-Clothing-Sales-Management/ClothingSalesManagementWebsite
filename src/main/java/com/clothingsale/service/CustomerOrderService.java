@@ -97,6 +97,30 @@ public class CustomerOrderService {
         return orders;
     }
 
+    public List<Order> getActiveOrdersByUserId(int userId) {
+        List<Order> result = new java.util.ArrayList<>();
+
+        for (Order order : getOrdersByUserId(userId)) {
+            if (!isHistoryOrder(order)) {
+                result.add(order);
+            }
+        }
+
+        return result;
+    }
+
+    public List<Order> getOrderHistoryByUserId(int userId) {
+        List<Order> result = new java.util.ArrayList<>();
+
+        for (Order order : getOrdersByUserId(userId)) {
+            if (isHistoryOrder(order)) {
+                result.add(order);
+            }
+        }
+
+        return result;
+    }
+
     public Map<Integer, CartItem> getCartMap(int userId) {
         return cartDAO.loadCart(userId);
     }
@@ -227,5 +251,31 @@ public class CustomerOrderService {
         order.setShippingStatusBadgeClass(
                 OrderStatusHelper.resolveShippingBadgeClass(order.getShippingStatus())
         );
+    }
+
+    private boolean isHistoryOrder(Order order) {
+        if (order == null) {
+            return false;
+        }
+
+        return isHistoryStatus(order.getOrderStatus())
+                || isHistoryStatus(order.getDisplayStatus())
+                || isHistoryStatus(order.getShippingStatus());
+    }
+
+    private boolean isHistoryStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+
+        String normalized = status.trim().toUpperCase();
+
+        return "CANCELLED".equals(normalized)
+                || "DELIVERED".equals(normalized)
+                || "RECEIVED".equals(normalized)
+                || "COMPLETED".equals(normalized)
+                || "PAID".equals(normalized)
+                || "RETURNED".equals(normalized)
+                || "FAILED".equals(normalized);
     }
 }

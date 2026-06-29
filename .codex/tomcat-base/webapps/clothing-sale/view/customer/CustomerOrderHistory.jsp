@@ -7,7 +7,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>My Orders</title>
+        <title>Order History</title>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -69,7 +69,7 @@
 
             .filter-bar {
                 display:grid;
-                grid-template-columns:repeat(4, minmax(150px, 1fr));
+                grid-template-columns:repeat(5, minmax(130px, 1fr));
                 gap:.7rem;
                 margin-bottom:1.25rem;
             }
@@ -412,38 +412,43 @@
         <main class="container orders-page py-4 py-lg-5">
             <div class="page-heading">
                 <div>
-                    <div class="page-kicker">Orders</div>
-                    <h1 class="page-title">My Orders</h1>
-                    <p class="page-subtitle">Track orders that are still being processed.</p>
+                    <div class="page-kicker">History</div>
+                    <h1 class="page-title">Order History</h1>
+                    <p class="page-subtitle">Review completed, cancelled, and returned purchases.</p>
                 </div>
 
             </div>
 
             <nav class="filter-bar" aria-label="Order status filter">
-                <a href="${pageContext.request.contextPath}/customer/orders"
+                <a href="${pageContext.request.contextPath}/customer/order-history"
                    class="filter-link ${empty param.status ? 'active' : ''}">
                     <i class="fa-solid fa-layer-group"></i>
                     All
                 </a>
 
-                <a href="?status=PENDING"
-                   class="filter-link ${param.status eq 'PENDING' ? 'active' : ''}">
-                    <i class="fa-solid fa-clock"></i>
-                    Pending
+                <a href="?status=DELIVERED"
+                   class="filter-link ${param.status eq 'DELIVERED' ? 'active' : ''}">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Delivered
                 </a>
 
-                <a href="?status=CONFIRMED"
-                   class="filter-link ${param.status eq 'CONFIRMED' ? 'active' : ''}">
-                    <i class="fa-solid fa-box"></i>
-                    Confirmed
+                <a href="?status=COMPLETED"
+                   class="filter-link ${param.status eq 'COMPLETED' ? 'active' : ''}">
+                    <i class="fa-solid fa-check-double"></i>
+                    Completed
                 </a>
 
-                <a href="?status=SHIPPING"
-                   class="filter-link ${param.status eq 'SHIPPING' ? 'active' : ''}">
-                    <i class="fa-solid fa-truck-fast"></i>
-                    Shipping
+                <a href="?status=CANCELLED"
+                   class="filter-link ${param.status eq 'CANCELLED' ? 'active' : ''}">
+                    <i class="fa-solid fa-ban"></i>
+                    Cancelled
                 </a>
 
+                <a href="?status=RETURNED"
+                   class="filter-link ${param.status eq 'RETURNED' ? 'active' : ''}">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Returned
+                </a>
             </nav>
 
             <c:if test="${not empty orderMessage}">
@@ -463,28 +468,31 @@
             <c:set var="hasVisibleOrder" value="false"/>
             <section class="orders-list">
                 <c:forEach items="${orders}" var="o">
-                    <c:if test="${empty param.status or o.orderStatus eq param.status}">
+                    <c:if test="${empty param.status
+                                  or o.orderStatus eq param.status
+                                  or o.displayStatus eq param.status
+                                  or o.shippingStatus eq param.status}">
                         <c:set var="hasVisibleOrder" value="true"/>
                         <c:set var="statusClass" value="status-default"/>
-                        <c:if test="${o.orderStatus eq 'PENDING'}">
+                        <c:if test="${o.orderStatus eq 'PENDING' or o.displayStatus eq 'PENDING'}">
                             <c:set var="statusClass" value="status-pending"/>
                         </c:if>
-                        <c:if test="${o.orderStatus eq 'CONFIRMED'}">
+                        <c:if test="${o.orderStatus eq 'CONFIRMED' or o.displayStatus eq 'CONFIRMED'}">
                             <c:set var="statusClass" value="status-confirmed"/>
                         </c:if>
-                        <c:if test="${o.orderStatus eq 'SHIPPING'}">
+                        <c:if test="${o.orderStatus eq 'SHIPPING' or o.displayStatus eq 'SHIPPING'}">
                             <c:set var="statusClass" value="status-shipping"/>
                         </c:if>
-                        <c:if test="${o.orderStatus eq 'DELIVERED'}">
+                        <c:if test="${o.orderStatus eq 'DELIVERED' or o.displayStatus eq 'DELIVERED' or o.shippingStatus eq 'DELIVERED'}">
                             <c:set var="statusClass" value="status-delivered"/>
                         </c:if>
-                        <c:if test="${o.orderStatus eq 'COMPLETED'}">
+                        <c:if test="${o.orderStatus eq 'COMPLETED' or o.displayStatus eq 'COMPLETED'}">
                             <c:set var="statusClass" value="status-completed"/>
                         </c:if>
-                        <c:if test="${o.orderStatus eq 'CANCELLED'}">
+                        <c:if test="${o.orderStatus eq 'CANCELLED' or o.displayStatus eq 'CANCELLED' or o.shippingStatus eq 'CANCELLED'}">
                             <c:set var="statusClass" value="status-cancelled"/>
                         </c:if>
-                        <c:if test="${o.orderStatus eq 'RETURNED'}">
+                        <c:if test="${o.orderStatus eq 'RETURNED' or o.displayStatus eq 'RETURNED' or o.shippingStatus eq 'RETURNED'}">
                             <c:set var="statusClass" value="status-returned"/>
                         </c:if>
 
@@ -623,7 +631,7 @@
                                     </c:if>
 
                                     <form method="post"
-                                          action="${pageContext.request.contextPath}/customer/orders">
+                                          action="${pageContext.request.contextPath}/customer/order-history">
                                         <input type="hidden" name="action" value="reorder">
                                         <input type="hidden" name="orderId" value="${o.id}">
                                         <button class="order-action primary" type="submit">
@@ -643,8 +651,8 @@
                     <div class="empty-mark">
                         <i class="fa-solid fa-receipt"></i>
                     </div>
-                    <h4>No active orders found</h4>
-                    <p class="text-muted mb-3">Processing orders matching this status will appear here.</p>
+                    <h4>No history found</h4>
+                    <p class="text-muted mb-3">Finished orders matching this status will appear here.</p>
                     <a href="${pageContext.request.contextPath}/products" class="btn btn-dark">
                         Browse Products
                     </a>

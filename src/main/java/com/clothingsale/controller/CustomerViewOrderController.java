@@ -53,7 +53,7 @@ public class CustomerViewOrderController
 
         request.setAttribute(
                 "orders",
-                service.getOrdersByUserId(userId));
+                service.getActiveOrdersByUserId(userId));
 
         request.getRequestDispatcher(
                 "/view/customer/CustomerViewOrder.jsp")
