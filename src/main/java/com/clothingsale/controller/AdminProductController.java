@@ -41,17 +41,7 @@ public class AdminProductController extends HttpServlet {
             case "view":
                 showProductDetails(request, response);
                 break;
-            case "edit":
-                // Đọc thông tin sản phẩm cần sửa để hiển thị lên form gộp nếu cần
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    Product product = productDAO.getProductById(id);
-                    request.setAttribute("productToEdit", product);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
-                listProducts(request, response);
-                break;
+
             case "list":
             default:
                 listProducts(request, response);
@@ -210,14 +200,41 @@ public class AdminProductController extends HttpServlet {
 
     private Product extractProductFromRequest(HttpServletRequest request) {
         Product product = new Product();
-        product.setProductName(request.getParameter("productName"));
-        product.setSlug(request.getParameter("slug"));
-        product.setBrandId(Integer.parseInt(request.getParameter("brandId")));
-        product.setCategoryId(Integer.parseInt(request.getParameter("categoryId")));
-        product.setShortDescription(request.getParameter("shortDescription"));
-        product.setLongDescription(request.getParameter("longDescription"));
-        product.setStatus(request.getParameter("status"));
+
+        product.setProductName(getMultipartParameter(request, "productName"));
+        product.setSlug(getMultipartParameter(request, "slug"));
+
+        String brandIdRaw = getMultipartParameter(request, "brandId");
+        product.setBrandId(brandIdRaw != null ? Integer.parseInt(brandIdRaw.trim()) : 0);
+
+        String categoryIdRaw = getMultipartParameter(request, "categoryId");
+        product.setCategoryId(categoryIdRaw != null ? Integer.parseInt(categoryIdRaw.trim()) : 0);
+
+        product.setShortDescription(getMultipartParameter(request, "shortDescription"));
+        product.setLongDescription(getMultipartParameter(request, "longDescription"));
+        product.setStatus(getMultipartParameter(request, "status"));
+
         return product;
+    }
+
+
+    private String getMultipartParameter(HttpServletRequest request, String paramName) {
+        String value = request.getParameter(paramName);
+        if (value == null || value.trim().isEmpty()) {
+            try {
+                Part part = request.getPart(paramName);
+                if (part != null) {
+                    try (java.util.Scanner scanner = new java.util.Scanner(part.getInputStream(), "UTF-8")) {
+                        if (scanner.hasNextLine()) {
+                            value = scanner.nextLine().trim();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("⚠️ Error extracting part " + paramName + ": " + e.getMessage());
+            }
+        }
+        return value;
     }
 
     private void listProducts(HttpServletRequest request, HttpServletResponse response)
@@ -249,6 +266,28 @@ public class AdminProductController extends HttpServlet {
             }
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/products?error=InvalidId");
+        }
+    }
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            int productId = Integer.parseInt(request.getParameter("id"));
+
+            // Gọi DAO lấy thông tin sản phẩm và các thuộc tính liên quan (Category, Brand)
+            AdminManageProductDAO productDAO = new AdminManageProductDAO();
+            Product product = productDAO.getProductById(productId);
+
+            // Đẩy dữ liệu lên bộ nhớ Request để trang JSP sửa đổi có thể hiển thị dữ liệu cũ
+            request.setAttribute("product", product);
+            request.setAttribute("categories", productDAO.getAllCategories());
+            request.setAttribute("brands", productDAO.getAllBrands());
+
+            // Chuyển hướng (Forward) sang trang JSP đảm nhận việc sửa đổi sản phẩm
+            request.getRequestDispatcher("/view/admin/admin_edit_product.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/AdminManageProduct?action=LIST");
         }
     }
 }
