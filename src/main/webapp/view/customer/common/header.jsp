@@ -83,7 +83,7 @@
                                 <a class="dropdown-item"
                                    href="${pageContext.request.contextPath}/customer/orders">
 
-                                    <i class="fa-solid fa-box me-2"></i>
+                                    <i class="fa-solid fa-clock-rotate-left me-2"></i>
                                     My Orders
 
                                 </a>
@@ -370,6 +370,47 @@
 
 <script>
     (function () {
+        var userMenuButton = document.querySelector('.user-menu');
+        var userDropdown = userMenuButton ? userMenuButton.closest('.dropdown') : null;
+        var userDropdownMenu = userDropdown ? userDropdown.querySelector('.dropdown-menu') : null;
+
+        if (userMenuButton && userDropdownMenu) {
+            userMenuButton.addEventListener('click', function (event) {
+                if (window.bootstrap && window.bootstrap.Dropdown) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                var shouldOpen = !userDropdownMenu.classList.contains('show');
+                userDropdownMenu.classList.toggle('show', shouldOpen);
+                userMenuButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (window.bootstrap && window.bootstrap.Dropdown) {
+                    return;
+                }
+
+                if (!userDropdown.contains(event.target)) {
+                    userDropdownMenu.classList.remove('show');
+                    userMenuButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (window.bootstrap && window.bootstrap.Dropdown) {
+                    return;
+                }
+
+                if (event.key === 'Escape') {
+                    userDropdownMenu.classList.remove('show');
+                    userMenuButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
         var logoutLink = document.querySelector('.js-customer-logout');
         var logoutModalElement = document.getElementById('customerLogoutModal');
         var confirmLogoutButton = document.getElementById('confirmCustomerLogoutButton');

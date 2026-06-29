@@ -6,6 +6,8 @@ package com.clothingsale.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Order {
 
@@ -45,6 +47,7 @@ public class Order {
     private String provinceName;
     private String districtName;
     private String wardName;
+    private List<OrderDetail> details = new ArrayList<>();
 
     public Order() {
     }
@@ -344,5 +347,13 @@ public class Order {
 
     public void setWardName(String wardName) {
         this.wardName = wardName;
+    }
+
+    public List<OrderDetail> getDetails() {
+        return details;
+    }
+
+    public void setDetails(List<OrderDetail> details) {
+        this.details = details != null ? details : new ArrayList<>();
     }
 }

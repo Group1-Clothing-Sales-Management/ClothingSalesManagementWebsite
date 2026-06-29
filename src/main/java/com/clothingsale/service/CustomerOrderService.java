@@ -1,16 +1,21 @@
 package com.clothingsale.service;
 
+import com.clothingsale.dao.CartDAO;
 import com.clothingsale.dao.CustomerOrderDAO;
 import com.clothingsale.model.CartItem;
 import com.clothingsale.model.Order;
+import com.clothingsale.model.OrderDetail;
+import com.clothingsale.model.ReorderResult;
 import com.clothingsale.model.UserAddress;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CustomerOrderService {
 
     private final CustomerOrderDAO dao = new CustomerOrderDAO();
+    private final CartDAO cartDAO = new CartDAO();
 
     // =================== ADDRESS ===================
     public List<UserAddress> getAddressesByUserId(int userId) {
@@ -87,8 +92,99 @@ public class CustomerOrderService {
         List<Order> orders = dao.getOrdersByUserId(userId);
         for (Order order : orders) {
             enrichOrder(order);
+            order.setDetails(dao.getOrderDetailsByOrderId(order.getId(), userId));
         }
         return orders;
+    }
+
+    public Map<Integer, CartItem> getCartMap(int userId) {
+        return cartDAO.loadCart(userId);
+    }
+
+    public ReorderResult reorderToCart(int userId, int orderId) {
+        List<OrderDetail> details = dao.getOrderDetailsByOrderId(orderId, userId);
+
+        if (details.isEmpty()) {
+            return new ReorderResult(
+                    false,
+                    0,
+                    0,
+                    "Order not found or has no items to reorder.");
+        }
+
+        Map<Integer, CartItem> cart = cartDAO.loadCart(userId);
+
+        int addedQuantity = 0;
+        int skippedLines = 0;
+        int adjustedLines = 0;
+
+        for (OrderDetail detail : details) {
+            if (detail == null || detail.getVariantId() <= 0) {
+                skippedLines++;
+                continue;
+            }
+
+            CartItem currentItem =
+                    cartDAO.getActiveVariantCartItem(detail.getVariantId());
+            int stock = cartDAO.getAvailableStock(detail.getVariantId());
+
+            if (currentItem == null || stock <= 0) {
+                skippedLines++;
+                continue;
+            }
+
+            CartItem existing = cart.get(detail.getVariantId());
+            int existingQty = existing != null ? existing.getQuantity() : 0;
+            int availableToAdd = stock - existingQty;
+
+            if (availableToAdd <= 0) {
+                skippedLines++;
+                continue;
+            }
+
+            int requestedQty = Math.max(1, detail.getQuantity());
+            int addQty = Math.min(requestedQty, availableToAdd);
+
+            if (addQty < requestedQty) {
+                adjustedLines++;
+            }
+
+            currentItem.setQuantity(existingQty + addQty);
+            cart.put(detail.getVariantId(), currentItem);
+            addedQuantity += addQty;
+        }
+
+        if (addedQuantity <= 0) {
+            return new ReorderResult(
+                    false,
+                    0,
+                    skippedLines,
+                    "Cannot recreate this order because all items are inactive or out of stock.");
+        }
+
+        boolean saved = cartDAO.saveCart(userId, cart);
+
+        if (!saved) {
+            return new ReorderResult(
+                    false,
+                    0,
+                    skippedLines,
+                    "Could not update your cart. Please try again.");
+        }
+
+        String message;
+        if (skippedLines > 0 || adjustedLines > 0) {
+            message = "Added " + addedQuantity
+                    + " item(s) to your cart. Some items were skipped or adjusted to current stock.";
+        } else {
+            message = "Recreated this order in your cart with current product prices.";
+        }
+
+        return new ReorderResult(
+                true,
+                addedQuantity,
+                skippedLines,
+                message);
     }
 
     public boolean validateCheckout(int userId) {

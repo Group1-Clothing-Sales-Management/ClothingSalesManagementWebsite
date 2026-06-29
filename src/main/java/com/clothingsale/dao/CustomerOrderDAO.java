@@ -2,6 +2,7 @@ package com.clothingsale.dao;
 
 import com.clothingsale.model.CartItem;
 import com.clothingsale.model.Order;
+import com.clothingsale.model.OrderDetail;
 import com.clothingsale.model.Shipment;
 import com.clothingsale.model.UserAddress;
 import com.clothingsale.model.Voucher;
@@ -181,6 +182,95 @@ public class CustomerOrderDAO {
         return list;
     }
 
+    public List<OrderDetail> getOrderDetailsByOrderId(
+            int orderId,
+            int userId) {
+
+        List<OrderDetail> list = new ArrayList<>();
+
+        String sql = "SELECT od.id, od.order_id, od.variant_id, "
+                + "od.product_name_snapshot, od.variant_attributes_snapshot, "
+                + "od.quantity, od.price, "
+                + "pv.product_id, pv.sale_price AS current_price, pv.stock_quantity, "
+                + "pv.status AS variant_status, "
+                + "p.product_name AS current_product_name, p.status AS product_status, "
+                + "img.image_url AS current_image_url "
+                + "FROM Order_Detail od "
+                + "JOIN [Order] o ON od.order_id = o.id "
+                + "LEFT JOIN Product_Variant pv ON od.variant_id = pv.id "
+                + "LEFT JOIN Product p ON pv.product_id = p.id "
+                + "LEFT JOIN Product_Image img ON p.id = img.product_id AND img.is_main = 1 "
+                + "WHERE od.order_id = ? "
+                + "AND o.user_id = ? "
+                + "ORDER BY od.id ASC";
+
+        try (
+                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, orderId);
+            ps.setInt(2, userId);
+
+            try ( ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+
+                    OrderDetail detail = new OrderDetail();
+
+                    detail.setId(rs.getInt("id"));
+                    detail.setOrderId(rs.getInt("order_id"));
+                    detail.setVariantId(rs.getInt("variant_id"));
+                    detail.setProductNameSnapshot(rs.getString("product_name_snapshot"));
+                    detail.setVariantAttributesSnapshot(rs.getString("variant_attributes_snapshot"));
+                    detail.setQuantity(rs.getInt("quantity"));
+                    detail.setPrice(rs.getBigDecimal("price"));
+                    detail.setProductId(rs.getInt("product_id"));
+                    detail.setCurrentProductName(rs.getString("current_product_name"));
+                    detail.setCurrentPrice(rs.getBigDecimal("current_price"));
+                    detail.setCurrentStock(rs.getInt("stock_quantity"));
+                    detail.setCurrentProductStatus(rs.getString("product_status"));
+                    detail.setCurrentVariantStatus(rs.getString("variant_status"));
+                    detail.setCurrentImageUrl(rs.getString("current_image_url"));
+
+                    BigDecimal price = detail.getPrice() != null
+                            ? detail.getPrice()
+                            : BigDecimal.ZERO;
+                    detail.setLineTotal(
+                            price.multiply(BigDecimal.valueOf(detail.getQuantity())));
+
+                    boolean activeProduct =
+                            "ACTIVE".equalsIgnoreCase(detail.getCurrentProductStatus());
+                    boolean activeVariant =
+                            "ACTIVE".equalsIgnoreCase(detail.getCurrentVariantStatus());
+                    boolean hasStock = detail.getCurrentStock() > 0;
+
+                    detail.setReorderable(
+                            detail.getVariantId() > 0
+                            && activeProduct
+                            && activeVariant
+                            && hasStock);
+
+                    if (detail.getVariantId() <= 0) {
+                        detail.setReorderNote("Variant no longer exists");
+                    } else if (!activeProduct || !activeVariant) {
+                        detail.setReorderNote("Product is no longer active");
+                    } else if (!hasStock) {
+                        detail.setReorderNote("Out of stock");
+                    } else {
+                        detail.setReorderNote("Available");
+                    }
+
+                    list.add(detail);
+                }
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
     private int createOrder(
             Connection con,
             int userId,
@@ -305,12 +395,22 @@ public class CustomerOrderDAO {
             List<CartItem> cartItems = getCartItems(userId, selectedVariantIds);
 
             if (cartItems.isEmpty()) {
+                con.rollback();
                 return false;
             }
 
             UserAddress address = getAddressById(addressId);
-            if (address == null) {
+            if (address == null || address.getUserId() != userId) {
+                con.rollback();
                 return false;
+            }
+
+            for (CartItem item : cartItems) {
+                int availableStock = cartDAO.getAvailableStock(item.getVariantId());
+                if (availableStock < item.getQuantity()) {
+                    con.rollback();
+                    return false;
+                }
             }
 
             // ===== SUBTOTAL =====
@@ -558,15 +658,20 @@ public class CustomerOrderDAO {
         String sql
                 = "UPDATE Product_Variant "
                 + "SET stock_quantity = stock_quantity - ? "
-                + "WHERE id=?";
+                + "WHERE id=? "
+                + "AND status='ACTIVE' "
+                + "AND stock_quantity >= ?";
 
         PreparedStatement ps
                 = con.prepareStatement(sql);
 
         ps.setInt(1, quantity);
         ps.setInt(2, variantId);
+        ps.setInt(3, quantity);
 
-        ps.executeUpdate();
+        if (ps.executeUpdate() == 0) {
+            throw new SQLException("Not enough stock for variant " + variantId);
+        }
     }
 
     public void clearCart(

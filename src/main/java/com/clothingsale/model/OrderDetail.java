@@ -16,6 +16,15 @@ public class OrderDetail {
     private int quantity;
     private BigDecimal price;
     private BigDecimal lineTotal;
+    private int productId;
+    private String currentProductName;
+    private BigDecimal currentPrice;
+    private int currentStock;
+    private String currentProductStatus;
+    private String currentVariantStatus;
+    private String currentImageUrl;
+    private boolean reorderable;
+    private String reorderNote;
 
     public OrderDetail() {
     }
@@ -94,5 +103,77 @@ public class OrderDetail {
 
     public void setLineTotal(BigDecimal lineTotal) {
         this.lineTotal = lineTotal;
+    }
+
+    public int getProductId() {
+        return productId;
+    }
+
+    public void setProductId(int productId) {
+        this.productId = productId;
+    }
+
+    public String getCurrentProductName() {
+        return currentProductName;
+    }
+
+    public void setCurrentProductName(String currentProductName) {
+        this.currentProductName = currentProductName;
+    }
+
+    public BigDecimal getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public void setCurrentPrice(BigDecimal currentPrice) {
+        this.currentPrice = currentPrice;
+    }
+
+    public int getCurrentStock() {
+        return currentStock;
+    }
+
+    public void setCurrentStock(int currentStock) {
+        this.currentStock = currentStock;
+    }
+
+    public String getCurrentProductStatus() {
+        return currentProductStatus;
+    }
+
+    public void setCurrentProductStatus(String currentProductStatus) {
+        this.currentProductStatus = currentProductStatus;
+    }
+
+    public String getCurrentVariantStatus() {
+        return currentVariantStatus;
+    }
+
+    public void setCurrentVariantStatus(String currentVariantStatus) {
+        this.currentVariantStatus = currentVariantStatus;
+    }
+
+    public String getCurrentImageUrl() {
+        return currentImageUrl;
+    }
+
+    public void setCurrentImageUrl(String currentImageUrl) {
+        this.currentImageUrl = currentImageUrl;
+    }
+
+    public boolean isReorderable() {
+        return reorderable;
+    }
+
+    public void setReorderable(boolean reorderable) {
+        this.reorderable = reorderable;
+    }
+
+    public String getReorderNote() {
+        return reorderNote;
+    }
+
+    public void setReorderNote(String reorderNote) {
+        this.reorderNote = reorderNote;
     }
 }

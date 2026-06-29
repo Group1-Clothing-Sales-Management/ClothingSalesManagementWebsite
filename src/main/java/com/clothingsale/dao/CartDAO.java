@@ -34,9 +34,28 @@ public class CartDAO {
             "INSERT INTO Cart (user_id, variant_id, quantity) VALUES (?, ?, ?)";
 
     private static final String CHECK_STOCK_SQL =
-            "SELECT stock_quantity "
-            + "FROM Product_Variant "
-            + "WHERE id = ? AND status = 'ACTIVE'";
+            "SELECT pv.stock_quantity "
+            + "FROM Product_Variant pv "
+            + "JOIN Product p ON pv.product_id = p.id "
+            + "WHERE pv.id = ? "
+            + "AND pv.status = 'ACTIVE' "
+            + "AND p.status = 'ACTIVE'";
+
+    private static final String SELECT_ACTIVE_VARIANT_FOR_CART_SQL =
+            "SELECT pv.id AS variant_id, pv.product_id, pv.sale_price, pv.stock_quantity, "
+            + "p.product_name, img.image_url AS main_image, "
+            + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav "
+            + "JOIN Attribute a ON vav.attribute_id = a.id "
+            + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') AS color, "
+            + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav "
+            + "JOIN Attribute a ON vav.attribute_id = a.id "
+            + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') AS size "
+            + "FROM Product_Variant pv "
+            + "JOIN Product p ON pv.product_id = p.id "
+            + "LEFT JOIN Product_Image img ON p.id = img.product_id AND img.is_main = 1 "
+            + "WHERE pv.id = ? "
+            + "AND pv.status = 'ACTIVE' "
+            + "AND p.status = 'ACTIVE'";
 
     public Map<Integer, CartItem> loadCart(int userId) {
 
@@ -227,5 +246,65 @@ public class CartDAO {
 
     public boolean isProductAvailable(int variantId) {
         return getAvailableStock(variantId) > 0;
+    }
+
+    public CartItem getActiveVariantCartItem(int variantId) {
+
+        try (Connection conn = DBConnection.getConnection()) {
+
+            if (conn == null) {
+                return null;
+            }
+
+            try (PreparedStatement ps =
+                    conn.prepareStatement(SELECT_ACTIVE_VARIANT_FOR_CART_SQL)) {
+
+                ps.setInt(1, variantId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    if (rs.next()) {
+                        CartItem item = new CartItem();
+
+                        item.setVariantId(rs.getInt("variant_id"));
+                        item.setProductId(rs.getInt("product_id"));
+                        item.setProductName(rs.getString("product_name"));
+                        item.setPrice(
+                                rs.getBigDecimal("sale_price") != null
+                                ? rs.getBigDecimal("sale_price")
+                                : BigDecimal.ZERO);
+                        item.setImageUrl(rs.getString("main_image"));
+                        item.setAttributes(buildAttributes(
+                                rs.getString("color"),
+                                rs.getString("size")));
+
+                        return item;
+                    }
+                }
+            }
+
+        } catch (SQLException ex) {
+
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private String buildAttributes(String color, String size) {
+        StringBuilder attributes = new StringBuilder();
+
+        if (color != null && !color.trim().isEmpty()) {
+            attributes.append("Color: ").append(color.trim());
+        }
+
+        if (size != null && !size.trim().isEmpty()) {
+            if (attributes.length() > 0) {
+                attributes.append(" / ");
+            }
+            attributes.append("Size: ").append(size.trim());
+        }
+
+        return attributes.length() > 0 ? attributes.toString() : "Standard";
     }
 }
