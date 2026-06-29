@@ -36,12 +36,15 @@ public class AdminProductController extends HttpServlet {
         if (action == null) {
             action = "list";
         }
-
+        request.setAttribute("categories", productDAO.getAllCategories());
+        request.setAttribute("brands", productDAO.getAllBrands());
         switch (action) {
             case "view":
                 showProductDetails(request, response);
                 break;
-
+            case "edit":
+                showEditForm(request, response);
+                break;
             case "list":
             default:
                 listProducts(request, response);
@@ -76,19 +79,14 @@ public class AdminProductController extends HttpServlet {
         String statusRedirect = "success";
 
         try {
-            if ("UPDATE".equals(action)) {
-                // Kiểm tra tham số ID sản phẩm bắt buộc
+            if ("UPDATE".equalsIgnoreCase(action)) {
+                // SỬA: Lấy productId bằng request.getParameter trước, nếu trống mới dùng Multipart để tăng độ an toàn
                 String idRaw = request.getParameter("productId");
                 if (idRaw == null || idRaw.trim().isEmpty()) {
-                    // Fallback bóc tách từ part nếu bị multipart làm ẩn mất parameter
-                    Part idPart = request.getPart("productId");
-                    if (idPart != null) {
-                        try (java.util.Scanner scanner = new java.util.Scanner(idPart.getInputStream(), "UTF-8")) {
-                            if (scanner.hasNext()) {
-                                idRaw = scanner.next().trim();
-                            }
-                        }
-                    }
+                    idRaw = getMultipartParameter(request, "productId");
+                }
+                if (idRaw == null || idRaw.trim().isEmpty()) {
+                    idRaw = request.getParameter("id");
                 }
 
                 if (idRaw != null && !idRaw.trim().isEmpty()) {
@@ -96,20 +94,30 @@ public class AdminProductController extends HttpServlet {
                     Product product = extractProductFromRequest(request);
                     product.setId(id);
 
-                    // Xử lý tệp tin hình ảnh tải lên
+                    // SỬA: Tự động sinh Slug hợp lệ theo tên mới sửa của sản phẩm để tránh trùng Unique Key trong DB
+                    if (product.getProductName() != null && !product.getProductName().trim().isEmpty()) {
+                        String cleanSlug = product.getProductName().toLowerCase()
+                                .replaceAll("[^a-z0-9\\s]", "")
+                                .replaceAll("\\s+", "-");
+                        product.setSlug(cleanSlug + "-" + id); // Đuôi ID đảm bảo không bao giờ trùng lặp
+                    } else {
+                        product.setSlug("updated-product-" + id);
+                    }
+
                     Part filePart = request.getPart("productImage");
                     String savedFileName = handleImageUpload(filePart);
 
+                    // Thực hiện gọi sang Service để cập nhật thông tin chính vào DB
                     boolean isUpdated = productService.updateProduct(product, savedFileName);
                     if (!isUpdated) {
                         statusRedirect = "error";
                     }
                 } else {
+                    System.err.println("❌ Không tìm thấy productId hợp lệ từ Request khi Update!");
                     statusRedirect = "error";
                 }
-
             } else if ("DELETE".equals(action)) {
-                // Đồng bộ kiểm tra cả 'productId' (từ form) lẫn 'id' (từ thẻ <a> cũ nếu có)
+
                 String idRaw = request.getParameter("productId");
                 if (idRaw == null) {
                     idRaw = request.getParameter("id");
@@ -127,6 +135,15 @@ public class AdminProductController extends HttpServlet {
 
             } else if ("ADD".equals(action)) {
                 Product product = extractProductFromRequest(request);
+
+                // TỰ ĐỘNG SINH SLUG THEO THỜI GIAN ĐỂ TRÁNH LỖI TRÙNG KHÓA DUY NHẤT (UNIQUE KEY)
+                if (product.getProductName() != null) {
+                    String cleanSlug = product.getProductName().toLowerCase()
+                            .replaceAll("[^a-z0-9\\s]", "")
+                            .replaceAll("\\s+", "-");
+                    product.setSlug(cleanSlug + "-" + System.currentTimeMillis());
+                }
+
                 Part filePart = request.getPart("productImage");
                 String savedFileName = handleImageUpload(filePart);
 
@@ -134,35 +151,44 @@ public class AdminProductController extends HttpServlet {
 
                 int index = 0;
                 while (true) {
-                    String skuParam = request.getParameter("variants[" + index + "].skuCode");
+                    // SỬA: Dùng getMultipartParameter thay vì request.getParameter
+                    String skuParam = getMultipartParameter(request, "variants[" + index + "].skuCode");
                     if (skuParam == null) {
                         break;
                     }
 
-                    String colorParam = request.getParameter("variants[" + index + "].color");
-                    String sizeParam = request.getParameter("variants[" + index + "].size");
-                    String statusParam = request.getParameter("variants[" + index + "].status");
+                    String colorParam = getMultipartParameter(request, "variants[" + index + "].color");
+                    String sizeParam = getMultipartParameter(request, "variants[" + index + "].size");
+                    String statusParam = getMultipartParameter(request, "variants[" + index + "].status");
 
                     if (!skuParam.trim().isEmpty()) {
                         com.clothingsale.model.ProductVariant variant = new com.clothingsale.model.ProductVariant();
                         variant.setSku(skuParam.trim().toUpperCase());
                         variant.setStatus(statusParam != null ? statusParam : "ACTIVE");
 
-                        // THAY ĐỔI: Ép cứng cả giá bán lẻ và giá vốn khởi điểm = 0 (Giá thật sẽ cập nhật khi Admin nhập Lô hàng FIFO)
                         variant.setSalePrice(java.math.BigDecimal.ZERO);
                         variant.setCostPrice(java.math.BigDecimal.ZERO);
                         variant.setStockQuantity(0);
 
-                        variant.setAttributeDetails(colorParam.trim() + "|" + sizeParam.trim());
+                        // Đảm bảo không bị NullPointerException nếu màu sắc/kích cỡ để trống
+                        String colorStr = (colorParam != null) ? colorParam.trim() : "Standard";
+                        String sizeStr = (sizeParam != null) ? sizeParam.trim() : "FreeSize";
+                        variant.setAttributeDetails(colorStr + "|" + sizeStr);
 
                         variantsList.add(variant);
                     }
                     index++;
                 }
 
-                boolean isAdded = productDAO.insertProductWithMatrixVariants(product, savedFileName, variantsList);
-                if (!isAdded) {
+                // Kiểm tra nghiệp vụ: Nếu Admin không tích chọn biến thể nào, thông báo lỗi luôn
+                if (variantsList.isEmpty()) {
+                    System.err.println("⚠️ Cảnh báo: Không có biến thể nào được tạo ra từ giao diện!");
                     statusRedirect = "error";
+                } else {
+                    boolean isAdded = productDAO.insertProductWithMatrixVariants(product, savedFileName, variantsList);
+                    if (!isAdded) {
+                        statusRedirect = "error";
+                    }
                 }
             }
         } catch (Exception e) {
@@ -192,8 +218,16 @@ public class AdminProductController extends HttpServlet {
             if (!uploadDir.exists()) {
                 uploadDir.mkdirs();
             }
-            filePart.write(uploadPath + File.separator + savedFileName);
-            return savedFileName;
+
+            // Thêm khối try-catch bọc riêng việc ghi file để nếu lỗi hình ảnh, dữ liệu text (sản phẩm) vẫn được cập nhật vào cơ sở dữ liệu
+            try {
+                filePart.write(uploadPath + File.separator + savedFileName);
+                return savedFileName;
+            } catch (Exception e) {
+                System.err.println("⚠️ Không thể ghi file lên ổ cứng (Có thể do quyền thư mục): " + e.getMessage());
+                // Trả về một tên file mặc định hoặc giữ nguyên để không bị crash cả luồng xử lý
+                return null;
+            }
         }
         return null;
     }
@@ -205,10 +239,10 @@ public class AdminProductController extends HttpServlet {
         product.setSlug(getMultipartParameter(request, "slug"));
 
         String brandIdRaw = getMultipartParameter(request, "brandId");
-        product.setBrandId(brandIdRaw != null ? Integer.parseInt(brandIdRaw.trim()) : 0);
+        product.setBrandId(brandIdRaw != null && !brandIdRaw.trim().isEmpty() ? Integer.parseInt(brandIdRaw.trim()) : 0);
 
         String categoryIdRaw = getMultipartParameter(request, "categoryId");
-        product.setCategoryId(categoryIdRaw != null ? Integer.parseInt(categoryIdRaw.trim()) : 0);
+        product.setCategoryId(categoryIdRaw != null && !categoryIdRaw.trim().isEmpty() ? Integer.parseInt(categoryIdRaw.trim()) : 0);
 
         product.setShortDescription(getMultipartParameter(request, "shortDescription"));
         product.setLongDescription(getMultipartParameter(request, "longDescription"));
@@ -216,7 +250,6 @@ public class AdminProductController extends HttpServlet {
 
         return product;
     }
-
 
     private String getMultipartParameter(HttpServletRequest request, String paramName) {
         String value = request.getParameter(paramName);
@@ -231,7 +264,7 @@ public class AdminProductController extends HttpServlet {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("⚠️ Error extracting part " + paramName + ": " + e.getMessage());
+                System.err.println("⚠️ Lỗi trích xuất Part " + paramName + ": " + e.getMessage());
             }
         }
         return value;

@@ -178,10 +178,6 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * SỬA LỖI TÊN BẢNG: Kiểm tra xem sản phẩm đã nằm trong đơn hàng (thông qua
-     * Product_Variant) chưa
-     */
     public boolean isProductInOrders(int productId) {
         String sql = "SELECT COUNT(*) FROM Order_Detail WHERE variant_id IN (SELECT id FROM Product_Variant WHERE product_id = ?)";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -346,7 +342,6 @@ public class AdminManageProductDAO {
         return list;
     }
 
-
     public boolean insertProductWithMatrixVariants(Product p, String imageName, List<com.clothingsale.model.ProductVariant> variants) {
         String sqlProd = "INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String sqlImg = "INSERT INTO Product_Image (product_id, image_url, is_main) VALUES (?, ?, 1)";
@@ -448,10 +443,12 @@ public class AdminManageProductDAO {
                 }
             }
 
-            // Thực thi chèn mảng đồng loạt (Batch Execution) để tối ưu hiệu năng
-            psAttrValue.executeBatch();
+            // Chỉ thực thi chèn mảng đồng loạt (Batch Execution) nếu danh sách thực sự có phần tử
+            if (!variants.isEmpty()) {
+                psAttrValue.executeBatch();
+            }
 
-            conn.commit(); // Hoàn tất thành công trọn vẹn chuỗi Transaction dữ liệu
+            conn.commit(); 
             return true;
 
         } catch (SQLException e) {
