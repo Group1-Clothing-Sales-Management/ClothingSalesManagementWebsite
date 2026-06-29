@@ -603,4 +603,52 @@ VALUES
 ((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 'COD', 'PAID', 380000.00, NULL, '2026-06-04 10:05:00'),
 ((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 'COD', 'UNPAID', 530000.00, NULL, NULL),
 ((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 'VNPAY', 'UNPAID', 310000.00, NULL, NULL);
+
+-- =========================================================================
+-- 11. DỮ LIỆU MỞ RỘNG CHO ORDER MANAGEMENT & FEEDBACK MANAGEMENT
+-- =========================================================================
+
+-- Thêm các đơn hàng với nhiều trạng thái để test danh sách, filter và chi tiết xử lý
+INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+VALUES
+('ORD1768234700010', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Số 123 Đường 3/2', 438000.00, 50000.00, 30000.00, 418000.00, 'DELIVERED', N'Đơn đã giao xong, dùng để test lịch sử đơn', '2026-06-23 09:15:00', '2026-06-25 18:20:00'),
+('ORD1768234700011', 5, 2, 2, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 879000.00, 30000.00, 30000.00, 879000.00, 'SHIPPING', N'Đơn đang giao để test trạng thái vận chuyển', '2026-06-24 10:00:00', '2026-06-26 12:10:00'),
+('ORD1768234700012', 4, NULL, 3, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Tòa nhà Bitexco, Tầng 15', 560000.00, 0.00, 30000.00, 590000.00, 'CONFIRMED', N'Đơn đã xác nhận chờ xuất kho', '2026-06-25 11:45:00', '2026-06-25 13:00:00'),
+('ORD1768234700013', 5, NULL, NULL, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 379000.00, 0.00, 30000.00, 409000.00, 'PENDING', N'Đơn mới tạo chờ duyệt thanh toán', '2026-06-26 08:30:00', '2026-06-26 08:30:00'),
+('ORD1768234700014', 4, NULL, 2, N'Nguyễn Ngọc Quý', '0933445566', '26734', N'Văn phòng Bitexco, tầng 15', 839000.00, 0.00, 30000.00, 869000.00, 'CANCELLED', N'Đơn bị hủy để test luồng hoàn tất/hủy', '2026-06-20 14:05:00', '2026-06-20 14:40:00'),
+('ORD1768234700015', 5, 1, 1, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 588000.00, 50000.00, 30000.00, 568000.00, 'RETURNED', N'Đơn đã giao nhưng khách trả hàng', '2026-06-18 09:00:00', '2026-06-28 10:15:00');
+
+-- Chi tiết cho các đơn bổ sung
+INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) VALUES
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 12, N'Áo T-Shirt Cotton Cổ Tròn', N'Color: White, Size: M', 1, 179000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 15, N'Áo Polo Nam Gân Nổi', N'Color: White, Size: M', 1, 259000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 69, N'Áo Blazer Nam Hàn Quốc', N'Color: Black, Size: M', 1, 680000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 57, N'Quần Short Kaki Đi Biển', N'Color: Beige, Size: M', 1, 199000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 28, N'Áo Sơ Mi Trắng Công Sở Oxford', N'Color: White, Size: L', 2, 280000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 53, N'Áo Hoodie Nỉ Bông Mùa Đông', N'Color: Gray, Size: M', 1, 379000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 34, N'Áo Sơ Mi Denim Bụi Bặm', N'Color: Denim Blue, Size: M', 1, 340000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 46, N'Quần Jean Nam Dáng Đứng Regular', N'Color: Dark Blue, Size: 30', 1, 499000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 73, N'Áo Len Cổ Lọ Giữ Nhiệt', N'Color: Cream, Size: M', 1, 359000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 77, N'Quần Jogger Thể Thao Năng Động', N'Color: Black, Size: M', 1, 229000.00);
+
+-- Thanh toán cho các đơn mới để test nhiều trạng thái
+INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date)
+VALUES
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 'BANK_TRANSFER', 'PAID', 418000.00, 'TXN2026062301', '2026-06-23 09:20:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 'VNPAY', 'PAID', 879000.00, 'TXN2026062402', '2026-06-24 10:05:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 'COD', 'PAID', 590000.00, NULL, '2026-06-25 11:50:00'),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 'COD', 'UNPAID', 409000.00, NULL, NULL),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 'VNPAY', 'FAILED', 869000.00, NULL, NULL),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 'BANK_TRANSFER', 'REFUNDED', 568000.00, 'TXN2026061803', '2026-06-28 10:30:00');
+
+-- Feedback đa dạng để test hiển thị, ẩn/hiện và trả lời của admin/staff
+INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status, admin_response, response_by, responded_at) VALUES
+(4, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 5, N'Áo mặc rất mát, form đẹp, giao nhanh.', 1, N'Cảm ơn anh đã đánh giá. Shop sẽ tiếp tục cải thiện dịch vụ.', 2, '2026-06-02 09:00:00'),
+(4, 4, (SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 4, N'Chất vải ổn, màu dễ phối, size chuẩn.', 1, NULL, NULL, NULL),
+(5, 20, (SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 2, N'Áo đẹp nhưng giao hơi chậm so với dự kiến.', 0, N'Shop đã ghi nhận phản hồi và sẽ theo dõi đơn vị vận chuyển.', 1, '2026-06-26 16:20:00'),
+(5, 8, (SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 5, N'Sơ mi rất lịch sự, mặc đi làm rất hợp.', 1, NULL, NULL, NULL),
+(4, 16, (SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 1, N'Khách trả hàng vì size không vừa, cần hỗ trợ đổi size.', 0, N'Shop đã tiếp nhận yêu cầu đổi trả và liên hệ lại khách.', 2, '2026-06-28 10:40:00'),
+(5, 12, (SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Mẫu quần ổn nhưng đóng gói cần chắc chắn hơn.', 1, N'Cảm ơn anh góp ý, shop sẽ cải thiện bao bì.', 2, '2026-05-20 15:10:00'),
+(4, 22, (SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 4, N'Quần jogger mặc thoải mái, phù hợp đi tập.', 1, NULL, NULL, NULL),
+(5, 10, (SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 2, N'Áo denim ổn nhưng form hơi rộng với mình.', 0, N'Shop xin lỗi về trải nghiệm chưa tốt, đã ẩn phản hồi để kiểm tra nội dung.', 1, '2026-06-20 18:00:00');
 GO
