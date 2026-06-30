@@ -49,10 +49,7 @@
                 <div class="container-fluid">
 
                     <c:if test="${param.status eq 'success'}">
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
-                            <i class="fa-solid fa-circle-check me-2"></i><strong>Success!</strong> Stock inflow transaction has been processed correctly.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
+                        <div class="d-none" data-admin-toast data-admin-toast-type="success">Stock inflow transaction has been processed correctly.</div>
                     </c:if>
 
                     <div class="page-header">

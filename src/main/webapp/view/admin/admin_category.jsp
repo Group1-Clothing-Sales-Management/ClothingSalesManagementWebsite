@@ -28,22 +28,13 @@
                 </div>
 
                 <c:if test="${param.status == 'success'}">
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-circle-check me-2"></i> Action executed successfully!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                    <div class="d-none" data-admin-toast data-admin-toast-type="success">Action executed successfully!</div>
                 </c:if>
                 <c:if test="${param.status == 'error'}">
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-circle-exclamation me-2"></i> An error occurred. Please try again!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                    <div class="d-none" data-admin-toast data-admin-toast-type="error">An error occurred. Please try again!</div>
                 </c:if>
                 <c:if test="${param.status == 'duplicate'}">
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i class="fa-solid fa-triangle-exclamation me-2"></i> <strong>Duplicate Name!</strong> This category already exists.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                    <div class="d-none" data-admin-toast data-admin-toast-type="warning"><strong>Duplicate Name!</strong> This category already exists.</div>
                 </c:if>
 
                 <div class="card card-main admin-card">

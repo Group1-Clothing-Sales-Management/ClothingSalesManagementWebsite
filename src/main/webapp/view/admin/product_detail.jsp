@@ -18,14 +18,10 @@
             </div>
 
             <c:if test="${param.status == 'success'}">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    Action performed successfully!
-                </div>
+                <div class="d-none" data-product-toast data-product-toast-type="success">Action performed successfully!</div>
             </c:if>
             <c:if test="${param.status == 'error'}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    An error occurred while processing the request. Please check inputs.
-                </div>
+                <div class="d-none" data-product-toast data-product-toast-type="error">An error occurred while processing the request. Please check inputs.</div>
             </c:if>
 
             <div class="page-header">
@@ -219,20 +215,32 @@
 
                                                            // Hiển thị Toast thông báo thành công sau khi trang reload lại
                                                            document.addEventListener("DOMContentLoaded", function () {
+                                                               const Toast = Swal.mixin({
+                                                                   toast: true,
+                                                                   position: 'top-end',
+                                                                   showConfirmButton: false,
+                                                                   timer: 3000,
+                                                                   timerProgressBar: true,
+                                                                   didOpen: (toast) => {
+                                                                       toast.addEventListener('mouseenter', Swal.stopTimer);
+                                                                       toast.addEventListener('mouseleave', Swal.resumeTimer);
+                                                                   }
+                                                               });
+
+                                                               document.querySelectorAll('[data-product-toast]').forEach(function (node) {
+                                                                   const type = node.getAttribute('data-product-toast-type') || 'info';
+                                                                   const message = (node.textContent || '').trim();
+                                                                   if (message) {
+                                                                       Toast.fire({
+                                                                           icon: type,
+                                                                           title: message
+                                                                       });
+                                                                   }
+                                                                   node.remove();
+                                                               });
+
                                                                const urlParams = new URLSearchParams(window.location.search);
                                                                if (urlParams.get('success') === 'StatusUpdated') {
-                                                                   const Toast = Swal.mixin({
-                                                                       toast: true,
-                                                                       position: 'top-end',
-                                                                       showConfirmButton: false,
-                                                                       timer: 3000,
-                                                                       timerProgressBar: true,
-                                                                       didOpen: (toast) => {
-                                                                           toast.addEventListener('mouseenter', Swal.stopTimer)
-                                                                           toast.addEventListener('mouseleave', Swal.resumeTimer)
-                                                                       }
-                                                                   });
-
                                                                    Toast.fire({
                                                                        icon: 'success',
                                                                        title: 'Variant status updated successfully'

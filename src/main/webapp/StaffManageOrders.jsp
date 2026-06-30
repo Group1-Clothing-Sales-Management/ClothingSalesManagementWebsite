@@ -79,24 +79,15 @@
 </jsp:include>
         <div class="admin-page">
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show flash-alert" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>${sessionScope.successMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
         <c:if test="${not empty sessionScope.errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>${sessionScope.errorMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${sessionScope.errorMsg}"/></div>
             <c:remove var="errorMsg" scope="session"/>
         </c:if>
         <c:if test="${not empty errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>${errorMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMsg}"/></div>
         </c:if>
 
         <c:choose>

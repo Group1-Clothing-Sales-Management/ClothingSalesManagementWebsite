@@ -257,6 +257,132 @@
         text-decoration: underline;
     }
 
+    .admin-toast-stack {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1080;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: min(380px, calc(100vw - 32px));
+        pointer-events: none;
+    }
+
+    .admin-toast {
+        pointer-events: auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        box-shadow: var(--admin-shadow);
+        border: 1px solid transparent;
+        background: #ffffff;
+        color: var(--admin-text);
+        animation: admin-toast-in 160ms ease-out both;
+    }
+
+    .admin-toast--success {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+    }
+
+    .admin-toast--error {
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .admin-toast--warning {
+        background: #fff7ed;
+        border-color: #fed7aa;
+    }
+
+    .admin-toast--info {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+
+    .admin-toast__icon {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .admin-toast--success .admin-toast__icon {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+    .admin-toast--error .admin-toast__icon {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .admin-toast--warning .admin-toast__icon {
+        background: #ffedd5;
+        color: #9a3412;
+    }
+
+    .admin-toast--info .admin-toast__icon {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .admin-toast__content {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .admin-toast__title {
+        margin: 0;
+        font-size: .92rem;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    .admin-toast__message {
+        margin-top: 2px;
+        font-size: .9rem;
+        line-height: 1.45;
+        color: #374151;
+        word-break: break-word;
+    }
+
+    .admin-toast__close {
+        margin-left: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        opacity: .55;
+        font-size: 1.15rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .admin-toast__close:hover {
+        opacity: 1;
+    }
+
+    @keyframes admin-toast-in {
+        from {
+            transform: translateY(-8px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
     @media (max-width: 767.98px) {
         .admin-shell {
             min-height: 100vh;

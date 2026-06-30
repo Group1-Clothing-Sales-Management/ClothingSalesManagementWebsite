@@ -40,6 +40,9 @@
 </jsp:include>
 
         <div class="admin-page">
+            <c:if test="${not empty errorMsg}">
+                <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMsg}"/></div>
+            </c:if>
             <div class="page-header">
                 <div>
                     <h2 class="page-title">Update Shipment Status</h2>

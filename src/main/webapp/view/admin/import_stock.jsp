@@ -54,6 +54,9 @@
 
             <div class="main-content admin-page">
                 <div class="container-fluid" style="max-width: 1100px; margin: 0 auto;">
+                    <c:if test="${param.status eq 'error'}">
+                        <div class="d-none" data-admin-toast data-admin-toast-type="error">Unable to process the stock import. Please try again.</div>
+                    </c:if>
                     <div class="card card-main admin-card p-4 mb-4">
                         <div class="border-bottom pb-3 mb-4">
                             <h2 class="page-title mb-1" style="font-size: 1.15rem;">

@@ -49,12 +49,7 @@
                     </div>
 
                     <c:if test="${not empty errorMessage}">
-                        <div class="alert alert-danger alert-dismissible fade show card p-3 mb-4 border-left border-danger" role="alert">
-                            <i class="fas fa-exclamation-circle mr-2"></i> ${errorMessage}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
+                        <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
                     </c:if>
 
                     <div class="card card-main admin-card">

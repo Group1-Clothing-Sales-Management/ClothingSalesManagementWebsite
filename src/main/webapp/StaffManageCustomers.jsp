@@ -42,19 +42,13 @@
         <div class="admin-page">
         <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-check-circle-fill"></i> ${sessionScope.successMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
 
         <%-- Thông báo lỗi tổng quan --%>
         <c:if test="${not empty errors.general}">
-            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> ${errors.general}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errors.general}"/></div>
         </c:if>
 
         <%-- 1. GIAO DIỆN DANH SÁCH KHÁCH HÀNG --%>

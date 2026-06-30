@@ -22,11 +22,12 @@
             </div>
 
             <c:if test="${not empty sessionScope.successMsg}">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    ${sessionScope.successMsg}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+                <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
                 <% session.removeAttribute("successMsg"); %>
+            </c:if>
+            <c:if test="${not empty sessionScope.errorMsg}">
+                <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${sessionScope.errorMsg}"/></div>
+                <% session.removeAttribute("errorMsg"); %>
             </c:if>
 
             <div class="card card-main admin-card mb-4">

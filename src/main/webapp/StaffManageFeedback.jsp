@@ -210,20 +210,12 @@
         <div class="admin-page">
         <%-- Flash message từ session giúp báo kết quả sau khi respond/delete. --%>
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>${sessionScope.successMsg}</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
 
         <c:if test="${not empty sessionScope.errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>${sessionScope.errorMsg}</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${sessionScope.errorMsg}"/></div>
             <c:remove var="errorMsg" scope="session"/>
         </c:if>
 
