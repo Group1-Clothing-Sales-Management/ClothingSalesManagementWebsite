@@ -14,22 +14,34 @@
         body { background: #f5f6fa; font-family: 'Segoe UI', sans-serif; }
         .main-wrapper { display: flex; height: 100vh; overflow: hidden; }
         .content-area { flex: 1; padding: 28px 32px; min-width: 0; height: 100vh; overflow-y: auto; }
-        
+
         .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
         .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
         .page-title .bi { color: #5c6bc0; margin-right: 8px; }
-        
+
         .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
         .card-main .card-header { background: #fff; border-bottom: 1px solid #eef0f5; border-radius: 14px 14px 0 0 !important; padding: 18px 24px; }
-        
+
+        .table { table-layout: fixed; }
         .table thead th { background: #212529; color: #fff; font-weight: 600; font-size: .85rem; border: none; white-space: nowrap; }
         .table tbody tr:hover { background: #f0f4ff; }
-        .table td { vertical-align: middle; font-size: .9rem; }
-        
+        .table td { vertical-align: middle; font-size: .9rem; height: 64px; }
+        .table td > span, .table td > code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 100%; }
+
+        .customer-name {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            vertical-align: middle;
+        }
+
         .badge-active { background: #d1fae5; color: #065f46; }
         .badge-inactive { background: #fef3c7; color: #92400e; }
         .badge-locked { background: #fee2e2; color: #991b1b; }
-        .avatar-circle { width: 36px; height: 36px; border-radius: 50%; background: #e8eaf6; color: #5c6bc0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; }
+        .avatar-circle { width: 36px; height: 36px; border-radius: 50%; background: #e8eaf6; color: #5c6bc0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; flex-shrink: 0; }
         .form-section-title { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #5c6bc0; margin-bottom: 14px; }
         .empty-state { padding: 56px 0; text-align: center; color: #9ca3af; }
         .breadcrumb { font-size: .82rem; margin-bottom: 6px; }
@@ -39,16 +51,20 @@
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="customers"/>
 </jsp:include>
-        <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-check-circle-fill"></i> ${sessionScope.successMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+                <div id="successToast" class="toast align-items-center text-white bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill"></i> ${sessionScope.successMsg}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
             </div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
 
-        <%-- Thông báo lỗi tổng quan --%>
         <c:if test="${not empty errors.general}">
             <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
                 <i class="bi bi-exclamation-triangle-fill"></i> ${errors.general}
@@ -56,15 +72,7 @@
             </div>
         </c:if>
 
-        <%-- 1. GIAO DIỆN DANH SÁCH KHÁCH HÀNG --%>
         <c:if test="${empty pageMode or pageMode eq 'list'}">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Customer Management</li>
-                </ol>
-            </nav>
-
             <div class="page-header">
                 <h1 class="page-title"><i class="bi bi-people-fill"></i> Customer Management</h1>
                 <a href="${pageContext.request.contextPath}/staff/customers?action=add" class="btn btn-primary btn-sm px-3">
@@ -99,6 +107,16 @@
                         <c:otherwise>
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
+                                    <colgroup>
+                                        <col style="width:5%">
+                                        <col style="width:20%">
+                                        <col style="width:13%">
+                                        <col style="width:20%">
+                                        <col style="width:13%">
+                                        <col style="width:12%">
+                                        <col style="width:10%">
+                                        <col style="width:7%">
+                                    </colgroup>
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -111,11 +129,14 @@
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="customerTable">
                                         <c:forEach var="c" items="${customers}" varStatus="st">
                                             <tr>
                                                 <td class="text-muted">${st.index + 1}</td>
-                                                <td><span class="avatar-circle me-2">${fn:toUpperCase(fn:substring(c.fullName, 0, 1))}</span>${c.fullName}</td>
+                                                <td class="d-flex align-items-center gap-2">
+                                                    <span class="avatar-circle">${fn:toUpperCase(fn:substring(c.fullName, 0, 1))}</span>
+                                                    <span class="customer-name" title="${c.fullName}">${c.fullName}</span>
+                                                </td>
                                                 <td><code>${c.username}</code></td>
                                                 <td>${c.email}</td>
                                                 <td>${not empty c.phone ? c.phone : '—'}</td>
@@ -133,13 +154,18 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3" style="border-top:1px solid #eee;">
+                                <small class="text-muted" id="paginationInfo"></small>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+                                </nav>
+                            </div>
                         </c:otherwise>
                     </c:choose>
                 </div>
             </div>
         </c:if>
 
-        <%-- 2. GIAO DIỆN FORM THÊM MỚI / CHỈNH SỬA KHÁCH HÀNG --%>
         <c:if test="${pageMode eq 'add' or pageMode eq 'edit'}">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
@@ -165,7 +191,7 @@
                         </c:if>
 
                         <div class="form-section-title">Account Information</div>
-                        
+
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small">Username <span class="text-danger">*</span></label>
@@ -202,7 +228,7 @@
                         </div>
 
                         <div class="form-section-title">Personal Profile</div>
-                        
+
                         <div class="row g-3 mb-4">
                             <div class="col-md-12">
                                 <label class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
@@ -244,5 +270,68 @@
         </c:if>
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const successToastEl = document.getElementById('successToast');
+    if (successToastEl) {
+        const toast = new bootstrap.Toast(successToastEl, { delay: 3000 });
+        toast.show();
+    }
+
+    const ROWS_PER_PAGE = 10;
+    let currentPage = 1;
+
+    function getAllRows() {
+        const tbody = document.getElementById("customerTable");
+        return tbody ? Array.from(tbody.getElementsByTagName("tr")) : [];
+    }
+
+    function renderPage() {
+        const allRows = getAllRows();
+        if (allRows.length === 0) return;
+
+        const totalPages = Math.max(1, Math.ceil(allRows.length / ROWS_PER_PAGE));
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        allRows.forEach(row => row.style.display = "none");
+
+        const start = (currentPage - 1) * ROWS_PER_PAGE;
+        const end = start + ROWS_PER_PAGE;
+        allRows.slice(start, end).forEach(row => row.style.display = "");
+
+        renderPaginationControls(totalPages, allRows.length);
+    }
+
+    function renderPaginationControls(totalPages, totalItems) {
+        const info = document.getElementById("paginationInfo");
+        const controls = document.getElementById("paginationControls");
+        if (!info || !controls) return;
+        controls.innerHTML = "";
+
+        const start = (currentPage - 1) * ROWS_PER_PAGE + 1;
+        const end = Math.min(currentPage * ROWS_PER_PAGE, totalItems);
+        info.textContent = "Showing " + start + "-" + end + " of " + totalItems + " customers";
+
+        const addPageItem = (label, page, disabled, active) => {
+            const li = document.createElement("li");
+            li.className = "page-item" + (disabled ? " disabled" : "") + (active ? " active" : "");
+            const a = document.createElement("a");
+            a.className = "page-link";
+            a.href = "#";
+            a.textContent = label;
+            a.onclick = (e) => { e.preventDefault(); if (!disabled) { currentPage = page; renderPage(); } };
+            li.appendChild(a);
+            controls.appendChild(li);
+        };
+
+        addPageItem("«", currentPage - 1, currentPage === 1, false);
+        for (let p = 1; p <= totalPages; p++) {
+            addPageItem(p, p, false, p === currentPage);
+        }
+        addPageItem("»", currentPage + 1, currentPage === totalPages, false);
+    }
+
+    document.addEventListener("DOMContentLoaded", renderPage);
+</script>
 </body>
 </html>

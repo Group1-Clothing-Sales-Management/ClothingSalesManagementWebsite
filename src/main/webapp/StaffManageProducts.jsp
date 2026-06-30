@@ -46,6 +46,7 @@
         }
 
         .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+        .table { table-layout: fixed; }
         .table thead th {
             background: #212529;
             color: #fff;
@@ -55,7 +56,11 @@
             white-space: nowrap;
         }
         .table tbody tr:hover { background: #f0f4ff; }
-        .table td { vertical-align: middle; font-size: .9rem; }
+        .table td {
+            vertical-align: middle;
+            font-size: .9rem;
+            height: 64px;
+        }
 
         .badge-active   { background: #d1fae5; color: #065f46; }
         .badge-inactive { background: #fee2e2; color: #991b1b; }
@@ -71,6 +76,14 @@
             border-radius: 4px;
             display: inline-block;
             margin-top: 3px;
+        }
+        .product-name {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
         .empty-state { padding: 56px 0; text-align: center; color: #9ca3af; }
         .breadcrumb { font-size: .82rem; margin-bottom: 6px; }
@@ -92,6 +105,14 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">
+                        <colgroup>
+                            <col style="width:5%">
+                            <col style="width:28%">
+                            <col style="width:22%">
+                            <col style="width:12%">
+                            <col style="width:13%">
+                            <col style="width:20%">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -118,7 +139,7 @@
                             <tr>
                                 <td class="text-muted"><%= index++ %></td>
                                 <td>
-                                    <div class="fw-semibold text-dark product-name"><%= item.getProductName() %></div>
+                                    <div class="fw-semibold text-dark product-name" title="<%= item.getProductName() %>"><%= item.getProductName() %></div>
                                     <span class="brand-badge"><%= item.getBrandName() %></span>
                                 </td>
                                 <td class="text-center">
@@ -140,20 +161,95 @@
                     </table>
                 </div>
             </div>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3" style="border-top:1px solid #eee;">
+                <small class="text-muted" id="paginationInfo"></small>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+                </nav>
+            </div>
         </div>
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function filterProducts() {
-        const filter = document.getElementById("searchInput").value.toLowerCase();
-        const rows = document.getElementById("productTable").getElementsByTagName("tr");
-        for (let i = 0; i < rows.length; i++) {
-            const nameEl = rows[i].querySelector(".product-name");
-            if (nameEl) {
-                rows[i].style.display = (nameEl.textContent.toLowerCase().includes(filter)) ? "" : "none";
-            }
-        }
+    const ROWS_PER_PAGE = 10;
+    let currentPage = 1;
+
+    function getAllRows() {
+        return Array.from(document.getElementById("productTable").getElementsByTagName("tr"));
     }
+
+    function getFilteredRows() {
+        const filter = document.getElementById("searchInput").value.toLowerCase();
+        return getAllRows().filter(row => {
+            const nameEl = row.querySelector(".product-name");
+            if (!nameEl) return false;
+            return nameEl.textContent.toLowerCase().includes(filter);
+        });
+    }
+
+    function renderPage() {
+        const filteredRows = getFilteredRows();
+        const allRows = getAllRows();
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / ROWS_PER_PAGE));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        allRows.forEach(row => row.style.display = "none");
+
+        const start = (currentPage - 1) * ROWS_PER_PAGE;
+        const end = start + ROWS_PER_PAGE;
+        filteredRows.slice(start, end).forEach(row => row.style.display = "");
+
+        if (filteredRows.length === 0) {
+            const emptyRow = allRows.find(r => !r.querySelector(".product-name"));
+            if (emptyRow) emptyRow.style.display = "";
+        }
+
+        renderPaginationControls(totalPages, filteredRows.length);
+    }
+
+    function renderPaginationControls(totalPages, totalItems) {
+        const info = document.getElementById("paginationInfo");
+        const controls = document.getElementById("paginationControls");
+        controls.innerHTML = "";
+
+        if (totalItems === 0) {
+            info.textContent = "No products found";
+            return;
+        }
+
+        const start = (currentPage - 1) * ROWS_PER_PAGE + 1;
+        const end = Math.min(currentPage * ROWS_PER_PAGE, totalItems);
+        info.textContent = "Showing " + start + "-" + end + " of " + totalItems + " products";
+
+        const addPageItem = (label, page, disabled, active) => {
+            const li = document.createElement("li");
+            li.className = "page-item" + (disabled ? " disabled" : "") + (active ? " active" : "");
+            const a = document.createElement("a");
+            a.className = "page-link";
+            a.href = "#";
+            a.textContent = label;
+            a.onclick = (e) => { e.preventDefault(); if (!disabled) { currentPage = page; renderPage(); } };
+            li.appendChild(a);
+            controls.appendChild(li);
+        };
+
+        addPageItem("«", currentPage - 1, currentPage === 1, false);
+
+        for (let p = 1; p <= totalPages; p++) {
+            addPageItem(p, p, false, p === currentPage);
+        }
+
+        addPageItem("»", currentPage + 1, currentPage === totalPages, false);
+    }
+
+    function filterProducts() {
+        currentPage = 1;
+        renderPage();
+    }
+
+    document.addEventListener("DOMContentLoaded", renderPage);
 </script>
 </body>
 </html>

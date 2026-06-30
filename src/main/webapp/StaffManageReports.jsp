@@ -34,12 +34,6 @@
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold text-dark"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Revenue Reports</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Revenue Reports</li>
-                </ol>
-            </nav>
         </div>
 
         <c:if test="${not empty errorMessage}">
