@@ -527,10 +527,7 @@ public class AdminManageProductDAO {
         return 0;
     }
 
-    /**
-     * HƯỚNG 1: Cập nhật riêng trạng thái hoạt động (ACTIVE/INACTIVE) cho từng
-     * biến thể cụ thể
-     */
+    
     public boolean updateVariantStatus(int variantId, String status) {
         String sql = "UPDATE Product_Variant SET status = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -648,4 +645,5 @@ public class AdminManageProductDAO {
             }
         }
     }
+    
 }

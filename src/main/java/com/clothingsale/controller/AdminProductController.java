@@ -14,6 +14,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(
         name = "AdminManageProduct",
@@ -183,6 +186,23 @@ public class AdminProductController extends HttpServlet {
                     }
                 } else {
                     statusRedirect = "error";
+                }
+            } else if ("updateVariantStatus".equals(action)) {
+                try {
+                    int variantId = Integer.parseInt(request.getParameter("variantId"));
+                    String newStatus = request.getParameter("newStatus");
+                    String productId = request.getParameter("productId");
+
+                    
+                    productDAO.updateVariantStatus(variantId, newStatus);
+
+                    response.sendRedirect(request.getContextPath() + "/admin/products?action=detail&id=" + productId + "&success=StatusUpdated");
+                    
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/admin/products?error=UpdateFailed");
+                    return;
                 }
             } else if ("DELETE".equals(action)) {
 

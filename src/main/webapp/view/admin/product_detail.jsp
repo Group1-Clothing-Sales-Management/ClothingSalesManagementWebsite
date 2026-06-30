@@ -6,6 +6,10 @@
         <meta charset="UTF-8">
         <title>Product Details - Admin Panel</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </head>
     <body>
         <div class="container mt-5">
@@ -84,10 +88,34 @@
                                             ${variant.stockQuantity} Available
                                         </span>
                                     </td>
-                                    <td>
-                                        <span class="badge ${variant.status == 'ACTIVE' ? 'badge-success' : 'badge-danger'}">
-                                            ${variant.status == 'ACTIVE' ? 'Active' : 'Inactive'}
-                                        </span>
+                                    <td class="align-middle text-center" style="width: 180px;">
+
+                                        <div class="dropdown d-inline-block">
+                                            <button class="btn btn-sm dropdown-toggle status-dropdown-btn ${variant.status == 'Active' || variant.status == '1' ? 'btn-success' : 'btn-danger'}" 
+                                                    type="button" 
+                                                    id="dropdownStatus-${variant.id}" 
+                                                    data-bs-toggle="dropdown" 
+                                                    aria-expanded="false"
+                                                    style="font-size: 0.85rem; padding: 4px 12px; border-radius: 20px; font-weight: 500; min-width: 100px;">
+                                                ${variant.status == 'Active' || variant.status == '1' ? 'Active' : 'Inactive'}
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownStatus-${variant.id}" style="border-radius: 8px; font-size: 0.9rem;">
+                                                <li>
+                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status == 'Active' || variant.status == '1' ? 'disabled bg-light' : ''}" 
+                                                       href="javascript:void(0)" 
+                                                       onclick="changeVariantStatus('${variant.id}', 'Active', '${product.id}')">
+                                                        <span class="badge bg-success me-2" style="width: 10px; height: 10px; border-radius: 50%; p-0"> </span> Active
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status != 'Active' && variant.status != '1' ? 'disabled bg-light' : ''}" 
+                                                       href="javascript:void(0)" 
+                                                       onclick="changeVariantStatus('${variant.id}', 'Inactive', '${product.id}')">
+                                                        <span class="badge bg-danger me-2" style="width: 10px; height: 10px; border-radius: 50%; p-0"> </span> Inactive
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -126,20 +154,81 @@
                             <div class="col-md-3 form-group">
                                 <label for="varStatus">Initial Status</label>
                                 <select id="varStatus" name="status" class="form-control">
-                                    <option value="ACTIVE">Active (Available for import)</option>
-                                    <option value="INACTIVE">Inactive (Hidden)</option>
+                                    <option value="ACTIVE">Active </option>
+                                    <option value="INACTIVE">Inactive</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="alert alert-warning py-2 mb-3" style="font-size: 13px;">
-                            💡 <strong>Warehouse Stock Policy:</strong> To maintain exact inventory control, initial price values (Cost/Sale Price) and Stock quantities for this new variant will be set to <strong>0</strong>. Please use the <strong>Stock Import module</strong> when actual goods arrive to update physical counts and purchase records.
-                        </div>
+
 
                         <button type="submit" class="btn btn-success px-4">Save & Generate Variant</button>
                     </form>
                 </div>
             </div>
         </div>
+
+        <c:url value="/admin/products" var="adminProductUrl" />
+
+        <form id="masterStatusForm" action="${adminProductUrl}" method="POST" style="display:none;">
+            <input type="hidden" name="action" value="updateVariantStatus">
+            <input type="hidden" name="productId" id="submitProductId">
+            <input type="hidden" name="variantId" id="submitVariantId">
+            <input type="hidden" name="newStatus" id="submitNewStatus">
+        </form>
     </body>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+                                                           function changeVariantStatus(variantId, nextStatus, productId) {
+                                                               const statusText = nextStatus === 'Active' ? 'Activate' : 'Deactivate';
+                                                               const confirmButtonColor = nextStatus === 'Active' ? '#198754' : '#dc3545';
+
+                                                               Swal.fire({
+                                                                   title: 'Change Status?',
+                                                                   text: `Are you sure you want to change this variant status to ${nextStatus}?`,
+                                                                   icon: 'question',
+                                                                   showCancelButton: true,
+                                                                   confirmButtonColor: confirmButtonColor,
+                                                                   cancelButtonColor: '#6c757d',
+                                                                   confirmButtonText: `Yes, ${statusText}!`,
+                                                                   cancelButtonText: 'Cancel',
+                                                                   background: '#ffffff',
+                                                                   customClass: {
+                                                                       popup: 'rounded-4 shadow-lg'
+                                                                   }
+                                                               }).then((result) => {
+                                                                   if (result.isConfirmed) {
+                                                                       // Nạp dữ liệu vào form tổng và submit
+                                                                       document.getElementById('submitProductId').value = productId;
+                                                                       document.getElementById('submitVariantId').value = variantId;
+                                                                       document.getElementById('submitNewStatus').value = nextStatus;
+
+                                                                       document.getElementById('masterStatusForm').submit();
+                                                                   }
+                                                               });
+                                                           }
+
+                                                           // Hiển thị Toast thông báo thành công sau khi trang reload lại
+                                                           document.addEventListener("DOMContentLoaded", function () {
+                                                               const urlParams = new URLSearchParams(window.location.search);
+                                                               if (urlParams.get('success') === 'StatusUpdated') {
+                                                                   const Toast = Swal.mixin({
+                                                                       toast: true,
+                                                                       position: 'top-end',
+                                                                       showConfirmButton: false,
+                                                                       timer: 3000,
+                                                                       timerProgressBar: true,
+                                                                       didOpen: (toast) => {
+                                                                           toast.addEventListener('mouseenter', Swal.stopTimer)
+                                                                           toast.addEventListener('mouseleave', Swal.resumeTimer)
+                                                                       }
+                                                                   });
+
+                                                                   Toast.fire({
+                                                                       icon: 'success',
+                                                                       title: 'Variant status updated successfully'
+                                                                   });
+                                                               }
+                                                           });
+    </script>
 </html>
