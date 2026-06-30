@@ -194,7 +194,6 @@
                                     <label class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
                                     <select class="form-select ${not empty errors.status ? 'is-invalid' : ''}" name="status">
                                         <option value="ACTIVE" ${customer.status eq 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-                                        <option value="INACTIVE" ${customer.status eq 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
                                         <option value="LOCKED" ${customer.status eq 'LOCKED' ? 'selected' : ''}>LOCKED</option>
                                     </select>
                                     <div class="invalid-feedback">${errors.status}</div>
