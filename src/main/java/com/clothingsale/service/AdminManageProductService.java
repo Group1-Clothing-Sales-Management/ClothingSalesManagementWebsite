@@ -47,4 +47,11 @@ public class AdminManageProductService {
     public List<com.clothingsale.model.ProductVariant> getVariantsByProductId(int productId) {
         return productDAO.getVariantsByProductId(productId);
     }
+    public boolean updateVariantStatus(int variantId, String status) {
+    return productDAO.updateVariantStatus(variantId, status);
+}
+
+public boolean addSingleVariant(com.clothingsale.model.ProductVariant variant) {
+    return productDAO.insertSingleVariant(variant);
+}
 }
