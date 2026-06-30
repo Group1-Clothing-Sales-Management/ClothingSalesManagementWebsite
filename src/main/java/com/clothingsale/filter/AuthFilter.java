@@ -90,9 +90,6 @@ public class AuthFilter extends HttpFilter {
         // Allow only public static assets, the homepage, and explicit auth endpoints
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
-                || lowerPath.startsWith("/home") 
-                || lowerPath.startsWith("/customer")
-                || lowerPath.startsWith("/cart")
                 || lowerPath.startsWith("/admin/login")
                 || lowerPath.startsWith("/customer/login")
                 || lowerPath.startsWith("/customer/register")
@@ -101,12 +98,7 @@ public class AuthFilter extends HttpFilter {
                 || lowerPath.startsWith("/cart")
                 || lowerPath.startsWith("/cart/add")
                 || lowerPath.startsWith("/cart/update")
-                || lowerPath.startsWith("/cart/remove")                
-                || lowerPath.startsWith("/product")
-                || lowerPath.startsWith("/products")
-                || lowerPath.startsWith("/product/detail")
-                || lowerPath.startsWith("/customer/address")
-                || lowerPath.startsWith("/customer/checkout")
+                || lowerPath.startsWith("/cart/remove")
                 || lowerPath.startsWith("/uploads/")
                 || lowerPath.startsWith("/css/")
                 || lowerPath.startsWith("/js/")
@@ -133,11 +125,7 @@ public class AuthFilter extends HttpFilter {
                 || "/StaffEditProduct.jsp".equals(path)
                 || path.startsWith("/StaffManageOrders")
                 || path.startsWith("/staff/orders")
-                || path.startsWith("/admin/feedback")
-                || path.startsWith("/staff/feedback")
-                || path.startsWith("/admin/products")
-                || "/StaffManageOrders.jsp".equals(path)
-                || "/StaffManageFeedback.jsp".equals(path);
+                || "/StaffManageOrders.jsp".equals(path);
     }
 
     private boolean isAdminRole(String roleName) {
