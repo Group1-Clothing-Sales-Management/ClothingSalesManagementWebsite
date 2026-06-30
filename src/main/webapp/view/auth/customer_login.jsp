@@ -98,7 +98,7 @@
             max-width:1160px;
             margin:auto;
             display:grid;
-            grid-template-columns:minmax(320px, .95fr) minmax(360px, .82fr);
+            grid-template-columns:repeat(2, minmax(0, 1fr));
             gap:24px;
             align-items:stretch;
         }
@@ -205,7 +205,10 @@
 
         .auth-card {
             padding:42px;
-            align-self:center;
+            min-height:620px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
             background:rgba(255, 255, 255, .9);
             backdrop-filter:blur(16px);
         }
@@ -344,6 +347,10 @@
             }
 
             .visual-panel {
+                min-height:auto;
+            }
+
+            .auth-card {
                 min-height:auto;
             }
         }
