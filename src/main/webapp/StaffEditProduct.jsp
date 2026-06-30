@@ -49,9 +49,9 @@
     String statusClass = "ACTIVE".equals(product.getStatus()) ? "badge-active" : "badge-inactive";
 %>
 
-<div class="main-wrapper">
-    <jsp:include page="/view/admin/sidebar.jsp"><jsp:param name="activeTab" value="products"/></jsp:include>
-    <div class="content-area">
+<jsp:include page="/view/admin/common/admin_layout_start.jsp">
+    <jsp:param name="activeTab" value="products"/>
+</jsp:include>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="StaffManageProducts">Product Management</a></li>
@@ -128,8 +128,7 @@
                 </div>
             </div>
         </form>
-    </div>
-</div>
+<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

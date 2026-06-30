@@ -11,8 +11,9 @@
     </head>
     <body class="bg-light">
 
-        <div class="d-flex">
-            <jsp:include page="sidebar.jsp" />
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="categories" />
+        </jsp:include>
 
             <div class="container-fluid p-4" style="flex: 1;">
 
@@ -93,7 +94,7 @@
                 </div>
 
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <div class="modal fade" id="categoryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">

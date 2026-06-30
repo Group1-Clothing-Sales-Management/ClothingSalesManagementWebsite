@@ -30,8 +30,9 @@
     </head>
     <body>
 
-        <div class="wrapper">
-            <jsp:include page="sidebar.jsp" />
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="discounts" />
+        </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
@@ -161,7 +162,7 @@
 
                 </div>
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <script>
             function toggleDiscountFields() {

@@ -103,12 +103,9 @@
     </head>
     <body>
 
-        <div class="dashboard-shell">
-            <div class="dashboard-sidebar">
-                <jsp:include page="sidebar.jsp">
-                    <jsp:param name="activeTab" value="dashboard" />
-                </jsp:include>
-            </div>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="dashboard" />
+        </jsp:include>
 
             <div class="main-content">
 
@@ -222,7 +219,7 @@
                 </div>
 
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

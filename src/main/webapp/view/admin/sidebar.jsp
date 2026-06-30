@@ -36,7 +36,16 @@
                 activeTab = "products";
             } else if (path.startsWith("/admin/inventory")) {
                 activeTab = "inventory";
+            } else if (path.startsWith("/admin/manage-category")
+                    || path.startsWith("/admin/categories")
+                    || path.startsWith("/view/admin/admin_category.jsp")) {
+                activeTab = "categories";
             } else if (path.startsWith("/admin/discounts")) {
+                activeTab = "discounts";
+            } else if (path.startsWith("/admin/voucher")
+                    || path.startsWith("/view/admin/admin_voucher_list.jsp")
+                    || path.startsWith("/view/admin/admin_create_voucher.jsp")
+                    || path.startsWith("/view/admin/admin_edit_voucher.jsp")) {
                 activeTab = "discounts";
             } else if (path.startsWith("/admin/orders") || path.startsWith("/staff/orders")) {
                 activeTab = "orders";
@@ -57,10 +66,15 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <style>
     .sidebar-shell {
+        flex: 0 0 260px;
+        width: 260px;
+        max-width: 260px;
         min-height: 100vh;
         height: 100vh;
         background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
         color: #e5e7eb;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.35;
         display: flex;
         flex-direction: column;
         position: sticky;
@@ -68,6 +82,7 @@
         z-index: 20;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
     }
     .sidebar-brand {
         padding: 1.15rem 1rem;
@@ -112,6 +127,12 @@
         text-align: center;
         flex-shrink: 0;
     }
+    .sidebar-icon {
+        margin-right: 0.15rem;
+    }
+    .sidebar-link {
+        width: 100%;
+    }
     .sidebar-footer {
         margin-top: auto;
         padding: 1rem;
@@ -143,6 +164,25 @@
         border-radius: 999px;
         display: inline-block;
     }
+    .sidebar-logout {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #ef4444;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        background: transparent;
+        text-decoration: none;
+        flex-shrink: 0;
+        transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .sidebar-logout:hover {
+        background: rgba(239, 68, 68, 0.12);
+        color: #fecaca;
+        border-color: #f87171;
+    }
     .text-sm {
         font-size: .875rem;
     }
@@ -152,59 +192,65 @@
     .min-w-0 {
         min-width: 0;
     }
+    @media (max-width: 767.98px) {
+        .sidebar-shell {
+            display: none;
+        }
+    }
+    @media (min-width: 768px) {
+        .sidebar-shell {
+            display: flex;
+        }
+    }
 </style>
 
-<div class="col-md-2 px-0 sidebar-shell d-none d-md-flex shadow">
+<div class="sidebar-shell">
     <div class="sidebar-brand">
-        <h4 class="sidebar-brand-title mb-0"><i class="fa-solid fa-shirt me-2"></i>Clothing Sale</h4>
+        <h4 class="sidebar-brand-title mb-0"><i class="fa-solid fa-shirt sidebar-icon"></i>Clothing Sale</h4>
     </div>
     <div class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/admin/dashboard" class="${requestScope.sidebarActiveTab == 'dashboard' ? 'active' : ''}">
-            <i class="fa-solid fa-chart-line me-2"></i>Dashboard
+        <a href="${pageContext.request.contextPath}/admin/dashboard" class="sidebar-link ${requestScope.sidebarActiveTab == 'dashboard' ? 'active' : ''}">
+            <i class="fa-solid fa-chart-line sidebar-icon"></i>Dashboard
         </a>
 
         <c:choose>
             <c:when test="${sessionScope.authRoleName == 'STAFF'}">
-                <a href="${pageContext.request.contextPath}/staff/products" class="${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box me-2"></i>Manage Products
+                <a href="${pageContext.request.contextPath}/staff/products" class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
+                    <i class="fa-solid fa-box sidebar-icon"></i>Manage Products
                 </a>
             </c:when>
             <c:otherwise>
-                <a href="${pageContext.request.contextPath}${rolePrefix}/products" class="nav-link ${activeTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box me-2"></i>Manage Products
+                <a href="${pageContext.request.contextPath}${rolePrefix}/products" class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
+                    <i class="fa-solid fa-box sidebar-icon"></i>Manage Products
                 </a>
-                <a href="${pageContext.request.contextPath}/admin/inventory" class="${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
-                    <i class="fa-solid fa-warehouse me-2"></i>Stock
+                <a href="${pageContext.request.contextPath}/admin/inventory" class="sidebar-link ${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
+                    <i class="fa-solid fa-warehouse sidebar-icon"></i>Stock
                 </a>
-                <a href="${pageContext.request.contextPath}/admin/manage-category"><i class="fa-solid fa-tags me-2"></i>Manage Category</a>
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/voucher?action=list">
-                    <i class="fas fa-ticket-alt"></i> 
+                <a href="${pageContext.request.contextPath}/admin/manage-category" class="sidebar-link ${requestScope.sidebarActiveTab == 'categories' ? 'active' : ''}">
+                    <i class="fa-solid fa-tags sidebar-icon"></i>Manage Category
+                </a>
+                <a class="sidebar-link ${requestScope.sidebarActiveTab == 'discounts' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/voucher?action=list">
+                    <i class="fas fa-ticket-alt sidebar-icon"></i> 
                     <span>Voucher Management</span>
                 </a>
             </c:otherwise>
         </c:choose>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="${requestScope.sidebarActiveTab == 'orders' ? 'active' : ''}">
-            <i class="fa-solid fa-receipt me-2"></i>Orders
+        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="sidebar-link ${requestScope.sidebarActiveTab == 'orders' ? 'active' : ''}">
+            <i class="fa-solid fa-receipt sidebar-icon"></i>Orders
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/shipments" class="${requestScope.sidebarActiveTab == 'shipments' ? 'active' : ''}">
-            <i class="fa-solid fa-truck me-2"></i>Shipments
+        <a href="${pageContext.request.contextPath}${rolePrefix}/shipments" class="sidebar-link ${requestScope.sidebarActiveTab == 'shipments' ? 'active' : ''}">
+            <i class="fa-solid fa-truck sidebar-icon"></i>Shipments
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}">
-            <i class="fa-solid fa-users me-2"></i>Customers
+        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="sidebar-link ${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}">
+            <i class="fa-solid fa-users sidebar-icon"></i>Customers
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
-            <i class="fa-solid fa-comments me-2"></i>Feedback
+        <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="sidebar-link ${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
+            <i class="fa-solid fa-comments sidebar-icon"></i>Feedback
         </a>
-
-        <c:if test="${sessionScope.authRoleName != 'STAFF'}">
-            <a href="${pageContext.request.contextPath}/admin/discounts" class="${requestScope.sidebarActiveTab == 'discounts' ? 'active' : ''}">
-                <i class="fa-solid fa-ticket me-2"></i>Discount Codes
-            </a>
-        </c:if>
     </div>
 
     <div class="sidebar-footer">
@@ -228,7 +274,7 @@
                     <%= displayRole%>
                 </div>
             </div>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1" onclick="return confirm('Are you sure you want to sign out?');" title="Sign out">
+            <a href="${pageContext.request.contextPath}/admin/logout" class="sidebar-logout" onclick="return confirm('Are you sure you want to sign out?');" title="Sign out">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>

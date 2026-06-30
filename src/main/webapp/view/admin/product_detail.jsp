@@ -50,10 +50,9 @@
     </head>
     <body>
 
-        <div class="wrapper">
-            <jsp:include page="sidebar.jsp">
-                <jsp:param name="activeTab" value="products" />
-            </jsp:include>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="products" />
+        </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
@@ -162,7 +161,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>

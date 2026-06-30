@@ -8,13 +8,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-<div class="container-fluid">
-    <div class="row">
-        <jsp:include page="/view/admin/sidebar.jsp">
-            <jsp:param name="activeTab" value="shipments" />
-        </jsp:include>
+<jsp:include page="/view/admin/common/admin_layout_start.jsp">
+    <jsp:param name="activeTab" value="shipments" />
+</jsp:include>
 
-        <div class="col-md-10 py-5 px-4">
+        <div class="py-5 px-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="text-dark fw-bold">Shipment Status Management</h2>
                 <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary">Dashboard</a>
@@ -108,8 +106,7 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
+<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

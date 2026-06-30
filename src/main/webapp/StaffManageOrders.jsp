@@ -74,12 +74,9 @@
     </style>
 </head>
 <body>
-<div class="main-wrapper">
-    <jsp:include page="/view/admin/sidebar.jsp">
-        <jsp:param name="activeTab" value="orders"/>
-    </jsp:include>
-
-    <div class="content-area">
+<jsp:include page="/view/admin/common/admin_layout_start.jsp">
+    <jsp:param name="activeTab" value="orders"/>
+</jsp:include>
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="alert alert-success alert-dismissible fade show flash-alert" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>${sessionScope.successMsg}
@@ -700,8 +697,7 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
+<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>

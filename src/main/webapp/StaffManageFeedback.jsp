@@ -204,13 +204,9 @@
     </style>
 </head>
 <body>
-<div class="main-wrapper">
-    <%-- Sidebar dùng chung cho cả Staff và Admin, activeTab = feedback để highlight đúng mục. --%>
-    <jsp:include page="/view/admin/sidebar.jsp">
-        <jsp:param name="activeTab" value="feedback"/>
-    </jsp:include>
-
-    <div class="content-area">
+<jsp:include page="/view/admin/common/admin_layout_start.jsp">
+    <jsp:param name="activeTab" value="feedback"/>
+</jsp:include>
         <%-- Flash message từ session giúp báo kết quả sau khi respond/delete. --%>
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
@@ -592,8 +588,7 @@
                 </div>
             </c:otherwise>
         </c:choose>
-    </div>
-</div>
+<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -45,10 +45,9 @@
     </head>
     <body>
 
-        <div class="wrapper">
-            <jsp:include page="sidebar.jsp">
-                <jsp:param name="activeTab" value="products" />
-            </jsp:include>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="products" />
+        </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
@@ -137,7 +136,7 @@
 
                 </div>
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">

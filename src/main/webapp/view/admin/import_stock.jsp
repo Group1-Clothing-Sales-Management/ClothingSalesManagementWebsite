@@ -48,10 +48,9 @@
     </head>
     <body>
 
-        <div class="wrapper">
-            <jsp:include page="sidebar.jsp">
-                <jsp:param name="activeTab" value="inventory" />
-            </jsp:include>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="inventory" />
+        </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid" style="max-width: 1100px; margin: 0 auto;">
@@ -166,7 +165,7 @@
 
                 </div>
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
       <script>
             // Synchronized Core In-Memory JSON Dataset
