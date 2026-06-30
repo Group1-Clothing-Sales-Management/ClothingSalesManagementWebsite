@@ -50,7 +50,6 @@
             } else if (path.startsWith("/admin/orders") || path.startsWith("/staff/orders")) {
                 activeTab = "orders";
             } else if (path.startsWith("/admin/shipments") || path.startsWith("/staff/shipments")) {
-                // BỔ SUNG: Tự động nhận diện highlight mục vận chuyển
                 activeTab = "shipments";
             } else if (path.startsWith("/admin/customers") || path.startsWith("/staff/customers")) {
                 activeTab = "customers";
@@ -58,6 +57,9 @@
                 activeTab = "feedback";
             } else if (path.startsWith("/staff/products")) {
                 activeTab = "products";
+            } else if (path.startsWith("/staff/reports") || path.startsWith("/staff/revenue-report")) {
+                // BỔ SUNG: Nhận diện URL báo cáo để tự động tô sáng mục Reports
+                activeTab = "reports";
             }
         }
     }
@@ -250,6 +252,10 @@
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="sidebar-link ${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
             <i class="fa-solid fa-comments sidebar-icon"></i>Feedback
+        </a>
+
+        <a href="${pageContext.request.contextPath}/staff/reports" class="sidebar-link ${requestScope.sidebarActiveTab == 'reports' ? 'active' : ''}">
+            <i class="fa-solid fa-chart-pie sidebar-icon"></i>Revenue Reports
         </a>
     </div>
 
