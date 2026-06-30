@@ -12,7 +12,7 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </head>
     <body>
-        <div class="container mt-5">
+        <div class="container admin-page">
             <div class="mb-3">
                 <a href="${pageContext.request.contextPath}/admin/manage-product" class="btn btn-sm btn-secondary">&larr; Back to Product List</a>
             </div>
@@ -28,10 +28,19 @@
                 </div>
             </c:if>
 
-            <div class="card mb-4">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Product Details</h1>
+                    <p class="page-subtitle mb-0">Inspect the product master record and its current variants.</p>
+                </div>
+                <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${product.id}" class="btn btn-primary">
+                    <i class="fa-solid fa-pen-to-square me-1"></i>Edit Info
+                </a>
+            </div>
+
+            <div class="card card-main admin-card mb-4">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Product Core Profile</h4>
-                    <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${product.id}" class="btn btn-sm btn-light">Edit Info</a>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -62,12 +71,12 @@
                 </div>
             </div>
 
-            <div class="card mb-4">
+            <div class="card card-main admin-card mb-4">
                 <div class="card-header bg-dark text-white">
                     <h5 class="mb-0">Current Stock Variants</h5>
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-hover table-striped mb-0">
+                    <table class="table table-hover table-striped mb-0 admin-table">
                         <thead class="thead-light">
                             <tr>
                                 <th>Variant ID</th>
@@ -129,7 +138,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card card-main admin-card">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">Add New Configuration Variant</h5>
                 </div>

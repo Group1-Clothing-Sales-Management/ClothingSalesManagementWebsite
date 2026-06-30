@@ -7,14 +7,17 @@
     <title>Shipment Status Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body>
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="shipments" />
 </jsp:include>
 
-        <div class="py-5 px-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-dark fw-bold">Shipment Status Management</h2>
+        <div class="admin-page">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">Shipment Status Management</h2>
+                    <p class="page-subtitle mb-0">Review shipments and update delivery progress from one place.</p>
+                </div>
                 <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary">Dashboard</a>
             </div>
 
@@ -26,7 +29,7 @@
                 <% session.removeAttribute("successMsg"); %>
             </c:if>
 
-            <div class="card shadow-sm mb-4">
+            <div class="card card-main admin-card mb-4">
                 <div class="card-body">
                     <form action="${pageContext.request.contextPath}/staff/shipments" method="GET" class="row g-3">
                         <div class="col-md-5">
@@ -48,10 +51,10 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm">
+            <div class="card card-main admin-card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped mb-0 align-middle">
+                        <table class="table table-hover table-striped mb-0 align-middle admin-table">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Order Code</th>

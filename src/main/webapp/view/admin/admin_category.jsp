@@ -9,16 +9,16 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     </head>
-    <body class="bg-light">
+    <body>
 
         <jsp:include page="/view/admin/common/admin_layout_start.jsp">
             <jsp:param name="activeTab" value="categories" />
         </jsp:include>
 
-            <div class="container-fluid p-4" style="flex: 1;">
+            <div class="container-fluid admin-page" style="flex: 1;">
 
-                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                    <h2 class="text-secondary fw-semibold m-0">
+                <div class="page-header">
+                    <h2 class="page-title">
                         <i class="fa-solid fa-tags me-2"></i>Product Category Management
                     </h2>
                     <button type="button" class="btn btn-success d-flex align-items-center" 
@@ -46,14 +46,14 @@
                     </div>
                 </c:if>
 
-                <div class="card shadow-sm">
+                <div class="card card-main admin-card">
                     <div class="card-header bg-dark text-white d-flex align-items-center">
                         <i class="fa-solid fa-list me-2"></i>
                         <h5 class="card-title mb-0">Category List</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover table-bordered align-middle mb-0">
+                            <table class="table table-striped table-hover table-bordered align-middle mb-0 admin-table">
                                 <thead class="table-secondary text-uppercase fs-7">
                                     <tr>
                                         <th style="width: 10%;" class="text-center">ID</th>

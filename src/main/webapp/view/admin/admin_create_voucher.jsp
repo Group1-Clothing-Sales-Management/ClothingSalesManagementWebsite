@@ -33,13 +33,13 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="page-header">
                         <div>
-                            <h2 class="font-weight-bold">Create New Voucher</h2>
-                            <p class="text-muted mb-0">Configure a new discount campaign for the store</p>
+                            <h2 class="page-title">Create New Voucher</h2>
+                            <p class="page-subtitle mb-0">Configure a new discount campaign for the store</p>
                         </div>
                     </div>
 
@@ -60,7 +60,7 @@
                         </div>
                     </c:if>
 
-                    <div class="card">
+                    <div class="card card-main admin-card">
                         <div class="card-body p-4">
                             <form action="${pageContext.request.contextPath}/admin/voucher" method="POST" id="voucherForm">
 

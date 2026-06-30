@@ -77,6 +77,7 @@
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="orders"/>
 </jsp:include>
+        <div class="admin-page">
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="alert alert-success alert-dismissible fade show flash-alert" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>${sessionScope.successMsg}
@@ -1465,12 +1466,13 @@
 
     // Chỉ tự đóng các thông báo flash ở đầu trang.
     // Không đóng alert nội dung trong card để người dùng còn đọc được.
-    document.querySelectorAll('.flash-alert').forEach(function (el) {
-        setTimeout(function () {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
-            bsAlert.close();
-        }, 4500);
-    });
-</script>
+            document.querySelectorAll('.flash-alert').forEach(function (el) {
+                setTimeout(function () {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+                    bsAlert.close();
+                }, 4500);
+            });
+        </script>
+        </div>
 </body>
 </html>

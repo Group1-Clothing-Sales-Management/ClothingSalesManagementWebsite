@@ -52,14 +52,14 @@
             <jsp:param name="activeTab" value="inventory" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid" style="max-width: 1100px; margin: 0 auto;">
-                    <div class="card shadow-sm border-0 p-4 bg-white rounded-3 mb-4">
+                    <div class="card card-main admin-card p-4 mb-4">
                         <div class="border-bottom pb-3 mb-4">
-                            <h2 class="h5 fw-bold text-dark mb-1">
+                            <h2 class="page-title mb-1" style="font-size: 1.15rem;">
                                 <i class="fa-solid fa-square-plus me-2 text-success"></i>Stock Inflow Management
                             </h2>
-                            <p class="text-muted small mb-0">Select items, specify pricing metrics, and add them to the temporary batch queuing registry pool.</p>
+                            <p class="page-subtitle small mb-0">Select items, specify pricing metrics, and add them to the temporary batch queuing registry pool.</p>
                         </div>
 
                         <!-- INPUT WORKSTATION SUB-PANEL -->
@@ -107,7 +107,7 @@
                     <form id="importStockForm" action="${pageContext.request.contextPath}/admin/inventory" method="POST">
                         <input type="hidden" name="action" value="IMPORT" />
 
-                        <div class="card shadow-sm border-0 p-4 bg-white rounded-3">
+                        <div class="card card-main admin-card p-4 bg-white rounded-3">
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold text-secondary">Batch System Reference Header</label>
@@ -124,7 +124,7 @@
                             </h5>
 
                             <div class="table-responsive mb-4 border rounded">
-                                <table class="table table-hover align-middle mb-0" id="queueTable">
+                                <table class="table table-hover align-middle mb-0 admin-table" id="queueTable">
                                     <thead class="table-light">
                                         <tr>
                                             <th class="text-center" style="width: 60px;">#</th>

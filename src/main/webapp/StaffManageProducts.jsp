@@ -80,6 +80,7 @@
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="products"/>
 </jsp:include>
+        <div class="admin-page">
         <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Product Management</li></ol></nav>
         <div class="page-header"><h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Management</h1></div>
 
@@ -155,5 +156,6 @@
         }
     }
 </script>
+        </div>
 </body>
 </html>

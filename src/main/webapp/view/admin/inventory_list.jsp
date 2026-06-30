@@ -45,7 +45,7 @@
             <jsp:param name="activeTab" value="inventory" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
                     <c:if test="${param.status eq 'success'}">
@@ -55,10 +55,10 @@
                         </div>
                     </c:if>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="page-header">
                         <div>
-                            <h2 class="h4 mb-1 fw-bold text-dark"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
-                            <p class="text-muted small mb-0">Historical lists of physical inventory item batches imported to store variants</p>
+                            <h2 class="page-title"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
+                            <p class="page-subtitle mb-0">Historical lists of physical inventory item batches imported to store variants</p>
                         </div>
 
 
@@ -68,9 +68,9 @@
                         </a>
                     </div>
 
-                    <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card card-main admin-card">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="table table-hover align-middle mb-0 admin-table">
                                 <thead>
                                     <tr>
                                         <th class="text-center" style="width: 80px;">ID</th>

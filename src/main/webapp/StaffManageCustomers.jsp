@@ -39,6 +39,7 @@
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="customers"/>
 </jsp:include>
+        <div class="admin-page">
         <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
@@ -244,5 +245,6 @@
         </c:if>
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        </div>
 </body>
 </html>

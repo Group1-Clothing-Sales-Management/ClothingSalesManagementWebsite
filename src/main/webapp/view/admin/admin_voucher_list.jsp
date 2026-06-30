@@ -51,13 +51,13 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="page-header">
                         <div>
-                            <h2 class="font-weight-bold">Voucher Management</h2>
-                            <p class="text-muted mb-0">Create, monitor, and manage discount campaigns smoothly</p>
+                            <h2 class="page-title">Voucher Management</h2>
+                            <p class="page-subtitle mb-0">Create, monitor, and manage discount campaigns smoothly</p>
                         </div>
                         <a href="${pageContext.request.contextPath}/admin/voucher?action=create" class="btn btn-primary font-weight-bold px-4">
                             <i class="fas fa-plus-circle mr-2"></i> Create New Voucher
@@ -77,7 +77,7 @@
                         </div>
                     </c:if>
 
-                    <div class="card mb-4">
+                    <div class="card card-main admin-card mb-4">
                         <div class="card-body">
                             <form action="${pageContext.request.contextPath}/admin/voucher" method="GET">
                                 <input type="hidden" name="action" value="list">
@@ -106,10 +106,10 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card card-main admin-card">
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                                <table class="table table-hover mb-0 admin-table">
                                     <thead>
                                         <tr>
                                             <th class="border-top-0 px-4">Code</th>

@@ -49,11 +49,11 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="text-dark fw-bold mb-0">
+                    <div class="page-header">
+                        <h2 class="page-title">
                             <i class="fa-solid fa-box-open me-2 text-primary"></i>Product Management
                         </h2>
                         <button class="btn btn-primary px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#createProductModal">
@@ -61,7 +61,7 @@
                         </button>
                     </div>
 
-                    <div class="card detail-card shadow-sm p-4">
+                    <div class="card card-main admin-card p-4">
                         <div class="mb-3">
                             <h3 class="h5 mb-0 fw-bold text-dark">
                                 <i class="fa-solid fa-list me-2 text-secondary"></i>Product Catalog List
@@ -69,7 +69,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover align-middle border text-center variant-table mb-0">
+                            <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0">
                                 <thead>
                                     <tr>
                                         <th style="width: 100px;">ID</th>
