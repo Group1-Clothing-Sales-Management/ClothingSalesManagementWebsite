@@ -54,13 +54,6 @@
 
             <div class="main-content">
                 <div class="container-fluid" style="max-width: 1100px; margin: 0 auto;">
-
-                    <div class="mb-4">
-                        <a href="${pageContext.request.contextPath}/admin/inventory?action=list" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-arrow-left me-2"></i>Back to Inventory List
-                        </a>
-                    </div>
-
                     <div class="card shadow-sm border-0 p-4 bg-white rounded-3 mb-4">
                         <div class="border-bottom pb-3 mb-4">
                             <h2 class="h5 fw-bold text-dark mb-1">

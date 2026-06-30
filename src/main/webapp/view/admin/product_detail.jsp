@@ -56,12 +56,6 @@
 
             <div class="main-content">
                 <div class="container-fluid">
-                    <div class="mb-4">
-                        <a href="${pageContext.request.contextPath}/admin/products" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-arrow-left me-2"></i>Back to Product Catalog
-                        </a>
-                    </div>
-
                     <div class="card detail-card shadow-sm p-4 mb-4">
                         <div class="row g-4">
                             <div class="col-md-3 text-center">

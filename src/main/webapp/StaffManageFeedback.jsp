@@ -234,9 +234,6 @@
                         <h1 class="page-title"><i class="bi bi-chat-left-text-fill"></i>Feedback Management</h1>
                         <div class="subtext mt-1">View customer feedback, open the detail screen, reply, or delete an entry.</div>
                     </div>
-                    <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-outline-secondary btn-sm px-3">
-                        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
-                    </a>
                 </div>
 
                 <div class="card card-main">
@@ -376,9 +373,6 @@
                         <h1 class="page-title"><i class="bi bi-chat-right-text-fill"></i>Feedback Detail</h1>
                         <div class="subtext mt-1">This screen shows the full context so Staff/Admin can decide how to respond.</div>
                     </div>
-                    <a href="${feedbackBasePath}" class="btn btn-outline-secondary btn-sm px-3">
-                        <i class="bi bi-arrow-left me-1"></i>Back to List
-                    </a>
                 </div>
 
                 <div class="row g-4">

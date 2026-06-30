@@ -61,7 +61,6 @@
 
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h1 class="page-title"><i class="bi bi-pencil-square"></i>Edit Product</h1>
-            <a href="StaffManageProducts" class="btn btn-outline-secondary btn-sm px-3"><i class="bi bi-arrow-left me-1"></i>Back to list</a>
         </div>
 
         <form action="StaffManageProducts" method="POST">

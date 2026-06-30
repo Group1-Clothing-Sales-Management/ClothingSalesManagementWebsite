@@ -154,9 +154,6 @@
                     <i class="bi ${pageMode eq 'add' ? 'bi-person-plus-fill' : 'bi-pencil-square'}"></i>
                     ${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer Info'}
                 </h1>
-                <a href="${pageContext.request.contextPath}/staff/customers" class="btn btn-outline-secondary btn-sm px-3">
-                    <i class="bi bi-arrow-left me-1"></i> Back to List
-                </a>
             </div>
 
             <div class="card card-main mx-auto" style="max-width: 720px;">

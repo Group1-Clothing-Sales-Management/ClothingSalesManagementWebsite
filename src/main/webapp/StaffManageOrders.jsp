@@ -126,9 +126,6 @@
                             </strong>
                         </div>
                     </div>
-                    <a href="${ordersBasePath}" class="btn btn-outline-secondary btn-sm px-3">
-                        <i class="bi bi-arrow-left me-1"></i>Back to list
-                    </a>
                 </div>
 
                 <div class="row g-4">

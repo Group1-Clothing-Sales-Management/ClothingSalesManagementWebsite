@@ -112,9 +112,6 @@
 
         <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
             <h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Details</h1>
-            <a href="StaffManageProducts" class="btn btn-outline-secondary btn-sm px-3">
-                <i class="bi bi-arrow-left me-1"></i>Back to list
-            </a>
         </div>
 
         <div class="card card-main" style="max-width: 960px; margin: 0 auto;">
