@@ -29,8 +29,9 @@
     </head>
     <body>
 
-        <div class="wrapper">
-            <jsp:include page="sidebar.jsp" />
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="discounts" />
+        </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
@@ -40,9 +41,6 @@
                             <h2 class="font-weight-bold">Create New Voucher</h2>
                             <p class="text-muted mb-0">Configure a new discount campaign for the store</p>
                         </div>
-                        <a href="${pageContext.request.contextPath}/admin/voucher?action=list" class="btn btn-secondary font-weight-bold">
-                            <i class="fas fa-arrow-left mr-2"></i> Back to List
-                        </a>
                     </div>
 
                     <c:if test="${not empty successMessage}">
@@ -163,7 +161,7 @@
 
                 </div>
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <script>
             function toggleDiscountFields() {

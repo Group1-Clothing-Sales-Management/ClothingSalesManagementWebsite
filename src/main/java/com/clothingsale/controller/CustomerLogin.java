@@ -14,6 +14,9 @@ import jakarta.servlet.http.HttpSession;
 public class CustomerLogin extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final int CUSTOMER_ROLE_ID = 3;
+    private static final String ACTIVE_STATUS = "ACTIVE";
+    private static final String LOCKED_STATUS = "LOCKED";
     private final UserDAO userDAO = new UserDAO();
 
     @Override
@@ -72,8 +75,14 @@ public class CustomerLogin extends HttpServlet {
             return;
         }
 
-        if (user.getStatus() == null || !"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-            request.setAttribute("errorMessage", "Account not active. Please verify your email or resend activation code.");
+        if (!isCustomerAccount(user)) {
+            request.setAttribute("errorMessage", "This login page is for customer accounts only.");
+            request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
+            return;
+        }
+
+        if (!isActive(user)) {
+            request.setAttribute("errorMessage", getInactiveAccountMessage(user.getStatus()));
             request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
             return;
         }
@@ -115,5 +124,21 @@ public class CustomerLogin extends HttpServlet {
         session.setAttribute("authRoleName", user.getRoleName());
 
         response.sendRedirect(request.getContextPath() + "/home");
+    }
+
+    private boolean isCustomerAccount(User user) {
+        return user != null && user.getRoleId() == CUSTOMER_ROLE_ID;
+    }
+
+    private boolean isActive(User user) {
+        return user != null && user.getStatus() != null
+                && ACTIVE_STATUS.equalsIgnoreCase(user.getStatus());
+    }
+
+    private String getInactiveAccountMessage(String status) {
+        if (status != null && LOCKED_STATUS.equalsIgnoreCase(status)) {
+            return "Your account is locked. Please contact staff for support.";
+        }
+        return "Your account is not active. Only active customer accounts can sign in.";
     }
 }

@@ -50,19 +50,12 @@
     </head>
     <body>
 
-        <div class="wrapper">
-            <jsp:include page="sidebar.jsp">
-                <jsp:param name="activeTab" value="products" />
-            </jsp:include>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="products" />
+        </jsp:include>
 
             <div class="main-content">
                 <div class="container-fluid">
-                    <div class="mb-4">
-                        <a href="${pageContext.request.contextPath}/admin/products" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-arrow-left me-2"></i>Back to Product Catalog
-                        </a>
-                    </div>
-
                     <div class="card detail-card shadow-sm p-4 mb-4">
                         <div class="row g-4">
                             <div class="col-md-3 text-center">
@@ -162,7 +155,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>

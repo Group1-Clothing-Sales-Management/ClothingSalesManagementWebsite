@@ -36,10 +36,9 @@
     </style>
 </head>
 <body>
-<div class="main-wrapper">
-    <jsp:include page="/view/admin/sidebar.jsp"><jsp:param name="activeTab" value="customers"/></jsp:include>
-
-    <div class="contentArea content-area">
+<jsp:include page="/view/admin/common/admin_layout_start.jsp">
+    <jsp:param name="activeTab" value="customers"/>
+</jsp:include>
         <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
@@ -155,9 +154,6 @@
                     <i class="bi ${pageMode eq 'add' ? 'bi-person-plus-fill' : 'bi-pencil-square'}"></i>
                     ${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer Info'}
                 </h1>
-                <a href="${pageContext.request.contextPath}/staff/customers" class="btn btn-outline-secondary btn-sm px-3">
-                    <i class="bi bi-arrow-left me-1"></i> Back to List
-                </a>
             </div>
 
             <div class="card card-main mx-auto" style="max-width: 720px;">
@@ -247,8 +243,7 @@
                 </div>
             </div>
         </c:if>
-    </div>
-</div>
+<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
