@@ -164,28 +164,39 @@ public class AdminProductController extends HttpServlet {
                     String statusParam = getMultipartParameter(request, "status");
 
                     if (skuParam != null && !skuParam.trim().isEmpty()) {
-                        ProductVariant variant = new ProductVariant();
-                        variant.setProductId(productId); // Đảm bảo cấu trúc đối tượng có trường Product ID liên kết
-                        variant.setSku(skuParam.trim().toUpperCase());
-                        variant.setStatus(statusParam != null ? statusParam : "ACTIVE");
-
-                        // Theo yêu cầu của bạn: Price và Stock sẽ không xử lý ở đây, mặc định bằng 0 để dành riêng cho nghiệp vụ Nhập kho
-                        variant.setSalePrice(java.math.BigDecimal.ZERO);
-                        variant.setCostPrice(java.math.BigDecimal.ZERO);
-                        variant.setStockQuantity(0);
-
                         String colorStr = (colorParam != null && !colorParam.trim().isEmpty()) ? colorParam.trim() : "Standard";
                         String sizeStr = (sizeParam != null && !sizeParam.trim().isEmpty()) ? sizeParam.trim() : "FreeSize";
-                        variant.setAttributeDetails(colorStr + "|" + sizeStr);
+                        String combinedAttributes = colorStr + "|" + sizeStr;
+                        String cleanSku = skuParam.trim().toUpperCase();
 
-                        // Gọi hàm lưu đơn lẻ biến thể mới vào database
-                        boolean isAdded = productService.addSingleVariant(variant);
-                        if (!isAdded) {
-                            statusRedirect = "error";
+                        // Thực hiện kiểm tra trùng lặp dữ liệu tầng Server-side
+                        boolean isDuplicate = productDAO.checkVariantDuplicate(productId, combinedAttributes);
+
+                        if (isDuplicate) {
+                            statusRedirect = "duplicate";
+                        } else {
+                            ProductVariant variant = new ProductVariant();
+                            variant.setProductId(productId);
+                            variant.setSku(cleanSku);
+                            variant.setStatus(statusParam != null ? statusParam : "ACTIVE");
+                            variant.setSalePrice(java.math.BigDecimal.ZERO);
+                            variant.setCostPrice(java.math.BigDecimal.ZERO);
+                            variant.setStockQuantity(0);
+                            variant.setAttributeDetails(combinedAttributes);
+
+                            boolean isAdded = productService.addSingleVariant(variant);
+                            if (!isAdded) {
+                                statusRedirect = "error";
+                            }
                         }
                     }
+                    // Redirect trực tiếp về trang xem chi tiết của chính sản phẩm này thay vì trôi xuống cuối file
+                    response.sendRedirect(request.getContextPath() + "/admin/products?action=view&id=" + productId + "&status=" + statusRedirect);
+                    return;
                 } else {
                     statusRedirect = "error";
+                    response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + statusRedirect);
+                    return;
                 }
             } else if ("updateVariantStatus".equals(action)) {
                 try {
@@ -193,11 +204,10 @@ public class AdminProductController extends HttpServlet {
                     String newStatus = request.getParameter("newStatus");
                     String productId = request.getParameter("productId");
 
-                    
                     productDAO.updateVariantStatus(variantId, newStatus);
 
-                    response.sendRedirect(request.getContextPath() + "/admin/products?action=detail&id=" + productId + "&success=StatusUpdated");
-                    
+                    response.sendRedirect(request.getContextPath() + "/admin/products?action=view&id=" + productId + "&success=StatusUpdated");
+
                     return;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -280,7 +290,7 @@ public class AdminProductController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi nghiêm trọng tại AdminManageProduct.doPost: " + e.getMessage());
+            System.err.println("❌ Error AdminManageProduct.doPost: " + e.getMessage());
             e.printStackTrace();
             statusRedirect = "error";
         }

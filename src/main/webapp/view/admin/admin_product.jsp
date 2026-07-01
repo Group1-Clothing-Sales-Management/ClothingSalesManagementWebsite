@@ -103,25 +103,31 @@
                                             ${prod.status}
                                         </span>
                                     </td>
-                                    <td>
-                                        <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" class="btn btn-sm btn-outline-info me-1 px-3">
-                                            <i class="fa-solid fa-eye"></i> View
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-warning me-1 px-3" 
-                                                onclick="openUpdateProductModal({
-                                                            id: '${prod.id}',
-                                                                    name: '<c:out value="${prod.productName}"/>',
-                                        catId: '${prod.categoryId}',
-                                        brandId: '${prod.brandId}',
-                                        status: '${prod.status}',
-                                        desc: '<c:out value="${prod.longDescription}"/>'
-                                    })">
-                                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                                    </button>   
-                                    <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteProduct(${prod.id})">
-                                        <i class="fa-solid fa-trash"></i> Delete
-                                    </button>
-                                    </td>
+                                    <td class="text-center">
+    <div class="d-inline-flex gap-2 justify-content-center">
+        <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" 
+           class="btn btn-sm btn-info text-white rounded-3 px-2.5 py-1.5 d-flex align-items-center shadow-sm" 
+           title="View Details">
+            <i class="fa-solid fa-eye me-1"></i> View
+        </a>
+        
+        <button type="button" 
+                class="btn btn-sm btn-warning text-white rounded-3 px-2.5 py-1.5 d-flex align-items-center shadow-sm" 
+                title="Edit Product"
+                onclick="openUpdateProductModal({
+                    id: '${prod.id}',
+                    name: '<c:out value="${prod.productName}"/>',
+                    catId: '${prod.categoryId}',
+                    brandId: '${prod.brandId}',
+                    status: '${prod.status}',
+                    desc: '<c:out value="${prod.longDescription}"/>'
+                })">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+        </button>   
+        
+        
+    </div>
+</td>
                                     </tr>
                                 </c:forEach>
                                 <c:if test="${empty products}">

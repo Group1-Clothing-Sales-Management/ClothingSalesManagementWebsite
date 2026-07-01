@@ -27,6 +27,9 @@
                     An error occurred while processing the request. Please check inputs.
                 </div>
             </c:if>
+            <c:if test="${param.status == 'duplicate'}">
+                <div class="d-none" data-product-toast data-product-toast-type="error">Biến thể hoặc tổ hợp Màu/Size này đã tồn tại trong hệ thống!</div>
+            </c:if>
 
             <div class="card mb-4">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
@@ -91,26 +94,26 @@
                                     <td class="align-middle text-center" style="width: 180px;">
 
                                         <div class="dropdown d-inline-block">
-                                            <button class="btn btn-sm dropdown-toggle status-dropdown-btn ${variant.status == 'Active' || variant.status == '1' ? 'btn-success' : 'btn-danger'}" 
+                                            <button class="btn btn-sm dropdown-toggle status-dropdown-btn ${variant.status == 'ACTIVE' || variant.status == 'Active' || variant.status == '1' ? 'btn-success' : 'btn-danger'}" 
                                                     type="button" 
                                                     id="dropdownStatus-${variant.id}" 
                                                     data-bs-toggle="dropdown" 
                                                     aria-expanded="false"
                                                     style="font-size: 0.85rem; padding: 4px 12px; border-radius: 20px; font-weight: 500; min-width: 100px;">
-                                                ${variant.status == 'Active' || variant.status == '1' ? 'Active' : 'Inactive'}
+                                                ${variant.status == 'ACTIVE' || variant.status == 'Active' || variant.status == '1' ? 'Active' : 'Inactive'}
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownStatus-${variant.id}" style="border-radius: 8px; font-size: 0.9rem;">
                                                 <li>
-                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status == 'Active' || variant.status == '1' ? 'disabled bg-light' : ''}" 
+                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status == 'ACTIVE' || variant.status == 'Active' || variant.status == '1' ? 'disabled bg-light' : ''}" 
                                                        href="javascript:void(0)" 
-                                                       onclick="changeVariantStatus('${variant.id}', 'Active', '${product.id}')">
+                                                       onclick="changeVariantStatus('${variant.id}', 'ACTIVE', '${product.id}')">
                                                         <span class="badge bg-success me-2" style="width: 10px; height: 10px; border-radius: 50%; p-0"> </span> Active
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status != 'Active' && variant.status != '1' ? 'disabled bg-light' : ''}" 
+                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status != 'ACTIVE' && variant.status != 'Active' && variant.status != '1' ? 'disabled bg-light' : ''}" 
                                                        href="javascript:void(0)" 
-                                                       onclick="changeVariantStatus('${variant.id}', 'Inactive', '${product.id}')">
+                                                       onclick="changeVariantStatus('${variant.id}', 'INACTIVE', '${product.id}')">
                                                         <span class="badge bg-danger me-2" style="width: 10px; height: 10px; border-radius: 50%; p-0"> </span> Inactive
                                                     </a>
                                                 </li>
@@ -141,7 +144,7 @@
                         <div class="row">
                             <div class="col-md-4 form-group">
                                 <label for="skuCode">SKU Code <span class="text-danger">*</span></label>
-                                <input type="text" id="skuCode" name="skuCode" class="form-control" placeholder="e.g., SHIRT-L-BLACK" required />
+                                <input type="text" id="skuCode" name="skuCode" class="form-control"required />
                             </div>
                             <div class="col-md-3 form-group">
                                 <label for="color">Color Attribute</label>
@@ -149,7 +152,13 @@
                             </div>
                             <div class="col-md-2 form-group">
                                 <label for="size">Size Attribute</label>
-                                <input type="text" id="size" name="size" class="form-control" placeholder="e.g., S, M, L, XL" />
+                                <select id="size" name="size" class="form-control">
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
                             </div>
                             <div class="col-md-3 form-group">
                                 <label for="varStatus">Initial Status</label>
@@ -178,57 +187,134 @@
         </form>
     </body>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-                                                           function changeVariantStatus(variantId, nextStatus, productId) {
-                                                               const statusText = nextStatus === 'Active' ? 'Activate' : 'Deactivate';
-                                                               const confirmButtonColor = nextStatus === 'Active' ? '#198754' : '#dc3545';
+                   // Định nghĩa hàm đổi trạng thái biến thể
+                   function changeVariantStatus(variantId, nextStatus, productId) {
+                       const statusText = nextStatus === 'Active' ? 'Activate' : 'Deactivate';
+                       const confirmButtonColor = nextStatus === 'Active' ? '#198754' : '#dc3545';
+                       Swal.fire({
+                           title: 'Change Status?',
+                           text: `Are you sure you want to change this variant status to ${nextStatus}?`,
+                           icon: 'question',
+                           showCancelButton: true,
+                           confirmButtonColor: confirmButtonColor,
+                           cancelButtonColor: '#6c757d',
+                           confirmButtonText: `Yes, ${statusText}!`,
+                           cancelButtonText: 'Cancel',
+                           background: '#ffffff',
+                           customClass: {
+                               popup: 'rounded-4 shadow-lg'
+                           }
+                       }).then((result) => {
+                           if (result.isConfirmed) {
+                               document.getElementById('submitProductId').value = productId;
+                               document.getElementById('submitVariantId').value = variantId;
+                               document.getElementById('submitNewStatus').value = nextStatus;
+                               document.getElementById('masterStatusForm').submit();
+                           }
+                       });
+                   }
 
-                                                               Swal.fire({
-                                                                   title: 'Change Status?',
-                                                                   text: `Are you sure you want to change this variant status to ${nextStatus}?`,
-                                                                   icon: 'question',
-                                                                   showCancelButton: true,
-                                                                   confirmButtonColor: confirmButtonColor,
-                                                                   cancelButtonColor: '#6c757d',
-                                                                   confirmButtonText: `Yes, ${statusText}!`,
-                                                                   cancelButtonText: 'Cancel',
-                                                                   background: '#ffffff',
-                                                                   customClass: {
-                                                                       popup: 'rounded-4 shadow-lg'
-                                                                   }
-                                                               }).then((result) => {
-                                                                   if (result.isConfirmed) {
-                                                                       // Nạp dữ liệu vào form tổng và submit
-                                                                       document.getElementById('submitProductId').value = productId;
-                                                                       document.getElementById('submitVariantId').value = variantId;
-                                                                       document.getElementById('submitNewStatus').value = nextStatus;
+                   // KHỐI XỬ LÝ CHÍNH KHI TRANG TẢI XONG
+                   document.addEventListener("DOMContentLoaded", function () {
 
-                                                                       document.getElementById('masterStatusForm').submit();
-                                                                   }
-                                                               });
-                                                           }
+                       // 1. HIỂN THỊ TOAST THÔNG BÁO THÀNH CÔNG
+                       const urlParams = new URLSearchParams(window.location.search);
+                       const statusParam = urlParams.get('status');
+                       if (urlParams.get('success') === 'StatusUpdated' || statusParam === 'success') {
+                           const Toast = Swal.mixin({
+                               toast: true,
+                               position: 'top-end',
+                               showConfirmButton: false,
+                               timer: 3000,
+                               timerProgressBar: true,
+                               didOpen: (toast) => {
+                                   toast.addEventListener('mouseenter', Swal.stopTimer);
+                                   toast.addEventListener('mouseleave', Swal.resumeTimer);
+                               }
+                           });
+                           Toast.fire({
+                               icon: 'success',
+                               title: 'Thao tác dữ liệu thành công!'
+                           });
+                       }
 
-                                                           // Hiển thị Toast thông báo thành công sau khi trang reload lại
-                                                           document.addEventListener("DOMContentLoaded", function () {
-                                                               const urlParams = new URLSearchParams(window.location.search);
-                                                               if (urlParams.get('success') === 'StatusUpdated') {
-                                                                   const Toast = Swal.mixin({
-                                                                       toast: true,
-                                                                       position: 'top-end',
-                                                                       showConfirmButton: false,
-                                                                       timer: 3000,
-                                                                       timerProgressBar: true,
-                                                                       didOpen: (toast) => {
-                                                                           toast.addEventListener('mouseenter', Swal.stopTimer)
-                                                                           toast.addEventListener('mouseleave', Swal.resumeTimer)
-                                                                       }
-                                                                   });
+                       // 2. TỰ ĐỘNG TẠO MÃ SKU (CODE ĐÃ ĐƯỢC LÀM CHO AN TOÀN TUYỆT ĐỐI)
+                       const colorInput = document.getElementById("color");
+                       const sizeSelect = document.getElementById("size");
+                       const skuCodeInput = document.getElementById("skuCode");
 
-                                                                   Toast.fire({
-                                                                       icon: 'success',
-                                                                       title: 'Variant status updated successfully'
-                                                                   });
-                                                               }
-                                                           });
-    </script>
+                       // Dùng nháy kép và escape an toàn của JSP
+                       let productNameRaw = "<c:out value='${product.productName}' escapeXml='true' />";
+                       if (!productNameRaw || productNameRaw.trim() === "") {
+                           productNameRaw = "PROD"; // Giá trị mặc định nếu rỗng
+                       }
+
+                       function generateSingleSku() {
+                           // Tiền tố tên sản phẩm
+                           let prefix = productNameRaw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "-").substring(0, 8);
+                           if (!prefix)
+                               prefix = "PROD";
+
+                           // Màu sắc
+                           let colorVal = colorInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+                           if (!colorVal)
+                               colorVal = "STANDARD";
+
+                           // Kích cỡ
+                           let sizeVal = sizeSelect.value;
+
+                           // Cập nhật ô SKU
+                           skuCodeInput.value = prefix + "-" + colorVal + "-" + sizeVal;
+                       }
+
+                       // Bắt sự kiện
+                       if (colorInput && sizeSelect && skuCodeInput) {
+                           colorInput.addEventListener("input", generateSingleSku);
+                           sizeSelect.addEventListener("change", generateSingleSku);
+                           generateSingleSku(); // Chạy ngay lần đầu để sinh chuỗi mặc định
+                       }
+
+                       // 3. KIỂM TRA TRÙNG LẶP THUỘC TÍNH (COLOR + SIZE)
+                       // Lấy form một cách an toàn không dùng cú pháp '?.'
+                       const variantActionInput = document.querySelector('form[action*="manage-product"] input[name="action"][value="ADD_VARIANT"]');
+                       const variantForm = variantActionInput ? variantActionInput.form : null;
+
+                       if (variantForm) {
+                           variantForm.addEventListener("submit", function (e) {
+
+                               let inputColor = (document.getElementById("color").value || "").trim();
+                               if (!inputColor)
+                                   inputColor = "Standard";
+
+                               let inputSize = document.getElementById("size").value || "FreeSize";
+
+                               const inputCombination = (inputColor + "|" + inputSize).toLowerCase().replace(/\s+/g, '');
+                               let isDuplicateOnUi = false;
+
+                               document.querySelectorAll(".admin-table tbody tr").forEach(function (row) {
+                                   const cells = row.querySelectorAll("td");
+                                   if (cells.length >= 3) {
+                                       const existingCombination = cells[2].textContent.toLowerCase().replace(/\s+/g, '');
+                                       if (existingCombination === inputCombination) {
+                                           isDuplicateOnUi = true;
+                                       }
+                                   }
+                               });
+
+                               if (isDuplicateOnUi) {
+                                   e.preventDefault();
+                                   Swal.fire({
+                                       icon: 'error',
+                                       title: 'Trùng lặp thuộc tính!',
+                                       text: 'Tổ hợp Màu sắc và Kích cỡ này đã tồn tại trong cấu hình của sản phẩm.',
+                                       confirmButtonColor: '#dc3545'
+                                   });
+                               }
+                           });
+                       }
+                   });
+    </script> 
 </html>
