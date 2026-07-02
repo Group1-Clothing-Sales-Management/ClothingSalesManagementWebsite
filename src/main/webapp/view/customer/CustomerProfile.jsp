@@ -189,7 +189,7 @@
                 display:grid;
                 grid-template-columns:minmax(280px, .72fr) minmax(0, 1.28fr);
                 gap:22px;
-                align-items:start;
+                align-items:stretch;
                 padding-bottom:54px;
             }
 
@@ -202,6 +202,8 @@
             }
 
             .profile-summary {
+                display:flex;
+                flex-direction:column;
                 overflow:hidden;
             }
 
@@ -211,6 +213,9 @@
             }
 
             .summary-body {
+                flex:1;
+                display:flex;
+                flex-direction:column;
                 padding:0 24px 26px;
             }
 
@@ -282,7 +287,8 @@
 
             .summary-divider {
                 height:1px;
-                margin:24px 0;
+                margin:24px 0 24px;
+                margin-top:auto;
                 background:var(--line);
             }
 
@@ -537,8 +543,20 @@
                         <div class="avatar-preview">
                             <c:choose>
                                 <c:when test="${not empty profile.avatarUrl}">
+                                    <c:choose>
+                                        <c:when test="${fn:startsWith(profile.avatarUrl, 'http://')
+                                                        or fn:startsWith(profile.avatarUrl, 'https://')}">
+                                            <c:set var="avatarSrc" value="${profile.avatarUrl}"/>
+                                        </c:when>
+                                        <c:when test="${fn:startsWith(profile.avatarUrl, '/')}">
+                                            <c:set var="avatarSrc" value="${pageContext.request.contextPath}${profile.avatarUrl}"/>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="avatarSrc" value="${pageContext.request.contextPath}/${profile.avatarUrl}"/>
+                                        </c:otherwise>
+                                    </c:choose>
                                     <img id="avatarImage"
-                                         src="${fn:escapeXml(profile.avatarUrl)}"
+                                         src="${fn:escapeXml(avatarSrc)}"
                                          alt="Customer avatar"
                                          onerror="this.style.display='none';document.getElementById('avatarFallback').style.display='';">
                                     <i id="avatarFallback"
@@ -606,6 +624,7 @@
 
                     <form action="${pageContext.request.contextPath}/customer/profile"
                           method="post"
+                          enctype="multipart/form-data"
                           autocomplete="off">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -675,18 +694,16 @@
                                 </c:if>
                             </div>
                             <div class="col-12">
-                                <label class="form-label" for="avatarUrl">Avatar URL</label>
+                                <label class="form-label" for="avatarFile">Avatar image</label>
                                 <div class="field-control">
                                     <i class="fa-regular fa-image field-icon"></i>
-                                    <input type="url"
-                                           id="avatarUrl"
-                                           name="avatarUrl"
+                                    <input type="file"
+                                           id="avatarFile"
+                                           name="avatarFile"
                                            class="form-control"
-                                           maxlength="255"
-                                           value="${fn:escapeXml(profile.avatarUrl)}"
-                                           placeholder="https://example.com/avatar.jpg">
+                                           accept="image/jpeg,image/png,image/gif,image/webp">
                                 </div>
-                                <div class="form-text">Use a direct image URL. Leave blank to keep the default avatar.</div>
+                                <div class="form-text">Upload a JPG, PNG, GIF, or WEBP image up to 5MB. Leave blank to keep the current avatar.</div>
                             </div>
                             <div class="col-12 form-actions">
                                 <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-secondary px-4">
@@ -763,20 +780,30 @@
                     });
                 }
 
-                var avatarInput = document.getElementById('avatarUrl');
+                var avatarInput = document.getElementById('avatarFile');
                 var avatarImage = document.getElementById('avatarImage');
                 var avatarFallback = document.getElementById('avatarFallback');
+                var previewUrl = null;
 
                 if (avatarInput && avatarImage && avatarFallback) {
-                    avatarInput.addEventListener('input', function() {
-                        var value = avatarInput.value.trim();
-                        if (!value) {
+                    avatarInput.addEventListener('change', function() {
+                        var file = avatarInput.files && avatarInput.files.length > 0
+                                ? avatarInput.files[0]
+                                : null;
+
+                        if (previewUrl) {
+                            URL.revokeObjectURL(previewUrl);
+                            previewUrl = null;
+                        }
+
+                        if (!file) {
                             avatarImage.style.display = 'none';
                             avatarFallback.style.display = '';
                             return;
                         }
 
-                        avatarImage.src = value;
+                        previewUrl = URL.createObjectURL(file);
+                        avatarImage.src = previewUrl;
                         avatarImage.style.display = '';
                         avatarFallback.style.display = 'none';
                     });
