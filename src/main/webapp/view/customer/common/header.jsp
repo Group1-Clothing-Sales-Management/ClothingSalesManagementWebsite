@@ -32,24 +32,23 @@
                 Products
             </a>
 
+            <a href="${pageContext.request.contextPath}/cart"
+               class="nav-btn position-relative">
+
+                <i class="fa-solid fa-cart-shopping"></i>
+                Cart
+
+                <c:if test="${loggedIn and sessionScope.cartCount > 0}">
+                    <span class="cart-badge">
+                        ${sessionScope.cartCount}
+                    </span>
+                </c:if>
+
+            </a>
+
             <c:choose>
 
                 <c:when test="${loggedIn}">
-
-                    <!-- CART -->
-                    <a href="${pageContext.request.contextPath}/cart"
-                       class="nav-btn position-relative">
-
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        Cart
-
-                        <c:if test="${sessionScope.cartCount > 0}">
-                            <span class="cart-badge">
-                                ${sessionScope.cartCount}
-                            </span>
-                        </c:if>
-
-                    </a>
 
                     <div class="dropdown">
 

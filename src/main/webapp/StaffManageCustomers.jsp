@@ -27,6 +27,7 @@
         .table td { vertical-align: middle; font-size: .9rem; }
         
         .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-pending { background: #dbeafe; color: #1d4ed8; }
         .badge-inactive { background: #fef3c7; color: #92400e; }
         .badge-locked { background: #fee2e2; color: #991b1b; }
         .avatar-circle { width: 36px; height: 36px; border-radius: 50%; background: #e8eaf6; color: #5c6bc0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; }
@@ -121,8 +122,11 @@
                                                 <td>${not empty c.phone ? c.phone : '—'}</td>
                                                 <td class="text-muted">${c.createdAt}</td>
                                                 <td>
-                                                    <span class="badge ${c.status eq 'ACTIVE' ? 'badge-active' : (c.status eq 'INACTIVE' ? 'badge-inactive' : 'badge-locked')} px-2 py-1 rounded-pill">
-                                                        ${c.status}
+                                                    <span class="badge ${c.status eq 'ACTIVE' ? 'badge-active' : (c.status eq 'CLOCK' || c.status eq 'PENDING' ? 'badge-pending' : (c.status eq 'INACTIVE' ? 'badge-inactive' : 'badge-locked'))} px-2 py-1 rounded-pill">
+                                                        <c:choose>
+                                                            <c:when test="${c.status eq 'CLOCK' or c.status eq 'PENDING'}">Clock</c:when>
+                                                            <c:otherwise>${c.status}</c:otherwise>
+                                                        </c:choose>
                                                     </span>
                                                 </td>
                                                 <td>
@@ -194,6 +198,7 @@
                                     <label class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
                                     <select class="form-select ${not empty errors.status ? 'is-invalid' : ''}" name="status">
                                         <option value="ACTIVE" ${customer.status eq 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                                        <option value="CLOCK" ${customer.status eq 'CLOCK' or customer.status eq 'PENDING' ? 'selected' : ''}>Clock</option>
                                         <option value="LOCKED" ${customer.status eq 'LOCKED' ? 'selected' : ''}>LOCKED</option>
                                     </select>
                                     <div class="invalid-feedback">${errors.status}</div>

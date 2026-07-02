@@ -2,7 +2,10 @@ package com.clothingsale.controller;
 
 import com.clothingsale.dao.UserDAO;
 import com.clothingsale.model.User;
+import com.clothingsale.util.MailtrapEmailService;
 import java.io.IOException;
+import java.sql.Timestamp;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,16 +18,24 @@ public class CustomerLogin extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final int CUSTOMER_ROLE_ID = 3;
+    private static final int OTP_EXPIRY_MINUTES = 15;
+    private static final String VERIFICATION_CONTEXT_LOGIN = "LOGIN";
     private static final String ACTIVE_STATUS = "ACTIVE";
+    private static final String PENDING_STATUS = "CLOCK";
+    private static final String PENDING_STATUS_LEGACY = "PENDING";
     private static final String LOCKED_STATUS = "LOCKED";
     private final UserDAO userDAO = new UserDAO();
+    private final MailtrapEmailService mailService = new MailtrapEmailService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String created = request.getParameter("created");
+        String verified = request.getParameter("verified");
         if ("1".equals(created)) {
             request.setAttribute("successMessage", "Account created successfully. Please sign in.");
+        } else if ("1".equals(verified)) {
+            request.setAttribute("successMessage", "Your account has been verified. Please sign in.");
         }
         request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
     }
@@ -38,6 +49,7 @@ public class CustomerLogin extends HttpServlet {
 
         if (username != null) username = username.trim();
         if (password == null) password = "";
+        request.setAttribute("username", username);
 
         HttpSession session = request.getSession(true);
         // simple session-based rate limit: lock after 5 failed attempts for 5 minutes
@@ -78,6 +90,11 @@ public class CustomerLogin extends HttpServlet {
         if (!isCustomerAccount(user)) {
             request.setAttribute("errorMessage", "This login page is for customer accounts only.");
             request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
+            return;
+        }
+
+        if (isPending(user)) {
+            handlePendingCustomerLogin(request, response, session, user, password);
             return;
         }
 
@@ -126,8 +143,72 @@ public class CustomerLogin extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/home");
     }
 
+    private void handlePendingCustomerLogin(HttpServletRequest request, HttpServletResponse response,
+            HttpSession session, User user, String password) throws ServletException, IOException {
+        try {
+            boolean ok = com.clothingsale.util.SecurityUtil.checkPassword(password, user.getPassword());
+            if (!ok) {
+                Integer at = (Integer) session.getAttribute("loginAttempts");
+                at = (at == null) ? 1 : at + 1;
+                session.setAttribute("loginAttempts", at);
+                if (at >= 5) {
+                    session.setAttribute("loginLockedUntil", System.currentTimeMillis() + 5 * 60 * 1000);
+                    request.setAttribute("errorMessage", "Account temporarily locked due to multiple failed attempts.");
+                } else {
+                    request.setAttribute("errorMessage", "Incorrect password.");
+                }
+                request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
+                return;
+            }
+            session.removeAttribute("loginAttempts");
+            session.removeAttribute("loginLockedUntil");
+        } catch (IllegalArgumentException ex) {
+            request.setAttribute("errorMessage", "Invalid credentials.");
+            request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
+            return;
+        }
+
+        Timestamp expiry = new Timestamp(System.currentTimeMillis() + OTP_EXPIRY_MINUTES * 60_000L);
+        String verificationCode = userDAO.generateEmailVerificationCode(user.getId(), expiry);
+        if (verificationCode == null) {
+            request.setAttribute("errorMessage", "Unable to generate verification code. Please try again.");
+            request.getRequestDispatcher("/view/auth/customer_login.jsp").forward(request, response);
+            return;
+        }
+
+        HttpSession verificationSession = request.getSession(true);
+        verificationSession.setAttribute("pendingUserId", user.getId());
+        verificationSession.setAttribute("pendingEmail", user.getEmail());
+        verificationSession.setAttribute("pendingUsername", user.getUsername());
+        verificationSession.setAttribute("pendingVerificationContext", VERIFICATION_CONTEXT_LOGIN);
+        verificationSession.setAttribute("verificationLastSentAt", System.currentTimeMillis());
+        verificationSession.setAttribute("verificationAttempts", 0);
+        verificationSession.setAttribute("verificationExpiresAt", expiry.getTime());
+
+        request.setAttribute("verificationAllowed", Boolean.TRUE);
+        request.setAttribute("pendingEmail", user.getEmail());
+        request.setAttribute("verificationContext", VERIFICATION_CONTEXT_LOGIN);
+
+        try {
+            mailService.sendVerificationCode(user.getEmail(), user.getFullName(), verificationCode, OTP_EXPIRY_MINUTES);
+            request.setAttribute("infoMessage", "Your account is not verified yet. We sent an OTP to your email.");
+        } catch (IllegalStateException ex) {
+            request.setAttribute("errorMessage", ex.getMessage());
+        } catch (MessagingException ex) {
+            request.setAttribute("errorMessage", "We could not send the verification email right now. Please try again later.");
+        }
+
+        request.getRequestDispatcher("/view/auth/verify_otp.jsp").forward(request, response);
+    }
+
     private boolean isCustomerAccount(User user) {
         return user != null && user.getRoleId() == CUSTOMER_ROLE_ID;
+    }
+
+    private boolean isPending(User user) {
+        return user != null && user.getStatus() != null
+                && (PENDING_STATUS.equalsIgnoreCase(user.getStatus())
+                || PENDING_STATUS_LEGACY.equalsIgnoreCase(user.getStatus()));
     }
 
     private boolean isActive(User user) {

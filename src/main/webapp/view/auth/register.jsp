@@ -1,6 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
     String username = (String) request.getAttribute("username");
+    String fullName = (String) request.getAttribute("fullName");
+    String email = (String) request.getAttribute("email");
+    String phone = (String) request.getAttribute("phone");
     String errorMessage = (String) request.getAttribute("errorMessage");
     String ctx = request.getContextPath();
 %>
@@ -468,12 +471,29 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label" for="confirmPasswordField">Confirm password</label>
+                        <div class="field-control password-control">
+                            <i class="fa-solid fa-shield-halved field-icon"></i>
+                            <input type="password"
+                                   class="form-control"
+                                   id="confirmPasswordField"
+                                   name="confirmPassword"
+                                   placeholder="Confirm password"
+                                   required>
+                            <button class="password-toggle" type="button" data-toggle-password="confirmPasswordField" aria-label="Show confirm password">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label" for="fullNameField">Full name</label>
                         <div class="field-control">
                             <i class="fa-regular fa-id-card field-icon"></i>
                             <input class="form-control"
                                    id="fullNameField"
                                    name="fullName"
+                                   value="<%= fullName != null ? fullName : "" %>"
                                    placeholder="Full name"
                                    required>
                         </div>
@@ -487,6 +507,7 @@
                                    class="form-control"
                                    id="emailField"
                                    name="email"
+                                   value="<%= email != null ? email : "" %>"
                                    placeholder="email@domain.com"
                                    required>
                         </div>
@@ -499,6 +520,7 @@
                             <input class="form-control"
                                    id="phoneField"
                                    name="phone"
+                                   value="<%= phone != null ? phone : "" %>"
                                    placeholder="Phone number">
                         </div>
                     </div>

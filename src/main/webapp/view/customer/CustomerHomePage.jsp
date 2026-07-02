@@ -287,9 +287,6 @@
 
     <body>
         <jsp:include page="/view/customer/common/header.jsp"/>
-        <c:set var="loggedIn"
-               value="${not empty sessionScope.authUserId}"/>
-
         <!-- HERO -->
 
         <section class="hero">
@@ -462,49 +459,30 @@
 
                                     </a>
                                     <c:if test="${not empty p.variants}">
-                                        <c:choose>
-                                            <c:when test="${loggedIn}">
-                                                <form action="${pageContext.request.contextPath}/cart" method="post" class="add-cart-form" style="margin:0">
-                                                    <select name="variantId" class="form-select form-select-sm mb-2 variant-select">
-                                                        <c:forEach items="${p.variants}" var="v">
-                                                            <option value="${v.id}"
-                                                                    data-price="${v.salePrice}"
-                                                                    data-attributes="${v.attributeDetails}">
-                                                                ${v.attributeDetails} - ${v.salePrice} $
-                                                            </option>
-                                                        </c:forEach>
-                                                    </select>
-                                                    <input type="hidden" name="productId" value="${p.id}" />
-                                                    <input type="hidden" name="productName" value="${p.productName}" />
-                                                    <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
-                                                    <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
-                                                    <input type="hidden" name="quantity" value="1" />
-                                                    <input type="hidden"name="imageUrl"value="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}" />
-                                                    <button type="submit" class="btn btn-danger w-100">
-                                                        <i class="fa-solid fa-cart-plus"></i>
-                                                        Add To Cart
-                                                    </button>
-                                                </form>
-
-                                            </c:when>
-
-
-                                            <c:otherwise>
-
-                                                <a 
-                                                    href="${pageContext.request.contextPath}/customer/login"
-                                                    class="btn btn-danger w-100">
-
-                                                    <i class="fa-solid fa-cart-plus"></i>
-                                                    Add To Cart
-
-                                                </a>
-
-                                            </c:otherwise>
-
-
-                                        </c:choose>
-
+                                        <form action="${pageContext.request.contextPath}/cart"
+                                              method="post"
+                                              class="add-cart-form"
+                                              style="margin:0">
+                                            <select name="variantId" class="form-select form-select-sm mb-2 variant-select">
+                                                <c:forEach items="${p.variants}" var="v">
+                                                    <option value="${v.id}"
+                                                            data-price="${v.salePrice}"
+                                                            data-attributes="${v.attributeDetails}">
+                                                        ${v.attributeDetails} - ${v.salePrice} $
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
+                                            <input type="hidden" name="productId" value="${p.id}" />
+                                            <input type="hidden" name="productName" value="${p.productName}" />
+                                            <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
+                                            <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
+                                            <input type="hidden" name="quantity" value="1" />
+                                            <input type="hidden"name="imageUrl"value="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}" />
+                                            <button type="submit" class="btn btn-danger w-100">
+                                                <i class="fa-solid fa-cart-plus"></i>
+                                                Add To Cart
+                                            </button>
+                                        </form>
                                     </c:if>
 
                                 </div>

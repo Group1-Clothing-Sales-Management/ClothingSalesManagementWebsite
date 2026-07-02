@@ -186,9 +186,6 @@
 
         <jsp:include page="/view/customer/common/header.jsp"/>
 
-        <c:set var="loggedIn"
-               value="${not empty sessionScope.authUserId}"/>
-
         <div class="container my-5">
 
             <div class="detail-card">
@@ -237,107 +234,91 @@
 
                         <div class="mt-4">
 
-                            <c:choose>
+                            <c:if test="${not empty product.variants}">
 
-                                <c:when test="${loggedIn and not empty product.variants}">
+                                <form action="${pageContext.request.contextPath}/cart"
+                                      method="post"
+                                      class="add-cart-form">
 
-                                    <form action="${pageContext.request.contextPath}/cart"
-                                          method="post"
-                                          class="add-cart-form">
+                                    <label class="form-label fw-semibold">
+                                        Chọn phân loại
+                                    </label>
 
-                                        <label class="form-label fw-semibold">
-                                            Chọn phân loại
-                                        </label>
+                                    <select name="variantId"
+                                            class="form-select mb-3 variant-select">
 
-                                        <select name="variantId"
-                                                class="form-select mb-3 variant-select">
+                                        <c:forEach items="${product.variants}" var="v">
 
-                                            <c:forEach items="${product.variants}" var="v">
+                                            <option value="${v.id}"
+                                                    data-price="${v.salePrice}"
+                                                    data-stock="${v.stockQuantity}"
+                                                    data-attributes="${v.attributeDetails}">
 
-                                                <option value="${v.id}"
-                                                        data-price="${v.salePrice}"
-                                                        data-stock="${v.stockQuantity}"
-                                                        data-attributes="${v.attributeDetails}">
+                                                ${v.attributeDetails}
 
-                                                    ${v.attributeDetails}
+                                            </option>
 
-                                                </option>
+                                        </c:forEach>
 
-                                            </c:forEach>
+                                    </select>
 
-                                        </select>
+                                    <div class="mb-3 stock-text">
 
-                                        <div class="mb-3 stock-text">
+                                        Còn lại:
+                                        <b id="stockText">
 
-                                            Còn lại:
-                                            <b id="stockText">
+                                            ${product.variants[0].stockQuantity}
 
-                                                ${product.variants[0].stockQuantity}
+                                        </b>
 
-                                            </b>
+                                        sản phẩm
 
-                                            sản phẩm
+                                    </div>
 
-                                        </div>
+                                    <input type="hidden"
+                                           name="productId"
+                                           value="${product.id}" />
 
-                                        <input type="hidden"
-                                               name="productId"
-                                               value="${product.id}" />
+                                    <input type="hidden"
+                                           name="productName"
+                                           value="${product.productName}" />
 
-                                        <input type="hidden"
-                                               name="productName"
-                                               value="${product.productName}" />
+                                    <input type="hidden"
+                                           name="attributes"
+                                           class="attributes-input"
+                                           value="${product.variants[0].attributeDetails}" />
 
-                                        <input type="hidden"
-                                               name="attributes"
-                                               class="attributes-input"
-                                               value="${product.variants[0].attributeDetails}" />
+                                    <input type="hidden"
+                                           name="price"
+                                           class="price-input"
+                                           value="${product.variants[0].salePrice}" />
 
-                                        <input type="hidden"
-                                               name="price"
-                                               class="price-input"
-                                               value="${product.variants[0].salePrice}" />
+                                    <input type="hidden"
+                                           name="quantity"
+                                           value="1" />
 
-                                        <input type="hidden"
-                                               name="quantity"
-                                               value="1" />
+                                    <input type="hidden"
+                                           name="imageUrl"
+                                           value="${pageContext.request.contextPath}/uploads/${product.mainImageUrl}" />
 
-                                        <input type="hidden"
-                                               name="imageUrl"
-                                               value="${pageContext.request.contextPath}/uploads/${product.mainImageUrl}" />
-
-                                        <button type="submit"
-                                                class="btn btn-cart btn-lg">
-
-                                            <i class="fa-solid fa-cart-shopping"></i>
-                                            Thêm vào giỏ hàng
-
-                                        </button>
-
-                                        <a href="${pageContext.request.contextPath}/cart"
-                                           class="btn btn-buy-now btn-lg">
-
-                                            Mua ngay
-
-                                        </a>
-
-                                    </form>
-
-                                </c:when>
-
-                                <c:otherwise>
-
-                                    <a href="${pageContext.request.contextPath}/customer/login"
-                                       class="btn btn-cart btn-lg">
+                                    <button type="submit"
+                                            class="btn btn-cart btn-lg">
 
                                         <i class="fa-solid fa-cart-shopping"></i>
-                                        Đăng nhập để mua
+                                        Thêm vào giỏ hàng
+
+                                    </button>
+
+                                    <a href="${pageContext.request.contextPath}/cart"
+                                       class="btn btn-buy-now btn-lg">
+
+                                        Mua ngay
 
                                     </a>
 
-                                </c:otherwise>
+                                </form>
 
-                            </c:choose>
+                            </c:if>
 
                         </div>
 

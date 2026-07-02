@@ -83,17 +83,23 @@ public class AuthFilter extends HttpFilter {
     }
 
     private boolean isPublicPath(String path) {
-        if (path == null || path.isEmpty() || "/".equals(path) || "/index.html".equals(path)) {
+        if (path == null || path.isEmpty() || "/".equals(path)
+                || "/index.html".equals(path)
+                || "/index.jsp".equals(path)) {
             return true;
         }
         String lowerPath = path.toLowerCase(Locale.ROOT);
-        // Allow only public static assets, the homepage, and explicit auth endpoints
+        // Allow public static assets, the homepage, and explicit auth endpoints
         return lowerPath.startsWith("/admin-staff-login")
                 || lowerPath.startsWith("/login")
                 || lowerPath.startsWith("/admin/login")
                 || lowerPath.startsWith("/customer/login")
                 || lowerPath.startsWith("/customer/register")
                 || lowerPath.startsWith("/customer/verify")
+                || lowerPath.startsWith("/customer/resend-otp")
+                || lowerPath.startsWith("/home")
+                || lowerPath.startsWith("/products")
+                || lowerPath.startsWith("/product/detail")
                 || lowerPath.startsWith("/view/auth/")
                 || lowerPath.startsWith("/cart")
                 || lowerPath.startsWith("/cart/add")
