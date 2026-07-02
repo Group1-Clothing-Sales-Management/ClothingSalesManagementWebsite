@@ -8,6 +8,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             body {
                 background-color: #f3f4f6;
@@ -103,25 +104,31 @@
                                             ${prod.status}
                                         </span>
                                     </td>
-                                    <td>
-                                        <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" class="btn btn-sm btn-outline-info me-1 px-3">
-                                            <i class="fa-solid fa-eye"></i> View
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-warning me-1 px-3" 
-                                                onclick="openUpdateProductModal({
-                                                            id: '${prod.id}',
-                                                                    name: '<c:out value="${prod.productName}"/>',
-                                        catId: '${prod.categoryId}',
-                                        brandId: '${prod.brandId}',
-                                        status: '${prod.status}',
-                                        desc: '<c:out value="${prod.longDescription}"/>'
-                                    })">
-                                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                                    </button>   
-                                    <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteProduct(${prod.id})">
-                                        <i class="fa-solid fa-trash"></i> Delete
-                                    </button>
-                                    </td>
+                                    <td class="text-center">
+    <div class="d-inline-flex gap-2 justify-content-center">
+        <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" 
+           class="btn btn-sm btn-info text-white rounded-3 px-2.5 py-1.5 d-flex align-items-center shadow-sm" 
+           title="View Details">
+            <i class="fa-solid fa-eye me-1"></i> View
+        </a>
+        
+        <button type="button" 
+                class="btn btn-sm btn-warning text-white rounded-3 px-2.5 py-1.5 d-flex align-items-center shadow-sm" 
+                title="Edit Product"
+                onclick="openUpdateProductModal({
+                    id: '${prod.id}',
+                    name: '<c:out value="${prod.productName}"/>',
+                    catId: '${prod.categoryId}',
+                    brandId: '${prod.brandId}',
+                    status: '${prod.status}',
+                    desc: '<c:out value="${prod.longDescription}"/>'
+                })">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+        </button>   
+        
+        
+    </div>
+</td>
                                     </tr>
                                 </c:forEach>
                                 <c:if test="${empty products}">

@@ -448,7 +448,7 @@ public class AdminManageProductDAO {
                 psAttrValue.executeBatch();
             }
 
-            conn.commit(); 
+            conn.commit();
             return true;
 
         } catch (SQLException e) {
@@ -526,4 +526,143 @@ public class AdminManageProductDAO {
         }
         return 0;
     }
+
+    public boolean updateVariantStatus(int variantId, String status) {
+        String sql = "UPDATE Product_Variant SET status = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+            ps.setInt(2, variantId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("❌ Error updating variant status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * CÁCH 2: Thêm đơn lẻ một biến thể mới từ trang xem chi tiết sản phẩm phát
+     * sinh thực tế (Mặc định Giá và Số lượng tồn kho bằng 0 để phân tách riêng
+     * cho nghiệp vụ Nhập kho)
+     */
+    public boolean insertSingleVariant(com.clothingsale.model.ProductVariant v) {
+        String sqlVariant = "INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status) VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlAttrValue = "INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES (?, ?, ?)";
+
+        Connection conn = null;
+        PreparedStatement psVariant = null;
+        PreparedStatement psAttrValue = null;
+
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Bắt đầu Transaction quản lý dữ liệu toàn vẹn
+
+            // 1. Thêm bản ghi định danh biến thể vào bảng Product_Variant
+            psVariant = conn.prepareStatement(sqlVariant, Statement.RETURN_GENERATED_KEYS);
+            psVariant.setInt(1, v.getProductId());
+            psVariant.setString(2, v.getSku());
+            psVariant.setBigDecimal(3, v.getCostPrice());
+            psVariant.setBigDecimal(4, v.getSalePrice());
+            psVariant.setInt(5, v.getStockQuantity());
+            psVariant.setString(6, v.getStatus());
+
+            int affectedRows = psVariant.executeUpdate();
+            if (affectedRows == 0) {
+                conn.rollback();
+                return false;
+            }
+
+            int variantId = 0;
+            try (ResultSet generatedKeys = psVariant.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    variantId = generatedKeys.getInt(1);
+                }
+            }
+
+            // 2. Tách chuỗi đặc tính dạng "Color|Size" để lưu vào bảng thuộc tính cầu nối trung gian
+            if (variantId > 0 && v.getAttributeDetails() != null) {
+                int colorAttrId = getAttributeIdByName(conn, "Color");
+                int sizeAttrId = getAttributeIdByName(conn, "Size");
+
+                String[] tokens = v.getAttributeDetails().split("\\|");
+                String colorValue = tokens.length > 0 ? tokens[0].trim() : null;
+                String sizeValue = tokens.length > 1 ? tokens[1].trim() : null;
+
+                psAttrValue = conn.prepareStatement(sqlAttrValue);
+
+                // Chèn giá trị màu sắc tự do (Color)
+                if (colorValue != null && !colorValue.isEmpty() && colorAttrId > 0) {
+                    psAttrValue.setInt(1, variantId);
+                    psAttrValue.setInt(2, colorAttrId);
+                    psAttrValue.setString(3, colorValue);
+                    psAttrValue.executeUpdate();
+                }
+
+                // Chèn giá trị kích thước chọn (Size)
+                if (sizeValue != null && !sizeValue.isEmpty() && sizeAttrId > 0) {
+                    psAttrValue.setInt(1, variantId);
+                    psAttrValue.setInt(2, sizeAttrId);
+                    psAttrValue.setString(3, sizeValue);
+                    psAttrValue.executeUpdate();
+                }
+            }
+
+            conn.commit(); // Hoàn tất giao dịch dữ liệu an toàn
+            return true;
+
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    System.err.println("❌ Rollback triggered due to error inserting single variant!");
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            // Giải phóng an toàn các kết nối tài nguyên
+            try {
+                if (psAttrValue != null) {
+                    psAttrValue.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (psVariant != null) {
+                    psVariant.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public boolean checkVariantDuplicate(int productId, String attributeDetails) {
+    
+    String sql = "SELECT COUNT(*) FROM Product_Variant WHERE product_id = ? AND attribute_details = ?";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setInt(1, productId);
+        ps.setString(2, attributeDetails);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+
 }

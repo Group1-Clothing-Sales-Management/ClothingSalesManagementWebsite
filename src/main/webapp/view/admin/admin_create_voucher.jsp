@@ -7,6 +7,7 @@
         <title>Create New Voucher - Admin</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             .wrapper {
                 display: flex;
@@ -35,7 +36,9 @@
 
             <div class="main-content">
                 <div class="container-fluid">
-
+                    <button type="button" class="btn btn-secondary mb-3" onclick="window.history.back();">
+                <i class="fa fa-arrow-left"></i> Back to Voucher List
+            </button>
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h2 class="font-weight-bold">Create New Voucher</h2>

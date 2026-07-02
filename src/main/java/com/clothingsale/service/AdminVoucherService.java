@@ -61,39 +61,49 @@ public class AdminVoucherService {
         return isSuccess ? "SUCCESS" : "Đã xảy ra lỗi hệ thống khi thêm mới voucher!";
     }
 
-    // 4. Cập nhật thông tin Voucher (BỔ SUNG THÊM - Áp dụng chặt chẽ Quy tắc A bảo vệ khách hàng)
     public String updateVoucher(Voucher voucher) {
         // Kiểm tra xem voucher có tồn tại hay không
         Voucher currentDB = voucherDAO.getVoucherById(voucher.getId());
         if (currentDB == null) {
-            return "Voucher not found or has been deleted!";
+            return "Voucher không tồn tại hoặc đã bị xóa!";
         }
 
         java.util.Date now = new java.util.Date();
 
         // Chặn chỉnh sửa nếu voucher đã kết thúc hoặc đã hết lượt sử dụng hoàn toàn
         if (currentDB.getUsedCount() >= currentDB.getUsageLimit() || now.after(currentDB.getEndDate())) {
-            return "Cannot edit an expired or fully exhausted voucher.";
+            return "Không thể chỉnh sửa voucher đã hết hạn hoặc đã sử dụng hết.";
         }
 
-        // Chặn hạ số lượng phát hành thấp hơn số lượng khách thực tế đã áp dụng thành công
-        if (voucher.getUsageLimit() < currentDB.getUsedCount()) {
-            return "Total usage limit cannot be lower than the already used count (" + currentDB.getUsedCount() + ").";
+        int savedCount = voucherDAO.getTotalSavedCount(voucher.getId());
+
+        // Nếu Admin cố tình set số lượng phát hành mới nhỏ hơn số khách đã lưu
+        if (voucher.getUsageLimit() < savedCount) {
+            return "Lỗi: Đã có " + savedCount + " khách hàng thu thập voucher này. Bạn chỉ có thể thiết lập số lượng tối thiểu là " + savedCount + " để bảo vệ quyền lợi khách hàng.";
         }
 
-        // Kiểm tra thời gian logic
         if (voucher.getEndDate().before(voucher.getStartDate())) {
-            return "End Date & Time must occur after the Start Date & Time.";
+            return "Ngày kết thúc phải diễn ra sau ngày bắt đầu.";
         }
 
-        // Đóng băng tính toán tiền cho voucher cố định
+        // Nếu Admin rút ngắn thời gian kết thúc (newEndDate < oldEndDate)
+        if (voucher.getEndDate().before(currentDB.getEndDate())) {
+            // Tính toán mốc thời gian an toàn (Hiện tại + 48 tiếng)
+            long safeBufferMillis = 48L * 60 * 60 * 1000;
+            java.util.Date safeLimitTime = new java.util.Date(now.getTime() + safeBufferMillis);
+
+            // Nếu ngày kết thúc mới bị ép xuống quá gấp (nhỏ hơn mốc 48h tới)
+            if (voucher.getEndDate().before(safeLimitTime)) {
+                return "Lỗi: Không thể rút ngắn thời hạn quá gấp. Hạn sử dụng mới phải cách thời điểm hiện tại tối thiểu 2 ngày để khách hàng đã lưu kịp sử dụng.";
+            }
+        }
+
         if ("FIXED_AMOUNT".equals(voucher.getDiscountType())) {
             voucher.setMaxDiscountAmount(voucher.getDiscountValue());
         }
 
-        // Đẩy xuống DAO thực thi cập nhật
         boolean isSuccess = voucherDAO.updateVoucher(voucher);
-        return isSuccess ? "SUCCESS" : "Failed to update voucher due to a system error.";
+        return isSuccess ? "SUCCESS" : "Lỗi hệ thống khi cập nhật voucher.";
     }
 
     // 5. Tiến trình dừng voucher sớm có lộ trình đệm (Đã có - Giữ nguyên)
@@ -122,5 +132,9 @@ public class AdminVoucherService {
 
         boolean isSuccess = voucherDAO.terminateVoucherEarly(id, newEndDate, reason.trim());
         return isSuccess ? "SUCCESS" : "System error occurred while updating the database.";
+    }
+
+    public int getTotalSavedCount(int id) {
+        return voucherDAO.getTotalSavedCount(id);
     }
 }

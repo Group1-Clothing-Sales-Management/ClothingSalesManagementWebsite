@@ -292,3 +292,77 @@ CREATE TABLE Product_Batch (
     current_quantity INT NOT NULL, -- Số lượng còn lại (Sẽ trừ dần về 0 theo FIFO)
     created_at DATETIME DEFAULT GETDATE() -- Sắp xếp theo thời gian tăng dần để tìm lô cũ nhất
 );
+
+
+-- =========================================================================
+-- Thêm tabel mới vào DB----
+-- =========================================================================
+
+USE ClothesShopDB; 
+GO
+
+IF OBJECT_ID('User_Saved_Voucher', 'U') IS NOT NULL 
+    DROP TABLE User_Saved_Voucher;
+GO
+
+CREATE TABLE User_Saved_Voucher (
+    user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE, 
+    voucher_id INT FOREIGN KEY REFERENCES Voucher(id) ON DELETE CASCADE,
+    saved_at DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (user_id, voucher_id)
+);
+GO
+
+
+DECLARE @i INT = 1;
+WHILE @i <= 40
+BEGIN
+    
+    IF NOT EXISTS (SELECT 1 FROM [User] WHERE username = 'test_user_' + CAST(@i AS VARCHAR))
+    BEGIN
+        INSERT INTO [User] (username, password, full_name, email) 
+        VALUES ('test_user_' + CAST(@i AS VARCHAR), '123456', 'Test User ' + CAST(@i AS VARCHAR), 'test' + CAST(@i AS VARCHAR) + '@gmail.com');
+    END
+    SET @i = @i + 1;
+END
+GO
+
+
+INSERT INTO User_Saved_Voucher (user_id, voucher_id)
+SELECT TOP 10 id, 1 FROM [User] WHERE id NOT IN (SELECT user_id FROM User_Saved_Voucher WHERE voucher_id = 1);
+
+
+INSERT INTO User_Saved_Voucher (user_id, voucher_id)
+SELECT TOP 20 id, 2 FROM [User] WHERE id NOT IN (SELECT user_id FROM User_Saved_Voucher WHERE voucher_id = 2);
+
+
+INSERT INTO User_Saved_Voucher (user_id, voucher_id)
+SELECT TOP 25 id, 3 FROM [User] WHERE id NOT IN (SELECT user_id FROM User_Saved_Voucher WHERE voucher_id = 3);
+
+INSERT INTO User_Saved_Voucher (user_id, voucher_id)
+SELECT TOP 35 id, 4 FROM [User] WHERE id NOT IN (SELECT user_id FROM User_Saved_Voucher WHERE voucher_id = 4);
+
+
+INSERT INTO User_Saved_Voucher (user_id, voucher_id)
+SELECT TOP 1 id, 5 FROM [User] WHERE id NOT IN (SELECT user_id FROM User_Saved_Voucher WHERE voucher_id = 5);
+
+
+INSERT INTO User_Saved_Voucher (user_id, voucher_id)
+SELECT TOP 5 id, 7 FROM [User] WHERE id NOT IN (SELECT user_id FROM User_Saved_Voucher WHERE voucher_id = 7);
+GO
+
+SELECT 
+    v.id AS VoucherID,
+    v.code AS VoucherCode,
+    v.usage_limit AS Total_Limit,
+    v.used_count AS Total_Used,
+    COUNT(usv.user_id) AS Total_Saved,
+    (v.usage_limit - COUNT(usv.user_id)) AS Available_To_Collect
+FROM 
+    Voucher v
+LEFT JOIN 
+    User_Saved_Voucher usv ON v.id = usv.voucher_id
+GROUP BY 
+    v.id, v.code, v.usage_limit, v.used_count
+ORDER BY 
+    v.id ASC;
