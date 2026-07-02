@@ -22,12 +22,12 @@ public class AdminVoucherController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        
+
         if (action == null || "list".equals(action)) {
             String searchQuery = request.getParameter("search");
             String statusFilter = request.getParameter("status");
 
-            List<Voucher> voucherList = voucherService.getAllVouchers(searchQuery, statusFilter); 
+            List<Voucher> voucherList = voucherService.getAllVouchers(searchQuery, statusFilter);
 
             // Đọc thông báo lỗi/thành công chuyển tiếp từ Session (nếu có)
             String successMessage = (String) request.getSession().getAttribute("successMessage");
@@ -43,10 +43,30 @@ public class AdminVoucherController extends HttpServlet {
 
             request.setAttribute("voucherList", voucherList);
             request.getRequestDispatcher("/view/admin/admin_voucher_list.jsp").forward(request, response);
-        } 
-        else if ("create".equals(action)) {
+        } else if ("create".equals(action)) {
             request.getRequestDispatcher("/view/admin/admin_create_voucher.jsp").forward(request, response);
+        } else if ("detail".equals(action)) {
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                Voucher voucher = voucherService.getVoucherById(id);
+                if (voucher != null) {
+                    // Lấy thêm số lượng khách đã thu thập từ DB
+                    int totalSaved = voucherService.getTotalSavedCount(id);
+                    
+                    request.setAttribute("voucher", voucher);
+                    request.setAttribute("totalSaved", totalSaved);
+                    request.getRequestDispatcher("/view/admin/admin_voucher_detail.jsp").forward(request, response);
+                } else {
+                    request.getSession().setAttribute("errorMessage", "Voucher không tồn tại!");
+                    response.sendRedirect(request.getContextPath() + "/admin/voucher?action=list");
+                }
+            } catch (Exception e) {
+                response.sendRedirect(request.getContextPath() + "/admin/voucher?action=list");
+            }
         }
+        
+        
+        
         else if ("edit".equals(action)) {
             try {
                 int id = Integer.parseInt(request.getParameter("id"));
@@ -68,9 +88,9 @@ public class AdminVoucherController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        
+
         String action = request.getParameter("action");
-        
+
         // NHÁNH XỬ LÝ: TIẾN TRÌNH DỪNG VOUCHER CÓ LỘ TRÌNH (GRACEFUL TERMINATION)
         if ("terminate".equals(action)) {
             try {
@@ -92,11 +112,11 @@ public class AdminVoucherController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/voucher?action=list");
             return;
         }
-        
+
         // NHÁNH XỬ LÝ: CREATE HOẶC UPDATE FORM THÔNG THƯỜNG
         String voucherIdStr = request.getParameter("id");
         boolean isUpdate = (voucherIdStr != null && !voucherIdStr.isEmpty());
-        
+
         try {
             String code = request.getParameter("code");
             String title = request.getParameter("title");
@@ -109,9 +129,9 @@ public class AdminVoucherController extends HttpServlet {
             String usageLimitStr = request.getParameter("usageLimit");
 
             BigDecimal discountValue = new BigDecimal(discountValueStr);
-            BigDecimal minOrderValue = (minOrderValueStr == null || minOrderValueStr.isEmpty()) 
-                                        ? BigDecimal.ZERO : new BigDecimal(minOrderValueStr);
-            
+            BigDecimal minOrderValue = (minOrderValueStr == null || minOrderValueStr.isEmpty())
+                    ? BigDecimal.ZERO : new BigDecimal(minOrderValueStr);
+
             BigDecimal maxDiscountAmount = null;
             if (maxDiscountAmountStr != null && !maxDiscountAmountStr.isEmpty()) {
                 maxDiscountAmount = new BigDecimal(maxDiscountAmountStr);
@@ -155,7 +175,7 @@ public class AdminVoucherController extends HttpServlet {
                     request.getRequestDispatcher("/view/admin/admin_create_voucher.jsp").forward(request, response);
                 }
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "Invalid format input patterns. Process rejected.");

@@ -37,11 +37,13 @@
 
             <div class="main-content">
                 <div class="container-fluid">
-
+                    
                     <jsp:useBean id="now" class="java.util.Date" />
                     <c:set var="isActive" value="${now.time >= voucher.startDate.time && now.time <= voucher.endDate.time}" />
                     <c:set var="isExpired" value="${now.time > voucher.endDate.time || voucher.usedCount >= voucher.usageLimit}" />
-
+                    <button type="button" class="btn btn-secondary mb-3" onclick="window.history.back();">
+                <i class="fa fa-arrow-left"></i> Back to Voucher List
+            </button>
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h2 class="font-weight-bold">Edit Voucher: ${voucher.code}</h2>

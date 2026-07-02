@@ -36,7 +36,9 @@
 
             <div class="main-content">
                 <div class="container-fluid">
-
+                    <button type="button" class="btn btn-secondary mb-3" onclick="window.history.back();">
+                <i class="fa fa-arrow-left"></i> Back to Voucher List
+            </button>
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h2 class="font-weight-bold">Create New Voucher</h2>
