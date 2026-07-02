@@ -10,6 +10,7 @@
         <title>Stock Inflow Management - Admin Area</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             body {
                 background-color: #f8f9fa;
@@ -58,7 +59,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h2 class="h4 mb-1 fw-bold text-dark"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
-                            <p class="text-muted small mb-0">Historical lists of physical inventory item batches imported to store variants</p>
+                            
                         </div>
 
 
