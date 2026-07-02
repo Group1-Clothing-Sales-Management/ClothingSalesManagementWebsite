@@ -78,7 +78,7 @@
                                         <th>Category ID</th>
                                         <th>Brand ID</th>
                                         <th>Status</th>
-                                        <th style="width: 200px;">Actions</th>
+                                        <th style="width: 300px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>

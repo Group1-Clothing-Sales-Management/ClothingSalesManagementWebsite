@@ -34,6 +34,9 @@
         </jsp:include>
 
             <div class="main-content admin-page">
+                <div class="mb-3">
+                <a href="${pageContext.request.contextPath}/admin/voucher" class="btn btn-sm btn-secondary">&larr; Back to Voucher List</a>
+            </div>
                 <div class="container-fluid">
 
                     <div class="page-header">
