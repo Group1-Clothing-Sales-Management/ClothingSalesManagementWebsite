@@ -90,6 +90,20 @@
             font-size: .8rem;
             color: #6b7280;
         }
+        .transfer-qr {
+            max-width: 100%;
+            width: 280px;
+            border-radius: 18px;
+            background: #fff;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+        .transfer-code {
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            letter-spacing: .03em;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -165,6 +179,20 @@
                                             <c:when test="${order.paymentStatus eq 'FAILED'}"><span class="badge rounded-pill text-bg-danger">FAILED</span></c:when>
                                             <c:otherwise><span class="badge rounded-pill badge-soft">UNPAID</span></c:otherwise>
                                         </c:choose>
+                                        <c:if test="${order.paymentMethod eq 'VNPAY' and order.paymentStatus ne 'PAID'}">
+                                            <div class="alert alert-warning border mt-3 mb-0">
+                                                <div class="fw-semibold mb-1">Awaiting bank transfer</div>
+                                                <div class="small mb-3">
+                                                    Open the transfer information to check the QR code, transfer amount, and payment content before confirming the payment.
+                                                </div>
+                                                <button type="button"
+                                                        class="btn btn-outline-primary btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#vnpayTransferModal">
+                                                    <i class="bi bi-qr-code-scan me-1"></i>Show transfer info
+                                                </button>
+                                            </div>
+                                        </c:if>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="detail-label">Shipping</div>
@@ -470,6 +498,91 @@
         </c:choose>
     </div>
 </div>
+
+<c:if test="${showVnpayTransferInfo}">
+    <div class="modal fade" id="vnpayTransferModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-qr-code-scan me-2"></i>VNPay transfer information
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4 align-items-start">
+                        <div class="col-lg-5">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body p-4">
+                                    <div class="detail-label">Order info</div>
+                                    <div class="detail-value mb-2">Order code: ${order.orderCode}</div>
+                                    <div class="subtext mb-1">Order ID: ${order.id}</div>
+                                    <div class="subtext mb-1">Recipient: ${order.recipientName} - ${order.recipientPhone}</div>
+                                    <div class="subtext mb-3">
+                                        Amount to transfer:
+                                        <strong><fmt:formatNumber value="${vnpayTransferAmount}" pattern="#,##0"/> VND</strong>
+                                    </div>
+
+                                    <div class="detail-label">Transfer content</div>
+                                    <div class="detail-value transfer-code mb-3">${vnpayTransferDescription}</div>
+
+                                    <div class="detail-label">Bank account</div>
+                                    <div class="detail-value mb-1">${not empty vnpayBankId ? vnpayBankId : 'Not configured'}</div>
+                                    <div class="subtext mb-1">Account no: ${not empty vnpayAccountNo ? vnpayAccountNo : 'Not configured'}</div>
+                                    <div class="subtext">Account name: ${not empty vnpayAccountName ? vnpayAccountName : 'Not configured'}</div>
+
+                                    <c:if test="${not vnpayTransferConfigReady}">
+                                        <div class="alert alert-warning mt-3 mb-0">
+                                            Bank information is not configured yet. Set the VNPay bank details in the service config before using the QR code.
+                                        </div>
+                                    </c:if>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 text-center">
+                            <div class="mb-3">
+                                <div class="detail-label text-start">QR code</div>
+                                <c:choose>
+                                    <c:when test="${not empty vnpayTransferQrUrl}">
+                                        <img src="${vnpayTransferQrUrl}"
+                                             alt="VNPay QR code"
+                                             class="transfer-qr img-fluid">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="alert alert-warning border text-start">
+                                            QR code cannot be generated because the transfer bank configuration is missing.
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div class="alert alert-light border text-start mb-0">
+                                <div class="fw-semibold mb-1">How to use</div>
+                                <div class="small">
+                                    Ask the customer to scan the QR code, transfer the exact amount shown above, and use the order ID as the payment content.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <c:if test="${order.paymentMethod eq 'VNPAY' and order.paymentStatus ne 'PAID'}">
+                        <form action="${ordersBasePath}" method="post" class="m-0">
+                            <input type="hidden" name="action" value="markPaymentPaid">
+                            <input type="hidden" name="id" value="${order.id}">
+                            <input type="hidden" name="returnMode" value="detail">
+                            <button type="submit"
+                                    class="btn btn-success"
+                                    onclick="return confirm('Confirm that this VNPay order has been paid?');">
+                                <i class="bi bi-check2-circle me-1"></i>Confirm paid
+                            </button>
+                        </form>
+                    </c:if>
+                </div>
+            </div>
+        </div>
+    </div>
+</c:if>
 
 <!-- This modal creates a walk-in order directly from the order screen so staff
      can complete a shop purchase without opening customer checkout. -->

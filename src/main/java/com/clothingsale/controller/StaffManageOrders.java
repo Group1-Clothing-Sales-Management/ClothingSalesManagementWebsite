@@ -66,6 +66,8 @@ public class StaffManageOrders extends HttpServlet {
             handleStatusChange(request, response, "CONFIRMED");
         } else if ("cancel".equalsIgnoreCase(action)) {
             handleStatusChange(request, response, "CANCELLED");
+        } else if ("markPaymentPaid".equalsIgnoreCase(action)) {
+            handlePaymentConfirmation(request, response);
         } else if ("updateStatus".equalsIgnoreCase(action)) {
             handleStatusChange(request, response, request.getParameter("newStatus"));
         } else if ("createStoreOrder".equalsIgnoreCase(action)) {
@@ -131,6 +133,15 @@ public class StaffManageOrders extends HttpServlet {
         List<OrderDetail> details = service.getOrderDetails(orderId);
         request.setAttribute("order", order);
         request.setAttribute("orderDetails", details);
+        request.setAttribute("showVnpayTransferInfo", service.needsVnpayTransferInfo(order));
+        request.setAttribute("vnpayTransferQrUrl", service.buildVnpayQrUrl(order));
+        request.setAttribute("vnpayTransferDescription", service.getVnpayTransferDescription(order));
+        request.setAttribute("vnpayTransferAmount", service.getVnpayTransferAmount(order));
+        request.setAttribute("vnpayBankId", service.getVnpayBankId());
+        request.setAttribute("vnpayAccountNo", service.getVnpayAccountNo());
+        request.setAttribute("vnpayAccountName", service.getVnpayAccountName());
+        request.setAttribute("vnpayTemplate", service.getVnpayTemplate());
+        request.setAttribute("vnpayTransferConfigReady", service.hasVnpayTransferConfig());
         request.setAttribute("ordersBasePath", buildOrdersBasePath(request));
         request.setAttribute("pageMode", "detail");
         request.getRequestDispatcher("/StaffManageOrders.jsp").forward(request, response);
@@ -195,6 +206,29 @@ public class StaffManageOrders extends HttpServlet {
         }
 
         response.sendRedirect(buildOrdersBasePath(request));
+    }
+
+    /**
+     * Confirm a VNPay order payment after the bank transfer is verified.
+     */
+    private void handlePaymentConfirmation(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        int orderId = parseId(request.getParameter("id"));
+        String result = service.confirmVnpayPayment(orderId);
+        String redirectMode = request.getParameter("returnMode");
+
+        if ("SUCCESS".equals(result)) {
+            request.getSession().setAttribute("successMsg", "VNPay payment confirmed successfully.");
+        } else {
+            request.getSession().setAttribute("errorMsg", result);
+        }
+
+        if ("detail".equalsIgnoreCase(redirectMode)) {
+            response.sendRedirect(buildOrdersBasePath(request) + "?action=view&id=" + orderId);
+        } else {
+            response.sendRedirect(buildOrdersBasePath(request));
+        }
     }
 
     /**
