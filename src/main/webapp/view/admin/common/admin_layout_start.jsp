@@ -87,9 +87,9 @@
         background: var(--admin-surface);
     }
 
-    .admin-page .card,
-    .main-content .card,
-    .content-area .card {
+    .admin-page .card:not(.stat-card),
+    .main-content .card:not(.stat-card),
+    .content-area .card:not(.stat-card) {
         border: none;
         border-radius: var(--admin-radius);
         box-shadow: var(--admin-shadow);

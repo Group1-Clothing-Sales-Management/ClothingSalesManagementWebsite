@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/staff/customers")
+@WebServlet(name = "StaffCustomerController", urlPatterns = {"/staff/customers", "/admin/customers"})
 public class StaffCustomerController extends HttpServlet {
 
     private final StaffCustomerService service = new StaffCustomerService();
@@ -59,7 +59,7 @@ public class StaffCustomerController extends HttpServlet {
         } else if ("update".equals(action)) {
             handleUpdate(req, resp);
         } else {
-            resp.sendRedirect(req.getContextPath() + "/staff/customers");
+            resp.sendRedirect(buildCustomersBasePath(req));
         }
     }
 
@@ -71,6 +71,7 @@ public class StaffCustomerController extends HttpServlet {
 
         req.setAttribute("customers", customers);
         req.setAttribute("keyword", keyword);
+        req.setAttribute("customersBasePath", buildCustomersBasePath(req));
         req.setAttribute("pageMode", "list");
         req.getRequestDispatcher("/StaffManageCustomers.jsp").forward(req, resp);
     }
@@ -88,6 +89,7 @@ public class StaffCustomerController extends HttpServlet {
         }
 
         req.setAttribute("customer", customer);
+        req.setAttribute("customersBasePath", buildCustomersBasePath(req));
         req.setAttribute("pageMode", "edit");
         req.getRequestDispatcher("/StaffManageCustomers.jsp").forward(req, resp);
     }
@@ -102,10 +104,11 @@ public class StaffCustomerController extends HttpServlet {
 
         if (errors.isEmpty()) {
             req.getSession().setAttribute("successMsg", "Customer added successfully.");
-            resp.sendRedirect(req.getContextPath() + "/staff/customers");
+            resp.sendRedirect(buildCustomersBasePath(req));
         } else {
             req.setAttribute("errors", errors);
             req.setAttribute("formData", c);
+            req.setAttribute("customersBasePath", buildCustomersBasePath(req));
             req.setAttribute("pageMode", "add");
             req.getRequestDispatcher("/StaffManageCustomers.jsp").forward(req, resp);
         }
@@ -121,10 +124,11 @@ public class StaffCustomerController extends HttpServlet {
 
         if (errors.isEmpty()) {
             req.getSession().setAttribute("successMsg", "Customer updated successfully.");
-            resp.sendRedirect(req.getContextPath() + "/staff/customers");
+            resp.sendRedirect(buildCustomersBasePath(req));
         } else {
             req.setAttribute("errors", errors);
             req.setAttribute("customer", c);
+            req.setAttribute("customersBasePath", buildCustomersBasePath(req));
             req.setAttribute("pageMode", "edit");
             req.getRequestDispatcher("/StaffManageCustomers.jsp").forward(req, resp);
         }
@@ -163,5 +167,12 @@ public class StaffCustomerController extends HttpServlet {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private String buildCustomersBasePath(HttpServletRequest req) {
+        if ("/admin/customers".equals(req.getServletPath())) {
+            return req.getContextPath() + "/admin/customers";
+        }
+        return req.getContextPath() + "/staff/customers";
     }
 }
