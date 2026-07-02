@@ -14,6 +14,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(
         name = "AdminManageProduct",
@@ -72,7 +75,7 @@ public class AdminProductController extends HttpServlet {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("⚠️ Lỗi trích xuất hành động từ Multipart Form: " + e.getMessage());
+                System.err.println("⚠️ Error from Multipart Form: " + e.getMessage());
             }
         }
 
@@ -80,7 +83,7 @@ public class AdminProductController extends HttpServlet {
 
         try {
             if ("UPDATE".equalsIgnoreCase(action)) {
-                // SỬA: Lấy productId bằng request.getParameter trước, nếu trống mới dùng Multipart để tăng độ an toàn
+
                 String idRaw = request.getParameter("productId");
                 if (idRaw == null || idRaw.trim().isEmpty()) {
                     idRaw = getMultipartParameter(request, "productId");
@@ -94,7 +97,6 @@ public class AdminProductController extends HttpServlet {
                     Product product = extractProductFromRequest(request);
                     product.setId(id);
 
-                    // SỬA: Tự động sinh Slug hợp lệ theo tên mới sửa của sản phẩm để tránh trùng Unique Key trong DB
                     if (product.getProductName() != null && !product.getProductName().trim().isEmpty()) {
                         String cleanSlug = product.getProductName().toLowerCase()
                                 .replaceAll("[^a-z0-9\\s]", "")
@@ -107,14 +109,110 @@ public class AdminProductController extends HttpServlet {
                     Part filePart = request.getPart("productImage");
                     String savedFileName = handleImageUpload(filePart);
 
+                    if (savedFileName == null) {
+                        Product oldProduct = productService.getProductById(id);
+                        if (oldProduct != null) {
+                            savedFileName = oldProduct.getMainImageUrl();
+                        }
+                    }
+
                     // Thực hiện gọi sang Service để cập nhật thông tin chính vào DB
                     boolean isUpdated = productService.updateProduct(product, savedFileName);
+                    int vIndex = 0;
+                    while (true) {
+                        String variantIdRaw = getMultipartParameter(request, "variants[" + vIndex + "].id");
+                        if (variantIdRaw == null) {
+                            break; // Hết danh sách biến thể cũ cần cập nhật
+                        }
+
+                        if (!variantIdRaw.trim().isEmpty()) {
+                            int variantId = Integer.parseInt(variantIdRaw.trim());
+                            String vStatus = getMultipartParameter(request, "variants[" + vIndex + "].status");
+
+                            // Mặc định trạng thái nếu trống là ACTIVE
+                            if (vStatus == null || vStatus.trim().isEmpty()) {
+                                vStatus = "ACTIVE";
+                            }
+
+                            // Gọi xuống service cập nhật riêng trạng thái hoạt động cho từng biến thể này
+                            // Bạn sẽ bổ sung hàm này ở Service/DAO bên dưới
+                            productService.updateVariantStatus(variantId, vStatus);
+                        }
+                        vIndex++;
+                    }
+
                     if (!isUpdated) {
                         statusRedirect = "error";
                     }
+
                 } else {
                     System.err.println("❌ Không tìm thấy productId hợp lệ từ Request khi Update!");
                     statusRedirect = "error";
+                }
+            } else if ("ADD_VARIANT".equalsIgnoreCase(action)) {
+                String idRaw = request.getParameter("productId");
+                if (idRaw == null || idRaw.trim().isEmpty()) {
+                    idRaw = getMultipartParameter(request, "productId");
+                }
+
+                if (idRaw != null && !idRaw.trim().isEmpty()) {
+                    int productId = Integer.parseInt(idRaw.trim());
+
+                    String skuParam = getMultipartParameter(request, "skuCode");
+                    String colorParam = getMultipartParameter(request, "color");
+                    String sizeParam = getMultipartParameter(request, "size");
+                    String statusParam = getMultipartParameter(request, "status");
+
+                    if (skuParam != null && !skuParam.trim().isEmpty()) {
+                        String colorStr = (colorParam != null && !colorParam.trim().isEmpty()) ? colorParam.trim() : "Standard";
+                        String sizeStr = (sizeParam != null && !sizeParam.trim().isEmpty()) ? sizeParam.trim() : "FreeSize";
+                        String combinedAttributes = colorStr + "|" + sizeStr;
+                        String cleanSku = skuParam.trim().toUpperCase();
+
+                        // Thực hiện kiểm tra trùng lặp dữ liệu tầng Server-side
+                        boolean isDuplicate = productDAO.checkVariantDuplicate(productId, combinedAttributes);
+
+                        if (isDuplicate) {
+                            statusRedirect = "duplicate";
+                        } else {
+                            ProductVariant variant = new ProductVariant();
+                            variant.setProductId(productId);
+                            variant.setSku(cleanSku);
+                            variant.setStatus(statusParam != null ? statusParam : "ACTIVE");
+                            variant.setSalePrice(java.math.BigDecimal.ZERO);
+                            variant.setCostPrice(java.math.BigDecimal.ZERO);
+                            variant.setStockQuantity(0);
+                            variant.setAttributeDetails(combinedAttributes);
+
+                            boolean isAdded = productService.addSingleVariant(variant);
+                            if (!isAdded) {
+                                statusRedirect = "error";
+                            }
+                        }
+                    }
+                    // Redirect trực tiếp về trang xem chi tiết của chính sản phẩm này thay vì trôi xuống cuối file
+                    response.sendRedirect(request.getContextPath() + "/admin/products?action=view&id=" + productId + "&status=" + statusRedirect);
+                    return;
+                } else {
+                    statusRedirect = "error";
+                    response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + statusRedirect);
+                    return;
+                }
+            } else if ("updateVariantStatus".equals(action)) {
+                try {
+                    int variantId = Integer.parseInt(request.getParameter("variantId"));
+                    String newStatus = request.getParameter("newStatus");
+                    String productId = request.getParameter("productId");
+
+                    productDAO.updateVariantStatus(variantId, newStatus);
+
+                    response.sendRedirect(request.getContextPath() + "/admin/products?action=view&id=" + productId + "&success=StatusUpdated");
+
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/admin/products?error=UpdateFailed");
+                    return;
                 }
             } else if ("DELETE".equals(action)) {
 
@@ -192,7 +290,7 @@ public class AdminProductController extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ Lỗi nghiêm trọng tại AdminManageProduct.doPost: " + e.getMessage());
+            System.err.println("❌ Error AdminManageProduct.doPost: " + e.getMessage());
             e.printStackTrace();
             statusRedirect = "error";
         }
@@ -309,12 +407,12 @@ public class AdminProductController extends HttpServlet {
             // Gọi DAO lấy thông tin sản phẩm và các thuộc tính liên quan (Category, Brand)
             AdminManageProductDAO productDAO = new AdminManageProductDAO();
             Product product = productDAO.getProductById(productId);
-
+            List<com.clothingsale.model.ProductVariant> variants = productDAO.getVariantsByProductId(productId);
             // Đẩy dữ liệu lên bộ nhớ Request để trang JSP sửa đổi có thể hiển thị dữ liệu cũ
             request.setAttribute("product", product);
             request.setAttribute("categories", productDAO.getAllCategories());
             request.setAttribute("brands", productDAO.getAllBrands());
-
+            request.setAttribute("variants", variants);
             // Chuyển hướng (Forward) sang trang JSP đảm nhận việc sửa đổi sản phẩm
             request.getRequestDispatcher("/view/admin/admin_edit_product.jsp").forward(request, response);
 
