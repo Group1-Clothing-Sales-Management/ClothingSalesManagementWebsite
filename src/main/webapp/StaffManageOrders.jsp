@@ -31,9 +31,28 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-        .page-title { font-size: 1.5rem; font-weight: 800; color: #111827; margin: 0; }
-        .page-title .bi { color: #2563eb; margin-right: 10px; }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+        }
+        .page-title .bi {
+            color: #2563eb;
+            margin-right: 10px;
+        }
+        .subtext {
+            font-size: .84rem;
+            color: #6b7280;
+        }
         .card-main { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
         .table thead th { background: #1f2937; color: #fff; font-weight: 600; font-size: .85rem; white-space: nowrap; border: none; }
         .table tbody tr:hover { background: #f8fbff; }
@@ -92,31 +111,10 @@
 
         <c:choose>
             <c:when test="${pageMode eq 'detail'}">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-2">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="${ordersBasePath}">Order Management</a></li>
-                        <li class="breadcrumb-item active">Order Details</li>
-                    </ol>
-                </nav>
-
                 <div class="page-header">
                     <div>
-                        <h1 class="page-title"><i class="bi bi-receipt-cutoff"></i>Order ${order.orderCode}</h1>
-                        <div class="text-muted mt-1">
-                            Customer:
-                            <strong>
-                                <c:choose>
-                                    <c:when test="${not empty order.customerFullName}">
-                                        ${order.customerFullName}
-                                    </c:when>
-                                    <c:when test="${not empty order.customerUsername}">
-                                        ${order.customerUsername}
-                                    </c:when>
-                                    <c:otherwise>N/A</c:otherwise>
-                                </c:choose>
-                            </strong>
-                        </div>
+                        <h1 class="page-title"><i class="bi bi-receipt-cutoff"></i>Order Details</h1>
+                        <div class="subtext mt-1">Review order information, track shipment, confirm or cancel when needed.</div>
                     </div>
                 </div>
 
@@ -330,18 +328,14 @@
             </c:when>
 
             <c:otherwise>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-2">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Order Management</li>
-                    </ol>
-                </nav>
-
                 <div class="page-header">
                     <div>
                         <h1 class="page-title"><i class="bi bi-receipt"></i>Order Management</h1>
-                        <div class="text-muted mt-1">View orders, confirm orders, cancel orders, and update status across the order lifecycle.</div>
+                        <div class="subtext mt-1">View orders, confirm orders, cancel orders, and update status across the order lifecycle.</div>
                     </div>
+                </div>
+
+                <div class="d-flex justify-content-end mb-3">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStoreOrderModal">
                         <i class="bi bi-bag-plus me-1"></i>Create store order
                     </button>
