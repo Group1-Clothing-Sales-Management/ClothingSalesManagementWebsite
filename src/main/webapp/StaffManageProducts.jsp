@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.clothingsale.model.StaffProductModel" %>
 <%@ page import="java.text.NumberFormat" %>
@@ -80,6 +81,13 @@
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="products"/>
 </jsp:include>
+        <div class="admin-page">
+        <c:if test="${not empty successMessage}">
+            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${successMessage}"/></div>
+        </c:if>
+        <c:if test="${not empty errorMessage}">
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
+        </c:if>
         <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Product Management</li></ol></nav>
         <div class="page-header"><h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Management</h1></div>
 
@@ -155,5 +163,6 @@
         }
     }
 </script>
+        </div>
 </body>
 </html>

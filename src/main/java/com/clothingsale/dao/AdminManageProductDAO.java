@@ -527,6 +527,7 @@ public class AdminManageProductDAO {
         return 0;
     }
 
+    
     public boolean updateVariantStatus(int variantId, String status) {
         String sql = "UPDATE Product_Variant SET status = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -644,25 +645,5 @@ public class AdminManageProductDAO {
             }
         }
     }
-
-    public boolean checkVariantDuplicate(int productId, String attributeDetails) {
     
-    String sql = "SELECT COUNT(*) FROM Product_Variant WHERE product_id = ? AND attribute_details = ?";
-    try (Connection conn = DBConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        
-        ps.setInt(1, productId);
-        ps.setString(2, attributeDetails);
-        
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-    return false;
-}
-
 }

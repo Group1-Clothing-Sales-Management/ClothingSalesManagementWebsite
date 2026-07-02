@@ -31,9 +31,28 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-        .page-title { font-size: 1.5rem; font-weight: 800; color: #111827; margin: 0; }
-        .page-title .bi { color: #2563eb; margin-right: 10px; }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+        }
+        .page-title .bi {
+            color: #2563eb;
+            margin-right: 10px;
+        }
+        .subtext {
+            font-size: .84rem;
+            color: #6b7280;
+        }
         .card-main { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
         .table thead th { background: #1f2937; color: #fff; font-weight: 600; font-size: .85rem; white-space: nowrap; border: none; }
         .table tbody tr:hover { background: #f8fbff; }
@@ -71,60 +90,45 @@
             font-size: .8rem;
             color: #6b7280;
         }
+        .transfer-qr {
+            max-width: 100%;
+            width: 280px;
+            border-radius: 18px;
+            background: #fff;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+        .transfer-code {
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            letter-spacing: .03em;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="orders"/>
 </jsp:include>
+        <div class="admin-page">
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show flash-alert" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>${sessionScope.successMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
         <c:if test="${not empty sessionScope.errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>${sessionScope.errorMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${sessionScope.errorMsg}"/></div>
             <c:remove var="errorMsg" scope="session"/>
         </c:if>
         <c:if test="${not empty errorMsg}">
-            <div class="alert alert-danger alert-dismissible fade show flash-alert" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>${errorMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMsg}"/></div>
         </c:if>
 
         <c:choose>
             <c:when test="${pageMode eq 'detail'}">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-2">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="${ordersBasePath}">Order Management</a></li>
-                        <li class="breadcrumb-item active">Order Details</li>
-                    </ol>
-                </nav>
-
                 <div class="page-header">
                     <div>
-                        <h1 class="page-title"><i class="bi bi-receipt-cutoff"></i>Order ${order.orderCode}</h1>
-                        <div class="text-muted mt-1">
-                            Customer:
-                            <strong>
-                                <c:choose>
-                                    <c:when test="${not empty order.customerFullName}">
-                                        ${order.customerFullName}
-                                    </c:when>
-                                    <c:when test="${not empty order.customerUsername}">
-                                        ${order.customerUsername}
-                                    </c:when>
-                                    <c:otherwise>N/A</c:otherwise>
-                                </c:choose>
-                            </strong>
-                        </div>
+                        <h1 class="page-title"><i class="bi bi-receipt-cutoff"></i>Order Details</h1>
+                        <div class="subtext mt-1">Review order information, track shipment, confirm or cancel when needed.</div>
                     </div>
                 </div>
 
@@ -175,6 +179,20 @@
                                             <c:when test="${order.paymentStatus eq 'FAILED'}"><span class="badge rounded-pill text-bg-danger">FAILED</span></c:when>
                                             <c:otherwise><span class="badge rounded-pill badge-soft">UNPAID</span></c:otherwise>
                                         </c:choose>
+                                        <c:if test="${order.paymentMethod eq 'VNPAY' and order.paymentStatus ne 'PAID'}">
+                                            <div class="alert alert-warning border mt-3 mb-0">
+                                                <div class="fw-semibold mb-1">Awaiting bank transfer</div>
+                                                <div class="small mb-3">
+                                                    Open the transfer information to check the QR code, transfer amount, and payment content before confirming the payment.
+                                                </div>
+                                                <button type="button"
+                                                        class="btn btn-outline-primary btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#vnpayTransferModal">
+                                                    <i class="bi bi-qr-code-scan me-1"></i>Show transfer info
+                                                </button>
+                                            </div>
+                                        </c:if>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="detail-label">Shipping</div>
@@ -338,18 +356,14 @@
             </c:when>
 
             <c:otherwise>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-2">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Order Management</li>
-                    </ol>
-                </nav>
-
                 <div class="page-header">
                     <div>
                         <h1 class="page-title"><i class="bi bi-receipt"></i>Order Management</h1>
-                        <div class="text-muted mt-1">View orders, confirm orders, cancel orders, and update status across the order lifecycle.</div>
+                        <div class="subtext mt-1">View orders, confirm orders, cancel orders, and update status across the order lifecycle.</div>
                     </div>
+                </div>
+
+                <div class="d-flex justify-content-end mb-3">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStoreOrderModal">
                         <i class="bi bi-bag-plus me-1"></i>Create store order
                     </button>
@@ -484,6 +498,91 @@
         </c:choose>
     </div>
 </div>
+
+<c:if test="${showVnpayTransferInfo}">
+    <div class="modal fade" id="vnpayTransferModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-qr-code-scan me-2"></i>VNPay transfer information
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4 align-items-start">
+                        <div class="col-lg-5">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body p-4">
+                                    <div class="detail-label">Order info</div>
+                                    <div class="detail-value mb-2">Order code: ${order.orderCode}</div>
+                                    <div class="subtext mb-1">Order ID: ${order.id}</div>
+                                    <div class="subtext mb-1">Recipient: ${order.recipientName} - ${order.recipientPhone}</div>
+                                    <div class="subtext mb-3">
+                                        Amount to transfer:
+                                        <strong><fmt:formatNumber value="${vnpayTransferAmount}" pattern="#,##0"/> VND</strong>
+                                    </div>
+
+                                    <div class="detail-label">Transfer content</div>
+                                    <div class="detail-value transfer-code mb-3">${vnpayTransferDescription}</div>
+
+                                    <div class="detail-label">Bank account</div>
+                                    <div class="detail-value mb-1">${not empty vnpayBankId ? vnpayBankId : 'Not configured'}</div>
+                                    <div class="subtext mb-1">Account no: ${not empty vnpayAccountNo ? vnpayAccountNo : 'Not configured'}</div>
+                                    <div class="subtext">Account name: ${not empty vnpayAccountName ? vnpayAccountName : 'Not configured'}</div>
+
+                                    <c:if test="${not vnpayTransferConfigReady}">
+                                        <div class="alert alert-warning mt-3 mb-0">
+                                            Bank information is not configured yet. Set the VNPay bank details in the service config before using the QR code.
+                                        </div>
+                                    </c:if>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 text-center">
+                            <div class="mb-3">
+                                <div class="detail-label text-start">QR code</div>
+                                <c:choose>
+                                    <c:when test="${not empty vnpayTransferQrUrl}">
+                                        <img src="${vnpayTransferQrUrl}"
+                                             alt="VNPay QR code"
+                                             class="transfer-qr img-fluid">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="alert alert-warning border text-start">
+                                            QR code cannot be generated because the transfer bank configuration is missing.
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div class="alert alert-light border text-start mb-0">
+                                <div class="fw-semibold mb-1">How to use</div>
+                                <div class="small">
+                                    Ask the customer to scan the QR code, transfer the exact amount shown above, and use the order ID as the payment content.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <c:if test="${order.paymentMethod eq 'VNPAY' and order.paymentStatus ne 'PAID'}">
+                        <form action="${ordersBasePath}" method="post" class="m-0">
+                            <input type="hidden" name="action" value="markPaymentPaid">
+                            <input type="hidden" name="id" value="${order.id}">
+                            <input type="hidden" name="returnMode" value="detail">
+                            <button type="submit"
+                                    class="btn btn-success"
+                                    onclick="return confirm('Confirm that this VNPay order has been paid?');">
+                                <i class="bi bi-check2-circle me-1"></i>Confirm paid
+                            </button>
+                        </form>
+                    </c:if>
+                </div>
+            </div>
+        </div>
+    </div>
+</c:if>
 
 <!-- This modal creates a walk-in order directly from the order screen so staff
      can complete a shop purchase without opening customer checkout. -->
@@ -1465,12 +1564,13 @@
 
     // Chỉ tự đóng các thông báo flash ở đầu trang.
     // Không đóng alert nội dung trong card để người dùng còn đọc được.
-    document.querySelectorAll('.flash-alert').forEach(function (el) {
-        setTimeout(function () {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
-            bsAlert.close();
-        }, 4500);
-    });
-</script>
+            document.querySelectorAll('.flash-alert').forEach(function (el) {
+                setTimeout(function () {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+                    bsAlert.close();
+                }, 4500);
+            });
+        </script>
+        </div>
 </body>
 </html>

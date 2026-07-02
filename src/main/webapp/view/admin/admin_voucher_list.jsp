@@ -8,7 +8,6 @@
         <title>Voucher Management - Admin</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             .wrapper {
                 display: flex;
@@ -52,13 +51,13 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="page-header">
                         <div>
-                            <h2 class="font-weight-bold">Voucher Management</h2>
-                            <p class="text-muted mb-0">Create, monitor, and manage discount campaigns smoothly</p>
+                            <h2 class="page-title">Voucher Management</h2>
+                            <p class="page-subtitle mb-0">Create, monitor, and manage discount campaigns smoothly</p>
                         </div>
                         <a href="${pageContext.request.contextPath}/admin/voucher?action=create" class="btn btn-primary font-weight-bold px-4">
                             <i class="fas fa-plus-circle mr-2"></i> Create New Voucher
@@ -66,19 +65,13 @@
                     </div>
 
                     <c:if test="${not empty successMessage}">
-                        <div class="alert alert-success alert-dismissible fade show card p-3 mb-4 border-left border-success">
-                            <i class="fas fa-check-circle mr-2"></i> ${successMessage}
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        </div>
+                        <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${successMessage}"/></div>
                     </c:if>
                     <c:if test="${not empty errorMessage}">
-                        <div class="alert alert-danger alert-dismissible fade show card p-3 mb-4 border-left border-danger">
-                            <i class="fas fa-exclamation-circle mr-2"></i> ${errorMessage}
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        </div>
+                        <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
                     </c:if>
 
-                    <div class="card mb-4">
+                    <div class="card card-main admin-card mb-4">
                         <div class="card-body">
                             <form action="${pageContext.request.contextPath}/admin/voucher" method="GET">
                                 <input type="hidden" name="action" value="list">
@@ -107,10 +100,10 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card card-main admin-card">
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                                <table class="table table-hover mb-0 admin-table">
                                     <thead>
                                         <tr>
                                             <th class="border-top-0 px-4">Code</th>

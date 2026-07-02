@@ -8,7 +8,6 @@
         <title>Edit Voucher - Admin</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             .wrapper {
                 display: flex;
@@ -35,30 +34,28 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-            <div class="main-content">
-                <div class="container-fluid">
-
+        <div class="main-content admin-page">
+            <div class="container-fluid">
+                <div class="main-content admin-page">
+                    <div class="mb-3">
+                        <a href="${pageContext.request.contextPath}/admin/voucher" class="btn btn-sm btn-secondary">&larr; Back to Voucher List</a>
+                    </div>
                     <jsp:useBean id="now" class="java.util.Date" />
                     <c:set var="isActive" value="${now.time >= voucher.startDate.time && now.time <= voucher.endDate.time}" />
                     <c:set var="isExpired" value="${now.time > voucher.endDate.time || voucher.usedCount >= voucher.usageLimit}" />
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="page-header">
                         <div>
-                            <h2 class="font-weight-bold">Edit Voucher: ${voucher.code}</h2>
-                            <p class="text-muted mb-0">Modify information for an existing discount campaign</p>
+                            <h2 class="page-title">Edit Voucher: ${voucher.code}</h2>
+                            <p class="page-subtitle mb-0">Modify information for an existing discount campaign</p>
                         </div>
                     </div>
 
                     <c:if test="${not empty errorMessage}">
-                        <div class="alert alert-danger alert-dismissible fade show card p-3 mb-4 border-left border-danger" role="alert">
-                            <i class="fas fa-exclamation-circle mr-2"></i> ${errorMessage}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
+                        <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
                     </c:if>
 
-                    <div class="card">
+                    <div class="card card-main admin-card">
                         <div class="card-body p-4">
                             <form action="${pageContext.request.contextPath}/admin/voucher" method="POST" id="editVoucherForm">
                                 <input type="hidden" name="id" value="${voucher.id}">
@@ -160,41 +157,41 @@
 
                 </div>
             </div>
-        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
+            <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
-        <script>
-            function toggleDiscountFields() {
-                var type = document.getElementById("discountType");
-                if (!type)
-                    return; // Dropdown is completely frozen from display mutations
+            <script>
+                function toggleDiscountFields() {
+                    var type = document.getElementById("discountType");
+                    if (!type)
+                        return; // Dropdown is completely frozen from display mutations
 
-                var maxDiscountGroup = document.getElementById("maxDiscountGroup");
-                var maxDiscountInput = document.getElementById("maxDiscountAmount");
+                    var maxDiscountGroup = document.getElementById("maxDiscountGroup");
+                    var maxDiscountInput = document.getElementById("maxDiscountAmount");
 
-                if (type.value === "FIXED_AMOUNT") {
-                    maxDiscountGroup.style.display = "none";
-                    maxDiscountInput.removeAttribute("required");
-                } else {
-                    maxDiscountGroup.style.display = "block";
-                    maxDiscountInput.setAttribute("required", "required");
+                    if (type.value === "FIXED_AMOUNT") {
+                        maxDiscountGroup.style.display = "none";
+                        maxDiscountInput.removeAttribute("required");
+                    } else {
+                        maxDiscountGroup.style.display = "block";
+                        maxDiscountInput.setAttribute("required", "required");
+                    }
                 }
-            }
 
-            window.onload = function () {
-                toggleDiscountFields();
-            };
+                window.onload = function () {
+                    toggleDiscountFields();
+                };
 
-            document.getElementById("editVoucherForm").addEventListener("submit", function (event) {
-                var start = new Date(document.getElementById("startDate").value);
-                var end = new Date(document.getElementById("endDate").value);
+                document.getElementById("editVoucherForm").addEventListener("submit", function (event) {
+                    var start = new Date(document.getElementById("startDate").value);
+                    var end = new Date(document.getElementById("endDate").value);
 
-                if (end <= start) {
-                    alert("Validation Error: End Date & Time must occur after the Start Date & Time.");
-                    event.preventDefault();
-                }
-            });
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+                    if (end <= start) {
+                        alert("Validation Error: End Date & Time must occur after the Start Date & Time.");
+                        event.preventDefault();
+                    }
+                });
+            </script>
+            <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

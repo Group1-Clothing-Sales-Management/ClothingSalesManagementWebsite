@@ -37,50 +37,50 @@
     </style>
 </head>
 <body>
+<%
+    String customersBasePath = (String) request.getAttribute("customersBasePath");
+    if (customersBasePath == null || customersBasePath.isBlank()) {
+        String servletPath = request.getServletPath();
+        if ("/admin/customers".equals(servletPath)) {
+            customersBasePath = request.getContextPath() + "/admin/customers";
+        } else {
+            customersBasePath = request.getContextPath() + "/staff/customers";
+        }
+        request.setAttribute("customersBasePath", customersBasePath);
+    }
+%>
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="customers"/>
 </jsp:include>
+        <div class="admin-page">
         <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-check-circle-fill"></i> ${sessionScope.successMsg}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
 
         <%-- Thông báo lỗi tổng quan --%>
         <c:if test="${not empty errors.general}">
-            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> ${errors.general}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errors.general}"/></div>
         </c:if>
 
         <%-- 1. GIAO DIỆN DANH SÁCH KHÁCH HÀNG --%>
         <c:if test="${empty pageMode or pageMode eq 'list'}">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Customer Management</li>
-                </ol>
-            </nav>
-
             <div class="page-header">
                 <h1 class="page-title"><i class="bi bi-people-fill"></i> Customer Management</h1>
-                <a href="${pageContext.request.contextPath}/staff/customers?action=add" class="btn btn-primary btn-sm px-3">
+                <a href="${customersBasePath}?action=add" class="btn btn-primary btn-sm px-3">
                      <i class="bi bi-person-plus-fill me-1"></i>Add Customer
                 </a>
             </div>
 
             <div class="card card-main mb-4">
                 <div class="card-body">
-                    <form method="get" action="${pageContext.request.contextPath}/staff/customers" class="d-flex gap-2">
+                    <form method="get" action="${customersBasePath}" class="d-flex gap-2">
                         <input type="hidden" name="action" value="list"/>
                         <input type="text" class="form-control" name="keyword" placeholder="Name, email, phone number..." value="${keyword}"/>
                         <button class="btn btn-primary px-4" type="submit">Search</button>
                         <c:if test="${not empty keyword}">
-                            <a href="${pageContext.request.contextPath}/staff/customers" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                            <a href="${customersBasePath}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
                         </c:if>
                     </form>
                 </div>
@@ -130,7 +130,7 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <a href="${pageContext.request.contextPath}/staff/customers?action=edit&id=${c.id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i></a>
+                                                    <a href="${customersBasePath}?action=edit&id=${c.id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i></a>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -147,8 +147,8 @@
         <c:if test="${pageMode eq 'add' or pageMode eq 'edit'}">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/staff/customers">Customer Management</a></li>
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="${customersBasePath}">Customer Management</a></li>
                     <li class="breadcrumb-item active">${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer'}</li>
                 </ol>
             </nav>
@@ -162,7 +162,7 @@
 
             <div class="card card-main mx-auto" style="max-width: 720px;">
                 <div class="card-body p-4">
-                    <form method="post" action="${pageContext.request.contextPath}/staff/customers">
+                    <form method="post" action="${customersBasePath}">
                         <input type="hidden" name="action" value="${pageMode eq 'add' ? 'add' : 'update'}"/>
                         <c:if test="${pageMode eq 'edit'}">
                             <input type="hidden" name="id" value="${customer.id}"/>
@@ -238,7 +238,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 border-top pt-3">
-                            <a href="${pageContext.request.contextPath}/staff/customers" class="btn btn-outline-secondary px-4">Cancel</a>
+                            <a href="${customersBasePath}" class="btn btn-outline-secondary px-4">Cancel</a>
                             <button type="submit" class="btn btn-primary px-4">
                                 <i class="bi bi-save me-1"></i> Save Changes
                             </button>
@@ -249,5 +249,6 @@
         </c:if>
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        </div>
 </body>
 </html>

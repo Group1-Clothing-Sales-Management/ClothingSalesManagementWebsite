@@ -34,13 +34,24 @@
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
     <jsp:param name="activeTab" value="shipments" />
 </jsp:include>
 
-        <div class="py-5 px-4 d-flex justify-content-center align-items-start">
-            <div class="card card-custom shadow-sm w-100" style="max-width: 750px;">
+        <div class="admin-page">
+            <c:if test="${not empty errorMsg}">
+                <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMsg}"/></div>
+            </c:if>
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">Update Shipment Status</h2>
+                    <p class="page-subtitle mb-0">Confirm delivery progress and record the final outcome.</p>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center align-items-start">
+            <div class="card card-main admin-card w-100" style="max-width: 750px;">
                 <div class="card-header bg-dark text-white py-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-truck-ramp-box me-2"></i>Update Shipment Status</h5>
                 </div>
@@ -125,6 +136,7 @@
                         </div>
                     </form>
                 </div>
+            </div>
             </div>
         </div>
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />

@@ -10,7 +10,6 @@
         <title>Stock Inflow Management - Admin Area</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             body {
                 background-color: #f8f9fa;
@@ -46,19 +45,16 @@
             <jsp:param name="activeTab" value="inventory" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
                     <c:if test="${param.status eq 'success'}">
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
-                            <i class="fa-solid fa-circle-check me-2"></i><strong>Success!</strong> Stock inflow transaction has been processed correctly.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
+                        <div class="d-none" data-admin-toast data-admin-toast-type="success">Stock inflow transaction has been processed correctly.</div>
                     </c:if>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="page-header">
                         <div>
-                            <h2 class="h4 mb-1 fw-bold text-dark"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
+                            <h2 class="page-title"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
                             
                         </div>
 
@@ -69,9 +65,9 @@
                         </a>
                     </div>
 
-                    <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card card-main admin-card">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="table table-hover align-middle mb-0 admin-table">
                                 <thead>
                                     <tr>
                                         <th class="text-center" style="width: 80px;">ID</th>

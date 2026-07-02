@@ -8,7 +8,6 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
         <style>
             body {
                 background-color: #f3f4f6;
@@ -50,11 +49,11 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-            <div class="main-content">
+            <div class="main-content admin-page">
                 <div class="container-fluid">
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="text-dark fw-bold mb-0">
+                    <div class="page-header">
+                        <h2 class="page-title">
                             <i class="fa-solid fa-box-open me-2 text-primary"></i>Product Management
                         </h2>
                         <button class="btn btn-primary px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#createProductModal">
@@ -62,7 +61,7 @@
                         </button>
                     </div>
 
-                    <div class="card detail-card shadow-sm p-4">
+                    <div class="card card-main admin-card p-4">
                         <div class="mb-3">
                             <h3 class="h5 mb-0 fw-bold text-dark">
                                 <i class="fa-solid fa-list me-2 text-secondary"></i>Product Catalog List
@@ -70,7 +69,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover align-middle border text-center variant-table mb-0">
+                            <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0">
                                 <thead>
                                     <tr>
                                         <th style="width: 100px;">ID</th>
@@ -79,7 +78,7 @@
                                         <th>Category ID</th>
                                         <th>Brand ID</th>
                                         <th>Status</th>
-                                        <th style="width: 200px;">Actions</th>
+                                        <th style="width: 300px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -104,31 +103,25 @@
                                             ${prod.status}
                                         </span>
                                     </td>
-                                    <td class="text-center">
-    <div class="d-inline-flex gap-2 justify-content-center">
-        <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" 
-           class="btn btn-sm btn-info text-white rounded-3 px-2.5 py-1.5 d-flex align-items-center shadow-sm" 
-           title="View Details">
-            <i class="fa-solid fa-eye me-1"></i> View
-        </a>
-        
-        <button type="button" 
-                class="btn btn-sm btn-warning text-white rounded-3 px-2.5 py-1.5 d-flex align-items-center shadow-sm" 
-                title="Edit Product"
-                onclick="openUpdateProductModal({
-                    id: '${prod.id}',
-                    name: '<c:out value="${prod.productName}"/>',
-                    catId: '${prod.categoryId}',
-                    brandId: '${prod.brandId}',
-                    status: '${prod.status}',
-                    desc: '<c:out value="${prod.longDescription}"/>'
-                })">
-            <i class="fa-solid fa-pen-to-square me-1"></i> Edit
-        </button>   
-        
-        
-    </div>
-</td>
+                                    <td>
+                                        <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" class="btn btn-sm btn-outline-info me-1 px-3">
+                                            <i class="fa-solid fa-eye"></i> View
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-warning me-1 px-3" 
+                                                onclick="openUpdateProductModal({
+                                                            id: '${prod.id}',
+                                                                    name: '<c:out value="${prod.productName}"/>',
+                                        catId: '${prod.categoryId}',
+                                        brandId: '${prod.brandId}',
+                                        status: '${prod.status}',
+                                        desc: '<c:out value="${prod.longDescription}"/>'
+                                    })">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </button>   
+                                    <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteProduct(${prod.id})">
+                                        <i class="fa-solid fa-trash"></i> Delete
+                                    </button>
+                                    </td>
                                     </tr>
                                 </c:forEach>
                                 <c:if test="${empty products}">

@@ -3,6 +3,9 @@ package com.clothingsale.service;
 import com.clothingsale.dao.OrderManagementDAO;
 import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -16,6 +19,10 @@ import java.util.Map;
 public class OrderManagementService {
 
     private final OrderManagementDAO dao = new OrderManagementDAO();
+    private static final String VNPAY_BANK_ID = readConfig("CLOTHINGSALE_VNPAY_BANK_ID", "clothingsale.vnpay.bankId", "mbbank");
+    private static final String VNPAY_ACCOUNT_NO = readConfig("CLOTHINGSALE_VNPAY_ACCOUNT_NO", "clothingsale.vnpay.accountNo", "0123456789");
+    private static final String VNPAY_TEMPLATE = readConfig("CLOTHINGSALE_VNPAY_TEMPLATE", "clothingsale.vnpay.template", "compact2");
+    private static final String VNPAY_ACCOUNT_NAME = readConfig("CLOTHINGSALE_VNPAY_ACCOUNT_NAME", "clothingsale.vnpay.accountName", "Clothing Sale");
 
     /**
      * Fetch orders by keyword and status filter.
@@ -53,6 +60,116 @@ public class OrderManagementService {
      */
     public List<OrderDetail> getOrderDetails(int orderId) {
         return dao.getOrderDetails(orderId);
+    }
+
+    /**
+     * Return true when the order is a VNPay order that still needs manual payment confirmation.
+     */
+    public boolean needsVnpayTransferInfo(Order order) {
+        if (order == null) {
+            return false;
+        }
+
+        return "VNPAY".equalsIgnoreCase(order.getPaymentMethod())
+                && (order.getPaymentStatus() == null || "UNPAID".equalsIgnoreCase(order.getPaymentStatus().trim()));
+    }
+
+    /**
+     * Build the VietQR URL for an order payment.
+     */
+    public String buildVnpayQrUrl(Order order) {
+        if (order == null || !hasVnpayTransferConfig()) {
+            return null;
+        }
+
+        BigDecimal amount = getVnpayTransferAmount(order);
+        String amountValue = amount == null
+                ? "0"
+                : amount.max(BigDecimal.ZERO).setScale(0, java.math.RoundingMode.HALF_UP).toPlainString();
+
+        return "https://img.vietqr.io/image/"
+                + VNPAY_BANK_ID.trim()
+                + "-"
+                + VNPAY_ACCOUNT_NO.trim()
+                + "-"
+                + VNPAY_TEMPLATE.trim()
+                + ".png?amount="
+                + encodeUrl(amountValue)
+                + "&addInfo="
+                + encodeUrl(getVnpayTransferDescription(order))
+                + "&accountName="
+                + encodeUrl(VNPAY_ACCOUNT_NAME.trim());
+    }
+
+    /**
+     * The transfer description is the order ID as requested by the business flow.
+     */
+    public String getVnpayTransferDescription(Order order) {
+        return order == null ? "" : String.valueOf(order.getId());
+    }
+
+    /**
+     * Use the product subtotal for the QR amount so the transfer amount matches the item value.
+     */
+    public BigDecimal getVnpayTransferAmount(Order order) {
+        if (order == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal amount = order.getTotalItemsPrice();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            amount = order.getTotalPayment();
+        }
+        return amount == null ? BigDecimal.ZERO : amount;
+    }
+
+    public String getVnpayBankId() {
+        return VNPAY_BANK_ID;
+    }
+
+    public String getVnpayAccountNo() {
+        return VNPAY_ACCOUNT_NO;
+    }
+
+    public String getVnpayTemplate() {
+        return VNPAY_TEMPLATE;
+    }
+
+    public String getVnpayAccountName() {
+        return VNPAY_ACCOUNT_NAME;
+    }
+
+    public boolean hasVnpayTransferConfig() {
+        return !VNPAY_BANK_ID.trim().isEmpty()
+                && !VNPAY_ACCOUNT_NO.trim().isEmpty()
+                && !VNPAY_TEMPLATE.trim().isEmpty()
+                && !VNPAY_ACCOUNT_NAME.trim().isEmpty();
+    }
+
+    public String confirmVnpayPayment(int orderId) {
+        if (orderId <= 0) {
+            return "Invalid order ID.";
+        }
+
+        Order order = getOrderById(orderId);
+        if (order == null) {
+            return "The order to update could not be found.";
+        }
+
+        if (!"VNPAY".equalsIgnoreCase(order.getPaymentMethod())) {
+            return "This order does not use VNPay payment.";
+        }
+
+        if (order.getPaymentStatus() != null && !"UNPAID".equalsIgnoreCase(order.getPaymentStatus().trim())) {
+            if ("PAID".equalsIgnoreCase(order.getPaymentStatus().trim())) {
+                return "This order has already been marked as paid.";
+            }
+            return "Only unpaid VNPay orders can be confirmed from this screen.";
+        }
+
+        return dao.markVnpayPaymentAsPaid(orderId)
+                ? "SUCCESS"
+                : "Failed to confirm the VNPay payment. Please try again.";
     }
 
     /**
@@ -207,5 +324,27 @@ public class OrderManagementService {
         order.setShippingStatusLabel(OrderStatusHelper.resolveShippingLabel(order.getShippingStatus()));
         order.setShippingStatusBadgeClass(OrderStatusHelper.resolveShippingBadgeClass(order.getShippingStatus()));
         return order;
+    }
+
+    private String encodeUrl(String value) {
+        try {
+            return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            return value == null ? "" : value;
+        }
+    }
+
+    private static String readConfig(String envName, String propertyName, String defaultValue) {
+        String envValue = System.getenv(envName);
+        if (envValue != null && !envValue.trim().isEmpty()) {
+            return envValue.trim();
+        }
+
+        String propertyValue = System.getProperty(propertyName);
+        if (propertyValue != null && !propertyValue.trim().isEmpty()) {
+            return propertyValue.trim();
+        }
+
+        return defaultValue == null ? "" : defaultValue;
     }
 }

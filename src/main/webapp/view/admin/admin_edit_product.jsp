@@ -6,10 +6,14 @@
         <meta charset="UTF-8">
         <title>Edit Product - Admin Panel</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     </head>
     <body>
-        <div class="container mt-5">
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="products" />
+        </jsp:include>
+
+        <div class="admin-page">
+        <div class="container-fluid">
             <div class="card mb-4">
                 <div class="card-header bg-dark text-white">
                     <h4 class="mb-0">Edit Product Information</h4>
@@ -135,5 +139,7 @@
                 </div>
             </div>
         </div>
+        </div>
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
     </body>
 </html>

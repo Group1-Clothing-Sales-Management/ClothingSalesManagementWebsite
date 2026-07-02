@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -631,8 +632,9 @@ public class OrderManagementDAO {
     }
 
     /**
-     * Record payment immediately because a counter sale is treated as paid at
-     * the moment the order is created.
+     * Record the initial payment state for a counter sale.
+     * Cash orders are marked as paid immediately; VNPay orders stay unpaid
+     * until staff confirms the bank transfer.
      */
     private void insertStorePayment(Connection conn,
             int orderId,
@@ -641,20 +643,90 @@ public class OrderManagementDAO {
 
         String sql = "INSERT INTO Payment "
                 + "(order_id, payment_method, payment_status, amount, transaction_reference, payment_date) "
-                + "VALUES (?, ?, ?, ?, ?, GETDATE())";
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
         String method = paymentMethod == null || paymentMethod.trim().isEmpty()
                 ? "CASH"
                 : paymentMethod.trim().toUpperCase();
+        boolean isVnpay = "VNPAY".equals(method);
+        String paymentStatus = isVnpay ? "UNPAID" : "PAID";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, orderId);
             ps.setString(2, method);
-            ps.setString(3, "PAID");
+            ps.setString(3, paymentStatus);
             ps.setBigDecimal(4, amount);
-            // A counter sale does not need an external transaction reference.
-            ps.setNull(5, Types.VARCHAR);
+            // VNPay orders stay unpaid until staff confirms the bank transfer.
+            if (isVnpay) {
+                ps.setString(5, "ORDER-" + orderId);
+                ps.setNull(6, Types.TIMESTAMP);
+            } else {
+                // A counter sale does not need an external transaction reference.
+                ps.setNull(5, Types.VARCHAR);
+                ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            }
             ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Mark a VNPay payment as paid after staff confirms the transfer.
+     */
+    public boolean markVnpayPaymentAsPaid(int orderId) {
+        String loadSql = "SELECT payment_method, payment_status FROM Payment WHERE order_id = ?";
+        String updateSql = "UPDATE Payment "
+                + "SET payment_status = 'PAID', transaction_reference = ?, payment_date = GETDATE() "
+                + "WHERE order_id = ?";
+        String updateOrderSql = "UPDATE [Order] SET updated_at = GETDATE() WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            String paymentMethod = null;
+            String paymentStatus = null;
+
+            try (PreparedStatement psLoad = conn.prepareStatement(loadSql)) {
+                psLoad.setInt(1, orderId);
+                try (ResultSet rs = psLoad.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return false;
+                    }
+
+                    paymentMethod = rs.getString("payment_method");
+                    paymentStatus = rs.getString("payment_status");
+                }
+            }
+
+            if (paymentMethod == null || !"VNPAY".equalsIgnoreCase(paymentMethod.trim())) {
+                conn.rollback();
+                return false;
+            }
+
+            if ("PAID".equalsIgnoreCase(paymentStatus)) {
+                conn.rollback();
+                return false;
+            }
+
+            try (PreparedStatement psUpdate = conn.prepareStatement(updateSql)) {
+                psUpdate.setString(1, "MANUAL-" + orderId);
+                psUpdate.setInt(2, orderId);
+                if (psUpdate.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
+                psOrder.setInt(1, orderId);
+                psOrder.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
