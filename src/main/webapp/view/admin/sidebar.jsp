@@ -251,6 +251,9 @@
         <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="sidebar-link ${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
             <i class="fa-solid fa-comments sidebar-icon"></i>Feedback
         </a>
+        <a href="${pageContext.request.contextPath}/staff/reports" class="sidebar-link ${requestScope.sidebarActiveTab == 'reports' ? 'active' : ''}">
+            <i class="fa-solid fa-chart-pie sidebar-icon"></i>Revenue Reports
+        </a>
     </div>
 
     <div class="sidebar-footer">
