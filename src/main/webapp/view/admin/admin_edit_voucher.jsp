@@ -34,9 +34,12 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-            <div class="main-content admin-page">
-                <div class="container-fluid">
-
+        <div class="main-content admin-page">
+            <div class="container-fluid">
+                <div class="main-content admin-page">
+                    <div class="mb-3">
+                        <a href="${pageContext.request.contextPath}/admin/voucher" class="btn btn-sm btn-secondary">&larr; Back to Voucher List</a>
+                    </div>
                     <jsp:useBean id="now" class="java.util.Date" />
                     <c:set var="isActive" value="${now.time >= voucher.startDate.time && now.time <= voucher.endDate.time}" />
                     <c:set var="isExpired" value="${now.time > voucher.endDate.time || voucher.usedCount >= voucher.usageLimit}" />
@@ -154,41 +157,41 @@
 
                 </div>
             </div>
-        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
+            <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
-        <script>
-            function toggleDiscountFields() {
-                var type = document.getElementById("discountType");
-                if (!type)
-                    return; // Dropdown is completely frozen from display mutations
+            <script>
+                function toggleDiscountFields() {
+                    var type = document.getElementById("discountType");
+                    if (!type)
+                        return; // Dropdown is completely frozen from display mutations
 
-                var maxDiscountGroup = document.getElementById("maxDiscountGroup");
-                var maxDiscountInput = document.getElementById("maxDiscountAmount");
+                    var maxDiscountGroup = document.getElementById("maxDiscountGroup");
+                    var maxDiscountInput = document.getElementById("maxDiscountAmount");
 
-                if (type.value === "FIXED_AMOUNT") {
-                    maxDiscountGroup.style.display = "none";
-                    maxDiscountInput.removeAttribute("required");
-                } else {
-                    maxDiscountGroup.style.display = "block";
-                    maxDiscountInput.setAttribute("required", "required");
+                    if (type.value === "FIXED_AMOUNT") {
+                        maxDiscountGroup.style.display = "none";
+                        maxDiscountInput.removeAttribute("required");
+                    } else {
+                        maxDiscountGroup.style.display = "block";
+                        maxDiscountInput.setAttribute("required", "required");
+                    }
                 }
-            }
 
-            window.onload = function () {
-                toggleDiscountFields();
-            };
+                window.onload = function () {
+                    toggleDiscountFields();
+                };
 
-            document.getElementById("editVoucherForm").addEventListener("submit", function (event) {
-                var start = new Date(document.getElementById("startDate").value);
-                var end = new Date(document.getElementById("endDate").value);
+                document.getElementById("editVoucherForm").addEventListener("submit", function (event) {
+                    var start = new Date(document.getElementById("startDate").value);
+                    var end = new Date(document.getElementById("endDate").value);
 
-                if (end <= start) {
-                    alert("Validation Error: End Date & Time must occur after the Start Date & Time.");
-                    event.preventDefault();
-                }
-            });
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+                    if (end <= start) {
+                        alert("Validation Error: End Date & Time must occur after the Start Date & Time.");
+                        event.preventDefault();
+                    }
+                });
+            </script>
+            <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

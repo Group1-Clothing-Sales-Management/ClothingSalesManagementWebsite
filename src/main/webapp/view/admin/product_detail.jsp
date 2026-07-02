@@ -12,6 +12,9 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </head>
     <body>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="products" />
+        </jsp:include>
         <div class="container admin-page">
             <div class="mb-3">
                 <a href="${pageContext.request.contextPath}/admin/manage-product" class="btn btn-sm btn-secondary">&larr; Back to Product List</a>

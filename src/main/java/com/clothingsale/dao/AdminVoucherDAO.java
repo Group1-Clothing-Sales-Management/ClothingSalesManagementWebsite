@@ -197,4 +197,19 @@ public class AdminVoucherDAO {
         }
         return false;
     }
+     public int getTotalSavedCount(int voucherId) {
+        String sql = "SELECT COUNT(user_id) FROM User_Saved_Voucher WHERE voucher_id = ?";
+        try (Connection conn = DBConnection.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, voucherId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; 
+    }
 }

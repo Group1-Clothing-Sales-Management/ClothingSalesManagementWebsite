@@ -55,7 +55,7 @@
                     <div class="page-header">
                         <div>
                             <h2 class="page-title"><i class="fa-solid fa-download me-2 text-primary"></i>Stock Inflow Logs</h2>
-                            <p class="page-subtitle mb-0">Historical lists of physical inventory item batches imported to store variants</p>
+                            
                         </div>
 
 
