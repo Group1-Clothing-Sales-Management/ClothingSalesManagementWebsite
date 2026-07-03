@@ -216,22 +216,22 @@
         <c:choose>
             <c:when test="${sessionScope.authRoleName == 'STAFF'}">
                 <a href="${pageContext.request.contextPath}/staff/products" class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box sidebar-icon"></i>Manage Products
+                    <i class="fa-solid fa-box sidebar-icon"></i>Products
                 </a>
             </c:when>
             <c:otherwise>
                 <a href="${pageContext.request.contextPath}${rolePrefix}/products" class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box sidebar-icon"></i>Manage Products
+                    <i class="fa-solid fa-box sidebar-icon"></i>Products
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="sidebar-link ${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
-                    <i class="fa-solid fa-warehouse sidebar-icon"></i>Stock
+                    <i class="fa-solid fa-warehouse sidebar-icon"></i>Inventory
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/manage-category" class="sidebar-link ${requestScope.sidebarActiveTab == 'categories' ? 'active' : ''}">
-                    <i class="fa-solid fa-tags sidebar-icon"></i>Manage Category
+                    <i class="fa-solid fa-tags sidebar-icon"></i>Categories
                 </a>
                 <a class="sidebar-link ${requestScope.sidebarActiveTab == 'discounts' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/voucher?action=list">
                     <i class="fas fa-ticket-alt sidebar-icon"></i> 
-                    <span>Voucher Management</span>
+                    <span>Vouchers</span>
                 </a>
             </c:otherwise>
         </c:choose>
