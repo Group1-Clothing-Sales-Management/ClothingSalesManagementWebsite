@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO {
 
@@ -547,5 +549,107 @@ public class UserDAO {
     private boolean isVerificationPendingStatus(String status) {
         return status != null && (STATUS_PENDING_VERIFICATION.equalsIgnoreCase(status)
                 || STATUS_PENDING_VERIFICATION_LEGACY.equalsIgnoreCase(status));
+    }
+    // Lấy danh sách nhân viên có tìm kiếm
+    public List<User> getAllStaffs(String keyword) {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT u.id, u.username, u.password, u.full_name, u.email, u.phone, u.avatar_url, "
+                   + "u.status, u.created_at, u.updated_at, u.role_id, r.role_name "
+                   + "FROM [User] u "
+                   + "INNER JOIN Role r ON u.role_id = r.id "
+                   + "WHERE r.role_name = 'STAFF' ";
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += "AND (u.full_name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR u.phone LIKE ?) ";
+        }
+        sql += "ORDER BY u.created_at DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchKw = "%" + keyword.trim() + "%";
+                ps.setString(1, searchKw);
+                ps.setString(2, searchKw);
+                ps.setString(3, searchKw);
+                ps.setString(4, searchKw);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapUser(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return list;
+    }
+
+    // Thêm mới nhân viên
+    public boolean createStaff(User user, String plainPassword) {
+        String sql = "INSERT INTO [User] (username, password, full_name, email, phone, status, role_id) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, (SELECT id FROM Role WHERE role_name = 'STAFF'))";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.getUsername().trim());
+            ps.setString(2, SecurityUtil.hashPassword(plainPassword));
+            ps.setString(3, user.getFullName().trim());
+            ps.setString(4, user.getEmail().trim());
+            ps.setString(5, user.getPhone() != null ? user.getPhone().trim() : null);
+            ps.setString(6, user.getStatus() != null ? user.getStatus() : "ACTIVE");
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    // Cập nhật nhân viên (không đổi username/password ở đây)
+    public boolean updateStaffProfile(User user) {
+        String sql = "UPDATE [User] SET full_name = ?, email = ?, phone = ?, status = ?, updated_at = GETDATE() "
+                   + "WHERE id = ? AND role_id = (SELECT id FROM Role WHERE role_name = 'STAFF')";
+                   
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.getFullName().trim());
+            ps.setString(2, user.getEmail().trim());
+            ps.setString(3, user.getPhone() != null ? user.getPhone().trim() : null);
+            ps.setString(4, user.getStatus());
+            ps.setInt(5, user.getId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+    // Khóa / Mở khóa tài khoản nhân viên (Soft Delete)
+    public boolean toggleStaffStatus(int id) {
+        // Lấy trạng thái hiện tại trước
+        String sqlSelect = "SELECT status FROM [User] WHERE id = ? AND role_id = (SELECT id FROM Role WHERE role_name = 'STAFF')";
+        String sqlUpdate = "UPDATE [User] SET status = ?, updated_at = GETDATE() WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement psSelect = conn.prepareStatement(sqlSelect)) {
+             
+            psSelect.setInt(1, id);
+            try (ResultSet rs = psSelect.executeQuery()) {
+                if (rs.next()) {
+                    String currentStatus = rs.getString("status");
+                    // Nếu đang LOCKED thì chuyển thành ACTIVE, ngược lại tất cả sẽ bị ép về LOCKED
+                    String newStatus = "LOCKED".equals(currentStatus) ? "ACTIVE" : "LOCKED";
+                    
+                    try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
+                        psUpdate.setString(1, newStatus);
+                        psUpdate.setInt(2, id);
+                        return psUpdate.executeUpdate() > 0;
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 }

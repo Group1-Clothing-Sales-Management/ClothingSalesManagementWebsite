@@ -233,6 +233,9 @@
                     <i class="fas fa-ticket-alt sidebar-icon"></i> 
                     <span>Vouchers</span>
                 </a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/staffs">
+                    <i class="bi bi-person-badge-fill"></i> Manage Staff
+                </a>
             </c:otherwise>
         </c:choose>
 

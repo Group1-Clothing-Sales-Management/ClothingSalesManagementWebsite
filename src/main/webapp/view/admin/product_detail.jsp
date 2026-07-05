@@ -99,27 +99,30 @@
                                     <td class="align-middle text-center" style="width: 180px;">
 
                                         <div class="dropdown d-inline-block">
-                                            <button class="btn btn-sm dropdown-toggle status-dropdown-btn ${variant.status == 'Active' || variant.status == '1' ? 'btn-success' : 'btn-danger'}" 
+                                            <%-- Nút hiển thị trạng thái hiện tại --%>
+                                            <button class="btn btn-sm dropdown-toggle status-dropdown-btn ${variant.status == 'ACTIVE' ? 'btn-success' : 'btn-danger'}" 
                                                     type="button" 
                                                     id="dropdownStatus-${variant.id}" 
                                                     data-bs-toggle="dropdown" 
                                                     aria-expanded="false"
                                                     style="font-size: 0.85rem; padding: 4px 12px; border-radius: 20px; font-weight: 500; min-width: 100px;">
-                                                ${variant.status == 'Active' || variant.status == '1' ? 'Active' : 'Inactive'}
+                                                ${variant.status == 'ACTIVE' ? 'Active' : 'Inactive'}
                                             </button>
+
+                                            <%-- Menu chọn trạng thái --%>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownStatus-${variant.id}" style="border-radius: 8px; font-size: 0.9rem;">
                                                 <li>
-                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status == 'Active' || variant.status == '1' ? 'disabled bg-light' : ''}" 
+                                                    <a class="dropdown-item d-flex align-items-center py-2 ${variant.status == 'ACTIVE' ? 'disabled bg-light' : ''}" 
                                                        href="javascript:void(0)" 
-                                                       onclick="changeVariantStatus('${variant.id}', 'Active', '${product.id}')">
-                                                        <span class="badge bg-success me-2" style="width: 10px; height: 10px; border-radius: 50%; p-0"> </span> Active
+                                                       onclick="changeVariantStatus('${variant.id}', 'ACTIVE', '${product.id}')">
+                                                        <span class="badge bg-success me-2" style="width: 10px; height: 10px; border-radius: 50%;"></span> Active
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-menu-item dropdown-item d-flex align-items-center py-2 ${variant.status != 'Active' && variant.status != '1' ? 'disabled bg-light' : ''}" 
+                                                    <a class="dropdown-item d-flex align-items-center py-2 ${variant.status != 'ACTIVE' ? 'disabled bg-light' : ''}" 
                                                        href="javascript:void(0)" 
-                                                       onclick="changeVariantStatus('${variant.id}', 'Inactive', '${product.id}')">
-                                                        <span class="badge bg-danger me-2" style="width: 10px; height: 10px; border-radius: 50%; p-0"> </span> Inactive
+                                                       onclick="changeVariantStatus('${variant.id}', 'INACTIVE', '${product.id}')">
+                                                        <span class="badge bg-danger me-2" style="width: 10px; height: 10px; border-radius: 50%;"></span> Inactive
                                                     </a>
                                                 </li>
                                             </ul>
@@ -187,68 +190,68 @@
     </body>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-                                                           function changeVariantStatus(variantId, nextStatus, productId) {
-                                                               const statusText = nextStatus === 'Active' ? 'Activate' : 'Deactivate';
-                                                               const confirmButtonColor = nextStatus === 'Active' ? '#198754' : '#dc3545';
+                   function changeVariantStatus(variantId, nextStatus, productId) {
+                       const statusText = nextStatus === 'Active' ? 'Activate' : 'Deactivate';
+                       const confirmButtonColor = nextStatus === 'Active' ? '#198754' : '#dc3545';
 
-                                                               Swal.fire({
-                                                                   title: 'Change Status?',
-                                                                   text: `Are you sure you want to change this variant status to ${nextStatus}?`,
-                                                                   icon: 'question',
-                                                                   showCancelButton: true,
-                                                                   confirmButtonColor: confirmButtonColor,
-                                                                   cancelButtonColor: '#6c757d',
-                                                                   confirmButtonText: `Yes, ${statusText}!`,
-                                                                   cancelButtonText: 'Cancel',
-                                                                   background: '#ffffff',
-                                                                   customClass: {
-                                                                       popup: 'rounded-4 shadow-lg'
-                                                                   }
-                                                               }).then((result) => {
-                                                                   if (result.isConfirmed) {
-                                                                       // Nạp dữ liệu vào form tổng và submit
-                                                                       document.getElementById('submitProductId').value = productId;
-                                                                       document.getElementById('submitVariantId').value = variantId;
-                                                                       document.getElementById('submitNewStatus').value = nextStatus;
+                       Swal.fire({
+                           title: 'Change Status?',
+                           text: `Are you sure you want to change this variant status to ${nextStatus}?`,
+                           icon: 'question',
+                           showCancelButton: true,
+                           confirmButtonColor: confirmButtonColor,
+                           cancelButtonColor: '#6c757d',
+                           confirmButtonText: `Yes, ${statusText}!`,
+                           cancelButtonText: 'Cancel',
+                           background: '#ffffff',
+                           customClass: {
+                               popup: 'rounded-4 shadow-lg'
+                           }
+                       }).then((result) => {
+                           if (result.isConfirmed) {
+                               // Nạp dữ liệu vào form tổng và submit
+                               document.getElementById('submitProductId').value = productId;
+                               document.getElementById('submitVariantId').value = variantId;
+                               document.getElementById('submitNewStatus').value = nextStatus;
 
-                                                                       document.getElementById('masterStatusForm').submit();
-                                                                   }
-                                                               });
-                                                           }
+                               document.getElementById('masterStatusForm').submit();
+                           }
+                       });
+                   }
 
-                                                           // Hiển thị Toast thông báo thành công sau khi trang reload lại
-                                                           document.addEventListener("DOMContentLoaded", function () {
-                                                               const Toast = Swal.mixin({
-                                                                   toast: true,
-                                                                   position: 'top-end',
-                                                                   showConfirmButton: false,
-                                                                   timer: 3000,
-                                                                   timerProgressBar: true,
-                                                                   didOpen: (toast) => {
-                                                                       toast.addEventListener('mouseenter', Swal.stopTimer);
-                                                                       toast.addEventListener('mouseleave', Swal.resumeTimer);
-                                                                   }
-                                                               });
+                   // Hiển thị Toast thông báo thành công sau khi trang reload lại
+                   document.addEventListener("DOMContentLoaded", function () {
+                       const Toast = Swal.mixin({
+                           toast: true,
+                           position: 'top-end',
+                           showConfirmButton: false,
+                           timer: 3000,
+                           timerProgressBar: true,
+                           didOpen: (toast) => {
+                               toast.addEventListener('mouseenter', Swal.stopTimer);
+                               toast.addEventListener('mouseleave', Swal.resumeTimer);
+                           }
+                       });
 
-                                                               document.querySelectorAll('[data-product-toast]').forEach(function (node) {
-                                                                   const type = node.getAttribute('data-product-toast-type') || 'info';
-                                                                   const message = (node.textContent || '').trim();
-                                                                   if (message) {
-                                                                       Toast.fire({
-                                                                           icon: type,
-                                                                           title: message
-                                                                       });
-                                                                   }
-                                                                   node.remove();
-                                                               });
+                       document.querySelectorAll('[data-product-toast]').forEach(function (node) {
+                           const type = node.getAttribute('data-product-toast-type') || 'info';
+                           const message = (node.textContent || '').trim();
+                           if (message) {
+                               Toast.fire({
+                                   icon: type,
+                                   title: message
+                               });
+                           }
+                           node.remove();
+                       });
 
-                                                               const urlParams = new URLSearchParams(window.location.search);
-                                                               if (urlParams.get('success') === 'StatusUpdated') {
-                                                                   Toast.fire({
-                                                                       icon: 'success',
-                                                                       title: 'Variant status updated successfully'
-                                                                   });
-                                                               }
-                                                           });
+                       const urlParams = new URLSearchParams(window.location.search);
+                       if (urlParams.get('success') === 'StatusUpdated') {
+                           Toast.fire({
+                               icon: 'success',
+                               title: 'Variant status updated successfully'
+                           });
+                       }
+                   });
     </script>
 </html>
