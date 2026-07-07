@@ -45,7 +45,7 @@
 
 <%
     StaffProductModel product = (StaffProductModel) request.getAttribute("product");
-    if (product == null) { response.sendRedirect("StaffManageProducts"); return; }
+    if (product == null) { response.sendRedirect(request.getContextPath() + "/StaffManageProducts"); return; }
     String statusClass = "ACTIVE".equals(product.getStatus()) ? "badge-active" : "badge-inactive";
 %>
 
@@ -55,7 +55,7 @@
         <div class="admin-page">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="StaffManageProducts">Product Management</a></li>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/StaffManageProducts">Product Management</a></li>
                 <li class="breadcrumb-item active">Edit Product</li>
             </ol>
         </nav>
@@ -64,7 +64,7 @@
             <h1 class="page-title"><i class="bi bi-pencil-square"></i>Edit Product</h1>
         </div>
 
-        <form action="StaffManageProducts" method="POST">
+        <form action="${pageContext.request.contextPath}/StaffManageProducts" method="POST">
             <input type="hidden" name="sku" value="<%= product.getSku() %>"/>
             <input type="hidden" name="variantId" value="<%= product.getVariantId() %>"/>
 
@@ -123,7 +123,7 @@
                 </div>
 
                 <div class="card-footer d-flex justify-content-end gap-2">
-                    <a href="StaffManageProducts" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <a href="${pageContext.request.contextPath}/StaffManageProducts" class="btn btn-outline-secondary px-4">Cancel</a>
                     <button type="submit" class="btn btn-primary px-4"><i class="bi bi-cloud-arrow-up-fill me-1"></i>Save Changes</button>
                 </div>
             </div>

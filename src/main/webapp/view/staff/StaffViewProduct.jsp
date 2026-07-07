@@ -91,7 +91,7 @@
 <%
     StaffProductModel product = (StaffProductModel) request.getAttribute("product");
     if (product == null) {
-        response.sendRedirect("StaffManageProducts");
+        response.sendRedirect(request.getContextPath() + "/StaffManageProducts");
         return;
     }
     NumberFormat numFormat = NumberFormat.getNumberInstance(Locale.US);
@@ -106,7 +106,7 @@
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="StaffManageProducts">Product Management</a></li>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/StaffManageProducts">Product Management</a></li>
                 <li class="breadcrumb-item active">Product Details</li>
             </ol>
         </nav>
@@ -186,8 +186,8 @@
             </div>
 
             <div class="card-footer d-flex justify-content-end gap-2">
-                <a href="StaffManageProducts" class="btn btn-outline-secondary px-4">Close</a>
-                <a href="StaffManageProducts?action=edit&sku=<%= product.getSku() %>"
+                <a href="${pageContext.request.contextPath}/StaffManageProducts" class="btn btn-outline-secondary px-4">Close</a>
+                <a href="${pageContext.request.contextPath}/StaffManageProducts?action=edit&sku=<%= product.getSku() %>"
                    class="btn btn-warning px-4 text-white">
                     <i class="bi bi-pencil-fill me-1"></i>Edit Product
                 </a>

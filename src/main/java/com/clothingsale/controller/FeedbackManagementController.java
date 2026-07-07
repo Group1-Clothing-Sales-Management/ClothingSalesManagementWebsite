@@ -76,14 +76,14 @@ public class FeedbackManagementController extends HttpServlet {
             request.setAttribute("feedbacks", feedbacks);
             request.setAttribute("pageMode", "list");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
-            request.getRequestDispatcher("/StaffManageFeedback.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/StaffManageFeedback.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("errorMsg", "System error while loading feedback list.");
             request.setAttribute("feedbacks", Collections.emptyList());
             request.setAttribute("pageMode", "list");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
-            request.getRequestDispatcher("/StaffManageFeedback.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/StaffManageFeedback.jsp").forward(request, response);
         }
     }
 
@@ -105,14 +105,14 @@ public class FeedbackManagementController extends HttpServlet {
             request.setAttribute("feedback", feedback);
             request.setAttribute("pageMode", "detail");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
-            request.getRequestDispatcher("/StaffManageFeedback.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/StaffManageFeedback.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("errorMsg", "System error while loading feedback detail.");
             request.setAttribute("feedbacks", Collections.emptyList());
             request.setAttribute("pageMode", "list");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
-            request.getRequestDispatcher("/StaffManageFeedback.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/StaffManageFeedback.jsp").forward(request, response);
         }
     }
 

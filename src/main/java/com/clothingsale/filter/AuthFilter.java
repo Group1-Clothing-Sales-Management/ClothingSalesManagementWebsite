@@ -85,7 +85,8 @@ public class AuthFilter extends HttpFilter {
     private boolean isPublicPath(String path) {
         if (path == null || path.isEmpty() || "/".equals(path)
                 || "/index.html".equals(path)
-                || "/index.jsp".equals(path)) {
+                || "/index.jsp".equals(path)
+                || "/view/index.jsp".equals(path)) {
             return true;
         }
         String lowerPath = path.toLowerCase(Locale.ROOT);
@@ -133,17 +134,16 @@ public class AuthFilter extends HttpFilter {
     private boolean isStaffPath(String path) {
         return path.startsWith("/StaffManageProducts")
                 || path.startsWith("/staff/products")
-                || "/StaffManageCustomers.jsp".equals(path)
-                || "/StaffManageProducts.jsp".equals(path)
-                || "/StaffViewProduct.jsp".equals(path)
-                || "/StaffEditProduct.jsp".equals(path)
                 || path.startsWith("/StaffManageOrders")
                 || path.startsWith("/staff/orders")
                 || path.startsWith("/admin/feedback")
                 || path.startsWith("/staff/feedback")
                 || path.startsWith("/admin/products")
-                || "/StaffManageOrders.jsp".equals(path)
-                || "/StaffManageFeedback.jsp".equals(path);
+                || path.startsWith("/view/staff/")
+                || path.startsWith("/staff/customers")
+                || path.startsWith("/staff/shipments")
+                || path.startsWith("/staff/reports")
+                || path.startsWith("/staff/revenue-report");
     }
 
     private boolean isAdminRole(String roleName) {

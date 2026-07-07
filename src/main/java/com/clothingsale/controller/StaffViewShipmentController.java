@@ -32,7 +32,7 @@ public class StaffViewShipmentController extends HttpServlet {
                 return;
             }
             request.setAttribute("shipment", shipment);
-            request.getRequestDispatcher("/StaffConfirmShipment.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/StaffConfirmShipment.jsp").forward(request, response);
         } else {
             String keyword = request.getParameter("keyword");
             String status = request.getParameter("status");
@@ -42,7 +42,7 @@ public class StaffViewShipmentController extends HttpServlet {
             request.setAttribute("keyword", keyword);
             request.setAttribute("selectedStatus",
                     status == null || status.trim().isEmpty() ? "ALL" : status.toUpperCase());
-            request.getRequestDispatcher("/StaffViewShipment.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/StaffViewShipment.jsp").forward(request, response);
         }
     }
 
@@ -69,7 +69,7 @@ public class StaffViewShipmentController extends HttpServlet {
             } else {
                 request.setAttribute("errorMsg", result);
                 request.setAttribute("shipment", service.getShipmentById(id));
-                request.getRequestDispatcher("/StaffConfirmShipment.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/staff/StaffConfirmShipment.jsp").forward(request, response);
             }
         }
     }
