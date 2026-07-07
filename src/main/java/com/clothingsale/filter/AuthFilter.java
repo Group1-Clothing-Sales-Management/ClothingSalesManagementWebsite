@@ -128,6 +128,7 @@ public class AuthFilter extends HttpFilter {
                 || path.startsWith("/admin/dashboard")
                 || path.startsWith("/AdminManageProduct")
                 || path.startsWith("/admin/manage-product")
+                || path.startsWith("/admin/staffs")
                 || path.startsWith("/view/admin/");
     }
 
@@ -136,11 +137,14 @@ public class AuthFilter extends HttpFilter {
                 || path.startsWith("/staff/products")
                 || path.startsWith("/StaffManageOrders")
                 || path.startsWith("/staff/orders")
+                || path.startsWith("/admin/orders")
                 || path.startsWith("/admin/feedback")
                 || path.startsWith("/staff/feedback")
                 || path.startsWith("/admin/products")
                 || path.startsWith("/view/staff/")
+                || path.startsWith("/admin/customers")
                 || path.startsWith("/staff/customers")
+                || path.startsWith("/admin/shipments")
                 || path.startsWith("/staff/shipments")
                 || path.startsWith("/staff/reports")
                 || path.startsWith("/staff/revenue-report");

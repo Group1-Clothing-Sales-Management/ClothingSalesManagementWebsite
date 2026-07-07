@@ -58,6 +58,8 @@
                 activeTab = "feedback";
             } else if (path.startsWith("/staff/products")) {
                 activeTab = "products";
+            } else if (path.startsWith("/admin/staffs")) {
+                activeTab = "staffs";
             }
         }
     }
@@ -233,7 +235,8 @@
                     <i class="fas fa-ticket-alt sidebar-icon"></i> 
                     <span>Vouchers</span>
                 </a>
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/staffs">
+                <%-- Mục này chỉ dành cho ADMIN nên cần active riêng khi đang ở trang quản lý staff. --%>
+                <a href="${pageContext.request.contextPath}/admin/staffs" class="sidebar-link ${requestScope.sidebarActiveTab == 'staffs' ? 'active' : ''}">
                     <i class="bi bi-person-badge-fill"></i> Manage Staff
                 </a>
             </c:otherwise>
