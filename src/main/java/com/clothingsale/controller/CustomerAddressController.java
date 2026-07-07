@@ -91,7 +91,7 @@ public class CustomerAddressController extends HttpServlet {
         request.setAttribute("from", from);
 
         request.getRequestDispatcher(
-                "/view/customer/CustomerManageAddress.jsp")
+                "/view/customer/customer_manage_address.jsp")
                 .forward(request, response);
     }
 
@@ -119,7 +119,7 @@ public class CustomerAddressController extends HttpServlet {
         request.setAttribute("address", address);
 
         request.getRequestDispatcher(
-                "/view/customer/CustomerManageAddress.jsp")
+                "/view/customer/customer_manage_address.jsp")
                 .forward(request, response);
     }
 

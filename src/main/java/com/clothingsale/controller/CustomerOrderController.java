@@ -68,7 +68,7 @@ public class CustomerOrderController extends HttpServlet {
         request.setAttribute("cartTotal", total);
 
         request.getRequestDispatcher(
-                "/view/customer/CustomerCheckout.jsp"
+                "/view/customer/customer_checkout.jsp"
         ).forward(request, response);
     }
 

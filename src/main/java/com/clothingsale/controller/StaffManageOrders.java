@@ -112,7 +112,7 @@ public class StaffManageOrders extends HttpServlet {
         request.setAttribute("hasSellableProducts", hasSellableProducts);
         request.setAttribute("ordersBasePath", buildOrdersBasePath(request));
         request.setAttribute("pageMode", "list");
-        request.getRequestDispatcher("/view/staff/StaffManageOrders.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/staff/staff_manage_orders.jsp").forward(request, response);
     }
 
     /**
@@ -144,7 +144,7 @@ public class StaffManageOrders extends HttpServlet {
         request.setAttribute("vnpayTransferConfigReady", service.hasVnpayTransferConfig());
         request.setAttribute("ordersBasePath", buildOrdersBasePath(request));
         request.setAttribute("pageMode", "detail");
-        request.getRequestDispatcher("/view/staff/StaffManageOrders.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/staff/staff_manage_orders.jsp").forward(request, response);
     }
 
     /**

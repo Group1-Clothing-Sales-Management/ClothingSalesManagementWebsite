@@ -43,7 +43,7 @@ public class CustomerOrderHistoryController extends HttpServlet {
 
         request.setAttribute("orders", service.getOrderHistoryByUserId(userId));
 
-        request.getRequestDispatcher("/view/customer/CustomerOrderHistory.jsp")
+        request.getRequestDispatcher("/view/customer/customer_order_history.jsp")
                 .forward(request, response);
     }
 

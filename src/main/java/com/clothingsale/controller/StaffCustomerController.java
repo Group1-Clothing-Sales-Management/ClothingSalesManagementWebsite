@@ -31,7 +31,7 @@ public class StaffCustomerController extends HttpServlet {
         switch (action) {
             case "add":
                 req.setAttribute("pageMode", "add");
-                req.getRequestDispatcher("/view/staff/StaffManageCustomers.jsp").forward(req, resp);
+                req.getRequestDispatcher("/view/staff/staff_manage_customers.jsp").forward(req, resp);
                 break;
 
             case "edit":
@@ -73,7 +73,7 @@ public class StaffCustomerController extends HttpServlet {
         req.setAttribute("keyword", keyword);
         req.setAttribute("customersBasePath", buildCustomersBasePath(req));
         req.setAttribute("pageMode", "list");
-        req.getRequestDispatcher("/view/staff/StaffManageCustomers.jsp").forward(req, resp);
+        req.getRequestDispatcher("/view/staff/staff_manage_customers.jsp").forward(req, resp);
     }
 
     private void handleShowEdit(HttpServletRequest req, HttpServletResponse resp)
@@ -91,7 +91,7 @@ public class StaffCustomerController extends HttpServlet {
         req.setAttribute("customer", customer);
         req.setAttribute("customersBasePath", buildCustomersBasePath(req));
         req.setAttribute("pageMode", "edit");
-        req.getRequestDispatcher("/view/staff/StaffManageCustomers.jsp").forward(req, resp);
+        req.getRequestDispatcher("/view/staff/staff_manage_customers.jsp").forward(req, resp);
     }
 
     private void handleAdd(HttpServletRequest req, HttpServletResponse resp)
@@ -110,7 +110,7 @@ public class StaffCustomerController extends HttpServlet {
             req.setAttribute("formData", c);
             req.setAttribute("customersBasePath", buildCustomersBasePath(req));
             req.setAttribute("pageMode", "add");
-            req.getRequestDispatcher("/view/staff/StaffManageCustomers.jsp").forward(req, resp);
+            req.getRequestDispatcher("/view/staff/staff_manage_customers.jsp").forward(req, resp);
         }
     }
 
@@ -130,7 +130,7 @@ public class StaffCustomerController extends HttpServlet {
             req.setAttribute("customer", c);
             req.setAttribute("customersBasePath", buildCustomersBasePath(req));
             req.setAttribute("pageMode", "edit");
-            req.getRequestDispatcher("/view/staff/StaffManageCustomers.jsp").forward(req, resp);
+            req.getRequestDispatcher("/view/staff/staff_manage_customers.jsp").forward(req, resp);
         }
     }
 

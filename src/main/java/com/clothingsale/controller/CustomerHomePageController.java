@@ -74,7 +74,7 @@ public class CustomerHomePageController extends HttpServlet {
             request.setAttribute("products", products);
 
             request.getRequestDispatcher(
-                    "/view/customer/CustomerHomePage.jsp"
+                    "/view/customer/customer_home_page.jsp"
             ).forward(request, response);
 
         } catch (Exception e) {
@@ -87,7 +87,7 @@ public class CustomerHomePageController extends HttpServlet {
             );
 
             request.getRequestDispatcher(
-                    "/view/customer/CustomerHomePage.jsp"
+                    "/view/customer/customer_home_page.jsp"
             ).forward(request, response);
         }
     }

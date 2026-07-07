@@ -47,7 +47,7 @@ public class CustomerProfileController extends HttpServlet {
         }
 
         request.setAttribute("profile", user);
-        request.getRequestDispatcher("/view/customer/CustomerProfile.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/customer/customer_profile.jsp").forward(request, response);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class CustomerProfileController extends HttpServlet {
             currentUser.setPhone(phone);
             request.setAttribute("profile", currentUser);
             request.setAttribute("errorMessage", "Avatar image must be 5MB or smaller.");
-            request.getRequestDispatcher("/view/customer/CustomerProfile.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/customer/customer_profile.jsp").forward(request, response);
             return;
         }
         String avatarUrl = currentUser.getAvatarUrl();
@@ -95,7 +95,7 @@ public class CustomerProfileController extends HttpServlet {
                 request.setAttribute("phoneError", error);
                 request.setAttribute("focusField", "phone");
             }
-            request.getRequestDispatcher("/view/customer/CustomerProfile.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/customer/customer_profile.jsp").forward(request, response);
             return;
         }
 
@@ -106,7 +106,7 @@ public class CustomerProfileController extends HttpServlet {
             currentUser.setPhone(phone);
             request.setAttribute("profile", currentUser);
             request.setAttribute("errorMessage", avatarError);
-            request.getRequestDispatcher("/view/customer/CustomerProfile.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/customer/customer_profile.jsp").forward(request, response);
             return;
         }
 
@@ -119,7 +119,7 @@ public class CustomerProfileController extends HttpServlet {
             currentUser.setPhone(phone);
             request.setAttribute("profile", currentUser);
             request.setAttribute("errorMessage", "Could not upload avatar image. Please try another file.");
-            request.getRequestDispatcher("/view/customer/CustomerProfile.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/customer/customer_profile.jsp").forward(request, response);
             return;
         }
 
@@ -141,7 +141,7 @@ public class CustomerProfileController extends HttpServlet {
             currentUser.setAvatarUrl(avatarUrl);
             request.setAttribute("profile", currentUser);
             request.setAttribute("errorMessage", "Could not update profile. Please try again.");
-            request.getRequestDispatcher("/view/customer/CustomerProfile.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/customer/customer_profile.jsp").forward(request, response);
             return;
         }
 

@@ -48,7 +48,7 @@ public class StaffReportController extends HttpServlet {
         request.setAttribute("selectedTimePeriod", timePeriod);
         request.setAttribute("selectedCategoryId", categoryId);
 
-        request.getRequestDispatcher("/view/staff/StaffManageReports.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/staff/staff_manage_reports.jsp").forward(request, response);
     }
 
     @Override

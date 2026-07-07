@@ -64,7 +64,7 @@ public class CustomerProductDetailController extends HttpServlet {
 
 
             request.getRequestDispatcher(
-                "/view/customer/CustomerViewProductDetail.jsp"
+                "/view/customer/customer_view_product_detail.jsp"
             ).forward(request, response);
 
 

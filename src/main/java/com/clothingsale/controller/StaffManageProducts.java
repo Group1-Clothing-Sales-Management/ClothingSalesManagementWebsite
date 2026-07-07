@@ -35,7 +35,7 @@ public class StaffManageProducts extends HttpServlet {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
-                        request.getRequestDispatcher("/view/staff/StaffViewProduct.jsp").forward(request, response);
+                        request.getRequestDispatcher("/view/staff/staff_view_product.jsp").forward(request, response);
                         return;
                     }
                 }
@@ -43,19 +43,19 @@ public class StaffManageProducts extends HttpServlet {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
-                        request.getRequestDispatcher("/view/staff/StaffEditProduct.jsp").forward(request, response);
+                        request.getRequestDispatcher("/view/staff/staff_edit_product.jsp").forward(request, response);
                         return;
                     }
                 }
             }
 
             request.setAttribute("productList", list);
-            request.getRequestDispatcher("/view/staff/StaffManageProducts.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "E1: System error while loading data.");
-            request.getRequestDispatcher("/view/staff/StaffManageProducts.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
         }
     }
 
@@ -79,7 +79,7 @@ public class StaffManageProducts extends HttpServlet {
             variantId = Integer.parseInt(variantIdStr);
         } catch (NumberFormatException e) {
             request.setAttribute("errorMessage", "Invalid variant ID.");
-            request.getRequestDispatcher("/view/staff/StaffManageProducts.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
             return;
         }
 
@@ -98,7 +98,7 @@ public class StaffManageProducts extends HttpServlet {
             request.setAttribute("errorMessage", "E1: System error while reloading data.");
         }
 
-        request.getRequestDispatcher("/view/staff/StaffManageProducts.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
     }
 
     @Override

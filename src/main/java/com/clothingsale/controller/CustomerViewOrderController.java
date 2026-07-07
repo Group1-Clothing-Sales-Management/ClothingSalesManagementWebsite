@@ -56,7 +56,7 @@ public class CustomerViewOrderController
                 service.getActiveOrdersByUserId(userId));
 
         request.getRequestDispatcher(
-                "/view/customer/CustomerViewOrder.jsp")
+                "/view/customer/customer_view_order.jsp")
                 .forward(request, response);
     }
 
