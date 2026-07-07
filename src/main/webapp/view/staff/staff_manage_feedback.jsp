@@ -225,7 +225,7 @@
                 <div class="page-header">
                     <div>
                         <h1 class="page-title"><i class="bi bi-chat-left-text-fill"></i>Feedback Management</h1>
-                        <div class="subtext mt-1">View customer feedback, open the detail screen, reply, or delete an entry.</div>
+                        <div class="subtext mt-1">View customer feedback, open the detail screen, and reply. Delete is available to admins only.</div>
                     </div>
                 </div>
 
@@ -339,13 +339,15 @@
                                                         <a href="${feedbackBasePath}?action=view&id=${fb.id}#response-section" class="btn btn-sm btn-outline-success">
                                                             <i class="bi bi-reply me-1"></i>Respond
                                                         </a>
-                                                        <form action="${feedbackBasePath}" method="post" class="d-inline" onsubmit="return confirm('Delete this feedback permanently?');">
-                                                            <input type="hidden" name="action" value="delete"/>
-                                                            <input type="hidden" name="id" value="${fb.id}"/>
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                                <i class="bi bi-trash me-1"></i>Delete
-                                                            </button>
-                                                        </form>
+                                                        <c:if test="${sessionScope.authRoleName eq 'ADMIN'}">
+                                                            <form action="${feedbackBasePath}" method="post" class="d-inline" onsubmit="return confirm('Delete this feedback permanently?');">
+                                                                <input type="hidden" name="action" value="delete"/>
+                                                                <input type="hidden" name="id" value="${fb.id}"/>
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                                    <i class="bi bi-trash me-1"></i>Delete
+                                                                </button>
+                                                            </form>
+                                                        </c:if>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -562,13 +564,15 @@
                                     </c:choose>
                                 </div>
 
-                                <form action="${feedbackBasePath}" method="post" onsubmit="return confirm('Delete this feedback permanently?');">
-                                    <input type="hidden" name="action" value="delete"/>
-                                    <input type="hidden" name="id" value="${feedback.id}"/>
-                                    <button type="submit" class="btn btn-outline-danger w-100">
-                                        <i class="bi bi-trash me-1"></i>Delete Feedback
-                                    </button>
-                                </form>
+                                <c:if test="${sessionScope.authRoleName eq 'ADMIN'}">
+                                    <form action="${feedbackBasePath}" method="post" onsubmit="return confirm('Delete this feedback permanently?');">
+                                        <input type="hidden" name="action" value="delete"/>
+                                        <input type="hidden" name="id" value="${feedback.id}"/>
+                                        <button type="submit" class="btn btn-outline-danger w-100">
+                                            <i class="bi bi-trash me-1"></i>Delete Feedback
+                                        </button>
+                                    </form>
+                                </c:if>
                             </div>
                         </div>
                     </div>
