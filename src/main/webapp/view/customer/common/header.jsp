@@ -89,16 +89,6 @@
                             </li>
 
                             <li>
-                                <a class="dropdown-item"
-                                   href="${pageContext.request.contextPath}/customer/order-history">
-
-                                    <i class="fa-solid fa-clock-rotate-left me-2"></i>
-                                    Order History
-
-                                </a>
-                            </li>
-
-                            <li>
                                 <hr class="dropdown-divider">
                             </li>
 

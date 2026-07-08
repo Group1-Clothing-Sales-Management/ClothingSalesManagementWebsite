@@ -57,8 +57,7 @@
             gap:16px;
         }
 
-        .brand-link,
-        .home-link {
+        .brand-link {
             min-height:42px;
             display:inline-flex;
             align-items:center;
@@ -77,20 +76,6 @@
             color:#fff;
             background:linear-gradient(135deg, var(--brand), var(--teal));
             box-shadow:0 12px 24px rgba(37, 99, 235, .2);
-        }
-
-        .home-link {
-            padding:0 16px;
-            border:1px solid var(--line);
-            border-radius:8px;
-            background:rgba(255, 255, 255, .72);
-            color:#344054;
-            font-weight:700;
-        }
-
-        .home-link:hover {
-            border-color:#b8d8d1;
-            color:var(--teal);
         }
 
         .auth-layout {
@@ -387,10 +372,6 @@
             <a class="brand-link" href="<%= ctx %>/home">
                 <span class="brand-logo"><i class="fa-solid fa-shirt"></i></span>
                 <span>Clothing Sale</span>
-            </a>
-            <a class="home-link" href="<%= ctx %>/home">
-                <i class="fa-solid fa-arrow-left"></i>
-                Back to Home
             </a>
         </div>
 

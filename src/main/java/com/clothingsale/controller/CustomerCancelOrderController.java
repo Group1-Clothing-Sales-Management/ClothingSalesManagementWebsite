@@ -53,15 +53,23 @@ public class CustomerCancelOrderController
 
         if (success) {
 
+            session.setAttribute(
+                    "orderMessage",
+                    "Order cancelled successfully.");
+
             response.sendRedirect(
                     request.getContextPath()
-                    + "/customer/orders?success=cancel");
+                    + "/customer/orders?status=CANCELLED");
 
         } else {
 
+            session.setAttribute(
+                    "orderError",
+                    "Could not cancel this order. Please try again.");
+
             response.sendRedirect(
                     request.getContextPath()
-                    + "/customer/orders?error=cancel");
+                    + "/customer/orders");
 
         }
     }
