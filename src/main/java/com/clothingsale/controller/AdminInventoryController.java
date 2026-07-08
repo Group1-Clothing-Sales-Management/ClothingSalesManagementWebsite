@@ -3,9 +3,9 @@ package com.clothingsale.controller;
 import com.clothingsale.dao.AdminInventoryDAO;
 import com.clothingsale.model.ProductBatch;
 import com.clothingsale.model.ProductVariant;
+import com.clothingsale.model.Supplier; // Cần import model Supplier
 import com.clothingsale.model.User;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,23 +25,23 @@ public class AdminInventoryController extends HttpServlet {
 
         String action = request.getParameter("action");
         if (action == null) {
-            action = "list"; // Thiết lập mặc định nếu tham số trống
+            action = "list";
         }
 
         if ("IMPORT_PAGE".equals(action)) {
-            // Tải dữ liệu tích hợp từ DAO để hiển thị lên Form nhập hàng
+            // Lấy danh sách biến thể
             List<ProductVariant> activeVariants = inventoryDAO.getAllActiveVariantsForImport();
             request.setAttribute("activeVariants", activeVariants);
 
+            // TODO: Lấy danh sách nhà cung cấp (Giả định bạn đã thêm hàm getAllSuppliers trong DAO)
+            // List<Supplier> supplierList = inventoryDAO.getAllSuppliers();
+            // request.setAttribute("supplierList", supplierList);
             request.getRequestDispatcher("/view/admin/import_stock.jsp").forward(request, response);
         } else if ("list".equals(action)) {
-            // Lấy lịch sử nhập kho để hiển thị ra trang danh sách (Khớp chuẩn logic gốc của bạn)
             List<com.clothingsale.model.ProductBatch> history = inventoryDAO.adminGetImportHistory();
             request.setAttribute("importHistory", history);
-
             request.getRequestDispatcher("/view/admin/inventory_list.jsp").forward(request, response);
         } else {
-            // Trường hợp Admin gõ sai action, chuyển hướng an toàn về trang danh sách chuẩn để tránh lỗi lặp
             response.sendRedirect(request.getContextPath() + "/admin/inventory?action=list");
         }
     }
@@ -58,37 +58,44 @@ public class AdminInventoryController extends HttpServlet {
             int adminUserId = (loggedInUser != null) ? loggedInUser.getId() : 1;
 
             try {
-                // Read form parallel arrays from dynamic table inputs
+                // Đọc thông tin Phiếu nhập tổng
+                String supplierIdRaw = request.getParameter("supplierId");
+                int supplierId = (supplierIdRaw != null && !supplierIdRaw.isEmpty()) ? Integer.parseInt(supplierIdRaw) : 1; // Mặc định 1 nếu trống
+                String batchCode = request.getParameter("batchCode");
+                String note = request.getParameter("note");
+
+                // Đọc thông tin chi tiết Lô hàng
                 String[] variantIds = request.getParameterValues("variantId[]");
                 String[] quantities = request.getParameterValues("quantity[]");
                 String[] costPrices = request.getParameterValues("costPrice[]");
                 String[] salePrices = request.getParameterValues("salePrice[]");
 
-                String batchCode = request.getParameter("batchCode");
-                String note = request.getParameter("note");
-
-                // Guard clause against empty checklist submit
                 if (variantIds == null || variantIds.length == 0) {
                     response.sendRedirect(request.getContextPath() + "/admin/inventory?action=IMPORT_PAGE&status=invalid");
                     return;
                 }
 
                 java.util.List<ProductBatch> batchList = new java.util.ArrayList<>();
+                double totalAmount = 0.0; // Tính tổng tiền phiếu nhập
 
-                // Loop and build objects list
                 for (int i = 0; i < variantIds.length; i++) {
                     ProductBatch item = new ProductBatch();
                     item.setVariantId(Integer.parseInt(variantIds[i]));
                     item.setInitialQuantity(Integer.parseInt(quantities[i]));
-                    item.setCostPrice(new java.math.BigDecimal(costPrices[i]));
+
+                    double cost = Double.parseDouble(costPrices[i]);
+                    item.setCostPrice(new java.math.BigDecimal(cost));
                     item.setSalePrice(new java.math.BigDecimal(salePrices[i]));
-                    item.setBatchCode(batchCode); // All rows share the same Batch Header reference
+                    item.setBatchCode(batchCode);
 
                     batchList.add(item);
+
+                    // Cộng dồn vào tổng tiền
+                    totalAmount += (cost * item.getInitialQuantity());
                 }
 
-                // Trigger safe batch transaction service call
-                boolean success = inventoryDAO.adminExecuteMultiStockImport(batchList, adminUserId, note);
+                // Gọi DAO với đầy đủ tham số mới
+                boolean success = inventoryDAO.adminExecuteMultiStockImport(supplierId, adminUserId, totalAmount, note, batchList);
 
                 if (success) {
                     response.sendRedirect(request.getContextPath() + "/admin/inventory?action=list&status=success");

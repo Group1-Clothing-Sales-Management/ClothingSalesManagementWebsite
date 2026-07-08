@@ -13,6 +13,7 @@ public class ProductBatch {
     private int initialQuantity;
     private int currentQuantity;
     private Timestamp createdAt;
+    private int importReceiptID;
 
     public ProductBatch() {
     }
@@ -93,4 +94,13 @@ public class ProductBatch {
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
+
+    public int getImportReceiptID() {
+        return importReceiptID;
+    }
+
+    public void setImportReceiptID(int importReceiptID) {
+        this.importReceiptID = importReceiptID;
+    }
+    
 }
