@@ -176,6 +176,12 @@ public class AdminProductController extends HttpServlet {
 
                         String colorStr = (colorParam != null && !colorParam.trim().isEmpty()) ? colorParam.trim() : "Standard";
                         String sizeStr = (sizeParam != null && !sizeParam.trim().isEmpty()) ? sizeParam.trim() : "FreeSize";
+
+                        // ---> [CẬP NHẬT MỚI]: Gán trực tiếp dữ liệu vào 2 trường vật lý mới
+                        variant.setColor(colorStr);
+                        variant.setSize(sizeStr);
+
+                        // (Vẫn giữ lại dòng này để tương thích với những đoạn JSP cũ chưa kịp sửa)
                         variant.setAttributeDetails(colorStr + "|" + sizeStr);
 
                         // Gọi hàm lưu đơn lẻ biến thể mới vào database
@@ -193,11 +199,10 @@ public class AdminProductController extends HttpServlet {
                     String newStatus = request.getParameter("newStatus");
                     String productId = request.getParameter("productId");
 
-                    
                     productDAO.updateVariantStatus(variantId, newStatus);
 
                     response.sendRedirect(request.getContextPath() + "/admin/products?action=detail&id=" + productId + "&success=StatusUpdated");
-                    
+
                     return;
                 } catch (Exception e) {
                     e.printStackTrace();
