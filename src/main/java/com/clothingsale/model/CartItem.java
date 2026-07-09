@@ -9,6 +9,8 @@ public class CartItem {
     private String productName;
     private String attributes; // e.g. "Size: M, Color: Blue"
     private BigDecimal price;
+    private String color;
+    private String size;
     private int quantity;
     private String imageUrl;
 
@@ -53,6 +55,22 @@ public class CartItem {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 
     public int getQuantity() {

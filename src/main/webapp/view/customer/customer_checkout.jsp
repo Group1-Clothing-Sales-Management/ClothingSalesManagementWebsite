@@ -198,11 +198,11 @@
 
                 <div class="row">
 
-                    <!-- LEFT -->
+                    <!-- ================= LEFT ================= -->
 
                     <div class="col-lg-8">
 
-                        <!-- ADDRESS -->
+                        <!-- SHIPPING ADDRESS -->
 
                         <div class="card mb-4">
 
@@ -283,7 +283,6 @@
                                                             <i class="bi bi-pin-map-fill"></i>
 
                                                             Ward :
-
                                                             ${a.wardId}
 
                                                         </div>
@@ -319,87 +318,130 @@
                             </div>
 
                         </div>
-                        <!-- PRODUCTS -->
+
+                        <!-- PAYMENT & SHIPPING -->
 
                         <div class="card mb-4">
 
                             <div class="card-header">
 
-                                <i class="bi bi-bag-check-fill text-primary"></i>
+                                <i class="bi bi-credit-card-fill text-primary"></i>
 
-                                Products
+                                Payment & Shipping
 
                             </div>
 
-                            <div class="card-body p-0">
+                            <div class="card-body">
 
-                                <table class="table table-hover align-middle mb-0">
+                                <!-- PAYMENT -->
 
-                                    <thead class="table-light">
+                                <div class="mb-4">
 
-                                        <tr>
+                                    <label class="form-label fw-semibold">
 
-                                            <th>Product</th>
+                                        Payment Method
 
-                                            <th width="130">Price</th>
+                                    </label>
 
-                                            <th width="90">Quantity</th>
+                                    <div class="form-check">
 
-                                            <th width="140">Total</th>
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               name="paymentMethod"
+                                               value="COD"
+                                               checked>
 
-                                        </tr>
+                                        <label class="form-check-label">
 
-                                    </thead>
+                                            Cash On Delivery
 
-                                    <tbody>
+                                        </label>
 
-                                        <c:forEach items="${cartItems}" var="item">
+                                    </div>
 
-                                            <tr>
+                                    <div class="form-check">
 
-                                                <td>
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               name="paymentMethod"
+                                               value="VNPAY">
 
-                                                    <div class="fw-bold">
+                                        <label class="form-check-label">
 
-                                                        ${item.productName}
+                                            VNPay Online
 
-                                                    </div>
+                                        </label>
 
-                                                </td>
+                                    </div>
 
-                                                <td>
+                                </div>
 
-                                                    ${item.price}
+                                <!-- SHIPPING -->
 
-                                                </td>
+                                <div class="mb-4">
 
-                                                <td>
+                                    <label class="form-label fw-semibold">
 
-                                                    <span class="badge bg-secondary">
+                                        Shipping Method
 
-                                                        x${item.quantity}
+                                    </label>
 
-                                                    </span>
+                                    <select class="form-select"
+                                            name="carrierName">
 
-                                                </td>
+                                        <option value="GHN">
 
-                                                <td>
+                                            Giao Hàng Nhanh (GHN)
 
-                                                    <strong>
+                                        </option>
 
-                                                        ${item.price * item.quantity}
+                                        <option value="GHTK">
 
-                                                    </strong>
+                                            Giao Hàng Tiết Kiệm (GHTK)
 
-                                                </td>
+                                        </option>
 
-                                            </tr>
+                                        <option value="STORE">
 
-                                        </c:forEach>
+                                            Tự giao hàng
 
-                                    </tbody>
+                                        </option>
 
-                                </table>
+                                    </select>
+
+                                </div>
+
+                                <!-- ORDER NOTE -->
+
+                                <div class="mb-4">
+
+                                    <label class="form-label fw-semibold">
+
+                                        Order Note
+
+                                    </label>
+
+                                    <textarea class="form-control"
+                                              rows="4"
+                                              name="note"
+                                              placeholder="Write something for the shop..."></textarea>
+
+                                </div>
+
+                                <!-- PLACE ORDER -->
+
+                                <div class="d-grid">
+
+                                    <button type="submit"
+                                            class="btn btn-success btn-place">
+
+                                        <i class="bi bi-credit-card-fill"></i>
+
+                                        Place Order
+
+                                    </button>
+
+                                </div>
 
                             </div>
 
@@ -407,24 +449,93 @@
 
                     </div>
 
-                    <!-- RIGHT -->
+                    <!-- ================= END LEFT ================= -->
+
+                    <!-- ================= RIGHT ================= -->
 
                     <div class="col-lg-4">
 
-                        <div class="card sticky-top"
-                             style="top:25px;">
+                        <div class="card sticky-top" style="top:25px;">
 
                             <div class="card-header">
 
-                                <i class="bi bi-receipt-cutoff text-success"></i>
+                                <i class="bi bi-bag-check-fill text-success"></i>
 
                                 Order Summary
 
                             </div>
 
                             <div class="card-body">
+                                <c:forEach items="${cartItems}" var="item">
 
-                                <div class="mb-3">
+                                    <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+
+                                        <!-- IMAGE -->
+
+                                        <img src="${pageContext.request.contextPath}/${item.imageUrl}"
+                                             class="rounded border"
+                                             style="width:90px;
+                                             height:90px;
+                                             object-fit:cover;">
+
+                                        <!-- INFO -->
+
+                                        <div class="ms-3 flex-grow-1">
+
+                                            <div class="fw-bold mb-2">
+
+                                                ${item.productName}
+
+                                            </div>
+
+                                            <div class="small text-muted mb-1">
+
+                                                <strong>Color :</strong>
+
+                                                ${item.color}
+
+                                            </div>
+
+                                            <div class="small text-muted mb-1">
+
+                                                <strong>Size :</strong>
+
+                                                ${item.size}
+
+                                            </div>
+
+                                            <div class="small">
+
+                                                <strong>Quantity :</strong>
+
+                                                x${item.quantity}
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- PRICE -->
+
+                                        <div class="text-end">
+
+                                            <div class="fw-bold text-danger">
+
+                                                ${item.price}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </c:forEach>
+
+
+                                <hr>
+
+                                <!-- Voucher -->
+
+                                <div class="mb-4">
 
                                     <label class="form-label fw-semibold">
 
@@ -437,50 +548,6 @@
                                         class="form-control"
                                         name="voucherCode"
                                         placeholder="Enter voucher...">
-
-                                </div>
-                                <div class="mb-3">
-
-                                    <label class="form-label fw-semibold">
-                                        Payment Method
-                                    </label>
-
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="radio"
-                                               name="paymentMethod"
-                                               value="COD"
-                                               checked>
-                                        <label class="form-check-label">
-                                            Cash on Delivery
-                                        </label>
-                                    </div>
-
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="radio"
-                                               name="paymentMethod"
-                                               value="VNPAY">
-                                        <label class="form-check-label">
-                                            VNPay Online
-                                        </label>
-                                    </div>
-
-                                </div>
-
-                                <div class="mb-3">
-
-                                    <label class="form-label fw-semibold">
-
-                                        Order Note
-
-                                    </label>
-
-                                    <textarea
-                                        class="form-control"
-                                        rows="4"
-                                        name="note"
-                                        placeholder="Write something for the shop..."></textarea>
 
                                 </div>
 
@@ -502,27 +569,19 @@
 
                                 </div>
 
-                                <div class="mb-3">
+                                <div class="summary-row">
 
-                                    <label class="form-label fw-semibold">
-                                        Shipping Method
-                                    </label>
+                                    <span>
 
-                                    <select class="form-select" name="carrierName">
+                                        Shipping Fee
 
-                                        <option value="GHN">
-                                            Giao Hàng Nhanh (GHN)
-                                        </option>
+                                    </span>
 
-                                        <option value="GHTK">
-                                            Giao Hàng Tiết Kiệm (GHTK)
-                                        </option>
+                                    <strong>
 
-                                        <option value="STORE">
-                                            Tự giao hàng
-                                        </option>
+                                        30,000 ₫
 
-                                    </select>
+                                    </strong>
 
                                 </div>
 
@@ -544,25 +603,13 @@
 
                                 </div>
 
-                                <div class="d-grid mt-4">
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-success btn-place">
-
-                                        <i class="bi bi-credit-card-fill"></i>
-
-                                        Place Order
-
-                                    </button>
-
-                                </div>
-
                             </div>
 
                         </div>
 
                     </div>
+
+                    <!-- ================= END RIGHT ================= -->
 
                 </div>
 
