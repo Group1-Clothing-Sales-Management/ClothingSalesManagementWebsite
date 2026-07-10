@@ -16,6 +16,9 @@ public class ProductVariant {
     private int stockQuantity;
     private String status;
     private String attributeDetails;
+    private String color;
+    private String size;
+    
 
     public ProductVariant() {
     }
@@ -95,4 +98,21 @@ public class ProductVariant {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+    
 }

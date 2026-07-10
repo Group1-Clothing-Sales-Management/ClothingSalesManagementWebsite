@@ -105,6 +105,8 @@ public class CartDAO {
                                 price != null ? price : BigDecimal.ZERO);
                         item.setQuantity(quantity);
                         item.setImageUrl(imageUrl);
+                        item.setColor(color);
+                        item.setSize(size);
                         item.setAttributes(
                                 attributes.length() > 0 ? attributes.toString() : "Standard");
 
@@ -274,6 +276,8 @@ public class CartDAO {
                                 ? rs.getBigDecimal("sale_price")
                                 : BigDecimal.ZERO);
                         item.setImageUrl(rs.getString("main_image"));
+                        item.setColor(rs.getString("color"));
+                        item.setSize(rs.getString("size"));
                         item.setAttributes(buildAttributes(
                                 rs.getString("color"),
                                 rs.getString("size")));

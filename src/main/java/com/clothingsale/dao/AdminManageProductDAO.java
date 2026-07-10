@@ -205,25 +205,24 @@ public class AdminManageProductDAO {
     }
 
     /**
-     * SỬA LỖI TÊN BẢNG: Thực hiện chuỗi xóa cứng qua bảng Product_Variant chuẩn
-     * schema
+     * SỬA LỖI TÊN BẢNG: Đã xóa lệnh DELETE dư thừa từ bảng
+     * Variant_Attribute_Value (do đã xóa bảng)
      */
     public boolean hardDeleteProduct(int id) {
-        String deleteAttrValue = "DELETE FROM Variant_Attribute_Value WHERE variant_id IN (SELECT id FROM Product_Variant WHERE product_id = ?)";
         String deleteVariant = "DELETE FROM Product_Variant WHERE product_id = ?";
         String deleteImages = "DELETE FROM Product_Image WHERE product_id = ?";
         String deleteProduct = "DELETE FROM Product WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement ps1 = conn.prepareStatement(deleteAttrValue); PreparedStatement ps2 = conn.prepareStatement(deleteVariant); PreparedStatement ps3 = conn.prepareStatement(deleteImages); PreparedStatement ps4 = conn.prepareStatement(deleteProduct)) {
+            try (PreparedStatement ps2 = conn.prepareStatement(deleteVariant); PreparedStatement ps3 = conn.prepareStatement(deleteImages); PreparedStatement ps4 = conn.prepareStatement(deleteProduct)) {
 
-                ps1.setInt(1, id);
-                ps1.executeUpdate();
                 ps2.setInt(1, id);
                 ps2.executeUpdate();
+
                 ps3.setInt(1, id);
                 ps3.executeUpdate();
+
                 ps4.setInt(1, id);
                 int affectedRows = ps4.executeUpdate();
 
@@ -239,9 +238,6 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * THÊM MỚI ĐỘNG: Lấy dữ liệu Thương hiệu thực tế từ bảng Brand
-     */
     public List<Brand> getAllBrands() {
         List<Brand> brands = new ArrayList<>();
         String sql = "SELECT id, brand_name, slug FROM Brand";
@@ -259,9 +255,6 @@ public class AdminManageProductDAO {
         return brands;
     }
 
-    /**
-     * THÊM MỚI ĐỘNG: Lấy dữ liệu Danh mục thực tế từ bảng Category
-     */
     public List<Category> getAllCategories() {
         List<Category> categories = new ArrayList<>();
         String sql = "SELECT id, category_name, slug FROM Category WHERE status = 1";
@@ -280,19 +273,14 @@ public class AdminManageProductDAO {
     }
 
     /**
-     * THÊM MỚI AN TOÀN: Lấy danh sách các biến thể Variant kèm chi tiết thuộc
-     * tính (Color, Size) theo Product ID
+     * CẬP NHẬT MỚI: Truy vấn cực nhanh, không cần Subquery do Color và Size đã
+     * nằm ngay trong Product_Variant
      */
     public List<com.clothingsale.model.ProductVariant> getVariantsByProductId(int productId) {
         List<com.clothingsale.model.ProductVariant> list = new ArrayList<>();
-        // Câu lệnh SQL bóc tách các thuộc tính Color, Size thông qua các câu truy vấn con lồng nhau để tối ưu tốc độ load
-        String sql = "SELECT pv.id, pv.product_id, pv.sku, pv.cost_price, pv.sale_price, pv.stock_quantity, pv.status, "
-                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color') as color, "
-                + "(SELECT TOP 1 vav.attribute_value FROM Variant_Attribute_Value vav JOIN Attribute a ON vav.attribute_id = a.id WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') as size "
-                + "FROM Product_Variant pv "
-                + "WHERE pv.product_id = ?";
+        String sql = "SELECT id, product_id, sku, cost_price, sale_price, stock_quantity, status, color, size "
+                + "FROM Product_Variant WHERE product_id = ?";
 
-        // Sử dụng Try-with-resources để tự động giải phóng kết nối, tránh treo bảng dữ liệu
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
@@ -300,21 +288,20 @@ public class AdminManageProductDAO {
                 while (rs.next()) {
                     com.clothingsale.model.ProductVariant v = new com.clothingsale.model.ProductVariant();
                     v.setId(rs.getInt("id"));
-
-                    int prodId = rs.getInt("product_id");
-                    if (!rs.wasNull()) {
-                        v.setProductId(prodId);
-                    }
-
+                    v.setProductId(rs.getInt("product_id"));
                     v.setSku(rs.getString("sku"));
                     v.setCostPrice(rs.getBigDecimal("cost_price"));
                     v.setSalePrice(rs.getBigDecimal("sale_price"));
                     v.setStockQuantity(rs.getInt("stock_quantity"));
                     v.setStatus(rs.getString("status"));
 
-                    // Ghép các thuộc tính động Color và Size thành chuỗi mô tả
+                    // Lấy trực tiếp từ DB mới
                     String color = rs.getString("color");
                     String size = rs.getString("size");
+                    v.setColor(color);
+                    v.setSize(size);
+
+                    // Ghép chuỗi attributeDetails để giữ an toàn không làm hỏng code JSP cũ (tương thích ngược)
                     StringBuilder details = new StringBuilder();
                     if (color != null && !color.trim().isEmpty()) {
                         details.append("Color: ").append(color);
@@ -328,8 +315,6 @@ public class AdminManageProductDAO {
                     if (details.length() == 0) {
                         details.append("Standard");
                     }
-
-                    // Gán chuỗi mô tả này vào thuộc tính attributeDetails của đối tượng ProductVariant
                     v.setAttributeDetails(details.toString());
 
                     list.add(v);
@@ -342,28 +327,29 @@ public class AdminManageProductDAO {
         return list;
     }
 
+    /**
+     * CẬP NHẬT MỚI: Dùng Batch Insert nhanh chóng, bỏ EAV
+     */
     public boolean insertProductWithMatrixVariants(Product p, String imageName, List<com.clothingsale.model.ProductVariant> variants) {
         String sqlProd = "INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String sqlImg = "INSERT INTO Product_Image (product_id, image_url, is_main) VALUES (?, ?, 1)";
-        String sqlVariant = "INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status) VALUES (?, ?, ?, ?, ?, ?)";
-        String sqlAttrValue = "INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES (?, ?, ?)";
+        String sqlVariant = "INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status, color, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement psProd = null;
         PreparedStatement psImg = null;
         PreparedStatement psVariant = null;
-        PreparedStatement psAttrValue = null;
 
         try {
             conn = DBConnection.getConnection();
-            conn.setAutoCommit(false); // Kích hoạt cơ chế quản lý giao dịch thủ công
+            conn.setAutoCommit(false);
 
-            // BƯỚC 1: Lưu thông tin sản phẩm chính để lấy ID tăng tự động
+            // 1. Thêm Product
             int productId = 0;
             psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS);
             psProd.setString(1, p.getProductName());
             psProd.setString(2, p.getSlug());
-            psProd.setInt(3, p.getBrandId());
+            psProd.setString(3, p.getBrandId() > 0 ? String.valueOf(p.getBrandId()) : null); // Phòng trường hợp form bỏ trống
             psProd.setInt(4, p.getCategoryId());
             psProd.setString(5, p.getShortDescription());
             psProd.setString(6, p.getLongDescription());
@@ -386,7 +372,7 @@ public class AdminManageProductDAO {
                 return false;
             }
 
-            // BƯỚC 2: Lưu tệp tin hình ảnh đại diện chính nếu Admin có tải lên
+            // 2. Thêm Hình ảnh chính
             if (imageName != null && !imageName.trim().isEmpty()) {
                 psImg = conn.prepareStatement(sqlImg);
                 psImg.setInt(1, productId);
@@ -394,58 +380,38 @@ public class AdminManageProductDAO {
                 psImg.executeUpdate();
             }
 
-            // Truy vấn lấy khóa ngoại của 2 nhóm thuộc tính hệ thống 'Color' và 'Size'
-            int colorAttrId = getAttributeIdByName(conn, "Color");
-            int sizeAttrId = getAttributeIdByName(conn, "Size");
-
-            // BƯỚC 3: Duyệt mảng ma trận tổ hợp để thêm đồng bộ bản ghi Variant & Đặc tính chi tiết
-            psVariant = conn.prepareStatement(sqlVariant, Statement.RETURN_GENERATED_KEYS);
-            psAttrValue = conn.prepareStatement(sqlAttrValue);
+            // 3. Thêm các Biến thể (Variants) bằng Batch
+            psVariant = conn.prepareStatement(sqlVariant);
 
             for (com.clothingsale.model.ProductVariant v : variants) {
-                // 3.1. Thêm bản ghi định danh biến thể vào Product_Variant
                 psVariant.setInt(1, productId);
                 psVariant.setString(2, v.getSku());
                 psVariant.setBigDecimal(3, v.getCostPrice());
                 psVariant.setBigDecimal(4, v.getSalePrice());
                 psVariant.setInt(5, v.getStockQuantity());
                 psVariant.setString(6, v.getStatus());
-                psVariant.executeUpdate();
 
-                int variantId = 0;
-                try (ResultSet gkVariant = psVariant.getGeneratedKeys()) {
-                    if (gkVariant.next()) {
-                        variantId = gkVariant.getInt(1);
-                    }
-                }
-
-                // 3.2. Bóc tách an toàn chuỗi gom "Color|Size" để phân bổ vào bảng trung gian cầu nối m-n
-                if (variantId > 0 && v.getAttributeDetails() != null) {
+                // Xử lý tách Color và Size (phòng hờ trường hợp Controller cũ đang truyền dạng "Color|Size")
+                String colorValue = v.getColor();
+                String sizeValue = v.getSize();
+                if (v.getAttributeDetails() != null && !v.getAttributeDetails().isEmpty()) {
                     String[] tokens = v.getAttributeDetails().split("\\|");
-                    String colorValue = tokens.length > 0 ? tokens[0].trim() : null;
-                    String sizeValue = tokens.length > 1 ? tokens[1].trim() : null;
-
-                    // Đẩy thuộc tính màu sắc tự do vào Batch
-                    if (colorValue != null && !colorValue.isEmpty() && colorAttrId > 0) {
-                        psAttrValue.setInt(1, variantId);
-                        psAttrValue.setInt(2, colorAttrId);
-                        psAttrValue.setString(3, colorValue);
-                        psAttrValue.addBatch();
+                    if (colorValue == null) {
+                        colorValue = tokens.length > 0 ? tokens[0].trim() : null;
                     }
-
-                    // Đẩy kích cỡ tick chọn vào Batch
-                    if (sizeValue != null && !sizeValue.isEmpty() && sizeAttrId > 0) {
-                        psAttrValue.setInt(1, variantId);
-                        psAttrValue.setInt(2, sizeAttrId);
-                        psAttrValue.setString(3, sizeValue);
-                        psAttrValue.addBatch();
+                    if (sizeValue == null) {
+                        sizeValue = tokens.length > 1 ? tokens[1].trim() : null;
                     }
                 }
+
+                psVariant.setString(7, colorValue);
+                psVariant.setString(8, sizeValue);
+                psVariant.addBatch();
             }
 
-            // Chỉ thực thi chèn mảng đồng loạt (Batch Execution) nếu danh sách thực sự có phần tử
+            // Thực thi chèn đồng loạt mảng
             if (!variants.isEmpty()) {
-                psAttrValue.executeBatch();
+                psVariant.executeBatch();
             }
 
             conn.commit();
@@ -454,7 +420,6 @@ public class AdminManageProductDAO {
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    System.err.println("❌ Critical SQL Error under Admin Action! System automatically rolled back.");
                     conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -463,13 +428,6 @@ public class AdminManageProductDAO {
             e.printStackTrace();
             return false;
         } finally {
-            // Đóng an toàn các tài nguyên để bảo vệ bộ nhớ hệ thống
-            try {
-                if (psAttrValue != null) {
-                    psAttrValue.close();
-                }
-            } catch (Exception e) {
-            }
             try {
                 if (psVariant != null) {
                     psVariant.close();
@@ -497,41 +455,9 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * Hàm phụ trợ lấy nhanh hoặc tự động sinh Attribute ID để đảm bảo không bị
-     * lỗi khóa ngoại
-     */
-    private int getAttributeIdByName(Connection conn, String attrName) throws SQLException {
-        String selectSql = "SELECT id FROM Attribute WHERE attribute_name = ?";
-        String insertSql = "INSERT INTO Attribute (attribute_name) VALUES (?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
-            ps.setString(1, attrName);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            }
-        }
-
-        // Nếu trong DB chưa có sẵn bản ghi 'Color' hay 'Size', tự động khởi tạo luôn
-        try (PreparedStatement psIns = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
-            psIns.setString(1, attrName);
-            psIns.executeUpdate();
-            try (ResultSet rsKeys = psIns.getGeneratedKeys()) {
-                if (rsKeys.next()) {
-                    return rsKeys.getInt(1);
-                }
-            }
-        }
-        return 0;
-    }
-
-    
     public boolean updateVariantStatus(int variantId, String status) {
         String sql = "UPDATE Product_Variant SET status = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, status);
             ps.setInt(2, variantId);
             return ps.executeUpdate() > 0;
@@ -543,24 +469,19 @@ public class AdminManageProductDAO {
     }
 
     /**
-     * CÁCH 2: Thêm đơn lẻ một biến thể mới từ trang xem chi tiết sản phẩm phát
-     * sinh thực tế (Mặc định Giá và Số lượng tồn kho bằng 0 để phân tách riêng
-     * cho nghiệp vụ Nhập kho)
+     * CẬP NHẬT MỚI: Thêm 1 biến thể duy nhất bỏ qua bảng EAV
      */
     public boolean insertSingleVariant(com.clothingsale.model.ProductVariant v) {
-        String sqlVariant = "INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status) VALUES (?, ?, ?, ?, ?, ?)";
-        String sqlAttrValue = "INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES (?, ?, ?)";
+        String sqlVariant = "INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quantity, status, color, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         Connection conn = null;
         PreparedStatement psVariant = null;
-        PreparedStatement psAttrValue = null;
 
         try {
             conn = DBConnection.getConnection();
-            conn.setAutoCommit(false); // Bắt đầu Transaction quản lý dữ liệu toàn vẹn
+            conn.setAutoCommit(false);
 
-            // 1. Thêm bản ghi định danh biến thể vào bảng Product_Variant
-            psVariant = conn.prepareStatement(sqlVariant, Statement.RETURN_GENERATED_KEYS);
+            psVariant = conn.prepareStatement(sqlVariant);
             psVariant.setInt(1, v.getProductId());
             psVariant.setString(2, v.getSku());
             psVariant.setBigDecimal(3, v.getCostPrice());
@@ -568,54 +489,34 @@ public class AdminManageProductDAO {
             psVariant.setInt(5, v.getStockQuantity());
             psVariant.setString(6, v.getStatus());
 
+            // Xử lý Color & Size (Tương thích cả dữ liệu form cũ & mới)
+            String colorValue = v.getColor();
+            String sizeValue = v.getSize();
+            if (v.getAttributeDetails() != null && !v.getAttributeDetails().isEmpty()) {
+                String[] tokens = v.getAttributeDetails().split("\\|");
+                if (colorValue == null) {
+                    colorValue = tokens.length > 0 ? tokens[0].trim() : null;
+                }
+                if (sizeValue == null) {
+                    sizeValue = tokens.length > 1 ? tokens[1].trim() : null;
+                }
+            }
+
+            psVariant.setString(7, colorValue);
+            psVariant.setString(8, sizeValue);
+
             int affectedRows = psVariant.executeUpdate();
             if (affectedRows == 0) {
                 conn.rollback();
                 return false;
             }
 
-            int variantId = 0;
-            try (ResultSet generatedKeys = psVariant.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    variantId = generatedKeys.getInt(1);
-                }
-            }
-
-            // 2. Tách chuỗi đặc tính dạng "Color|Size" để lưu vào bảng thuộc tính cầu nối trung gian
-            if (variantId > 0 && v.getAttributeDetails() != null) {
-                int colorAttrId = getAttributeIdByName(conn, "Color");
-                int sizeAttrId = getAttributeIdByName(conn, "Size");
-
-                String[] tokens = v.getAttributeDetails().split("\\|");
-                String colorValue = tokens.length > 0 ? tokens[0].trim() : null;
-                String sizeValue = tokens.length > 1 ? tokens[1].trim() : null;
-
-                psAttrValue = conn.prepareStatement(sqlAttrValue);
-
-                // Chèn giá trị màu sắc tự do (Color)
-                if (colorValue != null && !colorValue.isEmpty() && colorAttrId > 0) {
-                    psAttrValue.setInt(1, variantId);
-                    psAttrValue.setInt(2, colorAttrId);
-                    psAttrValue.setString(3, colorValue);
-                    psAttrValue.executeUpdate();
-                }
-
-                // Chèn giá trị kích thước chọn (Size)
-                if (sizeValue != null && !sizeValue.isEmpty() && sizeAttrId > 0) {
-                    psAttrValue.setInt(1, variantId);
-                    psAttrValue.setInt(2, sizeAttrId);
-                    psAttrValue.setString(3, sizeValue);
-                    psAttrValue.executeUpdate();
-                }
-            }
-
-            conn.commit(); // Hoàn tất giao dịch dữ liệu an toàn
+            conn.commit();
             return true;
 
         } catch (SQLException e) {
             if (conn != null) {
                 try {
-                    System.err.println("❌ Rollback triggered due to error inserting single variant!");
                     conn.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -624,13 +525,6 @@ public class AdminManageProductDAO {
             e.printStackTrace();
             return false;
         } finally {
-            // Giải phóng an toàn các kết nối tài nguyên
-            try {
-                if (psAttrValue != null) {
-                    psAttrValue.close();
-                }
-            } catch (Exception e) {
-            }
             try {
                 if (psVariant != null) {
                     psVariant.close();
@@ -645,5 +539,4 @@ public class AdminManageProductDAO {
             }
         }
     }
-    
 }
