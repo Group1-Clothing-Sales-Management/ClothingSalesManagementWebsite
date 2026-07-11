@@ -20,23 +20,14 @@ public class Voucher {
 
     private int usageLimit;
     private int usedCount;
+    private int limitPerUser;       // Giới hạn lượt dùng/mỗi User
+    private String terminateReason; // Lý do dừng sớm campaigns
+    private Integer categoryId;
 
     public Voucher() {
     }
 
-    public Voucher(
-            int id,
-            String code,
-            String title,
-            String discountType,
-            BigDecimal discountValue,
-            BigDecimal maxDiscountAmount,
-            BigDecimal minOrderValue,
-            Timestamp startDate,
-            Timestamp endDate,
-            int usageLimit,
-            int usedCount) {
-
+    public Voucher(int id, String code, String title, String discountType, BigDecimal discountValue, BigDecimal maxDiscountAmount, BigDecimal minOrderValue, Timestamp startDate, Timestamp endDate, int usageLimit, int usedCount, int limitPerUser, String terminateReason, Integer categoryId) {
         this.id = id;
         this.code = code;
         this.title = title;
@@ -48,6 +39,9 @@ public class Voucher {
         this.endDate = endDate;
         this.usageLimit = usageLimit;
         this.usedCount = usedCount;
+        this.limitPerUser = limitPerUser;
+        this.terminateReason = terminateReason;
+        this.categoryId = categoryId;
     }
 
     public int getId() {
@@ -142,4 +136,29 @@ public class Voucher {
 
         return usedCount < usageLimit;
     }
+
+    public int getLimitPerUser() {
+        return limitPerUser;
+    }
+
+    public void setLimitPerUser(int limitPerUser) {
+        this.limitPerUser = limitPerUser;
+    }
+
+    public String getTerminateReason() {
+        return terminateReason;
+    }
+
+    public void setTerminateReason(String terminateReason) {
+        this.terminateReason = terminateReason;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
+    }
+    
 }
