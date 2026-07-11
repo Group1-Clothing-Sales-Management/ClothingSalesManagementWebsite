@@ -109,6 +109,7 @@
                 overflow:hidden;
                 background:white;
                 transition:.25s;
+                position:relative;
             }
 
             .product-card:hover{
@@ -139,6 +140,63 @@
 
             .card-footer .btn{
                 border-radius:12px;
+            }
+
+            .wishlist-heart-form{
+                position:absolute;
+                top:12px;
+                right:12px;
+                z-index:5;
+                margin:0;
+            }
+
+            .wishlist-heart{
+                width:42px;
+                height:42px;
+                border:0;
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                background:rgba(255,255,255,.94);
+                color:#dc2626;
+                box-shadow:0 8px 24px rgba(15,23,42,.18);
+                transition:.2s;
+            }
+
+            .wishlist-heart:hover,
+            .wishlist-heart.is-active{
+                background:#dc2626;
+                color:#fff;
+                transform:scale(1.05);
+            }
+
+            .wishlist-toast{
+                position:fixed;
+                top:92px;
+                right:24px;
+                z-index:1080;
+                min-width:280px;
+                max-width:360px;
+                padding:14px 18px;
+                border-radius:14px;
+                background:#172033;
+                color:#fff;
+                box-shadow:0 18px 45px rgba(15,23,42,.24);
+                opacity:0;
+                transform:translateY(-12px);
+                pointer-events:none;
+                transition:.25s;
+                font-weight:700;
+            }
+
+            .wishlist-toast.show{
+                opacity:1;
+                transform:translateY(0);
+            }
+
+            .wishlist-toast.is-error{
+                background:#dc2626;
             }
 
             @media(max-width:768px){
@@ -252,7 +310,24 @@
 
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
 
+                        <c:set var="isWishlisted"
+                               value="${wishlistProductIds.contains(p.id)}"/>
+
                         <div class="card product-card h-100">
+
+                            <form action="${pageContext.request.contextPath}/wishlist/toggle"
+                                  method="post"
+                                  class="wishlist-heart-form">
+                                <input type="hidden" name="productId" value="${p.id}">
+                                <input type="hidden" name="variantId"
+                                       value="${not empty p.variants ? p.variants[0].id : ''}">
+                                <input type="hidden" name="wishlisted" value="${isWishlisted}">
+                                <button type="submit"
+                                        class="wishlist-heart ${isWishlisted ? 'is-active' : ''}"
+                                        title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+                                    <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                </button>
+                            </form>
 
                             <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
 
@@ -353,6 +428,38 @@
             </div>
 
         </div>
+
+        <div class="wishlist-toast" id="wishlistToast">
+            <i class="fa-solid fa-heart me-2"></i>
+            <span id="wishlistToastText"></span>
+        </div>
+
+        <script>
+            var wishlistParams = new URLSearchParams(window.location.search);
+
+            if (wishlistParams.has('wishlistAdded')
+                    || wishlistParams.has('wishlistRemoved')
+                    || wishlistParams.has('wishlistError')) {
+                var wishlistToast = document.getElementById('wishlistToast');
+                var wishlistToastText = document.getElementById('wishlistToastText');
+                var wishlistMessage = 'Đã thêm vào mục yêu thích.';
+
+                if (wishlistParams.has('wishlistRemoved')) {
+                    wishlistMessage = 'Đã bỏ khỏi mục yêu thích.';
+                }
+
+                if (wishlistParams.has('wishlistError')) {
+                    wishlistMessage = 'Không thể cập nhật mục yêu thích.';
+                    wishlistToast.classList.add('is-error');
+                }
+
+                wishlistToastText.textContent = wishlistMessage;
+                wishlistToast.classList.add('show');
+                setTimeout(function () {
+                    wishlistToast.classList.remove('show');
+                }, 2600);
+            }
+        </script>
 
         <jsp:include page="/view/customer/common/footer.jsp"/>
 

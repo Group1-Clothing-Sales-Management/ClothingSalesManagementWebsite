@@ -185,6 +185,24 @@ CREATE TABLE Cart (
     PRIMARY KEY (user_id, variant_id)
 );
 
+-- 18. Bang san pham yeu thich
+CREATE TABLE Wishlist (
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    variant_id INT NULL,
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME DEFAULT GETDATE(),
+    CONSTRAINT PK_Wishlist PRIMARY KEY (user_id, product_id),
+    CONSTRAINT FK_Wishlist_User FOREIGN KEY (user_id)
+        REFERENCES [User](id) ON DELETE CASCADE,
+    CONSTRAINT FK_Wishlist_Product FOREIGN KEY (product_id)
+        REFERENCES Product(id) ON DELETE CASCADE,
+    CONSTRAINT FK_Wishlist_Variant FOREIGN KEY (variant_id)
+        REFERENCES Product_Variant(id)
+);
+
+CREATE INDEX IX_Wishlist_Variant ON Wishlist(variant_id);
+
 -- 18. Bảng Mã giảm giá
 CREATE TABLE Voucher (
     id INT IDENTITY(1,1) PRIMARY KEY,

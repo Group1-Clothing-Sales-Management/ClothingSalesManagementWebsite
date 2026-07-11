@@ -7,6 +7,7 @@ DELETE FROM Payment;
 DELETE FROM Order_Detail;
 DELETE FROM [Order];
 DELETE FROM Cart;
+DELETE FROM Wishlist;
 DELETE FROM Voucher;
 DELETE FROM Shipment;
 DELETE FROM Product_Image;
