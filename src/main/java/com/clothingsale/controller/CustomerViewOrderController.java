@@ -1,6 +1,7 @@
 package com.clothingsale.controller;
 
 import com.clothingsale.service.CustomerOrderService;
+import com.clothingsale.model.Order;
 import com.clothingsale.model.ReorderResult;
 
 import jakarta.servlet.ServletException;
@@ -8,6 +9,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 @WebServlet("/customer/orders")
 public class CustomerViewOrderController
@@ -51,9 +57,16 @@ public class CustomerViewOrderController
             session.removeAttribute("orderError");
         }
 
+        String statusFilter =
+                normalize(
+                        request.getParameter("status"));
+
+        request.setAttribute("statusFilter", statusFilter);
         request.setAttribute(
                 "orders",
-                service.getActiveOrdersByUserId(userId));
+                filterOrders(
+                        service.getOrdersByUserId(userId),
+                        statusFilter));
 
         request.getRequestDispatcher(
                 "/view/customer/customer_view_order.jsp")
@@ -83,8 +96,7 @@ public class CustomerViewOrderController
 
         if (!"reorder".equalsIgnoreCase(action)) {
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/orders");
+                    buildOrdersRedirect(request));
             return;
         }
 
@@ -98,8 +110,7 @@ public class CustomerViewOrderController
         } catch (Exception e) {
             session.setAttribute("orderError", "Invalid order.");
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/orders");
+                    buildOrdersRedirect(request));
             return;
         }
 
@@ -115,8 +126,110 @@ public class CustomerViewOrderController
         } else {
             session.setAttribute("orderError", result.getMessage());
             response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/orders");
+                    buildOrdersRedirect(request));
         }
+    }
+
+    private String buildOrdersRedirect(HttpServletRequest request) {
+        StringBuilder redirect =
+                new StringBuilder(
+                        request.getContextPath()
+                        + "/customer/orders");
+
+        String status =
+                request.getParameter("status");
+
+        if (status != null && !status.trim().isEmpty()) {
+            redirect.append("?")
+                    .append("status=")
+                    .append(URLEncoder.encode(
+                            status.trim(),
+                            StandardCharsets.UTF_8));
+        }
+
+        return redirect.toString();
+    }
+
+    private List<Order> filterOrders(
+            List<Order> orders,
+            String statusFilter) {
+
+        if (statusFilter.isEmpty() || "ALL".equals(statusFilter)) {
+            return orders;
+        }
+
+        List<Order> result = new ArrayList<>();
+
+        for (Order order : orders) {
+            if (matchesFilter(order, statusFilter)) {
+                result.add(order);
+            }
+        }
+
+        return result;
+    }
+
+    private boolean matchesFilter(
+            Order order,
+            String statusFilter) {
+
+        if (order == null) {
+            return false;
+        }
+
+        String orderStatus = normalize(order.getOrderStatus());
+        String displayStatus = normalize(order.getDisplayStatus());
+        String shippingStatus = normalize(order.getShippingStatus());
+        String paymentStatus = normalize(order.getPaymentStatus());
+
+        switch (statusFilter) {
+            case "WAIT_PAYMENT":
+                return isAny(orderStatus, "PENDING")
+                        || isAny(displayStatus, "PENDING", "PENDING_APPROVAL")
+                        || isAny(paymentStatus, "PENDING", "UNPAID");
+            case "SHIPPING":
+                return isAny(orderStatus, "SHIPPING")
+                        || isAny(displayStatus, "SHIPPING")
+                        || isAny(shippingStatus, "SHIPPING");
+            case "WAIT_DELIVERY":
+                return isAny(displayStatus, "CONFIRMED", "APPROVED", "PREPARING")
+                        || isAny(shippingStatus, "PENDING_PICKUP");
+            case "COMPLETED":
+                return isAny(orderStatus, "DELIVERED", "COMPLETED", "PAID")
+                        || isAny(displayStatus, "DELIVERED", "RECEIVED", "COMPLETED", "PAID")
+                        || isAny(shippingStatus, "DELIVERED");
+            case "CANCELLED":
+                return isAny(orderStatus, "CANCELLED", "FAILED")
+                        || isAny(displayStatus, "CANCELLED")
+                        || isAny(shippingStatus, "CANCELLED", "FAILED");
+            case "RETURNED":
+                return isAny(orderStatus, "RETURNED")
+                        || isAny(displayStatus, "RETURNED")
+                        || isAny(shippingStatus, "RETURNED");
+            default:
+                return isAny(orderStatus, statusFilter)
+                        || isAny(displayStatus, statusFilter)
+                        || isAny(shippingStatus, statusFilter)
+                        || isAny(paymentStatus, statusFilter);
+        }
+    }
+
+    private boolean isAny(
+            String value,
+            String... candidates) {
+
+        for (String candidate : candidates) {
+            if (value.equals(normalize(candidate))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String normalize(String value) {
+        return value == null
+                ? ""
+                : value.trim().toUpperCase(Locale.ROOT);
     }
 }

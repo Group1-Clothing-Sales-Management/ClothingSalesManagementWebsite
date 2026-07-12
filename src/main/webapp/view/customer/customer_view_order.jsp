@@ -61,44 +61,48 @@
                 margin:.45rem 0 0;
             }
 
-            .order-action,
-            .filter-link {
+            .order-action {
                 border-radius:8px;
                 font-weight:750;
             }
 
             .filter-bar {
-                display:grid;
-                grid-template-columns:repeat(4, minmax(150px, 1fr));
-                gap:.7rem;
-                margin-bottom:1.25rem;
+                display:flex;
+                align-items:stretch;
+                margin-bottom:1.35rem;
+                background:#fff;
+                border-bottom:1px solid var(--order-line);
+                box-shadow:0 10px 24px rgba(15, 23, 42, .04);
+                overflow-x:auto;
+                scrollbar-width:thin;
             }
 
             .filter-link {
-                min-height:40px;
+                min-height:58px;
+                flex:1 0 150px;
                 display:inline-flex;
                 align-items:center;
                 justify-content:center;
-                gap:.45rem;
-                padding:.7rem 1rem;
-                border:1px solid var(--order-line);
-                color:#334155;
+                padding:.85rem 1.1rem;
+                border:0;
+                border-bottom:2px solid transparent;
+                color:#111827;
                 background:#fff;
                 text-decoration:none;
-                box-shadow:0 8px 22px rgba(15, 23, 42, .04);
+                font-size:1rem;
+                font-weight:650;
+                white-space:nowrap;
             }
 
             .filter-link:hover {
-                border-color:#bfdbfe;
-                color:var(--order-blue);
-                background:#f8fbff;
+                color:#ef3b2d;
+                background:#fff;
             }
 
             .filter-link.active {
-                color:#fff;
-                border-color:var(--order-ink);
-                background:var(--order-ink);
-                box-shadow:0 14px 30px rgba(17, 24, 39, .14);
+                color:#ef3b2d;
+                border-bottom-color:#ef3b2d;
+                background:#fff;
             }
 
             .flash {
@@ -173,11 +177,14 @@
 
             .status-pending { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
             .status-confirmed { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+            .status-preparing { background:#f0f9ff; color:#0369a1; border-color:#bae6fd; }
             .status-shipping { background:#eef2ff; color:#4338ca; border-color:#c7d2fe; }
             .status-delivered,
             .status-completed { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+            .status-paid { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
             .status-cancelled,
             .status-returned { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+            .status-unknown,
             .status-default { background:#f8fafc; color:#475569; border-color:#e2e8f0; }
 
             .order-summary {
@@ -373,10 +380,6 @@
                     margin-top:1rem;
                 }
 
-                .filter-bar {
-                    grid-template-columns:repeat(2, minmax(0, 1fr));
-                }
-
                 .order-summary {
                     grid-template-columns:1fr;
                 }
@@ -397,12 +400,6 @@
                     min-width:0;
                 }
             }
-
-            @media (max-width: 480px) {
-                .filter-bar {
-                    grid-template-columns:1fr;
-                }
-            }
         </style>
     </head>
 
@@ -414,36 +411,46 @@
                 <div>
                     <div class="page-kicker">Orders</div>
                     <h1 class="page-title">My Orders</h1>
-                    <p class="page-subtitle">Track orders that are still being processed.</p>
+                    <p class="page-subtitle">Track all of your orders by status.</p>
                 </div>
 
             </div>
 
             <nav class="filter-bar" aria-label="Order status filter">
                 <a href="${pageContext.request.contextPath}/customer/orders"
-                   class="filter-link ${empty param.status ? 'active' : ''}">
-                    <i class="fa-solid fa-layer-group"></i>
+                   class="filter-link ${empty statusFilter ? 'active' : ''}">
                     All
                 </a>
 
-                <a href="?status=PENDING"
-                   class="filter-link ${param.status eq 'PENDING' ? 'active' : ''}">
-                    <i class="fa-solid fa-clock"></i>
-                    Pending
+                <a href="${pageContext.request.contextPath}/customer/orders?status=WAIT_PAYMENT"
+                   class="filter-link ${statusFilter eq 'WAIT_PAYMENT' ? 'active' : ''}">
+                    Awaiting Payment
                 </a>
 
-                <a href="?status=CONFIRMED"
-                   class="filter-link ${param.status eq 'CONFIRMED' ? 'active' : ''}">
-                    <i class="fa-solid fa-box"></i>
-                    Confirmed
-                </a>
-
-                <a href="?status=SHIPPING"
-                   class="filter-link ${param.status eq 'SHIPPING' ? 'active' : ''}">
-                    <i class="fa-solid fa-truck-fast"></i>
+                <a href="${pageContext.request.contextPath}/customer/orders?status=SHIPPING"
+                   class="filter-link ${statusFilter eq 'SHIPPING' ? 'active' : ''}">
                     Shipping
                 </a>
 
+                <a href="${pageContext.request.contextPath}/customer/orders?status=WAIT_DELIVERY"
+                   class="filter-link ${statusFilter eq 'WAIT_DELIVERY' ? 'active' : ''}">
+                    Awaiting Delivery
+                </a>
+
+                <a href="${pageContext.request.contextPath}/customer/orders?status=COMPLETED"
+                   class="filter-link ${statusFilter eq 'COMPLETED' ? 'active' : ''}">
+                    Completed
+                </a>
+
+                <a href="${pageContext.request.contextPath}/customer/orders?status=CANCELLED"
+                   class="filter-link ${statusFilter eq 'CANCELLED' ? 'active' : ''}">
+                    Cancelled
+                </a>
+
+                <a href="${pageContext.request.contextPath}/customer/orders?status=RETURNED"
+                   class="filter-link ${statusFilter eq 'RETURNED' ? 'active' : ''}">
+                    Returns/Refunds
+                </a>
             </nav>
 
             <c:if test="${not empty orderMessage}">
@@ -463,30 +470,35 @@
             <c:set var="hasVisibleOrder" value="false"/>
             <section class="orders-list">
                 <c:forEach items="${orders}" var="o">
-                    <c:if test="${empty param.status or o.orderStatus eq param.status}">
-                        <c:set var="hasVisibleOrder" value="true"/>
-                        <c:set var="statusClass" value="status-default"/>
-                        <c:if test="${o.orderStatus eq 'PENDING'}">
-                            <c:set var="statusClass" value="status-pending"/>
-                        </c:if>
-                        <c:if test="${o.orderStatus eq 'CONFIRMED'}">
-                            <c:set var="statusClass" value="status-confirmed"/>
-                        </c:if>
-                        <c:if test="${o.orderStatus eq 'SHIPPING'}">
-                            <c:set var="statusClass" value="status-shipping"/>
-                        </c:if>
-                        <c:if test="${o.orderStatus eq 'DELIVERED'}">
-                            <c:set var="statusClass" value="status-delivered"/>
-                        </c:if>
-                        <c:if test="${o.orderStatus eq 'COMPLETED'}">
-                            <c:set var="statusClass" value="status-completed"/>
-                        </c:if>
-                        <c:if test="${o.orderStatus eq 'CANCELLED'}">
-                            <c:set var="statusClass" value="status-cancelled"/>
-                        </c:if>
-                        <c:if test="${o.orderStatus eq 'RETURNED'}">
-                            <c:set var="statusClass" value="status-returned"/>
-                        </c:if>
+                    <c:set var="hasVisibleOrder" value="true"/>
+                    <c:set var="statusClass" value="${not empty o.displayStatusBadgeClass ? o.displayStatusBadgeClass : 'status-default'}"/>
+                    <c:if test="${o.orderStatus eq 'PENDING' or o.displayStatus eq 'PENDING' or o.displayStatus eq 'PENDING_APPROVAL'}">
+                        <c:set var="statusClass" value="status-pending"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'CONFIRMED' or o.displayStatus eq 'CONFIRMED' or o.displayStatus eq 'APPROVED'}">
+                        <c:set var="statusClass" value="status-confirmed"/>
+                    </c:if>
+                    <c:if test="${o.displayStatus eq 'PREPARING'}">
+                        <c:set var="statusClass" value="status-preparing"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'SHIPPING' or o.displayStatus eq 'SHIPPING'}">
+                        <c:set var="statusClass" value="status-shipping"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'DELIVERED' or o.displayStatus eq 'DELIVERED' or o.displayStatus eq 'RECEIVED' or o.shippingStatus eq 'DELIVERED'}">
+                        <c:set var="statusClass" value="status-delivered"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'COMPLETED' or o.displayStatus eq 'COMPLETED'}">
+                        <c:set var="statusClass" value="status-completed"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'PAID' or o.displayStatus eq 'PAID'}">
+                        <c:set var="statusClass" value="status-paid"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'CANCELLED' or o.displayStatus eq 'CANCELLED' or o.shippingStatus eq 'CANCELLED'}">
+                        <c:set var="statusClass" value="status-cancelled"/>
+                    </c:if>
+                    <c:if test="${o.orderStatus eq 'RETURNED' or o.displayStatus eq 'RETURNED' or o.shippingStatus eq 'RETURNED'}">
+                        <c:set var="statusClass" value="status-returned"/>
+                    </c:if>
 
                         <article class="order-card">
                             <header class="order-card-header">
@@ -625,6 +637,9 @@
                                     <form method="post"
                                           action="${pageContext.request.contextPath}/customer/orders">
                                         <input type="hidden" name="action" value="reorder">
+                                        <c:if test="${not empty param.status}">
+                                            <input type="hidden" name="status" value="${param.status}">
+                                        </c:if>
                                         <input type="hidden" name="orderId" value="${o.id}">
                                         <button class="order-action primary" type="submit">
                                             <i class="fa-solid fa-rotate-right"></i>
@@ -634,7 +649,6 @@
                                 </div>
                             </footer>
                         </article>
-                    </c:if>
                 </c:forEach>
             </section>
 
@@ -643,8 +657,8 @@
                     <div class="empty-mark">
                         <i class="fa-solid fa-receipt"></i>
                     </div>
-                    <h4>No active orders found</h4>
-                    <p class="text-muted mb-3">Processing orders matching this status will appear here.</p>
+                    <h4>No orders found</h4>
+                    <p class="text-muted mb-3">Orders matching this status will appear here.</p>
                     <a href="${pageContext.request.contextPath}/products" class="btn btn-dark">
                         Browse Products
                     </a>

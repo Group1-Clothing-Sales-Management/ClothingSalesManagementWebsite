@@ -157,6 +157,20 @@
                 color:#fff;
             }
 
+            .btn-wishlist{
+                background:#fff;
+                color:#dc2626;
+                border:2px solid #dc2626;
+                border-radius:12px;
+                padding:12px 24px;
+                font-weight:700;
+            }
+
+            .btn-wishlist:hover{
+                background:#dc2626;
+                color:#fff;
+            }
+
             /* DESCRIPTION */
 
             .product-description h4{
@@ -254,7 +268,8 @@
                 }
 
                 .btn-cart,
-                .btn-buy-now{
+                .btn-buy-now,
+                .btn-wishlist{
                     width:100%;
                     margin:8px 0 0;
                 }
@@ -362,7 +377,7 @@
                                        value="${product.variants[0].salePrice}">
                                 <input type="hidden" name="quantity" value="1">
                                 <input type="hidden" name="imageUrl"
-                                       value="${pageContext.request.contextPath}/uploads/${product.mainImageUrl}">
+                                       value="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}">
 
                                 <div class="d-flex flex-wrap gap-3 mt-4">
 
@@ -381,6 +396,16 @@
                                         Buy Now
 
                                     </a>
+
+                                    <button type="submit"
+                                            formaction="${pageContext.request.contextPath}/wishlist/add"
+                                            formmethod="post"
+                                            class="btn btn-wishlist btn-lg px-4">
+
+                                        <i class="fa-solid fa-heart me-2"></i>
+                                        Add To Wishlist
+
+                                    </button>
 
                                 </div>
 
@@ -498,10 +523,12 @@
 
             var params = new URLSearchParams(window.location.search);
 
-            if (params.has('cartAdded') || params.has('cartError')) {
+            if (params.has('cartAdded') || params.has('cartError')
+                    || params.has('wishlistAdded') || params.has('wishlistError')) {
 
                 var modalElement = document.getElementById('cartMessageModal');
-                var isError = params.has('cartError');
+                var isWishlist = params.has('wishlistAdded') || params.has('wishlistError');
+                var isError = params.has('cartError') || params.has('wishlistError');
 
                 modalElement.classList.toggle('is-error', isError);
 
@@ -516,12 +543,16 @@
                 }
 
                 document.getElementById('cartMessageTitle').textContent =
-                        isError
-                        ? 'Could Not Add Item'
-                        : 'Cart Updated';
+                        isWishlist
+                        ? (isError ? 'Could Not Update Wishlist' : 'Wishlist Updated')
+                        : (isError ? 'Could Not Add Item' : 'Cart Updated');
 
                 document.getElementById('cartMessageText').textContent =
-                        params.has('cartAdded')
+                        params.has('wishlistAdded')
+                        ? 'Đã thêm vào mục yêu thích.'
+                        : params.has('wishlistError')
+                        ? 'Không thể cập nhật mục yêu thích.'
+                        : params.has('cartAdded')
                         ? 'Item added to your cart.'
                         : 'Could not add this item to your cart. Please check available stock.';
 
@@ -533,6 +564,6 @@
 
         <jsp:include page="/view/customer/common/footer.jsp"/>
 
-    </body>/body>
+    </body>
 
 </html>

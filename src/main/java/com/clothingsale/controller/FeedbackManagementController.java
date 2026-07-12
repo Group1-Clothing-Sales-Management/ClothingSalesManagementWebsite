@@ -13,9 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Servlet dùng chung cho Staff/Admin để xem, phản hồi và xóa feedback.
- * Chúng ta giữ mọi thao tác trong một controller để luồng đi đơn giản:
- * list -> detail -> respond/delete.
+ * Shared servlet for Staff/Admin to view, respond to, and delete feedback.
+ * Delete is restricted to ADMIN only.
  */
 @WebServlet(name = "FeedbackManagementController", urlPatterns = {"/admin/feedback", "/staff/feedback"})
 public class FeedbackManagementController extends HttpServlet {
@@ -67,7 +66,7 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Hiển thị danh sách feedback mới nhất.
+     * Show the newest feedback list.
      */
     private void showList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -88,7 +87,7 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Hiển thị chi tiết một feedback để Staff/Admin xem đầy đủ ngữ cảnh.
+     * Show a feedback detail page for Staff/Admin.
      */
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -117,7 +116,7 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Lưu phản hồi của Staff/Admin rồi quay lại trang chi tiết.
+     * Save a response and return to the detail page.
      */
     private void handleRespond(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -138,10 +137,14 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Xóa feedback rồi quay về danh sách.
+     * Delete feedback. ADMIN only.
      */
     private void handleDelete(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        if (!isAdminLoggedIn(request, response)) {
+            return;
+        }
+
         int feedbackId = parseId(request.getParameter("id"));
         String result = feedbackService.deleteFeedback(feedbackId);
         HttpSession session = request.getSession();
@@ -156,7 +159,7 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Chỉ cho Staff/Admin đã đăng nhập truy cập màn hình này.
+     * Allow only logged-in Staff/Admin to access this servlet.
      */
     private boolean isStaffOrAdminLoggedIn(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -177,7 +180,27 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Chuyển chuỗi sang số nguyên an toàn để tránh lỗi nhập liệu.
+     * Allow only ADMIN to delete feedback.
+     */
+    private boolean isAdminLoggedIn(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("authUserId") == null) {
+            response.sendRedirect(request.getContextPath() + "/admin/login?error=unauthorized");
+            return false;
+        }
+
+        Object role = session.getAttribute("authRoleName");
+        if (role == null || !"ADMIN".equalsIgnoreCase(role.toString())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only ADMIN can delete feedback.");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Parse an int safely.
      */
     private int parseId(String value) {
         try {
@@ -188,14 +211,14 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Loại bỏ khoảng trắng thừa để lưu dữ liệu sạch hơn.
+     * Trim blank input safely.
      */
     private String trimToEmpty(String value) {
         return value == null ? "" : value.trim();
     }
 
     /**
-     * Tự giữ đúng URL gốc của trang feedback để redirect không bị lệch staff/admin.
+     * Keep redirects on the original feedback path.
      */
     private String buildFeedbackBasePath(HttpServletRequest request) {
         String servletPath = request.getServletPath();
@@ -206,7 +229,7 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Lấy id người đang đăng nhập từ session, dùng để ghi nhận ai đã phản hồi.
+     * Read the current user id from the session.
      */
     private int getCurrentUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

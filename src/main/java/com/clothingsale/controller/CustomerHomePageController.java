@@ -2,15 +2,19 @@ package com.clothingsale.controller;
 
 import com.clothingsale.model.Product;
 import com.clothingsale.service.CustomerProductService;
+import com.clothingsale.service.WishlistService;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet(
         name = "CustomerHomePageController",
@@ -20,6 +24,7 @@ public class CustomerHomePageController extends HttpServlet {
 
     private CustomerProductService productService 
             = new CustomerProductService();
+    private final WishlistService wishlistService = new WishlistService();
  
     @Override
     protected void doGet(HttpServletRequest request,
@@ -72,6 +77,7 @@ public class CustomerHomePageController extends HttpServlet {
             );
 
             request.setAttribute("products", products);
+            populateWishlistState(request);
 
             request.getRequestDispatcher(
                     "/view/customer/customer_home_page.jsp"
@@ -105,5 +111,19 @@ public class CustomerHomePageController extends HttpServlet {
     @Override
     public String getServletInfo() {
         return "Customer Home Page Controller";
+    }
+
+    private void populateWishlistState(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Object userIdObj = session != null ? session.getAttribute("authUserId") : null;
+
+        if (userIdObj instanceof Integer) {
+            int userId = (Integer) userIdObj;
+            Set<Integer> productIds = wishlistService.getWishlistProductIds(userId);
+            request.setAttribute("wishlistProductIds", productIds);
+            session.setAttribute("wishlistCount", productIds.size());
+        } else {
+            request.setAttribute("wishlistProductIds", Collections.emptySet());
+        }
     }
 }

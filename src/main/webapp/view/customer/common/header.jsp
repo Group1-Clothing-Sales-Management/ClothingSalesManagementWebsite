@@ -32,6 +32,20 @@
                 Products
             </a>
 
+            <c:if test="${loggedIn}">
+                <a href="${pageContext.request.contextPath}/wishlist"
+                   class="nav-btn position-relative">
+                    <i class="fa-solid fa-heart"></i>
+                    Wishlist
+
+                    <c:if test="${sessionScope.wishlistCount > 0}">
+                        <span class="cart-badge">
+                            ${sessionScope.wishlistCount}
+                        </span>
+                    </c:if>
+                </a>
+            </c:if>
+
             <a href="${pageContext.request.contextPath}/cart"
                class="nav-btn position-relative">
 
@@ -84,16 +98,6 @@
 
                                     <i class="fa-solid fa-box me-2"></i>
                                     My Orders
-
-                                </a>
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item"
-                                   href="${pageContext.request.contextPath}/customer/order-history">
-
-                                    <i class="fa-solid fa-clock-rotate-left me-2"></i>
-                                    Order History
 
                                 </a>
                             </li>

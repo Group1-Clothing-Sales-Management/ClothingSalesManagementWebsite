@@ -9,6 +9,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @WebServlet("/customer/order-history")
 public class CustomerOrderHistoryController extends HttpServlet {
@@ -27,24 +30,7 @@ public class CustomerOrderHistoryController extends HttpServlet {
             return;
         }
 
-        int userId = (Integer) session.getAttribute("authUserId");
-
-        Object orderMessage = session.getAttribute("orderMessage");
-        if (orderMessage != null) {
-            request.setAttribute("orderMessage", orderMessage.toString());
-            session.removeAttribute("orderMessage");
-        }
-
-        Object orderError = session.getAttribute("orderError");
-        if (orderError != null) {
-            request.setAttribute("orderError", orderError.toString());
-            session.removeAttribute("orderError");
-        }
-
-        request.setAttribute("orders", service.getOrderHistoryByUserId(userId));
-
-        request.getRequestDispatcher("/view/customer/customer_order_history.jsp")
-                .forward(request, response);
+        response.sendRedirect(buildHistoryRedirect(request));
     }
 
     @Override
@@ -62,7 +48,7 @@ public class CustomerOrderHistoryController extends HttpServlet {
         String action = request.getParameter("action");
 
         if (!"reorder".equalsIgnoreCase(action)) {
-            response.sendRedirect(request.getContextPath() + "/customer/order-history");
+            response.sendRedirect(buildHistoryRedirect(request));
             return;
         }
 
@@ -71,7 +57,7 @@ public class CustomerOrderHistoryController extends HttpServlet {
             orderId = Integer.parseInt(request.getParameter("orderId"));
         } catch (Exception e) {
             session.setAttribute("orderError", "Invalid order.");
-            response.sendRedirect(request.getContextPath() + "/customer/order-history");
+            response.sendRedirect(buildHistoryRedirect(request));
             return;
         }
 
@@ -84,7 +70,38 @@ public class CustomerOrderHistoryController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/cart?skipMerge=1");
         } else {
             session.setAttribute("orderError", result.getMessage());
-            response.sendRedirect(request.getContextPath() + "/customer/order-history");
+            response.sendRedirect(buildHistoryRedirect(request));
         }
+    }
+
+    private String buildHistoryRedirect(HttpServletRequest request) {
+        StringBuilder redirect = new StringBuilder(
+                request.getContextPath()
+                + "/customer/orders");
+        String status = mapLegacyStatus(request.getParameter("status"));
+
+        if (status != null && !status.trim().isEmpty()) {
+            redirect.append("?status=")
+                    .append(URLEncoder.encode(
+                            status.trim(),
+                            StandardCharsets.UTF_8));
+        }
+
+        return redirect.toString();
+    }
+
+    private String mapLegacyStatus(String status) {
+        if (status == null) {
+            return "";
+        }
+
+        String normalized = status.trim().toUpperCase(Locale.ROOT);
+
+        if ("DELIVERED".equals(normalized)
+                || "RECEIVED".equals(normalized)) {
+            return "COMPLETED";
+        }
+
+        return normalized;
     }
 }
