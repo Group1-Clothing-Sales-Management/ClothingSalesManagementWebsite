@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c"
           uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <!DOCTYPE html>
 
@@ -431,6 +432,160 @@
                 <p class="mb-0">
                     ${product.longDescription}
                 </p>
+
+            </div>
+            <!-- FEEDBACK -->
+
+            <div class="product-description">
+
+                <h4 class="fw-bold mb-4">
+                    <i class="fa-solid fa-star text-warning me-2"></i>
+                    Customer Feedback
+                </h4>
+
+                <c:if test="${canFeedback}">
+
+                    <form action="${pageContext.request.contextPath}/feedback/add"
+                          method="post"
+                          class="mb-4">
+
+                        <input type="hidden"
+                               name="productId"
+                               value="${product.id}">
+
+                        <input type="hidden"
+                               name="orderId"
+                               value="${orderId}">
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-bold">
+                                Rating
+                            </label>
+
+                            <select name="rating"
+                                    class="form-select"
+                                    required>
+
+                                <option value="5">★★★★★ (5)</option>
+                                <option value="4">★★★★☆ (4)</option>
+                                <option value="3">★★★☆☆ (3)</option>
+                                <option value="2">★★☆☆☆ (2)</option>
+                                <option value="1">★☆☆☆☆ (1)</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-bold">
+                                Comment
+                            </label>
+
+                            <textarea name="comment"
+                                      rows="4"
+                                      class="form-control"
+                                      required></textarea>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-cart">
+
+                            <i class="fa-solid fa-paper-plane me-2"></i>
+
+                            Submit Review
+
+                        </button>
+
+                    </form>
+
+                    <hr>
+
+                </c:if>
+
+                <c:choose>
+
+                    <c:when test="${empty feedbacks}">
+
+                        <div class="alert alert-light">
+
+                            No feedback yet.
+
+                        </div>
+
+                    </c:when>
+
+                    <c:otherwise>
+
+                        <c:forEach items="${feedbacks}" var="fb">
+
+                            <div class="card shadow-sm mb-3">
+
+                                <div class="card-body">
+
+                                    <div class="d-flex justify-content-between">
+
+                                        <strong>
+
+                                            ${fb.userName}
+
+                                        </strong>
+
+                                        <small class="text-muted">
+
+                                            <fmt:formatDate
+                                                value="${fb.createdAt}"
+                                                pattern="dd/MM/yyyy HH:mm"/>
+
+                                        </small>
+
+                                    </div>
+
+                                    <div class="mt-2 mb-2">
+
+                                        <c:forEach begin="1" end="5" var="i">
+
+                                            <i class="fa-solid fa-star ${i<=fb.rating?'text-warning':'text-secondary'}"></i>
+
+                                        </c:forEach>
+
+                                    </div>
+
+                                    <p class="mb-2">
+
+                                        ${fb.comment}
+
+                                    </p>
+
+                                    <c:if test="${not empty fb.adminResponse}">
+
+                                        <div class="alert alert-success mb-0">
+
+                                            <strong>
+
+                                                Admin Reply
+
+                                            </strong>
+
+                                            <br>
+
+                                            ${fb.adminResponse}
+
+                                        </div>
+
+                                    </c:if>
+
+                                </div>
+
+                            </div>
+
+                        </c:forEach>
+
+                    </c:otherwise>
+
+                </c:choose>
 
             </div>
 
