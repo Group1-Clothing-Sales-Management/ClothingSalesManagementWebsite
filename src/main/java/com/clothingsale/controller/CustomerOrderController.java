@@ -22,7 +22,7 @@ public class CustomerOrderController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
@@ -36,13 +36,13 @@ public class CustomerOrderController extends HttpServlet {
 
         boolean selectionMode = "1".equals(request.getParameter("selectionMode"));
 
-        Set<Integer> selectedVariantIds =
-                selectionMode
+        Set<Integer> selectedVariantIds
+                = selectionMode
                         ? parseSelectedVariantIds(request.getParameterValues("selectedVariantId"))
                         : getCheckoutSelectedVariantIds(session);
 
-        List<CartItem> cartItems =
-                service.getCartItems(userId, selectedVariantIds);
+        List<CartItem> cartItems
+                = service.getCartItems(userId, selectedVariantIds);
 
         if (cartItems.isEmpty()) {
             session.removeAttribute("checkoutSelectedVariantIds");
@@ -56,16 +56,21 @@ public class CustomerOrderController extends HttpServlet {
         if (selectionMode) {
             session.setAttribute("checkoutSelectedVariantIds", selectedVariantIds);
         }
+        List<UserAddress> addresses
+                = service.getAddressesByUserId(userId);
 
-        BigDecimal total =
-                service.getCartTotal(userId, selectedVariantIds);
+        BigDecimal total
+                = service.getCartTotal(userId, selectedVariantIds);
 
-        List<UserAddress> addresses =
-                service.getAddressesByUserId(userId);
+        BigDecimal shippingFee = BigDecimal.valueOf(30000);
+        BigDecimal totalPayment = total.add(shippingFee);
 
         request.setAttribute("addresses", addresses);
         request.setAttribute("cartItems", cartItems);
         request.setAttribute("cartTotal", total);
+        request.setAttribute("shippingFee", shippingFee);
+        request.setAttribute("discountAmount", BigDecimal.ZERO);
+        request.setAttribute("totalPayment", totalPayment);
 
         request.getRequestDispatcher(
                 "/view/customer/customer_checkout.jsp"
@@ -74,7 +79,7 @@ public class CustomerOrderController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
@@ -86,107 +91,188 @@ public class CustomerOrderController extends HttpServlet {
 
         int userId = (Integer) session.getAttribute("authUserId");
 
-        int addressId;
-        try {
-            addressId = Integer.parseInt(request.getParameter("addressId"));
-        } catch (Exception e) {
-            response.sendRedirect(request.getContextPath()
-                    + "/customer/checkout?error=invalid_address");
+        Set<Integer> selectedVariantIds
+                = getCheckoutSelectedVariantIds(session);
+
+        List<CartItem> cartItems
+                = service.getCartItems(userId, selectedVariantIds);
+
+        BigDecimal cartTotal
+                = service.getCartTotal(userId, selectedVariantIds);
+
+        List<UserAddress> addresses
+                = service.getAddressesByUserId(userId);
+
+        String action = request.getParameter("action");
+
+        // ================= APPLY VOUCHER =================
+        if ("applyVoucher".equals(action)) {
+
+            String voucherCode = request.getParameter("voucherCode");
+
+            BigDecimal discount = BigDecimal.ZERO;
+
+            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+
+                var voucher = service.getVoucherByCode(voucherCode.trim());
+
+                if (voucher == null) {
+
+                    request.setAttribute("voucherError",
+                            "Voucher này không tồn tại");
+
+                } else {
+
+                    discount
+                            = service.calculateDiscount(cartTotal, voucher);
+
+                    request.setAttribute("voucherCode", voucherCode);
+                    request.setAttribute("discountAmount", discount);
+                    request.setAttribute("voucher", voucher);
+                }
+            }
+
+            request.setAttribute("addresses", addresses);
+            request.setAttribute("cartItems", cartItems);
+            request.setAttribute("cartTotal", cartTotal);
+            request.setAttribute("shippingFee", BigDecimal.valueOf(30000));
+            request.setAttribute("totalPayment",
+                    cartTotal.subtract(discount)
+                            .add(BigDecimal.valueOf(30000)));
+
+            request.getRequestDispatcher(
+                    "/view/customer/customer_checkout.jsp")
+                    .forward(request, response);
+
             return;
         }
 
-        Set<Integer> selectedVariantIds =
-                getCheckoutSelectedVariantIds(session);
+        // ================= PLACE ORDER =================
+        int addressId;
+
+        try {
+            addressId
+                    = Integer.parseInt(request.getParameter("addressId"));
+        } catch (Exception e) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/customer/checkout?error=invalid_address");
+
+            return;
+        }
 
         if (!service.validateCheckout(userId, selectedVariantIds)) {
-            response.sendRedirect(request.getContextPath()
+
+            response.sendRedirect(
+                    request.getContextPath()
                     + "/customer/checkout?error=invalid_checkout");
+
             return;
         }
 
-        // ===== FORM DATA =====
-        String voucherCode = request.getParameter("voucherCode");
-        String note = request.getParameter("note");
-        String paymentMethod = request.getParameter("paymentMethod");
+        String voucherCode
+                = request.getParameter("voucherCode");
 
-        // ⭐ NEW: shipment
-        String carrierName = request.getParameter("carrierName");
+        String note
+                = request.getParameter("note");
+
+        String paymentMethod
+                = request.getParameter("paymentMethod");
+
+        String carrierName
+                = request.getParameter("carrierName");
 
         if (paymentMethod == null || paymentMethod.isEmpty()) {
             paymentMethod = "COD";
         }
 
         if (carrierName == null || carrierName.isEmpty()) {
-            carrierName = "GHN"; // default carrier
+            carrierName = "GHN";
         }
 
-        // ===== PLACE ORDER =====
-        boolean success = service.placeOrder(
-                userId,
-                addressId,
-                voucherCode,
-                note,
-                paymentMethod,
-                carrierName,
-                selectedVariantIds
-        );
+        boolean success
+                = service.placeOrder(
+                        userId,
+                        addressId,
+                        voucherCode,
+                        note,
+                        paymentMethod,
+                        carrierName,
+                        selectedVariantIds);
 
         if (success) {
 
             pruneSessionCart(session, selectedVariantIds);
+
             session.removeAttribute("checkoutSelectedVariantIds");
 
             response.sendRedirect(
-                    request.getContextPath() + "/customer/orders"
-            );
+                    request.getContextPath()
+                    + "/customer/orders");
+
         } else {
+
             response.sendRedirect(
-                    request.getContextPath() + "/customer/checkout?error=failed"
-            );
+                    request.getContextPath()
+                    + "/customer/checkout?error=failed");
         }
     }
 
     // ===== HELPERS =====
-
     private Set<Integer> parseSelectedVariantIds(String[] values) {
         Set<Integer> ids = new HashSet<>();
-        if (values == null) return ids;
+        if (values == null) {
+            return ids;
+        }
 
         for (String v : values) {
             try {
                 int id = Integer.parseInt(v);
-                if (id > 0) ids.add(id);
-            } catch (Exception ignored) {}
+                if (id > 0) {
+                    ids.add(id);
+                }
+            } catch (Exception ignored) {
+            }
         }
         return ids;
     }
 
     private Set<Integer> getCheckoutSelectedVariantIds(HttpSession session) {
-        if (session == null) return null;
+        if (session == null) {
+            return null;
+        }
 
         Object value = session.getAttribute("checkoutSelectedVariantIds");
 
-        if (!(value instanceof Iterable<?>)) return null;
+        if (!(value instanceof Iterable<?>)) {
+            return null;
+        }
 
         Set<Integer> ids = new HashSet<>();
 
         for (Object o : (Iterable<?>) value) {
             try {
                 ids.add(Integer.parseInt(o.toString()));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         return ids;
     }
 
     private void pruneSessionCart(HttpSession session,
-                                  Set<Integer> selectedVariantIds) {
+            Set<Integer> selectedVariantIds) {
 
-        if (session == null) return;
+        if (session == null) {
+            return;
+        }
 
         Object cartObj = session.getAttribute("cart");
 
-        if (!(cartObj instanceof Map<?, ?>)) return;
+        if (!(cartObj instanceof Map<?, ?>)) {
+            return;
+        }
 
         Map<?, ?> cart = (Map<?, ?>) cartObj;
 

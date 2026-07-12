@@ -421,7 +421,7 @@ public class CustomerOrderDAO {
             }
 
             // ===== VOUCHER =====
-            Voucher voucher = applyVoucher(voucherCode);
+            Voucher voucher = getVoucherByCode(voucherCode);
             BigDecimal discount = calculateDiscount(voucher, subtotal);
 
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
@@ -538,30 +538,43 @@ public class CustomerOrderDAO {
         return 0;
     }
 
-    public Voucher applyVoucher(String code) {
+    public Voucher getVoucherByCode(String code) {
 
-        if (code == null || code.trim().isEmpty()) {
-            return null;
-        }
+    if (code == null || code.trim().isEmpty()) {
+        return null;
+    }
 
-        String sql = "SELECT * FROM Voucher WHERE code=? "
-                + "AND GETDATE() BETWEEN start_date AND end_date "
-                + "AND used_count < usage_limit";
+    String sql =
+        "SELECT * FROM Voucher " +
+        "WHERE code=? " +
+        "AND GETDATE() BETWEEN start_date AND end_date " +
+        "AND used_count < usage_limit";
 
-        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+    try (
+        Connection con = DBConnection.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)
+    ) {
 
-            ps.setString(1, code);
+        ps.setString(1, code.trim());
 
-            ResultSet rs = ps.executeQuery();
+        ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
-                Voucher v = new Voucher();
-                v.setId(rs.getInt("id"));
-                v.setCode(rs.getString("code"));
+        if (rs.next()) {
+
+            Voucher v = new Voucher();
+
+            v.setId(rs.getInt("id"));
+            v.setCode(rs.getString("code"));
+                v.setTitle(rs.getString("title"));
                 v.setDiscountType(rs.getString("discount_type"));
                 v.setDiscountValue(rs.getBigDecimal("discount_value"));
                 v.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
                 v.setMinOrderValue(rs.getBigDecimal("min_order_value"));
+                v.setStartDate(rs.getTimestamp("start_date"));
+                v.setEndDate(rs.getTimestamp("end_date"));
+                v.setUsageLimit(rs.getInt("usage_limit"));
+                v.setUsedCount(rs.getInt("used_count"));
+
                 return v;
             }
 

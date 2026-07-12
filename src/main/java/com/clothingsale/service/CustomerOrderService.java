@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.clothingsale.model.Voucher;
+import java.math.RoundingMode;
 
 public class CustomerOrderService {
 
@@ -63,6 +65,10 @@ public class CustomerOrderService {
         return dao.getCartTotal(userId, selected);
     }
 
+    public Voucher getVoucherByCode(String code) {
+        return dao.getVoucherByCode(code);
+    }
+
     // =================== ORDER CORE ===================
     public boolean placeOrder(
             int userId,
@@ -86,6 +92,38 @@ public class CustomerOrderService {
 
     public boolean cancelOrder(int orderId, int userId) {
         return dao.cancelOrder(orderId, userId);
+    }
+
+    public BigDecimal calculateDiscount(BigDecimal subtotal, Voucher voucher) {
+
+        if (voucher == null) {
+            return BigDecimal.ZERO;
+        }
+
+        if (subtotal.compareTo(voucher.getMinOrderValue()) < 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discount;
+
+        if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())) {
+
+            discount = subtotal
+                    .multiply(voucher.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+            if (voucher.getMaxDiscountAmount() != null
+                    && discount.compareTo(voucher.getMaxDiscountAmount()) > 0) {
+
+                discount = voucher.getMaxDiscountAmount();
+            }
+
+        } else {
+
+            discount = voucher.getDiscountValue();
+        }
+
+        return discount;
     }
 
     public List<Order> getOrdersByUserId(int userId) {
@@ -148,8 +186,8 @@ public class CustomerOrderService {
                 continue;
             }
 
-            CartItem currentItem =
-                    cartDAO.getActiveVariantCartItem(detail.getVariantId());
+            CartItem currentItem
+                    = cartDAO.getActiveVariantCartItem(detail.getVariantId());
             int stock = cartDAO.getAvailableStock(detail.getVariantId());
 
             if (currentItem == null || stock <= 0) {
@@ -230,10 +268,12 @@ public class CustomerOrderService {
 
     // =================== INTERNAL ===================
     private void enrichOrder(Order order) {
-        if (order == null) return;
+        if (order == null) {
+            return;
+        }
 
-        String displayStatus =
-                OrderStatusHelper.resolveDisplayStatus(order);
+        String displayStatus
+                = OrderStatusHelper.resolveDisplayStatus(order);
 
         order.setDisplayStatus(displayStatus);
         order.setDisplayStatusLabel(

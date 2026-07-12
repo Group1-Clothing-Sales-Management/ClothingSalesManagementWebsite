@@ -182,15 +182,6 @@
 
                 </div>
 
-                <a href="${pageContext.request.contextPath}/cart"
-                   class="btn btn-outline-secondary btn-back">
-
-                    <i class="bi bi-arrow-left"></i>
-
-                    Back To Cart
-
-                </a>
-
             </div>
 
             <form method="post"
@@ -388,13 +379,6 @@
 
                                     <select class="form-select"
                                             name="carrierName">
-
-                                        <option value="GHN">
-
-                                            Giao Hàng Nhanh (GHN)
-
-                                        </option>
-
                                         <option value="GHTK">
 
                                             Giao Hàng Tiết Kiệm (GHTK)
@@ -433,7 +417,9 @@
                                 <div class="d-grid">
 
                                     <button type="submit"
-                                            class="btn btn-success btn-place">
+                                            class="btn btn-success btn-place"
+                                            name="action"
+                                            value="placeOrder">
 
                                         <i class="bi bi-credit-card-fill"></i>
 
@@ -472,7 +458,7 @@
 
                                         <!-- IMAGE -->
 
-                                        <img src="${pageContext.request.contextPath}/${item.imageUrl}"
+                                        <img src="${pageContext.request.contextPath}/uploads/product/${item.imageUrl}"
                                              class="rounded border"
                                              style="width:90px;
                                              height:90px;
@@ -538,16 +524,35 @@
                                 <div class="mb-4">
 
                                     <label class="form-label fw-semibold">
-
                                         Voucher Code
-
                                     </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        name="voucherCode"
-                                        placeholder="Enter voucher...">
+                                    <div class="input-group">
+
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            name="voucherCode"
+                                            value="${voucherCode}"
+                                            placeholder="Enter voucher...">
+
+                                        <button
+                                            class="btn btn-primary"
+                                            type="submit"
+                                            name="action"
+                                            value="applyVoucher">
+
+                                            Apply
+
+                                        </button>
+
+                                    </div>
+
+                                    <c:if test="${not empty voucherError}">
+                                        <div class="text-danger mt-2">
+                                            ${voucherError}
+                                        </div>
+                                    </c:if>
 
                                 </div>
 
@@ -584,6 +589,14 @@
                                     </strong>
 
                                 </div>
+                                <c:if test="${discountAmount != null}">
+                                    <div class="summary-row">
+                                        <span>Discount</span>
+                                        <strong class="text-success">
+                                            - ${discountAmount}
+                                        </strong>
+                                    </div>
+                                </c:if>
 
                                 <hr>
 
@@ -597,7 +610,7 @@
 
                                     <span>
 
-                                        ${cartTotal}
+                                        ${totalPayment}
 
                                     </span>
 
