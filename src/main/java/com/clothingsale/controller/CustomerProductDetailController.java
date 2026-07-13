@@ -9,9 +9,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import com.clothingsale.model.Feedback;
 import com.clothingsale.service.CustomerFeedbackService;
+import com.clothingsale.service.WishlistService;
 import java.util.List;
+import java.util.Set;
 
 @WebServlet(name = "CustomerProductDetailController",
         urlPatterns = {"/product/detail"})
@@ -21,6 +24,8 @@ public class CustomerProductDetailController extends HttpServlet {
             = new CustomerProductService();
     private CustomerFeedbackService feedbackService
             = new CustomerFeedbackService();
+    private WishlistService wishlistService
+            = new WishlistService();
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -75,6 +80,7 @@ public class CustomerProductDetailController extends HttpServlet {
             request.setAttribute("commentsCount", commentsCount);
             // Gửi dữ liệu sang JSP
             request.setAttribute("product", product);
+            populateWishlistState(request, id);
 
             request.getRequestDispatcher(
                     "/view/customer/customer_view_product_detail.jsp"
@@ -92,5 +98,19 @@ public class CustomerProductDetailController extends HttpServlet {
     public String getServletInfo() {
 
         return "Customer Product Detail Controller";
+    }
+
+    private void populateWishlistState(HttpServletRequest request, int productId) {
+        HttpSession session = request.getSession(false);
+        Object userIdObj = session != null ? session.getAttribute("authUserId") : null;
+
+        if (userIdObj instanceof Integer) {
+            int userId = (Integer) userIdObj;
+            Set<Integer> productIds = wishlistService.getWishlistProductIds(userId);
+            request.setAttribute("isWishlisted", productIds.contains(productId));
+            session.setAttribute("wishlistCount", productIds.size());
+        } else {
+            request.setAttribute("isWishlisted", false);
+        }
     }
 }

@@ -410,7 +410,28 @@
                 flex:0 0 auto;
             }
 
-            .product-list-page .wishlist-heart-form,
+            .product-list-page .wishlist-heart-form{
+                position:static;
+                display:block;
+                margin:6px 0 2px;
+            }
+
+            .product-list-page .wishlist-heart{
+                width:30px;
+                height:30px;
+                border:1px solid #efd4c8;
+                background:#fff;
+                color:var(--catalog-primary);
+                box-shadow:none;
+                font-size:.82rem;
+            }
+
+            .product-list-page .wishlist-heart:hover,
+            .product-list-page .wishlist-heart.is-active{
+                background:var(--catalog-primary);
+                color:#fff;
+            }
+
             .product-list-page .card-footer{
                 display:none;
             }
@@ -536,20 +557,6 @@
 
                         <div class="card product-card h-100">
 
-                            <form action="${pageContext.request.contextPath}/wishlist/toggle"
-                                  method="post"
-                                  class="wishlist-heart-form">
-                                <input type="hidden" name="productId" value="${p.id}">
-                                <input type="hidden" name="variantId"
-                                       value="${not empty p.variants ? p.variants[0].id : ''}">
-                                <input type="hidden" name="wishlisted" value="${isWishlisted}">
-                                <button type="submit"
-                                        class="wishlist-heart ${isWishlisted ? 'is-active' : ''}"
-                                        title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
-                                    <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-                                </button>
-                            </form>
-
                             <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="product-image-link">
                                 <span class="product-ribbon">Featured</span>
                                 <c:if test="${not empty p.variants}">
@@ -576,6 +583,20 @@
                                     <div class="price mb-2">
                                         ${p.variants[0].salePrice} đ
                                     </div>
+
+                                    <form action="${pageContext.request.contextPath}/wishlist/toggle"
+                                          method="post"
+                                          class="wishlist-heart-form">
+                                        <input type="hidden" name="productId" value="${p.id}">
+                                        <input type="hidden" name="variantId"
+                                               value="${not empty p.variants ? p.variants[0].id : ''}">
+                                        <input type="hidden" name="wishlisted" value="${isWishlisted}">
+                                        <button type="submit"
+                                                class="wishlist-heart ${isWishlisted ? 'is-active' : ''}"
+                                                title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+                                            <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                        </button>
+                                    </form>
 
                                     <div class="product-meta">
                                         <span>${p.variants[0].attributeDetails}</span>
