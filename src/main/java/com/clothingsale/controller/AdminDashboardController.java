@@ -1,95 +1,91 @@
 package com.clothingsale.controller;
 
-import com.clothingsale.model.Product;
-import com.clothingsale.model.Brand;
-import com.clothingsale.model.Category;
 import com.clothingsale.model.DashboardStats;
 import com.clothingsale.service.AdminDashboardService;
-import com.clothingsale.service.AdminManageProductService;
-import com.clothingsale.service.StaffProductService;
-
-import java.io.IOException;
-import java.util.List;
+import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @WebServlet(
         name = "AdminDashboardController",
         urlPatterns = {"/admin/dashboard", "/dashboard"}
 )
-@MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 2,
-        maxFileSize = 1024 * 1024 * 10,
-        maxRequestSize = 1024 * 1024 * 50
-)
 public class AdminDashboardController extends HttpServlet {
 
-    private final AdminManageProductService adminProductService = new AdminManageProductService();
-    private final StaffProductService staffProductService = new StaffProductService();
-    private final AdminDashboardService adminDashboardService = new AdminDashboardService();
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+
+    private final AdminDashboardService dashboardService
+            = new AdminDashboardService();
+    private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 1. Lấy dữ liệu số liệu thống kê truyền sang JSP
-        DashboardStats stats = adminDashboardService.getDashboardOverview();
-        request.setAttribute("dashboardData", stats);
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
-        // 2. Lấy dữ liệu danh sách sản phẩm/danh mục để hiển thị ở các tab quản lý
+        String range = request.getParameter("range");
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
+
+        DashboardStats stats;
+
         try {
-            List<Product> listP = adminProductService.getAllProducts();
-            List<Brand> listB = adminProductService.getAllBrands();
-            List<Category> listC = adminProductService.getAllCategories();
-
-            request.setAttribute("listP", listP);
-            request.setAttribute("listB", listB);
-            request.setAttribute("listC", listC);
-        } catch (Exception e) {
-            e.printStackTrace();
+            stats = dashboardService.getDashboardOverview(
+                    range, startDate, endDate);
+        } catch (IllegalArgumentException ex) {
+            stats = loadFallbackDashboard();
+            stats.setErrorMessage(
+                    ex.getMessage() + " Showing This Month instead.");
+        } catch (Exception ex) {
+            System.err.println("[Dashboard] Fatal dashboard error: "
+                    + ex.getMessage());
+            ex.printStackTrace();
+            stats = createUnavailableDashboard();
+            stats.setErrorMessage(
+                    "Dashboard data is temporarily unavailable. "
+                    + "Check the server log for the exact database error.");
         }
 
-        request.getRequestDispatcher("/view/admin/dashboard.jsp").forward(request, response);
+        request.setAttribute("dashboardData", stats);
+        request.setAttribute(
+                "revenueTrendJson", gson.toJson(stats.getRevenueTrend()));
+        request.setAttribute(
+                "orderStatusJson",
+                gson.toJson(stats.getOrderStatusDistribution()));
+
+        request.getRequestDispatcher("/view/admin/dashboard.jsp")
+                .forward(request, response);
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        String roleName = (String) session.getAttribute("roleName");
-        String username = (String) session.getAttribute("username");
-        String action = request.getParameter("action");
-
+    private DashboardStats loadFallbackDashboard() {
         try {
-            if ("UPDATE".equals(action)) {
-                if ("STAFF".equalsIgnoreCase(roleName) || "ADMIN".equalsIgnoreCase(roleName)) {
-                    String sku = request.getParameter("sku");
-                    int variantId = Integer.parseInt(request.getParameter("variantId"));
-                    String productName = request.getParameter("productName");
-
-                    // Sử dụng luồng truyền tham số chuẩn xác từ file cũ
-                    staffProductService.updateProductDetails(sku, variantId, productName, roleName, username, action);
-                }
-            } else if ("DELETE".equals(action) && "ADMIN".equalsIgnoreCase(roleName)) {
-                int id = Integer.parseInt(request.getParameter("productId"));
-                adminProductService.deleteProductSmartly(id);
-            } else if ("INSERT".equals(action) && "ADMIN".equalsIgnoreCase(roleName)) {
-                Product p = new Product();
-                p.setProductName(request.getParameter("productName"));
-                p.setSlug(request.getParameter("slug"));
-                p.setStatus(request.getParameter("status"));
-                adminProductService.addProduct(p, null);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return dashboardService.getDashboardOverview(
+                    "this_month", null, null);
+        } catch (Exception ex) {
+            System.err.println("[Dashboard] Fallback dashboard failed: "
+                    + ex.getMessage());
+            ex.printStackTrace();
+            return createUnavailableDashboard();
         }
+    }
 
-        String tabParam = request.getParameter("variantId") != null || "products".equals(request.getParameter("tab")) ? "?tab=products" : "";
-        response.sendRedirect(request.getContextPath() + "/admin/dashboard" + tabParam);
+    private DashboardStats createUnavailableDashboard() {
+        LocalDate today = LocalDate.now(BUSINESS_ZONE);
+
+        DashboardStats stats = new DashboardStats();
+        stats.setSelectedRange("this_month");
+        stats.setRangeLabel("This Month");
+        stats.setStartDate(today.withDayOfMonth(1).toString());
+        stats.setEndDate(today.toString());
+        return stats;
     }
 }
