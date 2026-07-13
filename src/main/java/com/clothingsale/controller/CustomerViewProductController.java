@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-@WebServlet("/products")
+@WebServlet({"/products", "/product"})
 public class CustomerViewProductController extends HttpServlet {
 
     private final CustomerProductService service

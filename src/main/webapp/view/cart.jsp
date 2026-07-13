@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%
     java.util.Collection items = (java.util.Collection) request.getAttribute("items");
     java.util.Map variantsByProductId = (java.util.Map) request.getAttribute("variantsByProductId");
@@ -64,6 +65,66 @@
             white-space:nowrap;
         }
 
+        .account-menu{
+            position:relative;
+        }
+
+        .account-menu summary{
+            display:flex;
+            align-items:center;
+            gap:6px;
+            cursor:pointer;
+            list-style:none;
+        }
+
+        .account-menu summary::-webkit-details-marker{
+            display:none;
+        }
+
+        .account-avatar{
+            width:20px;
+            height:20px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:50%;
+            background:#087f68;
+            color:#fff;
+            font-size:11px;
+            font-weight:700;
+        }
+
+        .account-dropdown{
+            position:absolute;
+            z-index:20;
+            top:calc(100% + 10px);
+            right:0;
+            width:170px;
+            padding:8px 0;
+            background:#fff;
+            border:1px solid var(--cart-line);
+            border-radius:6px;
+            box-shadow:0 8px 22px rgba(37,33,30,.16);
+        }
+
+        .account-dropdown a{
+            display:block;
+            padding:9px 14px;
+            color:var(--cart-ink);
+            font-size:13px;
+        }
+
+        .account-dropdown a:hover{
+            background:var(--cart-soft);
+            color:var(--cart-accent);
+        }
+
+        .account-dropdown hr{
+            margin:5px 0;
+            border:0;
+            border-top:1px solid var(--cart-line);
+        }
+
         .cart-topbar a{
             color:#fff;
             text-decoration:none;
@@ -89,7 +150,8 @@
             display:flex;
             align-items:center;
             gap:14px;
-            min-height:90px;
+            flex-wrap:nowrap;
+            min-height:100px;
             margin:0 calc((1200px - 100vw) / 2) 20px;
             padding:0 max(16px, calc((100vw - 1200px) / 2));
             background:#fff;
@@ -142,6 +204,17 @@
             border:0;
             background:var(--cart-accent);
             color:#fff;
+        }
+
+        .cart-category-row{
+            flex:0 0 100%;
+            display:none;
+            justify-content:center;
+            gap:20px;
+            overflow:hidden;
+            color:#fff;
+            font-size:12px;
+            white-space:nowrap;
         }
 
         .cart-grid {
@@ -565,6 +638,7 @@
                 display:block;
                 padding:18px 0;
                 margin:0 -16px 16px;
+                min-height:0;
             }
 
             .cart-topbar-inner{
@@ -573,6 +647,10 @@
             }
 
             .cart-topbar-group:last-child{
+                display:flex;
+            }
+
+            .cart-topbar-group:last-child > span{
                 display:none;
             }
 
@@ -584,6 +662,10 @@
             .cart-search {
                 width:auto;
                 margin:14px 16px 0;
+            }
+
+            .cart-category-row{
+                display:none;
             }
 
             .platform-voucher{
@@ -665,6 +747,19 @@
                 <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
                 <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
                 <span><i class="fa-solid fa-globe me-1"></i>English</span>
+                <details class="account-menu">
+                    <summary>
+                        <span class="account-avatar">M</span>
+                        <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </summary>
+                    <div class="account-dropdown">
+                        <a href="<%= ctx %>/customer/profile">Profile</a>
+                        <a href="<%= ctx %>/customer/orders">My Orders</a>
+                        <hr>
+                        <a href="<%= ctx %>/customer/logout">Logout</a>
+                    </div>
+                </details>
             </div>
         </div>
     </div>
@@ -682,6 +777,14 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </form>
+            <div class="cart-category-row">
+                <span>Ốp lưng điện thoại</span>
+                <span>Micro máy vi tính để bàn</span>
+                <span>Yisong 003</span>
+                <span>Mô hình iPhone</span>
+                <span>Arm sleeve gaming</span>
+                <span>Ghế Centaur Gundam</span>
+            </div>
         </div>
 
         <% if (request.getAttribute("cartMessage") != null) { %>

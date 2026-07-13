@@ -1,277 +1,343 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <c:set var="loggedIn"
        value="${not empty sessionScope.authUserId}"/>
 
-<nav class="navbar navbar-expand-lg custom-navbar sticky-top">
+<nav class="navbar custom-navbar market-header sticky-top" aria-label="Store navigation">
+    <div class="market-topbar">
+        <div class="market-header-inner market-topbar-inner">
+            <div class="market-topbar-group">
+                <a href="${pageContext.request.contextPath}/home">Seller Centre</a>
+                <span class="market-separator">|</span>
+                <a href="${pageContext.request.contextPath}/home">Download</a>
+                <span class="market-separator">|</span>
+                <span>Follow us on</span>
+                <i class="fa-brands fa-facebook"></i>
+                <i class="fa-brands fa-instagram"></i>
+            </div>
 
-    <div class="container">
+            <div class="market-topbar-group market-topbar-right">
+                <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
+                <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
+                <span><i class="fa-solid fa-globe me-1"></i>English⌄</span>
 
-        <!-- LOGO -->
-        <a href="${pageContext.request.contextPath}/home"
-           class="navbar-brand brand-logo">
-
-            <i class="fa-solid fa-shirt"></i>
-            Clothing Sale
-
-        </a>
-
-        <!-- MENU -->
-        <div class="d-flex align-items-center gap-1 flex-wrap ms-auto nav-actions">
-
-            <a href="${pageContext.request.contextPath}/home"
-               class="nav-btn">
-                <i class="fa-solid fa-house"></i>
-                Home
-            </a>
-
-            <a href="${pageContext.request.contextPath}/products"
-               class="nav-btn">
-                <i class="fa-solid fa-store"></i>
-                Products
-            </a>
-
-            <c:if test="${loggedIn}">
-                <a href="${pageContext.request.contextPath}/wishlist"
-                   class="nav-btn position-relative">
-                    <i class="fa-solid fa-heart"></i>
-                    Wishlist
-
-                    <c:if test="${sessionScope.wishlistCount > 0}">
-                        <span class="cart-badge">
-                            ${sessionScope.wishlistCount}
-                        </span>
-                    </c:if>
-                </a>
-            </c:if>
-
-            <a href="${pageContext.request.contextPath}/cart"
-               class="nav-btn position-relative">
-
-                <i class="fa-solid fa-cart-shopping"></i>
-                Cart
-
-                <c:if test="${loggedIn and sessionScope.cartCount > 0}">
-                    <span class="cart-badge">
-                        ${sessionScope.cartCount}
-                    </span>
-                </c:if>
-
-            </a>
-
-            <c:choose>
-
-                <c:when test="${loggedIn}">
-
-                    <div class="dropdown">
-
-                        <button
-                            class="btn btn-outline-dark dropdown-toggle user-menu"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false">
-
-                            <i class="fa-solid fa-user-circle me-2"></i>
-
-                            <c:out value="${not empty sessionScope.customerFullName
-                                            ? sessionScope.customerFullName
-                                            : sessionScope.authUsername}"/>
-
-                        </button>
-
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-
-                            <li>
-                                <a class="dropdown-item"
-                                   href="${pageContext.request.contextPath}/customer/profile">
-
-                                    <i class="fa-solid fa-id-card me-2"></i>
-                                    Profile
-
+                <c:choose>
+                    <c:when test="${loggedIn}">
+                        <details class="market-account">
+                            <summary>
+                                <span class="market-avatar">M</span>
+                                <span><c:out value="${not empty sessionScope.customerFullName
+                                                ? sessionScope.customerFullName
+                                                : sessionScope.authUsername}" default="Account"/></span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </summary>
+                            <div class="market-account-menu">
+                                <a href="${pageContext.request.contextPath}/customer/profile">
+                                    <i class="fa-solid fa-id-card"></i> Profile
                                 </a>
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item"
-                                   href="${pageContext.request.contextPath}/customer/orders">
-
-                                    <i class="fa-solid fa-box me-2"></i>
-                                    My Orders
-
+                                <a href="${pageContext.request.contextPath}/customer/orders">
+                                    <i class="fa-solid fa-box"></i> My Orders
                                 </a>
-                            </li>
-
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-
-                            <li>
-
-                                <a class="dropdown-item text-danger js-customer-logout"
+                                <hr>
+                                <a class="js-customer-logout"
                                    href="${pageContext.request.contextPath}/customer/logout"
                                    data-logout-url="${pageContext.request.contextPath}/customer/logout">
-
-                                    <i class="fa-solid fa-right-from-bracket me-2"></i>
-                                    Logout
-
+                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
                                 </a>
-
-                            </li>
-
-                        </ul>
-
-                    </div>
-
-                </c:when>
-
-                <c:otherwise>
-
-                    <a href="${pageContext.request.contextPath}/customer/login"
-                       class="btn btn-login">
-
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        Login
-
-                    </a>
-
-                </c:otherwise>
-
-            </c:choose>
-
+                            </div>
+                        </details>
+                    </c:when>
+                    <c:otherwise>
+                        <a class="market-login" href="${pageContext.request.contextPath}/customer/login">
+                            Login
+                        </a>
+                    </c:otherwise>
+                </c:choose>
+            </div>
         </div>
-
     </div>
 
+    <div class="market-mainbar">
+        <div class="market-header-inner market-mainbar-inner">
+            <a href="${pageContext.request.contextPath}/home" class="market-brand">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span>Clothing Sale</span>
+            </a>
+
+            <form action="${pageContext.request.contextPath}/products" method="get" class="market-search">
+                <input type="text" name="keyword" placeholder="QUÀ TẶNG 500,000Đ" aria-label="Search products">
+                <button type="submit" aria-label="Search products">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+
+            <a href="${pageContext.request.contextPath}/cart" class="market-cart" aria-label="Cart">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <c:if test="${loggedIn and sessionScope.cartCount > 0}">
+                    <span class="market-cart-badge">${sessionScope.cartCount}</span>
+                </c:if>
+            </a>
+        </div>
+
+        <div class="market-header-inner market-category-row" aria-label="Popular categories">
+            <c:choose>
+                <c:when test="${not empty headerCategories}">
+                    <c:forEach items="${headerCategories}" var="category" varStatus="status">
+                        <c:if test="${status.index < 7}">
+                            <a href="${pageContext.request.contextPath}/product">
+                                <c:out value="${category.categoryName}"/>
+                            </a>
+                        </c:if>
+                    </c:forEach>
+                    <c:if test="${fn:length(headerCategories) > 7}">
+                        <a href="${pageContext.request.contextPath}/product" aria-label="More categories">...</a>
+                    </c:if>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}/product">Products</a>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
 </nav>
 
 <style>
-    :root{
-        --navy:#25211e;
-        --teal:#c65b3d;
-        --bg:#faf7f2;
+    .market-header{
+        display:block;
+        width:100%;
+        padding:0;
+        border:0;
+        background:transparent;
+        box-shadow:0 2px 10px rgba(122,37,20,.12);
     }
 
-    .custom-navbar{
-        background:rgba(255,253,249,.96);
-        backdrop-filter:blur(12px);
-        border-bottom:1px solid #e9e0d7;
-        box-shadow:0 3px 18px rgba(74,54,39,.06);
-        padding:10px 0;
+    .market-header-inner{
+        width:min(1200px, calc(100% - 32px));
+        max-width:1200px;
+        margin:0 auto;
     }
 
-    .brand-logo{
-        font-size:21px;
-        font-weight:800;
-        color:var(--navy);
-        text-decoration:none;
+    .market-topbar,
+    .market-mainbar{
+        color:#fff;
+        background:linear-gradient(90deg,#ff4d2d 0%,#ff6438 100%);
     }
 
-    .brand-logo i{
-        color:var(--teal);
-        margin-right:6px;
-    }
-
-    .nav-btn{
-        text-decoration:none;
-        color:#5f5750;
-        padding:9px 12px;
-        border-radius:9px;
-        transition:.25s;
-        font-weight:600;
-    }
-
-    .nav-btn:hover{
-        background:#f4e9df;
-        color:var(--teal);
-    }
-
-    .nav-actions{
-        row-gap:3px;
-    }
-
-    .user-box{
-        background:#faf7f2;
-        border:1px solid #e9e0d7;
-        padding:10px 16px;
-        border-radius:14px;
-        color:#334155;
-        font-weight:600;
-    }
-
-    .btn-login{
-        background:var(--teal);
-        color:white;
-        border:none;
-        border-radius:12px;
-        padding:10px 18px;
-        font-weight:600;
-    }
-
-    .btn-login:hover{
-        color:white;
-        background:#a9462d;
-        opacity:1;
-    }
-
-    .btn-logout{
-        background:#a9462d;
-        color:white;
-        border:none;
-        border-radius:12px;
-        padding:10px 18px;
-        font-weight:600;
-    }
-
-    .btn-logout:hover{
-        background:#873724;
-        color:white;
-    }
-
-    .cart-badge{
-        position:absolute;
-        top:-6px;
-        right:-6px;
-        min-width:20px;
-        height:20px;
-        border-radius:50%;
-        background:#ef4444;
-        color:white;
+    .market-topbar{
+        min-height:32px;
         font-size:12px;
+    }
+
+    .market-topbar-inner{
+        min-height:32px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:16px;
+    }
+
+    .market-topbar-group{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        white-space:nowrap;
+    }
+
+    .market-topbar a,
+    .market-login{
+        color:#fff;
+        text-decoration:none;
+    }
+
+    .market-topbar a:hover,
+    .market-login:hover{
+        color:#fff;
+        text-decoration:underline;
+    }
+
+    .market-separator{
+        opacity:.65;
+    }
+
+    .market-mainbar{
+        min-height:80px;
+    }
+
+    .market-mainbar-inner{
+        min-height:58px;
+        display:flex;
+        align-items:center;
+        gap:14px;
+    }
+
+    .market-brand{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        min-width:180px;
+        color:#fff;
+        font-size:28px;
+        font-weight:500;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .market-brand:hover{
+        color:#fff;
+    }
+
+    .market-brand i{
+        font-size:38px;
+    }
+
+    .market-search{
+        display:flex;
+        flex:1;
+        max-width:840px;
+        height:40px;
+        margin-left:18px;
+    }
+
+    .market-search input{
+        flex:1;
+        min-width:0;
+        border:2px solid #fff;
+        border-right:0;
+        border-radius:2px 0 0 2px;
+        padding:0 12px;
+        color:#39302c;
+        outline:0;
+    }
+
+    .market-search button{
+        width:64px;
+        border:0;
+        border-radius:0 2px 2px 0;
+        background:#ee3f25;
+        color:#fff;
+    }
+
+    .market-search button:hover{
+        background:#d93620;
+    }
+
+    .market-cart{
+        position:relative;
+        margin-left:auto;
+        padding:4px 10px;
+        color:#fff;
+        font-size:29px;
+        text-decoration:none;
+    }
+
+    .market-cart:hover{
+        color:#fff;
+    }
+
+    .market-cart-badge{
+        position:absolute;
+        top:-3px;
+        right:-2px;
+        min-width:20px;
+        height:18px;
+        padding:1px 5px;
+        border:2px solid #ff4d2d;
+        border-radius:10px;
+        background:#fff;
+        color:#ee3f25;
+        font-size:11px;
+        line-height:14px;
+        text-align:center;
+    }
+
+    .market-category-row{
+        min-height:22px;
         display:flex;
         align-items:center;
         justify-content:center;
+        gap:18px;
+        overflow:hidden;
+        font-size:12px;
+        white-space:nowrap;
     }
 
-    .user-menu{
-        border-radius:30px;
-        padding:10px 18px;
-        font-weight:600;
-        border:1px solid #e5e7eb;
+    .market-category-row a{
+        color:#fff;
+        text-decoration:none;
     }
 
-    .user-menu:hover{
-        background:#faf7f2;
+    .market-category-row a:hover{
+        color:#fff;
+        text-decoration:underline;
     }
 
-    .dropdown-menu{
-        min-width:220px;
-        border-radius:15px;
-        padding:10px;
+    .market-account{
+        position:relative;
     }
 
-    .dropdown-item{
-        border-radius:10px;
-        padding:10px 14px;
-        font-weight:500;
+    .market-account summary{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        cursor:pointer;
+        list-style:none;
     }
 
-    .dropdown-item:hover{
-        background:#f4e9df;
+    .market-account summary::-webkit-details-marker{
+        display:none;
     }
 
-    .dropdown-item.text-danger:hover{
-        background:#fbecea;
+    .market-avatar{
+        width:20px;
+        height:20px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#087f68;
+        color:#fff;
+        font-size:11px;
+        font-weight:700;
+    }
+
+    .market-account-menu{
+        position:absolute;
+        z-index:1050;
+        top:calc(100% + 9px);
+        right:0;
+        width:180px;
+        padding:8px 0;
+        border:1px solid #eee2dc;
+        border-radius:5px;
+        background:#fff;
+        box-shadow:0 10px 25px rgba(68,35,25,.18);
+    }
+
+    .market-account-menu a{
+        display:block;
+        padding:9px 14px;
+        color:#332b27;
+        font-size:13px;
+        text-decoration:none;
+    }
+
+    .market-account-menu a:hover{
+        background:#fff2ed;
+        color:#ee4d2d;
+    }
+
+    .market-account-menu i{
+        width:18px;
+        margin-right:5px;
+        color:#ee4d2d;
+    }
+
+    .market-account-menu hr{
+        margin:5px 0;
+        border:0;
+        border-top:1px solid #eee2dc;
     }
     .logout-confirm-modal .modal-dialog {
         max-width: 460px;
@@ -339,31 +405,83 @@
         border-color: #873724;
     }
 
+    @media (max-width: 900px) {
+        .market-header-inner {
+            width:calc(100% - 24px);
+        }
+
+        .market-mainbar {
+            padding-bottom:10px;
+        }
+
+        .market-mainbar-inner {
+            min-height:92px;
+            flex-wrap:wrap;
+            padding-top:10px;
+        }
+
+        .market-brand {
+            min-width:0;
+            font-size:24px;
+        }
+
+        .market-brand i {
+            font-size:32px;
+        }
+
+        .market-search {
+            order:3;
+            flex:0 0 100%;
+            max-width:none;
+            height:38px;
+            margin:0;
+        }
+
+        .market-cart {
+            margin-left:auto;
+        }
+
+        .market-category-row {
+            display:none;
+        }
+    }
+
     @media (max-width: 576px) {
-        .custom-navbar .container {
-            align-items: flex-start;
+        .market-topbar-inner {
+            min-height:30px;
+            width:calc(100% - 20px);
+            gap:8px;
+            overflow:visible;
         }
 
-        .brand-logo {
-            font-size: 19px;
+        .market-topbar-group {
+            gap:5px;
+            font-size:11px;
         }
 
-        .nav-actions {
-            justify-content: flex-end;
-            max-width: 100%;
+        .market-topbar-right > span {
+            display:none;
         }
 
-        .nav-btn {
-            padding: 7px 8px;
-            font-size: .8rem;
+        .market-mainbar-inner {
+            min-height:86px;
+            width:calc(100% - 20px);
         }
 
-        .user-menu {
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 8px 10px;
+        .market-brand {
+            font-size:21px;
+        }
+
+        .market-brand i {
+            font-size:29px;
+        }
+
+        .market-cart {
+            font-size:25px;
+        }
+
+        .market-account-menu {
+            right:-4px;
         }
 
         .logout-confirm-actions .btn {

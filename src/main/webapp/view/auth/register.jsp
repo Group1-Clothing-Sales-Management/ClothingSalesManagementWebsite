@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%
     String username = (String) request.getAttribute("username");
     String fullName = (String) request.getAttribute("fullName");
@@ -378,6 +379,8 @@
     </style>
 </head>
 <body>
+    <jsp:include page="/view/customer/common/header.jsp"/>
+
     <main class="auth-shell">
         <div class="auth-topbar">
             <a class="brand-link" href="<%= ctx %>/home">

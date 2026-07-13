@@ -2,6 +2,7 @@ package com.clothingsale.dao;
 
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
+import com.clothingsale.model.Category;
 import com.clothingsale.util.DBConnection;
 
 import java.sql.*;
@@ -9,6 +10,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerProductDAO {
+
+    public List<Category> getActiveCategories() {
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT id, category_name, slug, status "
+                + "FROM Category WHERE status = 1 ORDER BY id ASC";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Category category = new Category();
+                category.setId(rs.getInt("id"));
+                category.setCategoryName(rs.getString("category_name"));
+                category.setSlug(rs.getString("slug"));
+                category.setStatus(rs.getInt("status"));
+                categories.add(category);
+            }
+        } catch (SQLException e) {
+            System.err.println("Could not load customer header categories.");
+            e.printStackTrace();
+        }
+
+        return categories;
+    }
 
     public List<Product> getProducts(
             String keyword,

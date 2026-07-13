@@ -804,6 +804,7 @@
 
             <!-- SEARCH + FILTER -->
 
+            <c:if test="${not empty param.keyword}">
             <form action="${pageContext.request.contextPath}/home" method="GET" class="card search-card p-3 p-md-4 mb-5">
                 <div class="mb-3">
                     <h2 class="search-heading"><i class="fa-solid fa-sliders"></i> Find the right piece</h2>
@@ -842,6 +843,7 @@
                     </div>
                 </div>
             </form>
+            </c:if>
 
             <!-- PRODUCT SECTION TITLE -->
 

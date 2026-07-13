@@ -184,7 +184,7 @@
                 padding:0 4px;
                 display:flex;
                 align-items:center;
-                justify-content:space-between;
+                justify-content:flex-start;
                 gap:12px;
             }
 
@@ -193,6 +193,71 @@
                 align-items:center;
                 gap:9px;
                 white-space:nowrap;
+            }
+
+            .checkout-topbar-group:nth-child(2){
+                margin-left:auto;
+            }
+
+            .account-menu{
+                position:relative;
+            }
+
+            .account-menu summary{
+                display:flex;
+                align-items:center;
+                gap:6px;
+                cursor:pointer;
+                list-style:none;
+            }
+
+            .account-menu summary::-webkit-details-marker{
+                display:none;
+            }
+
+            .account-avatar{
+                width:20px;
+                height:20px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                border-radius:50%;
+                background:#087f68;
+                color:#fff;
+                font-size:11px;
+                font-weight:700;
+            }
+
+            .account-dropdown{
+                position:absolute;
+                z-index:20;
+                top:calc(100% + 10px);
+                right:0;
+                width:170px;
+                padding:8px 0;
+                background:#fff;
+                border:1px solid var(--checkout-border);
+                border-radius:6px;
+                box-shadow:0 8px 22px rgba(37,33,30,.16);
+            }
+
+            .account-dropdown a{
+                display:block;
+                padding:9px 14px;
+                color:var(--checkout-ink);
+                font-size:13px;
+                text-decoration:none;
+            }
+
+            .account-dropdown a:hover{
+                background:#fff3ef;
+                color:var(--checkout-primary);
+            }
+
+            .account-dropdown hr{
+                margin:5px 0;
+                border:0;
+                border-top:1px solid var(--checkout-border);
             }
 
             .checkout-brand{
@@ -228,6 +293,62 @@
                 border-left:1px solid var(--checkout-primary);
                 color:var(--checkout-primary);
                 font-size:20px;
+            }
+
+            .checkout-search{
+                display:flex;
+                flex:1;
+                max-width:700px;
+                height:40px;
+                margin-left:28px;
+            }
+
+            .checkout-search input{
+                flex:1;
+                min-width:0;
+                border:2px solid var(--checkout-primary);
+                border-right:0;
+                padding:0 12px;
+                color:var(--checkout-ink);
+            }
+
+            .checkout-search button{
+                width:62px;
+                border:0;
+                background:var(--checkout-primary);
+                color:#fff;
+            }
+
+            .checkout-cart-link{
+                position:relative;
+                margin-left:auto;
+                color:var(--checkout-primary);
+                font-size:28px;
+                text-decoration:none;
+            }
+
+            .checkout-cart-count{
+                position:absolute;
+                top:-5px;
+                right:-12px;
+                min-width:18px;
+                height:18px;
+                padding:1px 5px;
+                border-radius:10px;
+                background:#fff;
+                color:var(--checkout-primary);
+                font-size:11px;
+                text-align:center;
+            }
+
+            .checkout-category-row{
+                display:none;
+                justify-content:center;
+                gap:20px;
+                overflow:hidden;
+                color:#fff;
+                font-size:12px;
+                white-space:nowrap;
             }
 
             .checkout-shell{
@@ -442,8 +563,13 @@
                     padding:0 16px;
                 }
 
-                .checkout-topbar-group:last-child{
+                .checkout-topbar-group:nth-child(2){
                     display:none;
+                }
+
+                .checkout-account-menu{
+                    display:flex;
+                    margin-left:auto;
                 }
 
                 .checkout-brand-inner{
@@ -457,6 +583,14 @@
 
                 .checkout-brand-title{
                     font-size:17px;
+                }
+
+                .checkout-search{
+                    margin-left:8px;
+                }
+
+                .checkout-category-row{
+                    display:none;
                 }
 
                 .checkout-page .card-header,
@@ -478,6 +612,21 @@
 
                 .address-info{
                     display:block;
+                }
+            }
+
+            @media(max-width:575px){
+                .checkout-brand-inner{
+                    min-height:124px;
+                    padding:12px 16px;
+                    flex-wrap:wrap;
+                }
+
+                .checkout-search{
+                    flex:0 0 100%;
+                    max-width:none;
+                    margin:0;
+                    order:3;
                 }
             }
 
@@ -503,6 +652,19 @@
                     <span><i class="bi bi-question-circle me-1"></i>Help</span>
                     <span><i class="bi bi-globe me-1"></i>English⌄</span>
                 </div>
+                <details class="account-menu checkout-account-menu">
+                    <summary>
+                        <span class="account-avatar">M</span>
+                        <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
+                        <i class="bi bi-chevron-down"></i>
+                    </summary>
+                    <div class="account-dropdown">
+                        <a href="${pageContext.request.contextPath}/customer/profile">Profile</a>
+                        <a href="${pageContext.request.contextPath}/customer/orders">My Orders</a>
+                        <hr>
+                        <a href="${pageContext.request.contextPath}/customer/logout">Logout</a>
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -513,6 +675,24 @@
                     Clothing Sale
                 </a>
                 <span class="checkout-brand-title">Checkout</span>
+                <form action="${pageContext.request.contextPath}/products" method="get" class="checkout-search">
+                    <input type="text" name="keyword" placeholder="Search products">
+                    <button type="submit" aria-label="Search products">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                <a href="${pageContext.request.contextPath}/cart" class="checkout-cart-link" aria-label="Cart">
+                    <i class="bi bi-cart3"></i>
+                    <span class="checkout-cart-count">0</span>
+                </a>
+            </div>
+            <div class="checkout-category-row">
+                <span>Ốp lưng điện thoại</span>
+                <span>Micro máy vi tính để bàn</span>
+                <span>Yisong 003</span>
+                <span>Mô hình iPhone</span>
+                <span>Arm sleeve gaming</span>
+                <span>Ghế Centaur Gundam</span>
             </div>
         </div>
 

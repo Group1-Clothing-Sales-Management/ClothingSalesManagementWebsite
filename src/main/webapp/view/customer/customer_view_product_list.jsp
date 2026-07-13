@@ -456,6 +456,7 @@
 
             <!-- SEARCH -->
 
+            <c:if test="${not empty param.keyword}">
             <form action="${pageContext.request.contextPath}/products"
                   method="get"
                   class="card search-card p-4 mb-5">
@@ -524,6 +525,7 @@
                 </div>
 
             </form>
+            </c:if>
 
             <div class="product-grid">
 
