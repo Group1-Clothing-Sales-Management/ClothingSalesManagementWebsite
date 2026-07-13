@@ -1,6 +1,9 @@
-CREATE DATABASE ClothesShopDB;
+IF DB_ID(N'ClothesShopDB') IS NULL
+BEGIN
+    EXEC(N'CREATE DATABASE [ClothesShopDB]');
+END
 GO
-USE ClothesShopDB;
+USE [ClothesShopDB];
 GO
 
 -- =========================================================================
@@ -8,27 +11,36 @@ GO
 -- =========================================================================
 
 -- 1. Bảng Tỉnh / Thành phố
-CREATE TABLE Province (
+IF OBJECT_ID(N'dbo.Province', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Province (
     id VARCHAR(20) PRIMARY KEY, -- Có thể dùng mã Code của Tổng cục Thống kê hoặc API (VD: '01' cho Hà Nội)
     province_name NVARCHAR(100) NOT NULL,
     type NVARCHAR(30) -- Thành phố TW, Tỉnh
 );
+END
 
 -- 2. Bảng Quận / Huyện
-CREATE TABLE District (
+IF OBJECT_ID(N'dbo.District', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.District (
     id VARCHAR(20) PRIMARY KEY,
     district_name NVARCHAR(100) NOT NULL,
     type NVARCHAR(30),
     province_id VARCHAR(20) FOREIGN KEY REFERENCES Province(id)
 );
+END
 
 -- 3. Bảng Phường / Xã / Thị trấn
-CREATE TABLE Ward (
+IF OBJECT_ID(N'dbo.Ward', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Ward (
     id VARCHAR(20) PRIMARY KEY,
     ward_name NVARCHAR(100) NOT NULL,
     type NVARCHAR(30),
     district_id VARCHAR(20) FOREIGN KEY REFERENCES District(id)
 );
+END
 
 
 -- =========================================================================
@@ -36,14 +48,19 @@ CREATE TABLE Ward (
 -- =========================================================================
 
 -- 4. Bảng Role
-CREATE TABLE Role (
+IF OBJECT_ID(N'dbo.Role', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Role (
     id INT IDENTITY(1,1) PRIMARY KEY,
     role_name VARCHAR(50) NOT NULL UNIQUE, -- ADMIN, CUSTOMER, STAFF, MANAGER
     description NVARCHAR(255)
 );
+END
 
 -- 5. Bảng User
-CREATE TABLE [User] (
+IF OBJECT_ID(N'dbo.User', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.[User] (
     id INT IDENTITY(1,1) PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL, -- Lưu hash password (BCrypt/SCrypt)
@@ -56,9 +73,12 @@ CREATE TABLE [User] (
     updated_at DATETIME DEFAULT GETDATE(),
     role_id INT FOREIGN KEY REFERENCES Role(id)
 );
+END
 
 -- 6. Bảng Sổ địa chỉ người dùng (Một user có nhiều địa chỉ)
-CREATE TABLE User_Address (
+IF OBJECT_ID(N'dbo.User_Address', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.User_Address (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE,
     recipient_name NVARCHAR(100) NOT NULL, -- Tên người nhận (có thể mua hộ người khác)
@@ -67,9 +87,12 @@ CREATE TABLE User_Address (
     address_detail NVARCHAR(255) NOT NULL,  -- Số nhà, tên đường, thôn/xóm
     is_default BIT DEFAULT 0 -- 1: Địa chỉ mặc định
 );
+END
 
 -- 7. Bảng Token bảo mật (Dùng chung cho cả Reset Pass và Verify Email)
-CREATE TABLE Security_Token (
+IF OBJECT_ID(N'dbo.Security_Token', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Security_Token (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE,
     token_type VARCHAR(30) NOT NULL, -- RESET_PASSWORD, EMAIL_VERIFICATION
@@ -77,9 +100,12 @@ CREATE TABLE Security_Token (
     expiry_date DATETIME NOT NULL,
     is_used BIT DEFAULT 0
 );
+END
 
 -- 8. Bảng Nhật ký hệ thống
-CREATE TABLE Activity_Log (
+IF OBJECT_ID(N'dbo.Activity_Log', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Activity_Log (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE SET NULL,
     action_type VARCHAR(50) NOT NULL, -- LOGIN, UPDATE_PROFILE, PLACE_ORDER...
@@ -87,6 +113,7 @@ CREATE TABLE Activity_Log (
     ip_address VARCHAR(45),
     created_at DATETIME DEFAULT GETDATE()
 );
+END
 
 
 -- =========================================================================
@@ -94,16 +121,21 @@ CREATE TABLE Activity_Log (
 -- =========================================================================
 
 -- 9. Bảng Thương hiệu
-CREATE TABLE Brand (
+IF OBJECT_ID(N'dbo.Brand', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Brand (
     id INT IDENTITY(1,1) PRIMARY KEY,
     brand_name NVARCHAR(100) NOT NULL,
     slug VARCHAR(150) NOT NULL UNIQUE, -- Phục vụ SEO URL đẹp (VD: 'nike-store')
     description NVARCHAR(MAX),
     logo_url VARCHAR(255)
 );
+END
 
 -- 10. Bảng Danh mục (Hỗ trợ danh mục đa cấp - Đệ quy)
-CREATE TABLE Category (
+IF OBJECT_ID(N'dbo.Category', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Category (
     id INT IDENTITY(1,1) PRIMARY KEY,
     category_name NVARCHAR(100) NOT NULL,
     slug VARCHAR(150) NOT NULL UNIQUE,
@@ -111,9 +143,12 @@ CREATE TABLE Category (
     description NVARCHAR(MAX),
     status BIT DEFAULT 1
 );
+END
 
 -- 11. Bảng Sản phẩm (Thông tin cốt lõi)
-CREATE TABLE Product (
+IF OBJECT_ID(N'dbo.Product', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Product (
     id INT IDENTITY(1,1) PRIMARY KEY,
     product_name NVARCHAR(200) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
@@ -125,18 +160,24 @@ CREATE TABLE Product (
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE()
 );
+END
 
 -- 12. Bảng Hình ảnh sản phẩm
-CREATE TABLE Product_Image (
+IF OBJECT_ID(N'dbo.Product_Image', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Product_Image (
     id INT IDENTITY(1,1) PRIMARY KEY,
     product_id INT FOREIGN KEY REFERENCES Product(id) ON DELETE CASCADE,
     image_url VARCHAR(255) NOT NULL,
     is_main BIT DEFAULT 0, -- 1: Ảnh đại diện hiển thị ở danh sách
     sort_order INT DEFAULT 0 -- Thứ tự sắp xếp ảnh khi slide
 );
+END
 
 -- 13. Bảng Biến thể sản phẩm (Mỗi bản ghi là một SKU thực tế trong kho)
-CREATE TABLE Product_Variant (
+IF OBJECT_ID(N'dbo.Product_Variant', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Product_Variant (
     id INT IDENTITY(1,1) PRIMARY KEY,
     product_id INT FOREIGN KEY REFERENCES Product(id) ON DELETE CASCADE,
     sku VARCHAR(50) NOT NULL UNIQUE, -- Mã quản lý kho (VD: PREMIUM-JEAN-M-BLUE)
@@ -145,23 +186,32 @@ CREATE TABLE Product_Variant (
     stock_quantity INT NOT NULL DEFAULT 0,
     status VARCHAR(30) DEFAULT 'ACTIVE' -- ACTIVE, INACTIVE
 );
+END
 
 -- 14. Bảng Thuộc tính (Size, Color, Material...)
-CREATE TABLE Attribute (
+IF OBJECT_ID(N'dbo.Attribute', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Attribute (
     id INT IDENTITY(1,1) PRIMARY KEY,
     attribute_name NVARCHAR(100) NOT NULL UNIQUE
 );
+END
 
 -- 15. Bảng Giá trị thuộc tính của từng Biến thể (Cầu nối m-n)
-CREATE TABLE Variant_Attribute_Value (
+IF OBJECT_ID(N'dbo.Variant_Attribute_Value', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Variant_Attribute_Value (
     variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
     attribute_id INT FOREIGN KEY REFERENCES Attribute(id),
     attribute_value NVARCHAR(100) NOT NULL, -- VD: 'L', 'XL' hoặc 'Đỏ', 'Đen'
     PRIMARY KEY (variant_id, attribute_id)
 );
+END
 
 -- 16. Bảng Nhật ký kho hàng (Theo dõi chặt chẽ dòng chảy của hàng hóa)
-CREATE TABLE Inventory_Log (
+IF OBJECT_ID(N'dbo.Inventory_Log', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Inventory_Log (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
     user_id INT FOREIGN KEY REFERENCES [User](id), -- Nhân viên thực hiện
@@ -170,6 +220,7 @@ CREATE TABLE Inventory_Log (
     note NVARCHAR(500), -- Ghi chú lý do hoặc mã đơn hàng liên quan
     created_at DATETIME DEFAULT GETDATE()
 );
+END
 
 
 -- =========================================================================
@@ -177,16 +228,21 @@ CREATE TABLE Inventory_Log (
 -- =========================================================================
 
 -- 17. Bảng Giỏ hàng (Lưu trực tiếp DB để đồng bộ trên mọi thiết bị khi User đăng nhập)
-CREATE TABLE Cart (
+IF OBJECT_ID(N'dbo.Cart', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Cart (
     user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE CASCADE,
     variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
     quantity INT NOT NULL CHECK (quantity > 0),
     created_at DATETIME DEFAULT GETDATE(),
     PRIMARY KEY (user_id, variant_id)
 );
+END
 
 -- 18. Bang san pham yeu thich
-CREATE TABLE Wishlist (
+IF OBJECT_ID(N'dbo.Wishlist', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Wishlist (
     user_id INT NOT NULL,
     product_id INT NOT NULL,
     variant_id INT NULL,
@@ -200,11 +256,23 @@ CREATE TABLE Wishlist (
     CONSTRAINT FK_Wishlist_Variant FOREIGN KEY (variant_id)
         REFERENCES Product_Variant(id)
 );
+END
 
-CREATE INDEX IX_Wishlist_Variant ON Wishlist(variant_id);
+IF OBJECT_ID(N'dbo.Wishlist', N'U') IS NOT NULL
+   AND NOT EXISTS (
+       SELECT 1
+       FROM sys.indexes
+       WHERE name = N'IX_Wishlist_Variant'
+         AND object_id = OBJECT_ID(N'dbo.Wishlist')
+   )
+BEGIN
+    CREATE INDEX IX_Wishlist_Variant ON dbo.Wishlist(variant_id);
+END
 
 -- 18. Bảng Mã giảm giá
-CREATE TABLE Voucher (
+IF OBJECT_ID(N'dbo.Voucher', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Voucher (
     id INT IDENTITY(1,1) PRIMARY KEY,
     code VARCHAR(50) NOT NULL UNIQUE,
     title NVARCHAR(200) NOT NULL,
@@ -217,9 +285,12 @@ CREATE TABLE Voucher (
     usage_limit INT NOT NULL, -- Tổng lượt sử dụng tối đa của voucher này
     used_count INT DEFAULT 0 -- Số lượt đã dùng
 );
+END
 
 -- 19. Bảng Đơn vị & Thông tin vận chuyển
-CREATE TABLE Shipment (
+IF OBJECT_ID(N'dbo.Shipment', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Shipment (
     id INT IDENTITY(1,1) PRIMARY KEY,
     carrier_name NVARCHAR(100) NOT NULL, -- GHN, GHTK, Tự giao hàng...
     shipping_status VARCHAR(50) NOT NULL, -- PENDING_PICKUP, SHIPPING, DELIVERED, FAILED
@@ -227,9 +298,12 @@ CREATE TABLE Shipment (
     shipping_cost DECIMAL(18,2) DEFAULT 0,
     estimated_delivery_time DATETIME NULL
 );
+END
 
 -- 20. Bảng Đơn hàng (Đóng băng toàn bộ thông tin tại thời điểm mua)
-CREATE TABLE [Order] (
+IF OBJECT_ID(N'dbo.Order', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.[Order] (
     id INT IDENTITY(1,1) PRIMARY KEY,
     order_code VARCHAR(50) NOT NULL UNIQUE, -- Mã đơn hàng hiển thị trực quan (VD: SHOP-20260601-001)
     user_id INT FOREIGN KEY REFERENCES [User](id) ON DELETE SET NULL, -- User xóa thì đơn hàng vẫn giữ lại để làm báo cáo
@@ -253,9 +327,12 @@ CREATE TABLE [Order] (
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE()
 );
+END
 
 -- 21. Bảng Chi tiết đơn hàng
-CREATE TABLE Order_Detail (
+IF OBJECT_ID(N'dbo.Order_Detail', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Order_Detail (
     id INT IDENTITY(1,1) PRIMARY KEY,
     order_id INT FOREIGN KEY REFERENCES [Order](id) ON DELETE CASCADE,
     variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE SET NULL, -- Biến thể xóa vẫn lưu log mua bán
@@ -266,9 +343,12 @@ CREATE TABLE Order_Detail (
     quantity INT NOT NULL CHECK (quantity > 0),
     price DECIMAL(18,2) NOT NULL -- Giá bán thực tế tại thời điểm mua
 );
+END
 
 -- 22. Bảng Thanh toán
-CREATE TABLE Payment (
+IF OBJECT_ID(N'dbo.Payment', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Payment (
     id INT IDENTITY(1,1) PRIMARY KEY,
     order_id INT FOREIGN KEY REFERENCES [Order](id) ON DELETE CASCADE,
     payment_method VARCHAR(50) NOT NULL, -- COD, VNPAY, MOMO, BANK_TRANSFER
@@ -277,9 +357,12 @@ CREATE TABLE Payment (
     transaction_reference VARCHAR(100) NULL, -- Mã giao dịch trả về từ ngân hàng/VNPAY (rất quan trọng đối soát)
     payment_date DATETIME NULL
 );
+END
 
 -- 23. Bảng Đánh giá & Bình luận
-CREATE TABLE Feedback (
+IF OBJECT_ID(N'dbo.Feedback', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Feedback (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT FOREIGN KEY REFERENCES [User](id),
     product_id INT FOREIGN KEY REFERENCES Product(id) ON DELETE CASCADE,
@@ -292,6 +375,7 @@ CREATE TABLE Feedback (
     responded_at DATETIME NULL, -- Thời gian trả lời gần nhất
     created_at DATETIME DEFAULT GETDATE()
 );
+END
 GO
 
 
@@ -300,7 +384,9 @@ GO
 -- nếu có thay đổi ae phải add vào DB 
 
 -- Thêm bảng mới phục vụ quản lý lô hàng theo cơ chế FIFO
-CREATE TABLE Product_Batch (
+IF OBJECT_ID(N'dbo.Product_Batch', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Product_Batch (
     id INT IDENTITY(1,1) PRIMARY KEY,
     variant_id INT FOREIGN KEY REFERENCES Product_Variant(id) ON DELETE CASCADE,
     batch_code VARCHAR(50) NOT NULL, -- Ví dụ: BATCH-20260611-01
@@ -310,3 +396,4 @@ CREATE TABLE Product_Batch (
     current_quantity INT NOT NULL, -- Số lượng còn lại (Sẽ trừ dần về 0 theo FIFO)
     created_at DATETIME DEFAULT GETDATE() -- Sắp xếp theo thời gian tăng dần để tìm lô cũ nhất
 );
+END
