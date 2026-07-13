@@ -87,26 +87,26 @@ INSERT INTO [User] (username, password, full_name, email, phone, status, role_id
 ('khachhang02', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Lê Hoàng Nam',       'namlh@gmail.com',       '0944556677', 'ACTIVE', 3);
 
 INSERT INTO User_Address (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default) VALUES
-(4, N'Nguyễn Ngọc Quý',        '0933445566', '31162', N'Số 123 Đường 3/2',             1),
-(4, N'Anh Quý (Văn phòng)',    '0933445566', '26734', N'Tòa nhà Bitexco, Tầng 15',     0),
-(5, N'Lê Hoàng Nam',           '0944556677', '00010', N'Số 45 Phố Trúc Bạch',          1);
+(4, N'Nguyễn Ngọc Quý',        '0933445566', '31162', N'123 3/2 Street',                1),
+(4, N'Anh Quý (Office)',       '0933445566', '26734', N'Bitexco Building, Floor 15',    0),
+(5, N'Lê Hoàng Nam',           '0944556677', '00010', N'45 Truc Bach Street',            1);
 
 -- =========================================================================
 -- 3. BRANDS & CATEGORIES
 -- =========================================================================
 INSERT INTO Brand (brand_name, slug, description, logo_url) VALUES
-('Coolmate', 'coolmate', N'Thương hiệu thời trang nam tối giản',            'coolmate_logo.png'),
-('Routine',  'routine',  N'Thời trang nam nữ phong cách hằng ngày',         'routine_logo.png'),
-('Uniqlo',   'uniqlo',   N'Thời trang bán lẻ quốc tế đến từ Nhật Bản',     'uniqlo_logo.png');
+('Coolmate', 'coolmate', N'Minimalist menswear brand',                       'coolmate_logo.png'),
+('Routine',  'routine',  N'Everyday fashion for men and women',              'routine_logo.png'),
+('Uniqlo',   'uniqlo',   N'International retail fashion from Japan',         'uniqlo_logo.png');
 
 INSERT INTO Category (category_name, slug, parent_id, description, status) VALUES
-(N'Áo Nam',  'ao-nam',  NULL, N'Các sản phẩm áo dành cho nam', 1),
-(N'Quần Nam','quan-nam', NULL, N'Các sản phẩm quần dành cho nam', 1);
+(N'Mens Tops',  'ao-nam',  NULL, N'Tops and shirts for men', 1),
+(N'Mens Bottoms','quan-nam', NULL, N'Bottoms and trousers for men', 1);
 
 INSERT INTO Category (category_name, slug, parent_id, description, status) VALUES
-(N'Áo Thun T-Shirt', 'ao-thun-t-shirt', 1, N'Áo thun cổ tròn, cổ tim nam',   1),
-(N'Áo Sơ Mi',        'ao-so-mi',        1, N'Áo sơ mi dài tay, ngắn tay',     1),
-(N'Quần Jean Nam',   'quan-jean-nam',   2, N'Quần bò, jean dáng dài',          1);
+(N'T-Shirts', 'ao-thun-t-shirt', 1, N'Mens crew-neck and V-neck T-shirts', 1),
+(N'Shirts',   'ao-so-mi',        1, N'Long-sleeve and short-sleeve shirts', 1),
+(N'Mens Jeans','quan-jean-nam',  2, N'Full-length denim jeans for men', 1);
 
 -- =========================================================================
 -- 4. ATTRIBUTES
@@ -119,28 +119,28 @@ INSERT INTO Attribute (attribute_name) VALUES
 -- 5. PRODUCTS (ID 1-22)
 -- =========================================================================
 INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status, created_at, updated_at) VALUES
-(N'Áo Thun Nam Cotton Compact',    'ao-thun-nam-cotton-compact',    1, 3, N'Áo thun 100% cotton siêu mát',        N'Chất liệu cotton compact bền bỉ gấp 2 lần cotton thường, thấm hút mồ hôi cực tốt thích hợp mặc hằng ngày.',                    'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Jean Nam Dáng Slimfit',    'quan-jean-nam-dang-slimfit',    2, 5, N'Quần jean co giãn nhẹ lịch lãm',      N'Thiết kế ôm nhẹ tôn dáng, chất liệu jean dày dặn có co giãn giúp thoải mái vận động cả ngày dài.',                          'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Thun Thể Thao Nam Pro',      'ao-thun-the-thao-nam-pro',      1, 3, N'Chất vải co giãn, thoáng khí tốt',    N'Phù hợp cho các hoạt động thể thao, gym, chạy bộ với độ bền màu cao.',                                                       'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo T-Shirt Cotton Cổ Tròn',     'ao-t-shirt-cotton-co-tron',     1, 3, N'100% Cotton tự nhiên mềm mại',        N'Form dáng basic dễ phối đồ, mặc mát mẻ quanh năm.',                                                                          'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Polo Nam Gân Nổi',           'ao-polo-nam-gan-noi',           1, 3, N'Áo polo lịch sự, tôn dáng',           N'Chất liệu cá sấu pha spandex giúp giữ form áo cực tốt sau nhiều lần giặt.',                                                   'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Thun Oversize Đường Phố',    'ao-thun-oversize-duong-pho',    1, 3, N'Phong cách streetstyle năng động',    N'Thiết kế rộng rãi, họa tiết in kỹ thuật số sắc nét không bong tróc.',                                                        'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Sơ Mi Cổ Tàu Vải Đũi',      'ao-so-mi-co-tau-vai-dui',       2, 4, N'Chất đũi nhẹ nhàng, thấm hút',        N'Phong cách nhẹ nhàng vintage, thích hợp đi du lịch, đi cà phê.',                                                             'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Sơ Mi Trắng Công Sở OxFord','ao-so-mi-trang-cong-so-oxford', 2, 4, N'Vải Oxford dày dặn, đứng form',        N'Mẫu áo không thể thiếu của phái mạnh khi đi làm hoặc tham gia sự kiện.',                                                     'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Sơ Mi Họa Tiết Sọc Kẻ',     'ao-so-mi-hoa-tiet-soc-ke',      3, 4, N'Sọc kẻ thanh lịch trẻ trung',         N'Chất vải ít nhăn, dễ ủi, mang lại cảm giác dễ chịu cả ngày.',                                                               'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Sơ Mi Denim Bụi Bặm',       'ao-so-mi-denim-bui-bam',        2, 4, N'Phong cách bò nam tính',               N'Vải denim mềm vừa phải, có thể mặc khoác ngoài hoặc mặc trơn.',                                                             'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Jean Đen Trơn Dáng Baggy', 'quan-jean-den-tron-dang-baggy', 2, 5, N'Dáng baggy thoải mái vận động',       N'Phù hợp cho cả nam và nữ, chất bò dày dặn, không ra màu.',                                                                   'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Jean Rách Gối Cá Tính',    'quan-jean-rach-goi-ca-tinh',    2, 5, N'Điểm nhấn rách gối trẻ trung',        N'Sản phẩm dành cho các bạn trẻ yêu thích sự phá cách, bụi bặm.',                                                             'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Jean Co Giãn Màu Xám Khói','quan-jean-co-gian-mau-xam-khoi',2, 5, N'Màu xám khói trendy dễ phối',         N'Sự kết hợp hoàn hảo giữa cotton và spandex tạo độ co giãn tối đa.',                                                         'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Jean Nam Dáng Đứng Regular','quan-jean-nam-dang-dung-regular',3,5, N'Ống đứng cổ điển, lịch sự',           N'Thích hợp cho độ tuổi trưởng thành, mặc đi làm, đi chơi đều hợp.',                                                          'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Khoác Gió Chống Nước',       'ao-khoac-gio-chong-nuoc',       3, 3, N'Chống mưa nhẹ và cản gió tốt',        N'Công nghệ vải dù cao cấp từ Nhật Bản, có túi trong tiện lợi.',                                                               'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Hoodie Nỉ Bông Mùa Đông',    'ao-hoodie-ni-bong-mua-dong',    1, 3, N'Nỉ bông dày dặn siêu ấm áp',          N'Form áo local brand rộng rãi, bo chun tay chắc chắn.',                                                                       'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Short Kaki Đi Biển',        'quan-short-kaki-di-bien',       2, 5, N'Chất kaki mềm, nhiều màu sắc',        N'Chiều dài ngang đùi trẻ trung, cạp chun co giãn dễ chịu.',                                                                   'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Tanktop Nam Sát Nách Gym',    'ao-tanktop-nam-sat-nach-gym',   1, 3, N'Thiết kế khoét sâu thể thao',         N'Vải thun lạnh siêu mát, thoát mồ hôi chỉ trong vài giây.',                                                                   'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Tây Âu Công Sở Nam',        'quan-tay-au-cong-so-nam',       2, 5, N'Chất vải tuyết mưa đứng dáng',        N'Có tăng cạp thông minh, thích hợp phối cùng áo sơ mi.',                                                                      'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Blazer Nam Hàn Quốc',         'ao-blazer-nam-han-quoc',        2, 4, N'Form rộng phong cách lãng tử',        N'Vải có lót trong mịn màng, thích hợp mặc mùa thu đông.',                                                                     'ACTIVE', GETDATE(), GETDATE()),
-(N'Áo Len Cổ Lọ Giữ Nhiệt',         'ao-len-co-lo-giu-nhiet',        3, 3, N'Sợi len dệt tăm co giãn tốt',         N'Giữ ấm cổ rất tốt, ôm sát cơ thể tôn đường nét nam tính.',                                                                   'ACTIVE', GETDATE(), GETDATE()),
-(N'Quần Jogger Thể Thao Năng Động', 'quan-jogger-the-thao-nang-dong',1, 5, N'Chất nỉ chân cua cao cấp',            N'Thích hợp mặc ở nhà, đi tập hoặc dạo phố cuối tuần.',                                                                        'ACTIVE', GETDATE(), GETDATE());
+(N'Compact Cotton Mens T-Shirt',    'ao-thun-nam-cotton-compact',    1, 3, N'Cool 100% cotton T-shirt',             N'Durable compact cotton is twice as strong as regular cotton and offers excellent moisture absorption for everyday wear.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Slim-Fit Mens Jeans',            'quan-jean-nam-dang-slimfit',    2, 5, N'Polished jeans with light stretch',    N'A lightly fitted cut and flexible denim keep you comfortable throughout the day.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Pro Mens Performance T-Shirt',   'ao-thun-the-thao-nam-pro',      1, 3, N'Stretchy, breathable fabric',          N'Ideal for sports, gym sessions, and running with excellent colorfastness.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Classic Cotton Crew-Neck T-Shirt','ao-t-shirt-cotton-co-tron',     1, 3, N'Soft 100% natural cotton',             N'A versatile basic fit that stays cool and easy to style all year round.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Textured Mens Polo Shirt',        'ao-polo-nam-gan-noi',           1, 3, N'Polished polo with a flattering fit',   N'Pique fabric blended with spandex helps the shirt retain its shape after repeated washing.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Oversized Street T-Shirt',        'ao-thun-oversize-duong-pho',    1, 3, N'Dynamic streetwear style',             N'A relaxed cut with sharp digital-print graphics that will not peel.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Lightweight Linen Mandarin Shirt', 'ao-so-mi-co-tau-vai-dui',      2, 4, N'Light, breathable linen',              N'A gentle vintage style for travel, coffee dates, and relaxed days.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'White Oxford Business Shirt',     'ao-so-mi-trang-cong-so-oxford', 2, 4, N'Heavyweight Oxford fabric',             N'An essential shirt for work and special occasions.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Classic Striped Shirt',            'ao-so-mi-hoa-tiet-soc-ke',      3, 4, N'Young, elegant stripes',               N'Wrinkle-resistant fabric provides comfortable wear throughout the day.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Rugged Denim Shirt',               'ao-so-mi-denim-bui-bam',        2, 4, N'Confident denim style',                N'Soft medium-weight denim works as an overshirt or a standalone piece.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Black Baggy Jeans',                'quan-jean-den-tron-dang-baggy', 2, 5, N'Comfortable baggy fit',                N'Suitable for all genders, with durable denim that does not fade easily.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Distressed Knee Jeans',             'quan-jean-rach-goi-ca-tinh',    2, 5, N'Youthful distressed-knee detail',       N'Made for anyone who enjoys an edgy, rugged look.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Smoke Gray Stretch Jeans',           'quan-jean-co-gian-mau-xam-khoi',2, 5, N'Trendy, easy-to-style smoke gray',      N'A balanced cotton and spandex blend delivers maximum stretch.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Regular Straight-Leg Mens Jeans',   'quan-jean-nam-dang-dung-regular',3,5, N'Classic, polished straight leg',       N'An easy choice for work or weekends.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Water-Resistant Windbreaker',       'ao-khoac-gio-chong-nuoc',       3, 3, N'Light rain and wind protection',       N'Premium Japanese technical fabric with a convenient inner pocket.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Warm Winter Fleece Hoodie',         'ao-hoodie-ni-bong-mua-dong',    1, 3, N'Thick, cozy fleece',                   N'A relaxed local-brand fit with secure ribbed cuffs.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Beach Kaki Shorts',                  'quan-short-kaki-di-bien',       2, 5, N'Soft kaki in multiple colors',         N'A youthful mid-thigh length with a comfortable elastic waistband.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Gym Mens Tank Top',                  'ao-tanktop-nam-sat-nach-gym',   1, 3, N'Athletic deep-armhole design',         N'Cool quick-dry jersey wicks away sweat in seconds.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Classic Mens Dress Trousers',        'quan-tay-au-cong-so-nam',       2, 5, N'Structured premium fabric',            N'Features an adjustable waistband and pairs well with dress shirts.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Korean-Style Mens Blazer',           'ao-blazer-nam-han-quoc',        2, 4, N'Relaxed romantic fit',                 N'Smoothly lined fabric is ideal for fall and winter.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Warm Turtleneck Sweater',             'ao-len-co-lo-giu-nhiet',        3, 3, N'Flexible rib-knit yarn',              N'Keeps the neck warm while following the body for a confident silhouette.', 'ACTIVE', GETDATE(), GETDATE()),
+(N'Dynamic Sport Joggers',               'quan-jogger-the-thao-nang-dong',1, 5, N'Premium loopback fleece',              N'Comfortable for lounging, workouts, or weekend walks.', 'ACTIVE', GETDATE(), GETDATE());
 GO
 
 -- =========================================================================
@@ -300,15 +300,15 @@ GO
 
 -- Product 1 (variant_id 1-4)
 INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(1, 1, N'Đen'),        (1, 2, 'M'),
-(2, 1, N'Đen'),        (2, 2, 'L'),
-(3, 1, N'Trắng'),      (3, 2, 'M'),
-(4, 1, N'Trắng'),      (4, 2, 'L');
+(1, 1, N'Black'),      (1, 2, 'M'),
+(2, 1, N'Black'),      (2, 2, 'L'),
+(3, 1, N'White'),      (3, 2, 'M'),
+(4, 1, N'White'),      (4, 2, 'L');
 
 -- Product 2 (variant_id 5-6)
 INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(5, 1, N'Xanh Khói'),  (5, 2, '30'),
-(6, 1, N'Xanh Khói'),  (6, 2, '31');
+(5, 1, N'Smoke Gray'),  (5, 2, '30'),
+(6, 1, N'Smoke Gray'),  (6, 2, '31');
 
 -- Product 3 (variant_id 7-10)
 INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
@@ -478,22 +478,22 @@ INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
 -- 9. VOUCHERS, CART, ORDERS & PAYMENTS
 -- =========================================================================
 INSERT INTO Voucher (code, title, discount_type, discount_value, max_discount_amount, min_order_value, start_date, end_date, usage_limit, used_count) VALUES
-('XINCHAO50', N'Voucher chào mừng thành viên mới',       'FIXED_AMOUNT', 50000, 50000, 150000, '2026-01-01', '2026-12-31', 1000,  5),
-('HE2026',    N'Khuyến mãi bộ sưu tập hè giảm 10%',      'PERCENTAGE',   10,    30000, 200000, '2026-05-01', '2026-08-31',  500, 12);
+('XINCHAO50', N'Welcome voucher for new members',        'FIXED_AMOUNT', 50000, 50000, 150000, '2026-01-01', '2026-12-31', 1000,  5),
+('HE2026',    N'Summer collection: 10% off',             'PERCENTAGE',   10,    30000, 200000, '2026-05-01', '2026-08-31',  500, 12);
 
 INSERT INTO Cart (user_id, variant_id, quantity) VALUES
 (4, 1, 2),
 (4, 5, 1);
 
 INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time) VALUES
-(N'Giao Hàng Nhanh (GHN)', 'SHIPPING', 'GHN998877A', 30000, '2026-06-05');
+(N'Fast Delivery (GHN)', 'SHIPPING', 'GHN998877A', 30000, '2026-06-05');
 
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note) VALUES
-('SHOP-20260601-001', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Số 123 Đường 3/2', 639000, 50000, 30000, 619000, 'SHIPPING', N'Giao giờ hành chính giúp em');
+('SHOP-20260601-001', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street', 639000, 50000, 30000, 619000, 'SHIPPING', N'Please deliver during office hours');
 
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) VALUES
-(1, 1, N'Áo Thun Nam Cotton Compact', N'Color: Đen, Size: M',        1, 189000),
-(1, 5, N'Quần Jean Nam Dáng Slimfit', N'Color: Xanh Khói, Size: 30', 1, 450000);
+(1, 1, N'Compact Cotton Mens T-Shirt', N'Color: Black, Size: M',        1, 189000),
+(1, 5, N'Slim-Fit Mens Jeans', N'Color: Smoke Gray, Size: 30', 1, 450000);
 
 INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date) VALUES
 (1, 'VNPAY', 'PAID', 619000, 'VNPAY123456789', '2026-06-01 08:30:00');
@@ -506,7 +506,7 @@ INSERT INTO Inventory_Log (variant_id, user_id, change_quantity, transaction_typ
 (5, 2, 20, 'IMPORT', N'Nhập lô hàng quần jean dáng slimfit size 30');
 
 INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status) VALUES
-(5, 1, NULL, 5, N'Áo mặc mát lắm, giặt không bị xù lông, sẽ ủng hộ shop tiếp!', 1);
+(5, 1, NULL, 5, N'Light and comfortable to wear, washes well, and I will shop here again!', 1);
 GO
 
 -- =========================================================================
@@ -519,79 +519,79 @@ GO
 -- 1. Bổ sung một số Voucher mẫu đúng chuẩn 'PERCENT' hoặc 'FIXED_AMOUNT'
 INSERT INTO Voucher (code, title, discount_type, discount_value, max_discount_amount, min_order_value, start_date, end_date, usage_limit, used_count)
 VALUES 
-('VOUCHER10', N'Giảm 10% cho đơn hàng từ 500k', 'PERCENT', 10.00, 50000.00, 500000.00, '2026-01-01', '2026-12-31', 100, 15),
-('FIXED50', N'Giảm thẳng 50k cho thành viên mới', 'FIXED_AMOUNT', 50000.00, NULL, 200000.00, '2026-01-01', '2026-12-31', 200, 30);
+('VOUCHER10', N'10% off orders over 500,000 VND', 'PERCENT', 10.00, 50000.00, 500000.00, '2026-01-01', '2026-12-31', 100, 15),
+('FIXED50', N'50,000 VND off for new members', 'FIXED_AMOUNT', 50000.00, NULL, 200000.00, '2026-01-01', '2026-12-31', 200, 30);
 
 -- 2. Bổ sung một số đơn vị vận chuyển (Shipment)
 INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time)
 VALUES 
-(N'Giao Hàng Nhanh (GHN)', 'DELIVERED', 'GHN123456789', 30000.00, '2026-02-15'),
-(N'Giao Hàng Tiết Kiệm (GHTK)', 'DELIVERED', 'GHTK987654321', 30000.00, '2026-03-20'),
+(N'Fast Delivery (GHN)', 'DELIVERED', 'GHN123456789', 30000.00, '2026-02-15'),
+(N'Economical Delivery (GHTK)', 'DELIVERED', 'GHTK987654321', 30000.00, '2026-03-20'),
 (N'Viettel Post', 'SHIPPING', 'VT777888999', 30000.00, '2026-06-25');
 
 -- 3. Bổ sung đơn hàng mẫu (Mã ORD + chuỗi số, Phí ship cố định 30,000đ)
 -- Giả định hệ thống của bạn đã có user_id = 1 (hoặc thay bằng id khách hàng hợp lệ trong DB của bạn)
 -- Đơn hàng tháng 1/2026 (Thành công -> Tính vào doanh thu)
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234100001', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Đường Lê Lợi', 450000.00, 0.00, 30000.00, 480000.00, 'DELIVERED', N'Đơn hàng tháng 1', '2026-01-15 10:30:00', '2026-01-17 15:00:00');
+VALUES ('ORD1768234100001', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Le Loi Street', 450000.00, 0.00, 30000.00, 480000.00, 'DELIVERED', N'January order', '2026-01-15 10:30:00', '2026-01-17 15:00:00');
 
 -- Đơn hàng tháng 2/2026 (Thành công)
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234200002', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Đường Lê Lợi', 780000.00, 0.00, 30000.00, 810000.00, 'DELIVERED', N'Đơn hàng tháng 2', '2026-02-20 14:15:00', '2026-02-22 16:30:00');
+VALUES ('ORD1768234200002', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Le Loi Street', 780000.00, 0.00, 30000.00, 810000.00, 'DELIVERED', N'February order', '2026-02-20 14:15:00', '2026-02-22 16:30:00');
 
 -- Đơn hàng tháng 3/2026 (Thành công)
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234300003', 1, 1, 2, N'Nguyễn Văn A', '0912345678', NULL, N'123 Đường Lê Lợi', 600000.00, 50000.00, 30000.00, 580000.00, 'DELIVERED', N'Đơn hàng tháng 3 áp dụng voucher', '2026-03-10 09:00:00', '2026-03-12 11:00:00');
+VALUES ('ORD1768234300003', 1, 1, 2, N'Nguyễn Văn A', '0912345678', NULL, N'123 Le Loi Street', 600000.00, 50000.00, 30000.00, 580000.00, 'DELIVERED', N'March order with voucher', '2026-03-10 09:00:00', '2026-03-12 11:00:00');
 
 -- Đơn hàng tháng 4/2026 (Thành công)
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234400004', 1, NULL, 2, N'Trần Thị B', '0988888888', NULL, N'456 Trần Hưng Đạo', 1200000.00, 0.00, 30000.00, 1230000.00, 'DELIVERED', N'Đơn hàng lớn tháng 4', '2026-04-05 18:20:00', '2026-04-07 20:00:00');
+VALUES ('ORD1768234400004', 1, NULL, 2, N'Trần Thị B', '0988888888', NULL, N'456 Tran Hung Dao Street', 1200000.00, 0.00, 30000.00, 1230000.00, 'DELIVERED', N'Large April order', '2026-04-05 18:20:00', '2026-04-07 20:00:00');
 
 -- Đơn hàng tháng 5/2026 (Thành công)
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234500005', 1, 2, 2, N'Trần Thị B', '0988888888', NULL, N'456 Trần Hưng Đạo', 950000.00, 50000.00, 30000.00, 930000.00, 'DELIVERED', N'Đơn hàng tháng 5', '2026-05-18 11:10:00', '2026-05-20 14:00:00');
+VALUES ('ORD1768234500005', 1, 2, 2, N'Trần Thị B', '0988888888', NULL, N'456 Tran Hung Dao Street', 950000.00, 50000.00, 30000.00, 930000.00, 'DELIVERED', N'May order', '2026-05-18 11:10:00', '2026-05-20 14:00:00');
 
 -- Các đơn hàng tháng 6/2026 (Tháng hiện tại - Gồm cả đơn đã xong và đơn PENDING mới nhận)
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
 VALUES 
-('ORD1768234600006', 1, NULL, 1, N'Lê Hoàng C', '0901112222', NULL, N'789 Nguyễn Trãi', 350000.00, 0.00, 30000.00, 380000.00, 'DELIVERED', N'Đơn hoàn thành tháng 6', '2026-06-02 08:30:00', '2026-06-04 10:00:00'),
-('ORD1768234600007', 1, NULL, 3, N'Phạm Minh D', '0933344455', NULL, N'321 Điện Biên Phủ', 500000.00, 0.00, 30000.00, 530000.00, 'PENDING', N'Đơn hàng MỚI CHỜ DUYỆT 1', '2026-06-21 15:45:00', '2026-06-21 15:45:00'),
-('ORD1768234600008', 1, NULL, NULL, N'Hoàng Thúy E', '0944555666', NULL, N'15 Ba Tháng Hai', 280000.00, 0.00, 30000.00, 310000.00, 'PENDING', N'Đơn hàng MỚI CHỜ DUYỆT 2', '2026-06-22 10:00:00', '2026-06-22 10:00:00'),
-('ORD1768234600009', 1, NULL, NULL, N'Đỗ Tiến F', '0955666777', NULL, N'99 Cộng Hòa', 620000.00, 0.00, 30000.00, 650000.00, 'CANCELLED', N'Đơn hàng khách hủy', '2026-06-10 13:00:00', '2026-06-10 13:30:00');
+('ORD1768234600006', 1, NULL, 1, N'Lê Hoàng C', '0901112222', NULL, N'789 Nguyen Trai Street', 350000.00, 0.00, 30000.00, 380000.00, 'DELIVERED', N'Completed June order', '2026-06-02 08:30:00', '2026-06-04 10:00:00'),
+('ORD1768234600007', 1, NULL, 3, N'Phạm Minh D', '0933344455', NULL, N'321 Dien Bien Phu Street', 500000.00, 0.00, 30000.00, 530000.00, 'PENDING', N'New order pending approval 1', '2026-06-21 15:45:00', '2026-06-21 15:45:00'),
+('ORD1768234600008', 1, NULL, NULL, N'Hoàng Thúy E', '0944555666', NULL, N'15 Ba Thang Hai Street', 280000.00, 0.00, 30000.00, 310000.00, 'PENDING', N'New order pending approval 2', '2026-06-22 10:00:00', '2026-06-22 10:00:00'),
+('ORD1768234600009', 1, NULL, NULL, N'Đỗ Tiến F', '0955666777', NULL, N'99 Cong Hoa Street', 620000.00, 0.00, 30000.00, 650000.00, 'CANCELLED', N'Order cancelled by customer', '2026-06-10 13:00:00', '2026-06-10 13:30:00');
 
 -- 4. Chi tiết đơn hàng mẫu (Liên kết đến các đơn hàng vừa tạo thông qua ID tự tăng)
 -- Đơn 1
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 2, 225000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 2, 225000.00);
 
 -- Đơn 2
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234200002'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 2, 390000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234200002'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 2, 390000.00);
 
 -- Đơn 3
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 2, 200000.00),
-       ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 1, 200000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 2, 200000.00),
+       ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 1, 200000.00);
 
 -- Đơn 4
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234400004'), 3, N'Váy Nữ Dáng Xòe Elegant', N'Size: S, Color: Red', 3, 400000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234400004'), 3, N'Elegant Flared Womens Skirt', N'Size: S, Color: Red', 3, 400000.00);
 
 -- Đơn 5
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 1, 450000.00),
-       ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Váy Nữ Dáng Xòe Elegant', N'Size: S, Color: Red', 1, 500000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 1, 450000.00),
+       ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Elegant Flared Womens Skirt', N'Size: S, Color: Red', 1, 500000.00);
 
 -- Đơn 6 (Đơn hoàn thành trong tháng 6)
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 1, 350000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 1, 350000.00);
 
 -- Đơn 7, 8 (Các đơn hàng mới đang chờ xử lý)
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 2, N'Quần Jean Nam Cao Cấp', N'Size: L, Color: Black', 1, 500000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 1, 500000.00);
 
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 1, N'Áo Sơ Mi Nam Hàn Quốc', N'Size: M, Color: Blue', 1, 280000.00);
+VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 1, 280000.00);
 
 -- 5. Đồng bộ bảng thanh toán (Payment) tương ứng cho các đơn thành công
 INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date)
@@ -612,25 +612,25 @@ VALUES
 -- Thêm các đơn hàng với nhiều trạng thái để test danh sách, filter và chi tiết xử lý
 INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
 VALUES
-('ORD1768234700010', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Số 123 Đường 3/2', 438000.00, 50000.00, 30000.00, 418000.00, 'DELIVERED', N'Đơn đã giao xong, dùng để test lịch sử đơn', '2026-06-23 09:15:00', '2026-06-25 18:20:00'),
-('ORD1768234700011', 5, 2, 2, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 879000.00, 30000.00, 30000.00, 879000.00, 'SHIPPING', N'Đơn đang giao để test trạng thái vận chuyển', '2026-06-24 10:00:00', '2026-06-26 12:10:00'),
-('ORD1768234700012', 4, NULL, 3, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Tòa nhà Bitexco, Tầng 15', 560000.00, 0.00, 30000.00, 590000.00, 'CONFIRMED', N'Đơn đã xác nhận chờ xuất kho', '2026-06-25 11:45:00', '2026-06-25 13:00:00'),
-('ORD1768234700013', 5, NULL, NULL, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 379000.00, 0.00, 30000.00, 409000.00, 'PENDING', N'Đơn mới tạo chờ duyệt thanh toán', '2026-06-26 08:30:00', '2026-06-26 08:30:00'),
-('ORD1768234700014', 4, NULL, 2, N'Nguyễn Ngọc Quý', '0933445566', '26734', N'Văn phòng Bitexco, tầng 15', 839000.00, 0.00, 30000.00, 869000.00, 'CANCELLED', N'Đơn bị hủy để test luồng hoàn tất/hủy', '2026-06-20 14:05:00', '2026-06-20 14:40:00'),
-('ORD1768234700015', 5, 1, 1, N'Lê Hoàng Nam', '0944556677', '00010', N'Số 45 Phố Trúc Bạch', 588000.00, 50000.00, 30000.00, 568000.00, 'RETURNED', N'Đơn đã giao nhưng khách trả hàng', '2026-06-18 09:00:00', '2026-06-28 10:15:00');
+('ORD1768234700010', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street', 438000.00, 50000.00, 30000.00, 418000.00, 'DELIVERED', N'Delivered order for order-history testing', '2026-06-23 09:15:00', '2026-06-25 18:20:00'),
+('ORD1768234700011', 5, 2, 2, N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street', 879000.00, 30000.00, 30000.00, 879000.00, 'SHIPPING', N'In-transit order for shipping-status testing', '2026-06-24 10:00:00', '2026-06-26 12:10:00'),
+('ORD1768234700012', 4, NULL, 3, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Bitexco Building, Floor 15', 560000.00, 0.00, 30000.00, 590000.00, 'CONFIRMED', N'Confirmed order awaiting warehouse release', '2026-06-25 11:45:00', '2026-06-25 13:00:00'),
+('ORD1768234700013', 5, NULL, NULL, N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street', 379000.00, 0.00, 30000.00, 409000.00, 'PENDING', N'New order awaiting payment approval', '2026-06-26 08:30:00', '2026-06-26 08:30:00'),
+('ORD1768234700014', 4, NULL, 2, N'Nguyễn Ngọc Quý', '0933445566', '26734', N'Bitexco Office, Floor 15', 839000.00, 0.00, 30000.00, 869000.00, 'CANCELLED', N'Cancelled order for completion-flow testing', '2026-06-20 14:05:00', '2026-06-20 14:40:00'),
+('ORD1768234700015', 5, 1, 1, N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street', 588000.00, 50000.00, 30000.00, 568000.00, 'RETURNED', N'Delivered order returned by the customer', '2026-06-18 09:00:00', '2026-06-28 10:15:00');
 
 -- Chi tiết cho các đơn bổ sung
 INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) VALUES
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 12, N'Áo T-Shirt Cotton Cổ Tròn', N'Color: White, Size: M', 1, 179000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 15, N'Áo Polo Nam Gân Nổi', N'Color: White, Size: M', 1, 259000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 69, N'Áo Blazer Nam Hàn Quốc', N'Color: Black, Size: M', 1, 680000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 57, N'Quần Short Kaki Đi Biển', N'Color: Beige, Size: M', 1, 199000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 28, N'Áo Sơ Mi Trắng Công Sở Oxford', N'Color: White, Size: L', 2, 280000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 53, N'Áo Hoodie Nỉ Bông Mùa Đông', N'Color: Gray, Size: M', 1, 379000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 34, N'Áo Sơ Mi Denim Bụi Bặm', N'Color: Denim Blue, Size: M', 1, 340000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 46, N'Quần Jean Nam Dáng Đứng Regular', N'Color: Dark Blue, Size: 30', 1, 499000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 73, N'Áo Len Cổ Lọ Giữ Nhiệt', N'Color: Cream, Size: M', 1, 359000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 77, N'Quần Jogger Thể Thao Năng Động', N'Color: Black, Size: M', 1, 229000.00);
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 12, N'Classic Cotton Crew-Neck T-Shirt', N'Color: White, Size: M', 1, 179000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 15, N'Textured Mens Polo Shirt', N'Color: White, Size: M', 1, 259000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 69, N'Korean-Style Mens Blazer', N'Color: Black, Size: M', 1, 680000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 57, N'Beach Kaki Shorts', N'Color: Beige, Size: M', 1, 199000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 28, N'White Oxford Business Shirt', N'Color: White, Size: L', 2, 280000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 53, N'Warm Winter Fleece Hoodie', N'Color: Gray, Size: M', 1, 379000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 34, N'Rugged Denim Shirt', N'Color: Denim Blue, Size: M', 1, 340000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 46, N'Regular Straight-Leg Mens Jeans', N'Color: Dark Blue, Size: 30', 1, 499000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 73, N'Warm Turtleneck Sweater', N'Color: Cream, Size: M', 1, 359000.00),
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 77, N'Dynamic Sport Joggers', N'Color: Black, Size: M', 1, 229000.00);
 
 -- Thanh toán cho các đơn mới để test nhiều trạng thái
 INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date)
@@ -644,12 +644,12 @@ VALUES
 
 -- Feedback đa dạng để test hiển thị, ẩn/hiện và trả lời của admin/staff
 INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status, admin_response, response_by, responded_at) VALUES
-(4, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 5, N'Áo mặc rất mát, form đẹp, giao nhanh.', 1, N'Cảm ơn anh đã đánh giá. Shop sẽ tiếp tục cải thiện dịch vụ.', 2, '2026-06-02 09:00:00'),
-(4, 4, (SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 4, N'Chất vải ổn, màu dễ phối, size chuẩn.', 1, NULL, NULL, NULL),
-(5, 20, (SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 2, N'Áo đẹp nhưng giao hơi chậm so với dự kiến.', 0, N'Shop đã ghi nhận phản hồi và sẽ theo dõi đơn vị vận chuyển.', 1, '2026-06-26 16:20:00'),
-(5, 8, (SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 5, N'Sơ mi rất lịch sự, mặc đi làm rất hợp.', 1, NULL, NULL, NULL),
-(4, 16, (SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 1, N'Khách trả hàng vì size không vừa, cần hỗ trợ đổi size.', 0, N'Shop đã tiếp nhận yêu cầu đổi trả và liên hệ lại khách.', 2, '2026-06-28 10:40:00'),
-(5, 12, (SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Mẫu quần ổn nhưng đóng gói cần chắc chắn hơn.', 1, N'Cảm ơn anh góp ý, shop sẽ cải thiện bao bì.', 2, '2026-05-20 15:10:00'),
-(4, 22, (SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 4, N'Quần jogger mặc thoải mái, phù hợp đi tập.', 1, NULL, NULL, NULL),
-(5, 10, (SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 2, N'Áo denim ổn nhưng form hơi rộng với mình.', 0, N'Shop xin lỗi về trải nghiệm chưa tốt, đã ẩn phản hồi để kiểm tra nội dung.', 1, '2026-06-20 18:00:00');
+(4, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 5, N'Great fabric, flattering fit, and fast delivery.', 1, N'Thank you for your review. We will continue improving our service.', 2, '2026-06-02 09:00:00'),
+(4, 4, (SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 4, N'Good fabric, easy-to-style color, and accurate sizing.', 1, NULL, NULL, NULL),
+(5, 20, (SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 2, N'Great shirt, but delivery was slightly slower than expected.', 0, N'We have recorded your feedback and will monitor the carrier.', 1, '2026-06-26 16:20:00'),
+(5, 8, (SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 5, N'Polished shirt that works perfectly for the office.', 1, NULL, NULL, NULL),
+(4, 16, (SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 1, N'Returned because the size did not fit; support was needed.', 0, N'We received the return request and contacted the customer.', 2, '2026-06-28 10:40:00'),
+(5, 12, (SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Good trousers, but the packaging could be sturdier.', 1, N'Thank you for the feedback. We will improve our packaging.', 2, '2026-05-20 15:10:00'),
+(4, 22, (SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 4, N'Comfortable joggers, great for workouts.', 1, NULL, NULL, NULL),
+(5, 10, (SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 2, N'Good denim, but the fit was a little loose for me.', 0, N'We are sorry about the experience and hid the review while checking its content.', 1, '2026-06-20 18:00:00');
 GO

@@ -38,16 +38,16 @@ public final class OrderStatusHelper {
     private static final LinkedHashMap<String, String> STATUS_OPTIONS = new LinkedHashMap<>();
 
     static {
-        LABELS.put(DISPLAY_PENDING_APPROVAL, "Chờ duyệt");
-        LABELS.put(DISPLAY_APPROVED, "Đã duyệt");
-        LABELS.put(DISPLAY_PREPARING, "Chuẩn bị hàng");
-        LABELS.put(DISPLAY_SHIPPING, "Đang giao");
-        LABELS.put(DISPLAY_RECEIVED, "Đã nhận hàng");
-        LABELS.put(DISPLAY_COMPLETED, "Hoàn thành");
-        LABELS.put(DISPLAY_PAID, "Đã thanh toán");
-        LABELS.put(DISPLAY_CANCELLED, "Đã hủy");
-        LABELS.put(DISPLAY_RETURNED, "Hoàn trả");
-        LABELS.put(DISPLAY_UNKNOWN, "Không xác định");
+        LABELS.put(DISPLAY_PENDING_APPROVAL, "Pending approval");
+        LABELS.put(DISPLAY_APPROVED, "Approved");
+        LABELS.put(DISPLAY_PREPARING, "Preparing");
+        LABELS.put(DISPLAY_SHIPPING, "Shipping");
+        LABELS.put(DISPLAY_RECEIVED, "Received");
+        LABELS.put(DISPLAY_COMPLETED, "Completed");
+        LABELS.put(DISPLAY_PAID, "Paid");
+        LABELS.put(DISPLAY_CANCELLED, "Cancelled");
+        LABELS.put(DISPLAY_RETURNED, "Returned");
+        LABELS.put(DISPLAY_UNKNOWN, "Unknown");
 
         BADGE_CLASSES.put(DISPLAY_PENDING_APPROVAL, "status-pending");
         BADGE_CLASSES.put(DISPLAY_APPROVED, "status-confirmed");
@@ -60,11 +60,11 @@ public final class OrderStatusHelper {
         BADGE_CLASSES.put(DISPLAY_RETURNED, "status-returned");
         BADGE_CLASSES.put(DISPLAY_UNKNOWN, "status-unknown");
 
-        SHIPPING_LABELS.put("PENDING_PICKUP", "Chuẩn bị hàng");
-        SHIPPING_LABELS.put(RAW_SHIPPING, "Đang giao");
-        SHIPPING_LABELS.put(RAW_DELIVERED, "Đã nhận hàng");
-        SHIPPING_LABELS.put(RAW_FAILED, "Giao thất bại");
-        SHIPPING_LABELS.put(RAW_CANCELLED, "Đã hủy");
+        SHIPPING_LABELS.put("PENDING_PICKUP", "Preparing");
+        SHIPPING_LABELS.put(RAW_SHIPPING, "Shipping");
+        SHIPPING_LABELS.put(RAW_DELIVERED, "Delivered");
+        SHIPPING_LABELS.put(RAW_FAILED, "Delivery failed");
+        SHIPPING_LABELS.put(RAW_CANCELLED, "Cancelled");
 
         SHIPPING_BADGE_CLASSES.put("PENDING_PICKUP", "status-preparing");
         SHIPPING_BADGE_CLASSES.put(RAW_SHIPPING, "status-shipping");
@@ -72,16 +72,16 @@ public final class OrderStatusHelper {
         SHIPPING_BADGE_CLASSES.put(RAW_FAILED, "status-cancelled");
         SHIPPING_BADGE_CLASSES.put(RAW_CANCELLED, "status-cancelled");
 
-        STATUS_OPTIONS.put("ALL", "Tất cả");
-        STATUS_OPTIONS.put(DISPLAY_PENDING_APPROVAL, "Chờ duyệt");
-        STATUS_OPTIONS.put(DISPLAY_APPROVED, "Đã duyệt");
-        STATUS_OPTIONS.put(DISPLAY_PREPARING, "Chuẩn bị hàng");
-        STATUS_OPTIONS.put(DISPLAY_SHIPPING, "Đang giao");
-        STATUS_OPTIONS.put(DISPLAY_RECEIVED, "Đã nhận hàng");
-        STATUS_OPTIONS.put(DISPLAY_COMPLETED, "Hoàn thành");
-        STATUS_OPTIONS.put(DISPLAY_PAID, "Đã thanh toán");
-        STATUS_OPTIONS.put(DISPLAY_CANCELLED, "Đã hủy");
-        STATUS_OPTIONS.put(DISPLAY_RETURNED, "Hoàn trả");
+        STATUS_OPTIONS.put("ALL", "All");
+        STATUS_OPTIONS.put(DISPLAY_PENDING_APPROVAL, "Pending approval");
+        STATUS_OPTIONS.put(DISPLAY_APPROVED, "Approved");
+        STATUS_OPTIONS.put(DISPLAY_PREPARING, "Preparing");
+        STATUS_OPTIONS.put(DISPLAY_SHIPPING, "Shipping");
+        STATUS_OPTIONS.put(DISPLAY_RECEIVED, "Received");
+        STATUS_OPTIONS.put(DISPLAY_COMPLETED, "Completed");
+        STATUS_OPTIONS.put(DISPLAY_PAID, "Paid");
+        STATUS_OPTIONS.put(DISPLAY_CANCELLED, "Cancelled");
+        STATUS_OPTIONS.put(DISPLAY_RETURNED, "Returned");
     }
 
     private OrderStatusHelper() {

@@ -177,7 +177,7 @@ public class CustomerProfileController extends HttpServlet {
             return "Full name is too long.";
         }
         if (!FULL_NAME_PATTERN.matcher(fullName).matches()) {
-            return "Full name must contain only letters and spaces (no digits or special characters). Example: Nguyễn Văn A";
+            return "Full name must contain only letters and spaces (no digits or special characters). Example: John Doe";
         }
         if (email == null || email.isEmpty()) {
             return "Email is required.";

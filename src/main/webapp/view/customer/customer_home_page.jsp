@@ -1006,7 +1006,7 @@
                     </c:url>
                     <div class="home-more">
                         <a href="${productsPageUrl}" class="btn btn-outline-dark">
-                            Xem thêm sản phẩm <i class="fa-solid fa-arrow-right ms-2"></i>
+                            View more products <i class="fa-solid fa-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </c:if>
@@ -1104,14 +1104,14 @@
             if (params.has('wishlistAdded') || params.has('wishlistRemoved') || params.has('wishlistError')) {
                 var wishlistToast = document.getElementById('wishlistToast');
                 var wishlistToastText = document.getElementById('wishlistToastText');
-                var wishlistMessage = 'Đã thêm vào mục yêu thích.';
+                var wishlistMessage = 'Added to your wishlist.';
 
                 if (params.has('wishlistRemoved')) {
-                    wishlistMessage = 'Đã bỏ khỏi mục yêu thích.';
+                    wishlistMessage = 'Removed from your wishlist.';
                 }
 
                 if (params.has('wishlistError')) {
-                    wishlistMessage = 'Không thể cập nhật mục yêu thích.';
+                    wishlistMessage = 'Unable to update your wishlist.';
                     wishlistToast.classList.add('is-error');
                 }
 

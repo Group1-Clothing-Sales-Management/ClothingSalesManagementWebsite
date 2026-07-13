@@ -687,12 +687,12 @@
                 </a>
             </div>
             <div class="checkout-category-row">
-                <span>Ốp lưng điện thoại</span>
-                <span>Micro máy vi tính để bàn</span>
+                <span>Phone Cases</span>
+                <span>Desktop Microphones</span>
                 <span>Yisong 003</span>
-                <span>Mô hình iPhone</span>
+                <span>iPhone Models</span>
                 <span>Arm sleeve gaming</span>
-                <span>Ghế Centaur Gundam</span>
+                <span>Centaur Gundam Chairs</span>
             </div>
         </div>
 
@@ -915,13 +915,13 @@
                                             name="carrierName">
                                         <option value="GHTK">
 
-                                            Giao Hàng Tiết Kiệm (GHTK)
+                                            Economical Delivery (GHTK)
 
                                         </option>
 
                                         <option value="STORE">
 
-                                            Tự giao hàng
+                                            Self Delivery
 
                                         </option>
 

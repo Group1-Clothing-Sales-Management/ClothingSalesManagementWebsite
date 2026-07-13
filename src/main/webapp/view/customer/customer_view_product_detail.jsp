@@ -1246,7 +1246,7 @@
                     document.getElementById('stockText').textContent = option.dataset.stock;
 
                     if (priceValue) {
-                        priceValue.textContent = option.dataset.price + ' đ';
+                        priceValue.textContent = option.dataset.price + ' VND';
                     }
 
                     if (quantityInput) {
@@ -1360,11 +1360,11 @@
 
                 document.getElementById('cartMessageText').textContent =
                         params.has('wishlistAdded')
-                        ? 'Đã thêm vào mục yêu thích.'
+                        ? 'Added to your wishlist.'
                         : params.has('wishlistRemoved')
                         ? 'Removed from wishlist.'
                         : params.has('wishlistError')
-                        ? 'Không thể cập nhật mục yêu thích.'
+                        ? 'Unable to update your wishlist.'
                         : params.has('cartAdded')
                         ? 'Item added to your cart.'
                         : 'Could not add this item to your cart. Please check available stock.';

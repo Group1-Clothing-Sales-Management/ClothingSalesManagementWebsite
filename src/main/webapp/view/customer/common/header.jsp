@@ -74,7 +74,7 @@
             </a>
 
             <form action="${pageContext.request.contextPath}/products" method="get" class="market-search">
-                <input type="text" name="keyword" placeholder="QUÀ TẶNG 500,000Đ" aria-label="Search products">
+                <input type="text" name="keyword" placeholder="500,000 VND gift" aria-label="Search products">
                 <button type="submit" aria-label="Search products">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>

@@ -583,7 +583,7 @@
                                 <c:if test="${not empty p.variants}">
 
                                     <div class="price mb-2">
-                                        ${p.variants[0].salePrice} đ
+                                        ${p.variants[0].salePrice} VND
                                     </div>
 
                                     <form action="${pageContext.request.contextPath}/wishlist/toggle"
@@ -634,7 +634,7 @@
                                                         data-price="${v.salePrice}"
                                                         data-attributes="${v.attributeDetails}">
 
-                                                    ${v.attributeDetails} - ${v.salePrice} đ
+                                                    ${v.attributeDetails} - ${v.salePrice} VND
 
                                                 </option>
 
@@ -700,14 +700,14 @@
                     || wishlistParams.has('wishlistError')) {
                 var wishlistToast = document.getElementById('wishlistToast');
                 var wishlistToastText = document.getElementById('wishlistToastText');
-                var wishlistMessage = 'Đã thêm vào mục yêu thích.';
+                var wishlistMessage = 'Added to your wishlist.';
 
                 if (wishlistParams.has('wishlistRemoved')) {
-                    wishlistMessage = 'Đã bỏ khỏi mục yêu thích.';
+                    wishlistMessage = 'Removed from your wishlist.';
                 }
 
                 if (wishlistParams.has('wishlistError')) {
-                    wishlistMessage = 'Không thể cập nhật mục yêu thích.';
+                    wishlistMessage = 'Unable to update your wishlist.';
                     wishlistToast.classList.add('is-error');
                 }
 

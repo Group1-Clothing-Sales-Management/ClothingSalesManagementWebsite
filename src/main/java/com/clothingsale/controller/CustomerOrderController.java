@@ -47,7 +47,7 @@ public class CustomerOrderController extends HttpServlet {
         if (cartItems.isEmpty()) {
             session.removeAttribute("checkoutSelectedVariantIds");
             session.setAttribute("cartMessage",
-                    "Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
+                    "Please select at least one product to check out.");
 
             response.sendRedirect(request.getContextPath() + "/cart?skipMerge=1");
             return;
@@ -119,7 +119,7 @@ public class CustomerOrderController extends HttpServlet {
                 if (voucher == null) {
 
                     request.setAttribute("voucherError",
-                            "Voucher này không tồn tại");
+                            "This voucher does not exist.");
 
                 } else {
 
