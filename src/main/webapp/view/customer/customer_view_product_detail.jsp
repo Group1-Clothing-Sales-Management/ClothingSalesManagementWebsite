@@ -307,6 +307,7 @@
             }
 
             .product-media-frame{
+                position:relative;
                 display:flex;
                 align-items:center;
                 justify-content:center;
@@ -314,6 +315,35 @@
                 height:450px;
                 background:#fafafa;
                 overflow:hidden;
+            }
+
+            .detail-wishlist-form{
+                position:absolute;
+                top:14px;
+                right:14px;
+                z-index:4;
+                margin:0;
+            }
+
+            .detail-wishlist-button{
+                width:42px;
+                height:42px;
+                border:1px solid rgba(238,77,45,.28);
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                background:rgba(255,255,255,.96);
+                color:var(--detail-primary);
+                box-shadow:0 8px 20px rgba(37,33,30,.16);
+                transition:.2s;
+            }
+
+            .detail-wishlist-button:hover,
+            .detail-wishlist-button.is-active{
+                background:var(--detail-primary);
+                color:#fff;
+                transform:scale(1.05);
             }
 
             .product-image{
@@ -907,6 +937,19 @@
                 <div class="row g-4">
                     <div class="col-lg-5 col-md-6 product-gallery">
                         <div class="product-media-frame">
+                            <form action="${pageContext.request.contextPath}/wishlist/toggle"
+                                  method="post"
+                                  class="detail-wishlist-form">
+                                <input type="hidden" name="productId" value="${product.id}">
+                                <input type="hidden" name="variantId"
+                                       value="${not empty product.variants ? product.variants[0].id : ''}">
+                                <input type="hidden" name="wishlisted" value="${isWishlisted}">
+                                <button type="submit"
+                                        class="detail-wishlist-button ${isWishlisted ? 'is-active' : ''}"
+                                        title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+                                    <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                </button>
+                            </form>
                             <img src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}"
                                  class="product-image"
                                  alt="${product.productName}">
@@ -1279,13 +1322,26 @@
             });
 
             var params = new URLSearchParams(window.location.search);
+            var wishlistStatusParams = ['wishlistAdded', 'wishlistRemoved', 'wishlistError'];
+            var hasWishlistStatus = wishlistStatusParams.some(function (key) {
+                return params.has(key);
+            });
 
-            if (params.has('cartAdded') || params.has('cartError')
-                    || params.has('wishlistAdded') || params.has('wishlistError')) {
+            if (hasWishlistStatus) {
+                wishlistStatusParams.forEach(function (key) {
+                    params.delete(key);
+                });
+
+                var cleanUrl = window.location.pathname
+                        + (params.toString() ? '?' + params.toString() : '')
+                        + window.location.hash;
+                window.history.replaceState({}, '', cleanUrl);
+            }
+
+            if (params.has('cartAdded') || params.has('cartError')) {
 
                 var modalElement = document.getElementById('cartMessageModal');
-                var isWishlist = params.has('wishlistAdded') || params.has('wishlistError');
-                var isError = params.has('cartError') || params.has('wishlistError');
+                var isError = params.has('cartError');
 
                 modalElement.classList.toggle('is-error', isError);
 
@@ -1300,13 +1356,13 @@
                 }
 
                 document.getElementById('cartMessageTitle').textContent =
-                        isWishlist
-                        ? (isError ? 'Could Not Update Wishlist' : 'Wishlist Updated')
-                        : (isError ? 'Could Not Add Item' : 'Cart Updated');
+                        isError ? 'Could Not Add Item' : 'Cart Updated';
 
                 document.getElementById('cartMessageText').textContent =
                         params.has('wishlistAdded')
                         ? 'Đã thêm vào mục yêu thích.'
+                        : params.has('wishlistRemoved')
+                        ? 'Removed from wishlist.'
                         : params.has('wishlistError')
                         ? 'Không thể cập nhật mục yêu thích.'
                         : params.has('cartAdded')
