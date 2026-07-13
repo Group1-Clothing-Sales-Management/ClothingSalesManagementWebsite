@@ -237,7 +237,7 @@
                 </a>
                 <%-- Mục này chỉ dành cho ADMIN nên cần active riêng khi đang ở trang quản lý staff. --%>
                 <a href="${pageContext.request.contextPath}/admin/staffs" class="sidebar-link ${requestScope.sidebarActiveTab == 'staffs' ? 'active' : ''}">
-                    <i class="bi bi-person-badge-fill"></i> Manage Staff
+                    <i class="fa-solid fa-user-tie sidebar-icon"></i> Manage Staff
                 </a>
             </c:otherwise>
         </c:choose>
