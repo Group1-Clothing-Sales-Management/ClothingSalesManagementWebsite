@@ -27,7 +27,14 @@
                     <c:when test="${loggedIn}">
                         <details class="market-account">
                             <summary>
-                                <span class="market-avatar">M</span>
+                                <span class="market-avatar" aria-label="User avatar">
+                                    <c:choose>
+                                        <c:when test="${not empty sessionScope.authUsername}">
+                                            <c:out value="${fn:toUpperCase(fn:substring(sessionScope.authUsername, 0, 1))}"/>
+                                        </c:when>
+                                        <c:otherwise>A</c:otherwise>
+                                    </c:choose>
+                                </span>
                                 <span><c:out value="${not empty sessionScope.customerFullName
                                                 ? sessionScope.customerFullName
                                                 : sessionScope.authUsername}" default="Account"/></span>

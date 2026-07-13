@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<c:set var="editMode" value="${not empty errorMessage or not empty phoneError}"/>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,13 +13,15 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <style>
             :root {
-                --ink:#172033;
-                --muted:#667085;
-                --line:#e4e7ec;
-                --teal:#0f9b8e;
-                --teal-dark:#0d8278;
-                --blue:#2563eb;
-                --danger:#dc2626;
+                --ink:#25211e;
+                --muted:#6f665e;
+                --line:#e9e0d7;
+                --primary:#c65b3d;
+                --primary-dark:#a9462d;
+                --accent:#e9a957;
+                --surface:#ffffff;
+                --bg:#faf7f2;
+                --danger:#bd4a38;
             }
 
             * {
@@ -30,9 +33,9 @@
                 margin:0;
                 color:var(--ink);
                 background:
-                    radial-gradient(circle at 8% 8%, rgba(15, 155, 142, .12), transparent 28%),
-                    radial-gradient(circle at 88% 12%, rgba(37, 99, 235, .10), transparent 24%),
-                    linear-gradient(180deg, #f7fbfd 0%, #ffffff 46%, #f4f8fb 100%);
+                    radial-gradient(circle at 8% 8%, rgba(230, 157, 79, .18), transparent 28%),
+                    radial-gradient(circle at 88% 12%, rgba(198, 91, 61, .09), transparent 24%),
+                    linear-gradient(180deg, #fffdf9 0%, var(--bg) 48%, #f5eee7 100%);
                 font-family:"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             }
 
@@ -81,8 +84,8 @@
                 display:grid;
                 place-items:center;
                 color:#fff;
-                background:linear-gradient(135deg, var(--ink), var(--teal));
-                box-shadow:0 12px 26px rgba(15, 155, 142, .22);
+                background:linear-gradient(135deg, var(--ink), var(--primary));
+                box-shadow:0 12px 26px rgba(198, 91, 61, .22);
             }
 
             .nav-actions {
@@ -111,19 +114,19 @@
             }
 
             .nav-action.home:hover {
-                border-color:#b8d8d1;
-                color:var(--teal);
+                border-color:#d9b6a4;
+                color:var(--primary);
             }
 
             .nav-action.logout {
-                border:1px solid #fecdd3;
+                border:1px solid #efd4c8;
                 background:#fff;
                 color:var(--danger);
             }
 
             .nav-action.logout:hover {
-                background:#fff1f2;
-                color:#b91c1c;
+                background:#fff1ed;
+                color:var(--primary-dark);
             }
 
             .page-hero {
@@ -139,8 +142,8 @@
                 margin-bottom:12px;
                 padding:7px 11px;
                 border-radius:999px;
-                background:#dff7f1;
-                color:#0f766e;
+                background:#fff3dc;
+                color:var(--primary-dark);
                 font-size:.8rem;
                 font-weight:900;
                 text-transform:uppercase;
@@ -195,10 +198,10 @@
 
             .profile-summary,
             .profile-form-panel {
-                border:1px solid rgba(228, 231, 236, .95);
-                border-radius:8px;
-                background:rgba(255, 255, 255, .92);
-                box-shadow:0 22px 60px rgba(15, 23, 42, .09);
+                border:1px solid rgba(233, 224, 215, .95);
+                border-radius:18px;
+                background:rgba(255, 255, 255, .94);
+                box-shadow:0 22px 60px rgba(74, 54, 39, .09);
             }
 
             .profile-summary {
@@ -209,7 +212,7 @@
 
             .summary-cover {
                 height:118px;
-                background:linear-gradient(135deg, rgba(23, 32, 51, .98), rgba(15, 155, 142, .88));
+                background:linear-gradient(135deg, rgba(37, 33, 30, .98), rgba(198, 91, 61, .92));
             }
 
             .summary-body {
@@ -230,8 +233,8 @@
                 justify-content:center;
                 overflow:hidden;
                 color:#fff;
-                background:linear-gradient(135deg, var(--ink), var(--teal));
-                box-shadow:0 18px 38px rgba(15, 23, 42, .20);
+                background:linear-gradient(135deg, var(--ink), var(--primary));
+                box-shadow:0 18px 38px rgba(74, 54, 39, .20);
                 font-size:2.35rem;
             }
 
@@ -273,8 +276,8 @@
                 border-radius:8px;
                 display:grid;
                 place-items:center;
-                color:var(--teal);
-                background:#edf7f5;
+                color:var(--primary);
+                background:#fff3dc;
                 flex:0 0 auto;
             }
 
@@ -329,8 +332,8 @@
                 align-items:center;
                 gap:8px;
                 padding:0 12px;
-                color:#1d4ed8;
-                background:#eff6ff;
+                color:var(--primary-dark);
+                background:#fff3dc;
                 font-weight:800;
                 white-space:nowrap;
             }
@@ -357,22 +360,24 @@
 
             .form-control {
                 min-height:50px;
-                border:1px solid #d0d5dd;
-                border-radius:8px;
+                border:1px solid #d9cfc6;
+                border-radius:12px;
                 padding-left:44px;
-                background:#fff;
+                background:var(--surface);
                 color:var(--ink);
                 box-shadow:0 1px 2px rgba(16, 24, 40, .04);
             }
 
             .form-control.readonly-control {
-                background:#f8fafc;
-                color:#475467;
+                background:#fcf8f4;
+                color:#6f665e;
+                border-color:#eaded4;
+                cursor:default;
             }
 
             .form-control:focus {
-                border-color:var(--teal);
-                box-shadow:0 0 0 .22rem rgba(15, 155, 142, .14);
+                border-color:var(--primary);
+                box-shadow:0 0 0 .22rem rgba(198, 91, 61, .14);
             }
 
             .form-text {
@@ -398,14 +403,50 @@
                 display:inline-flex;
                 align-items:center;
                 gap:8px;
-                background:linear-gradient(135deg, var(--blue), var(--teal));
-                box-shadow:0 14px 24px rgba(15, 155, 142, .22);
+                background:linear-gradient(135deg, var(--primary), var(--accent));
+                box-shadow:0 14px 24px rgba(198, 91, 61, .22);
             }
 
             .btn-save:hover,
             .btn-save:focus {
-                background:linear-gradient(135deg, #1d4ed8, var(--teal-dark));
-                box-shadow:0 16px 28px rgba(15, 155, 142, .27);
+                background:linear-gradient(135deg, var(--primary-dark), var(--primary));
+                box-shadow:0 16px 28px rgba(198, 91, 61, .27);
+            }
+
+            .btn-edit-profile {
+                min-height:42px;
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                border:1px solid var(--primary);
+                color:var(--primary);
+                background:#fff;
+            }
+
+            .btn-edit-profile:hover,
+            .btn-edit-profile:focus-visible {
+                border-color:var(--primary-dark);
+                color:#fff;
+                background:var(--primary);
+            }
+
+            .form-heading-actions {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                flex-wrap:wrap;
+                justify-content:flex-end;
+            }
+
+            .profile-editable:not([readonly]) {
+                background:#fff;
+                border-color:#d9cfc6;
+                cursor:text;
+            }
+
+            .profile-editable:disabled {
+                opacity:.72;
+                cursor:not-allowed;
             }
 
             .logout-dialog {
@@ -439,8 +480,8 @@
                 display:grid;
                 place-items:center;
                 color:#fff;
-                background:linear-gradient(135deg, var(--ink), var(--teal));
-                box-shadow:0 14px 30px rgba(15, 155, 142, .24);
+                background:linear-gradient(135deg, var(--ink), var(--primary));
+                box-shadow:0 14px 30px rgba(198, 91, 61, .24);
                 font-size:1.25rem;
                 flex:0 0 auto;
             }
@@ -614,17 +655,27 @@
                     <div class="form-heading">
                         <div>
                             <h2>Profile Details</h2>
-                            <p>Update your personal information and avatar.</p>
+                            <p id="profileHint">View your personal information and avatar.</p>
                         </div>
-                        <span class="section-chip">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            Private
-                        </span>
+                        <div class="form-heading-actions">
+                            <span class="section-chip">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                Private
+                            </span>
+                            <button type="button"
+                                    class="btn btn-edit-profile ${editMode ? 'd-none' : ''}"
+                                    id="editProfileBtn">
+                                <i class="fa-solid fa-pen"></i>
+                                Edit profile
+                            </button>
+                        </div>
                     </div>
 
                     <form action="${pageContext.request.contextPath}/customer/profile"
                           method="post"
                           enctype="multipart/form-data"
+                          id="profileForm"
+                          data-edit-mode="${editMode}"
                           autocomplete="off">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -652,11 +703,12 @@
                                 <div class="field-control">
                                     <i class="fa-regular fa-id-card field-icon"></i>
                                     <input type="text"
-                                           id="fullName"
-                                           name="fullName"
-                                           class="form-control"
+                                            id="fullName"
+                                            name="fullName"
+                                           class="form-control profile-editable readonly-control"
                                            maxlength="255"
                                            value="${fn:escapeXml(profile.fullName)}"
+                                           readonly
                                            required>
                                 </div>
                             </div>
@@ -665,11 +717,12 @@
                                 <div class="field-control">
                                     <i class="fa-regular fa-envelope field-icon"></i>
                                     <input type="email"
-                                           id="email"
-                                           name="email"
-                                           class="form-control"
+                                            id="email"
+                                            name="email"
+                                           class="form-control profile-editable readonly-control"
                                            maxlength="100"
                                            value="${fn:escapeXml(profile.email)}"
+                                           readonly
                                            required>
                                 </div>
                             </div>
@@ -678,13 +731,14 @@
                                 <div class="field-control">
                                     <i class="fa-solid fa-phone field-icon"></i>
                                     <input type="text"
-                                           id="phone"
-                                           name="phone"
-                                           class="form-control ${not empty phoneError ? 'is-invalid' : ''}"
+                                            id="phone"
+                                            name="phone"
+                                           class="form-control profile-editable readonly-control ${not empty phoneError ? 'is-invalid' : ''}"
                                            maxlength="10"
                                            pattern="^0[1-9][0-9]{8}$"
                                            title="Phone must be 10 digits starting with single 0, for example 0123456789."
                                            placeholder="0123456789"
+                                           readonly
                                            value="${fn:escapeXml(profile.phone)}">
                                 </div>
                                 <c:if test="${not empty phoneError}">
@@ -698,17 +752,18 @@
                                 <div class="field-control">
                                     <i class="fa-regular fa-image field-icon"></i>
                                     <input type="file"
-                                           id="avatarFile"
-                                           name="avatarFile"
-                                           class="form-control"
+                                            id="avatarFile"
+                                            name="avatarFile"
+                                           class="form-control profile-editable"
+                                           disabled
                                            accept="image/jpeg,image/png,image/gif,image/webp">
                                 </div>
-                                <div class="form-text">Upload a JPG, PNG, GIF, or WEBP image up to 5MB. Leave blank to keep the current avatar.</div>
+                                <div class="form-text">Select Edit profile to upload a JPG, PNG, GIF, or WEBP image up to 5MB.</div>
                             </div>
-                            <div class="col-12 form-actions">
-                                <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-secondary px-4">
+                            <div class="col-12 form-actions ${editMode ? '' : 'd-none'}" id="profileFormActions">
+                                <button type="button" class="btn btn-outline-secondary px-4" id="cancelEditBtn">
                                     Cancel
-                                </a>
+                                </button>
                                 <button type="submit" class="btn btn-primary btn-save px-4">
                                     <i class="fa-solid fa-floppy-disk"></i>
                                     Save changes
@@ -777,6 +832,69 @@
                         if (event.key === 'Escape' && logoutDialog.classList.contains('is-open')) {
                             hideLogoutDialog();
                         }
+                    });
+                }
+
+                var profileForm = document.getElementById('profileForm');
+                var editProfileBtn = document.getElementById('editProfileBtn');
+                var cancelEditBtn = document.getElementById('cancelEditBtn');
+                var profileFormActions = document.getElementById('profileFormActions');
+                var profileHint = document.getElementById('profileHint');
+                var profileEditableFields = profileForm
+                        ? profileForm.querySelectorAll('.profile-editable')
+                        : [];
+                var isEditing = false;
+
+                function setEditMode(enabled, focusFirstField) {
+                    isEditing = enabled;
+
+                    for (var i = 0; i < profileEditableFields.length; i++) {
+                        var field = profileEditableFields[i];
+                        if (field.type === 'file') {
+                            field.disabled = !enabled;
+                        } else {
+                            field.readOnly = !enabled;
+                        }
+                        field.classList.toggle('readonly-control', !enabled);
+                    }
+
+                    if (editProfileBtn) {
+                        editProfileBtn.classList.toggle('d-none', enabled);
+                    }
+                    if (profileFormActions) {
+                        profileFormActions.classList.toggle('d-none', !enabled);
+                    }
+                    if (profileHint) {
+                        profileHint.textContent = enabled
+                                ? 'Make your changes, then save them to update your account.'
+                                : 'View your personal information and avatar.';
+                    }
+                    if (focusFirstField) {
+                        var fullNameInput = document.getElementById('fullName');
+                        if (fullNameInput) {
+                            fullNameInput.focus();
+                        }
+                    }
+                }
+
+                if (profileForm) {
+                    setEditMode(profileForm.dataset.editMode === 'true');
+                    profileForm.addEventListener('submit', function(event) {
+                        if (!isEditing) {
+                            event.preventDefault();
+                        }
+                    });
+                }
+
+                if (editProfileBtn) {
+                    editProfileBtn.addEventListener('click', function() {
+                        setEditMode(true, true);
+                    });
+                }
+
+                if (cancelEditBtn) {
+                    cancelEditBtn.addEventListener('click', function() {
+                        window.location.reload();
                     });
                 }
 

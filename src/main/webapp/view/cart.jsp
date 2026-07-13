@@ -107,14 +107,14 @@
             box-shadow:0 8px 22px rgba(37,33,30,.16);
         }
 
-        .account-dropdown a{
+        .cart-topbar .account-dropdown a{
             display:block;
             padding:9px 14px;
             color:var(--cart-ink);
             font-size:13px;
         }
 
-        .account-dropdown a:hover{
+        .cart-topbar .account-dropdown a:hover{
             background:var(--cart-soft);
             color:var(--cart-accent);
         }
@@ -747,19 +747,26 @@
                 <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
                 <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
                 <span><i class="fa-solid fa-globe me-1"></i>English</span>
-                <details class="account-menu">
-                    <summary>
-                        <span class="account-avatar">M</span>
-                        <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </summary>
-                    <div class="account-dropdown">
-                        <a href="<%= ctx %>/customer/profile">Profile</a>
-                        <a href="<%= ctx %>/customer/orders">My Orders</a>
-                        <hr>
-                        <a href="<%= ctx %>/customer/logout">Logout</a>
-                    </div>
-                </details>
+                <c:choose>
+                    <c:when test="${not empty sessionScope.authUserId}">
+                        <details class="account-menu">
+                            <summary>
+                                <span class="account-avatar">M</span>
+                                <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </summary>
+                            <div class="account-dropdown">
+                                <a href="<%= ctx %>/customer/profile">Profile</a>
+                                <a href="<%= ctx %>/customer/orders">My Orders</a>
+                                <hr>
+                                <a href="<%= ctx %>/customer/logout">Logout</a>
+                            </div>
+                        </details>
+                    </c:when>
+                    <c:otherwise>
+                        <a class="cart-login" href="<%= ctx %>/customer/login">Login</a>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </div>
