@@ -1173,7 +1173,7 @@
                     currency: 'VND'
                 }).format(value);
             } catch (error) {
-                return value.toLocaleString('vi-VN') + ' VND';
+                return value.toLocaleString('vi-VN') + ' \u20ab';
             }
         }
 

@@ -1,5 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
 <html>
@@ -583,7 +585,7 @@
                                 <c:if test="${not empty p.variants}">
 
                                     <div class="price mb-2">
-                                        ${p.variants[0].salePrice} VND
+                                        <fmt:formatNumber value="${p.variants[0].salePrice}" pattern="#,##0"/> &#8363;
                                     </div>
 
                                     <form action="${pageContext.request.contextPath}/wishlist/toggle"
@@ -634,7 +636,7 @@
                                                         data-price="${v.salePrice}"
                                                         data-attributes="${v.attributeDetails}">
 
-                                                    ${v.attributeDetails} - ${v.salePrice} VND
+                                                    ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> &#8363;
 
                                                 </option>
 

@@ -1,5 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
 <html>
@@ -1040,7 +1042,7 @@
 
                                             <div class="fw-bold text-danger">
 
-                                                ${item.price}
+                                                <fmt:formatNumber value="${item.price}" pattern="#,##0"/> &#8363;
 
                                             </div>
 
@@ -1102,7 +1104,7 @@
 
                                     <strong>
 
-                                        ${cartTotal}
+                                        <fmt:formatNumber value="${cartTotal}" pattern="#,##0"/> &#8363;
 
                                     </strong>
 
@@ -1118,7 +1120,7 @@
 
                                     <strong>
 
-                                        30,000 ₫
+                                        <fmt:formatNumber value="30000" pattern="#,##0"/> &#8363;
 
                                     </strong>
 
@@ -1127,7 +1129,7 @@
                                     <div class="summary-row">
                                         <span>Discount</span>
                                         <strong class="text-success">
-                                            - ${discountAmount}
+                                            - <fmt:formatNumber value="${discountAmount}" pattern="#,##0"/> &#8363;
                                         </strong>
                                     </div>
                                 </c:if>
@@ -1144,7 +1146,7 @@
 
                                     <span>
 
-                                        ${totalPayment}
+                                        <fmt:formatNumber value="${totalPayment}" pattern="#,##0"/> &#8363;
 
                                     </span>
 

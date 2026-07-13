@@ -1,5 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
 <html>
@@ -920,7 +922,7 @@
                                     <c:choose>
                                         <c:when test="${not empty p.variants}">
                                             <div class="product-price mb-2">
-                                                ${p.variants[0].salePrice} &#8363;
+                                                <fmt:formatNumber value="${p.variants[0].salePrice}" pattern="#,##0"/> &#8363;
                                             </div>
                                             <form action="${pageContext.request.contextPath}/wishlist/toggle"
                                                   method="post"
@@ -960,7 +962,7 @@
                                                     <option value="${v.id}"
                                                             data-price="${v.salePrice}"
                                                             data-attributes="${v.attributeDetails}">
-                                                        ${v.attributeDetails} - ${v.salePrice} &#8363;
+                                                        ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> &#8363;
                                                     </option>
                                                 </c:forEach>
                                             </select>

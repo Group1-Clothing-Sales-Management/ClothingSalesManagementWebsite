@@ -2,6 +2,7 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
+<fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
 <html>
@@ -231,7 +232,7 @@
                                         <div class="wishlist-price mb-1">
                                             <c:choose>
                                                 <c:when test="${not empty item.salePrice}">
-                                                    <fmt:formatNumber value="${item.salePrice}" type="number"/> d
+                                                    <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> &#8363;
                                                 </c:when>
                                                 <c:otherwise>
                                                     Contact
@@ -283,7 +284,7 @@
                                                                     ${variant.id == item.variantId ? 'selected' : ''}>
                                                                 ${variant.attributeDetails}
                                                                 -
-                                                                <fmt:formatNumber value="${variant.salePrice}" type="number"/> d
+                                                                <fmt:formatNumber value="${variant.salePrice}" pattern="#,##0"/> &#8363;
                                                             </option>
                                                         </c:forEach>
                                                     </select>

@@ -2,6 +2,7 @@
 <%@taglib prefix="c"
           uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
 
@@ -978,7 +979,7 @@
                         <c:choose>
                             <c:when test="${not empty product.variants}">
                                 <div class="price">
-                                    <span id="priceValue">${product.variants[0].salePrice} &#8363;</span>
+                                    <span id="priceValue"><fmt:formatNumber value="${product.variants[0].salePrice}" pattern="#,##0"/> &#8363;</span>
                                     <span class="price-note">Best price today</span>
                                 </div>
                             </c:when>
@@ -1246,7 +1247,7 @@
                     document.getElementById('stockText').textContent = option.dataset.stock;
 
                     if (priceValue) {
-                        priceValue.textContent = option.dataset.price + ' VND';
+                        priceValue.textContent = Number(option.dataset.price || 0).toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' \u20ab';
                     }
 
                     if (quantityInput) {
