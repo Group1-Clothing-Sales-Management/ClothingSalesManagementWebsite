@@ -737,7 +737,7 @@
             <div class="cart-topbar-group">
                 <a href="<%= ctx %>/home">Seller Centre</a>
                 <span class="cart-topbar-separator">|</span>
-                <a href="<%= ctx %>/home">Download</a>
+                <a href="<%= ctx %>/product">Shop Now</a>
                 <span class="cart-topbar-separator">|</span>
                 <span>Follow us on</span>
                 <i class="fa-brands fa-facebook"></i>
@@ -746,20 +746,20 @@
             <div class="cart-topbar-group">
                 <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
                 <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
-                <span><i class="fa-solid fa-globe me-1"></i>English</span>
+                <span>English</span>
                 <c:choose>
                     <c:when test="${not empty sessionScope.authUserId}">
                         <details class="account-menu">
-                            <summary>
+                            <summary aria-haspopup="menu">
                                 <span class="account-avatar">M</span>
                                 <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </summary>
-                            <div class="account-dropdown">
-                                <a href="<%= ctx %>/customer/profile">Profile</a>
-                                <a href="<%= ctx %>/customer/orders">My Orders</a>
+                            <div class="account-dropdown" role="menu">
+                                <a href="<%= ctx %>/customer/profile" role="menuitem">Profile</a>
+                                <a href="<%= ctx %>/customer/orders" role="menuitem">My Orders</a>
                                 <hr>
-                                <a href="<%= ctx %>/customer/logout">Logout</a>
+                                <a href="<%= ctx %>/customer/logout" role="menuitem">Logout</a>
                             </div>
                         </details>
                     </c:when>
@@ -1241,6 +1241,37 @@
         }
 
         updateSelectedSummary();
+    </script>
+    <script>
+        (function () {
+            document.querySelectorAll('.account-menu').forEach(function (account) {
+                var summary = account.querySelector('summary');
+
+                if (!summary) {
+                    return;
+                }
+
+                account.addEventListener('toggle', function () {
+                    summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
+                });
+                summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
+
+                document.addEventListener('click', function (event) {
+                    if (!account.contains(event.target)) {
+                        account.removeAttribute('open');
+                        summary.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && account.open) {
+                        account.removeAttribute('open');
+                        summary.setAttribute('aria-expanded', 'false');
+                        summary.focus();
+                    }
+                });
+            });
+        }());
     </script>
 </body>
 </html>

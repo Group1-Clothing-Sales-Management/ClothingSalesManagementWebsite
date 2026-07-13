@@ -643,7 +643,7 @@
                 <div class="checkout-topbar-group">
                     <span>Seller Centre</span>
                     <span>|</span>
-                    <span>Download</span>
+                    <span>Shop Now</span>
                     <span>|</span>
                     <span>Follow us on</span>
                     <i class="bi bi-facebook"></i>
@@ -652,19 +652,19 @@
                 <div class="checkout-topbar-group">
                     <span><i class="bi bi-bell me-1"></i>Notifications</span>
                     <span><i class="bi bi-question-circle me-1"></i>Help</span>
-                    <span><i class="bi bi-globe me-1"></i>English⌄</span>
+                    <span>English</span>
                 </div>
                 <details class="account-menu checkout-account-menu">
-                    <summary>
+                    <summary aria-haspopup="menu">
                         <span class="account-avatar">M</span>
                         <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
                         <i class="bi bi-chevron-down"></i>
                     </summary>
-                    <div class="account-dropdown">
-                        <a href="${pageContext.request.contextPath}/customer/profile">Profile</a>
-                        <a href="${pageContext.request.contextPath}/customer/orders">My Orders</a>
+                    <div class="account-dropdown" role="menu">
+                        <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">Profile</a>
+                        <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">My Orders</a>
                         <hr>
-                        <a href="${pageContext.request.contextPath}/customer/logout">Logout</a>
+                        <a href="${pageContext.request.contextPath}/customer/logout" role="menuitem">Logout</a>
                     </div>
                 </details>
             </div>
@@ -1167,6 +1167,37 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            (function () {
+                document.querySelectorAll('.account-menu').forEach(function (account) {
+                    var summary = account.querySelector('summary');
+
+                    if (!summary) {
+                        return;
+                    }
+
+                    account.addEventListener('toggle', function () {
+                        summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
+                    });
+                    summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
+
+                    document.addEventListener('click', function (event) {
+                        if (!account.contains(event.target)) {
+                            account.removeAttribute('open');
+                            summary.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape' && account.open) {
+                            account.removeAttribute('open');
+                            summary.setAttribute('aria-expanded', 'false');
+                            summary.focus();
+                        }
+                    });
+                });
+            }());
+        </script>
 
     </body>
 

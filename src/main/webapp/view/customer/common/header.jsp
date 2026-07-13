@@ -11,7 +11,7 @@
             <div class="market-topbar-group">
                 <a href="${pageContext.request.contextPath}/home">Seller Centre</a>
                 <span class="market-separator">|</span>
-                <a href="${pageContext.request.contextPath}/home">Download</a>
+                <a href="${pageContext.request.contextPath}/product">Shop Now</a>
                 <span class="market-separator">|</span>
                 <span>Follow us on</span>
                 <i class="fa-brands fa-facebook"></i>
@@ -21,12 +21,12 @@
             <div class="market-topbar-group market-topbar-right">
                 <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
                 <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
-                <span><i class="fa-solid fa-globe me-1"></i>English⌄</span>
+                <span>English</span>
 
                 <c:choose>
                     <c:when test="${loggedIn}">
                         <details class="market-account">
-                            <summary>
+                            <summary aria-haspopup="menu">
                                 <span class="market-avatar" aria-label="User avatar">
                                     <c:choose>
                                         <c:when test="${not empty sessionScope.authUsername}">
@@ -40,18 +40,19 @@
                                                 : sessionScope.authUsername}" default="Account"/></span>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </summary>
-                            <div class="market-account-menu">
-                                <a href="${pageContext.request.contextPath}/customer/profile">
-                                    <i class="fa-solid fa-id-card"></i> Profile
+                            <div class="market-account-menu" role="menu">
+                                <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">
+                                    Profile
                                 </a>
-                                <a href="${pageContext.request.contextPath}/customer/orders">
-                                    <i class="fa-solid fa-box"></i> My Orders
+                                <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
+                                    My Orders
                                 </a>
                                 <hr>
                                 <a class="js-customer-logout"
                                    href="${pageContext.request.contextPath}/customer/logout"
-                                   data-logout-url="${pageContext.request.contextPath}/customer/logout">
-                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                                   data-logout-url="${pageContext.request.contextPath}/customer/logout"
+                                   role="menuitem">
+                                    Logout
                                 </a>
                             </div>
                         </details>
@@ -335,12 +336,6 @@
         color:#c65b3d;
     }
 
-    .market-account-menu i{
-        width:18px;
-        margin-right:5px;
-        color:#c65b3d;
-    }
-
     .market-account-menu hr{
         margin:5px 0;
         border:0;
@@ -536,46 +531,33 @@
 
 <script>
     (function () {
-        var userMenuButton = document.querySelector('.user-menu');
-        var userDropdown = userMenuButton ? userMenuButton.closest('.dropdown') : null;
-        var userDropdownMenu = userDropdown ? userDropdown.querySelector('.dropdown-menu') : null;
+        document.querySelectorAll('.market-account').forEach(function (account) {
+            var summary = account.querySelector('summary');
 
-        if (userMenuButton && userDropdownMenu) {
-            userMenuButton.addEventListener('click', function (event) {
-                if (window.bootstrap && window.bootstrap.Dropdown) {
-                    return;
-                }
+            if (!summary) {
+                return;
+            }
 
-                event.preventDefault();
-                event.stopPropagation();
-
-                var shouldOpen = !userDropdownMenu.classList.contains('show');
-                userDropdownMenu.classList.toggle('show', shouldOpen);
-                userMenuButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            account.addEventListener('toggle', function () {
+                summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
             });
+            summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
 
             document.addEventListener('click', function (event) {
-                if (window.bootstrap && window.bootstrap.Dropdown) {
-                    return;
-                }
-
-                if (!userDropdown.contains(event.target)) {
-                    userDropdownMenu.classList.remove('show');
-                    userMenuButton.setAttribute('aria-expanded', 'false');
+                if (!account.contains(event.target)) {
+                    account.removeAttribute('open');
+                    summary.setAttribute('aria-expanded', 'false');
                 }
             });
 
             document.addEventListener('keydown', function (event) {
-                if (window.bootstrap && window.bootstrap.Dropdown) {
-                    return;
-                }
-
-                if (event.key === 'Escape') {
-                    userDropdownMenu.classList.remove('show');
-                    userMenuButton.setAttribute('aria-expanded', 'false');
+                if (event.key === 'Escape' && account.open) {
+                    account.removeAttribute('open');
+                    summary.setAttribute('aria-expanded', 'false');
+                    summary.focus();
                 }
             });
-        }
+        });
 
         var logoutLink = document.querySelector('.js-customer-logout');
         var logoutModalElement = document.getElementById('customerLogoutModal');
