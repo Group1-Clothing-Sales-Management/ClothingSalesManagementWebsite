@@ -21,9 +21,10 @@ public class CustomerAddressController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-
-        int userId = (Integer) session.getAttribute("authUserId");
+        Integer userId = getCustomerUserId(request, response);
+        if (userId == null) {
+            return;
+        }
 
         String action = request.getParameter("action");
 
@@ -54,9 +55,10 @@ public class CustomerAddressController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
-
-        int userId = (Integer) session.getAttribute("authUserId");
+        Integer userId = getCustomerUserId(request, response);
+        if (userId == null) {
+            return;
+        }
 
         String action = request.getParameter("action");
 
@@ -93,6 +95,30 @@ public class CustomerAddressController extends HttpServlet {
         request.getRequestDispatcher(
                 "/view/customer/customer_manage_address.jsp")
                 .forward(request, response);
+    }
+
+    private Integer getCustomerUserId(HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        HttpSession session = request.getSession(false);
+        Object userIdObj = session == null
+                ? null
+                : session.getAttribute("authUserId");
+        String roleName = session == null
+                ? null
+                : (String) session.getAttribute("authRoleName");
+
+        if (!(userIdObj instanceof Integer)
+                || !"CUSTOMER".equalsIgnoreCase(roleName)) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/customer/login?error=unauthorized");
+
+            return null;
+        }
+
+        return (Integer) userIdObj;
     }
 
     private void editAddress(HttpServletRequest request,
@@ -229,7 +255,7 @@ public class CustomerAddressController extends HttpServlet {
         if (address != null
                 && address.getUserId() == userId) {
 
-            service.deleteAddress(id, id);
+            service.deleteAddress(userId, id);
         }
 
         String from = request.getParameter("from");
