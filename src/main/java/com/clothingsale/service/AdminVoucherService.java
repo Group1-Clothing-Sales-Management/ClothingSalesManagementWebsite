@@ -82,12 +82,22 @@ public class AdminVoucherService {
             return "Total supply limit cannot be lower than the already used count (" + currentDB.getUsedCount() + ").";
         }
         
-        // KIỂM TRA NGÀY TẠI BACKEND: Chặn lỗi Logic bằng Toast thay vì JS Alert
         if (!voucher.getEndDate().after(voucher.getStartDate())) {
             return "Validation Error: Campaign End Date & Time must occur strictly after the Start Date!";
         }
 
-        // ĐỒNG BỘ VALIDATION TỪ LUỒNG CREATE SANG UPDATE ĐỂ BẢO VỆ DỮ LIỆU
+        // --- BỔ SUNG LOGIC: BẢO VỆ KHÁCH HÀNG (48-HOUR BUFFER) ---
+        // Chỉ kiểm tra nếu Admin thực sự có chỉnh sửa ngày kết thúc
+        if (!voucher.getEndDate().equals(currentDB.getEndDate())) {
+            long bufferMillis = 48L * 60 * 60 * 1000; // 48 giờ tính bằng milliseconds
+            java.util.Date minSafeDate = new java.util.Date(now.getTime() + bufferMillis);
+            
+            if (voucher.getEndDate().before(minSafeDate)) {
+                return "Customer Protection Policy: The new End Date must be at least 48 hours from the current time.";
+            }
+        }
+        // ---------------------------------------------------------
+
         if ("PERCENTAGE".equals(voucher.getDiscountType())) {
             if (voucher.getDiscountValue().compareTo(BigDecimal.ZERO) <= 0
                     || voucher.getDiscountValue().compareTo(new BigDecimal("100")) > 0) {
