@@ -15,9 +15,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --cart-accent:#ee4d2d;
-            --cart-accent-dark:#d83f25;
-            --cart-teal:#ee4d2d;
+            --cart-accent:#c65b3d;
+            --cart-accent-dark:#a9462d;
+            --cart-teal:#c65b3d;
             --cart-ink:#25211e;
             --cart-muted:#6f665e;
             --cart-line:#e5e5e5;
@@ -42,7 +42,7 @@
 
         .cart-topbar{
             min-height:34px;
-            background:linear-gradient(90deg,#f4512a,#ff673b);
+            background:#c65b3d;
             color:#fff;
             font-size:12px;
         }

@@ -19,6 +19,7 @@
                 --order-line:#e2e8f0;
                 --order-blue:#2563eb;
                 --order-teal:#0f9b8e;
+                --order-primary:#c65b3d;
                 --order-red:#dc2626;
                 --order-green:#047857;
             }
@@ -95,13 +96,13 @@
             }
 
             .filter-link:hover {
-                color:#ef3b2d;
+                color:var(--order-primary);
                 background:#fff;
             }
 
             .filter-link.active {
-                color:#ef3b2d;
-                border-bottom-color:#ef3b2d;
+                color:var(--order-primary);
+                border-bottom-color:var(--order-primary);
                 background:#fff;
             }
 

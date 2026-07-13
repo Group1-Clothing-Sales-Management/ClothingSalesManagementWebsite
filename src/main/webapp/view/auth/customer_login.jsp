@@ -1,7 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%
-    String usernameValue = (String) request.getAttribute("username");
     String errorMessage = (String) request.getAttribute("errorMessage");
     String successMessage = (String) request.getAttribute("successMessage");
     String ctx = request.getContextPath();
@@ -11,474 +10,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Login | Clothing Sale</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Log In | Clothing Sale</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --ink:#172033;
-            --muted:#667085;
-            --line:#e4e7ec;
-            --paper:#ffffff;
-            --soft:#f5f7fb;
-            --brand:#2563eb;
-            --teal:#0f9b8e;
-            --coral:#e8795b;
+            --brand-orange: #c65b3d;
+            --button-coral: #c65b3d;
+            --ink: #222;
+            --muted: #999;
+            --line: #dbdbdb;
         }
 
-        * { box-sizing:border-box; }
+        * { box-sizing: border-box; }
+
+        html, body { min-height: 100%; }
 
         body {
-            min-height:100vh;
-            min-height:100svh;
-            margin:0;
-            color:var(--ink);
-            background:
-                radial-gradient(circle at 10% 12%, rgba(232, 121, 91, .16), transparent 28%),
-                radial-gradient(circle at 88% 18%, rgba(15, 155, 142, .16), transparent 30%),
-                linear-gradient(135deg, #f7f9fc 0%, #edf6f3 48%, #fff6f1 100%);
-            font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            color: var(--ink);
+            background: var(--brand-orange);
+            font-family: Arial, Helvetica, sans-serif;
         }
 
-        .auth-shell {
-            min-height:100vh;
-            min-height:100svh;
-            padding:28px clamp(16px, 4vw, 48px);
-            display:flex;
-            flex-direction:column;
+        a { color: inherit; }
+
+        .site-header {
+            height: 74px;
+            background: #fff;
         }
 
-        .auth-topbar {
-            width:100%;
-            max-width:1160px;
-            margin:0 auto 24px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:16px;
+        .header-inner {
+            width: min(1160px, calc(100% - 48px));
+            height: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
         }
 
         .brand-link {
-            min-height:42px;
-            display:inline-flex;
-            align-items:center;
-            gap:10px;
-            text-decoration:none;
-            font-weight:800;
-            color:var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--brand-orange);
+            text-decoration: none;
         }
 
-        .brand-logo {
-            width:42px;
-            height:42px;
-            border-radius:8px;
-            display:grid;
-            place-items:center;
-            color:#fff;
-            background:linear-gradient(135deg, var(--brand), var(--teal));
-            box-shadow:0 12px 24px rgba(37, 99, 235, .2);
+        .brand-mark {
+            position: relative;
+            width: 32px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 3px;
+            background: var(--brand-orange);
+            color: #fff;
         }
 
-        .auth-layout {
-            width:100%;
-            max-width:1160px;
-            margin:auto;
-            display:grid;
-            grid-template-columns:repeat(2, minmax(0, 1fr));
-            gap:24px;
-            align-items:stretch;
+        .brand-mark::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            width: 14px;
+            height: 13px;
+            border: 2px solid var(--brand-orange);
+            border-bottom: 0;
+            border-radius: 10px 10px 0 0;
         }
 
-        .visual-panel,
-        .auth-card {
-            border:1px solid rgba(23, 32, 51, .09);
-            border-radius:8px;
-            box-shadow:0 24px 70px rgba(23, 32, 51, .12);
+        .brand-mark span {
+            position: relative;
+            z-index: 1;
+            font-size: 23px;
+            line-height: 1;
         }
 
-        .visual-panel {
-            min-height:620px;
-            position:relative;
-            overflow:hidden;
-            padding:36px;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
-            color:#fff;
-            background:
-                linear-gradient(160deg, rgba(23, 32, 51, .96) 0%, rgba(18, 57, 65, .94) 100%);
+        .brand-name {
+            font-size: 24px;
+            letter-spacing: -.5px;
         }
 
-        .visual-panel::after {
-            content:"";
-            position:absolute;
-            inset:auto -12% -20% 34%;
-            height:260px;
-            background:radial-gradient(circle, rgba(232, 121, 91, .36), transparent 66%);
-            pointer-events:none;
+        .header-divider {
+            width: 1px;
+            height: 27px;
+            margin: 0 14px 0 22px;
+            background: #d8d8d8;
         }
 
-        .visual-copy,
-        .lookbook,
-        .benefit-row {
-            position:relative;
-            z-index:1;
+        .page-title {
+            font-size: 22px;
+            color: #222;
         }
 
-        .eyebrow {
-            margin-bottom:12px;
-            color:#a7f3d0;
-            font-size:.8rem;
-            font-weight:800;
-            letter-spacing:.08em;
-            text-transform:uppercase;
+        .help-link {
+            margin-left: auto;
+            color: var(--brand-orange);
+            font-size: 13px;
+            text-decoration: none;
         }
 
-        .visual-title {
-            max-width:430px;
-            margin:0;
-            font-size:clamp(2rem, 4vw, 3.6rem);
-            line-height:1.02;
-            font-weight:900;
+        .help-link:hover,
+        .text-link:hover { text-decoration: underline; }
+
+        .login-stage {
+            min-height: calc(100vh - 74px);
+            min-height: calc(100svh - 74px);
+            width: min(1160px, calc(100% - 48px));
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 620px) 400px;
+            align-items: center;
+            gap: 70px;
+            padding: 32px 0;
         }
 
-        .visual-text {
-            max-width:450px;
-            margin:18px 0 0;
-            color:rgba(255, 255, 255, .72);
-            font-size:1.02rem;
+        .brand-panel {
+            min-width: 0;
+            color: #fff;
+            text-align: center;
         }
 
-        .lookbook {
-            display:grid;
-            grid-template-columns:1.25fr .8fr;
-            gap:14px;
-            margin:34px 0;
+        .hero-logo {
+            position: relative;
+            width: 178px;
+            height: 158px;
+            margin: 0 auto 12px;
+            border-radius: 0 0 18px 18px;
+            background: #fff;
         }
 
-        .lookbook img {
-            width:100%;
-            height:100%;
-            display:block;
-            object-fit:cover;
-            border-radius:8px;
-            border:1px solid rgba(255, 255, 255, .16);
+        .hero-logo::before {
+            content: "";
+            position: absolute;
+            top: -49px;
+            left: 46px;
+            width: 86px;
+            height: 91px;
+            border: 12px solid #fff;
+            border-bottom: 0;
+            border-radius: 50px 50px 0 0;
         }
 
-        .lookbook-main {
-            min-height:300px;
+        .hero-logo::after {
+            content: "C";
+            position: absolute;
+            inset: 13px 0 0;
+            color: var(--brand-orange);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 126px;
+            font-weight: 400;
+            line-height: 1;
         }
 
-        .lookbook-stack {
-            display:grid;
-            grid-template-rows:1fr 1fr;
-            gap:14px;
+        .hero-wordmark {
+            margin: 0;
+            font-size: clamp(54px, 6vw, 68px);
+            font-weight: 400;
+            letter-spacing: -2px;
         }
 
-        .benefit-row {
-            display:grid;
-            grid-template-columns:repeat(3, minmax(0, 1fr));
-            gap:12px;
-            color:rgba(255, 255, 255, .82);
-            font-size:.9rem;
+        .hero-copy {
+            max-width: 520px;
+            margin: 48px auto 0;
+            font-size: clamp(22px, 2.1vw, 28px);
+            line-height: 1.5;
         }
 
-        .benefit-row span {
-            display:flex;
-            align-items:center;
-            gap:8px;
+        .login-card {
+            width: 100%;
+            padding: 22px 30px 28px;
+            border-radius: 4px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .16);
         }
 
-        .auth-card {
-            padding:42px;
-            min-height:620px;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            background:rgba(255, 255, 255, .9);
-            backdrop-filter:blur(16px);
+        .card-heading {
+            min-height: 46px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .card-kicker {
-            width:max-content;
-            margin-bottom:16px;
-            padding:8px 12px;
-            border-radius:999px;
-            color:#0f766e;
-            background:#dff7f1;
-            font-size:.82rem;
-            font-weight:800;
+        .card-heading h1 {
+            margin: 16px 0 0;
+            font-size: 20px;
+            font-weight: 400;
         }
 
-        .auth-title {
-            margin:0;
-            font-size:clamp(2rem, 3vw, 2.6rem);
-            line-height:1.1;
-            font-weight:900;
+        .message {
+            margin: 0 0 14px;
+            padding: 9px 11px;
+            border-radius: 2px;
+            font-size: 12px;
+            line-height: 1.35;
         }
 
-        .auth-subtitle {
-            margin:12px 0 28px;
-            color:var(--muted);
-            font-size:1rem;
+        .message-error { color: #b42318; background: #fff1f0; }
+        .message-success { color: #087443; background: #ecfdf3; }
+
+        .field {
+            position: relative;
+            display: flex;
+            height: 40px;
+            margin-top: 14px;
+            border: 1px solid var(--line);
+            background: #fff;
         }
 
-        .alert {
-            border:0;
-            border-radius:8px;
-            font-weight:600;
+        .field:focus-within { border-color: #999; }
+
+        .field input {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            outline: 0;
+            padding: 0 12px;
+            color: #333;
+            font-size: 14px;
         }
 
-        .form-label {
-            color:#344054;
-            font-size:.92rem;
-            font-weight:800;
-        }
+        .field input::placeholder { color: #b8b8b8; }
 
-        .field-control {
-            position:relative;
-        }
-
-        .field-control .field-icon {
-            position:absolute;
-            left:16px;
-            top:50%;
-            transform:translateY(-50%);
-            color:#98a2b3;
-            pointer-events:none;
-        }
-
-        .form-control {
-            height:52px;
-            padding-left:46px;
-            border:1px solid #d0d5dd;
-            border-radius:8px;
-            background:#fff;
-            color:var(--ink);
-            box-shadow:0 1px 2px rgba(16, 24, 40, .04);
-        }
-
-        .form-control::placeholder {
-            color:#98a2b3;
-        }
-
-        .form-control:focus {
-            border-color:var(--teal);
-            box-shadow:0 0 0 .22rem rgba(15, 155, 142, .14);
-        }
-
-        .password-control .form-control {
-            padding-right:54px;
-        }
+        .password-field input { padding-right: 46px; }
 
         .password-toggle {
-            position:absolute;
-            right:6px;
-            top:6px;
-            width:40px;
-            height:40px;
-            border:0;
-            border-radius:8px;
-            color:#475467;
-            background:transparent;
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 42px;
+            height: 38px;
+            border: 0;
+            color: #777;
+            background: transparent;
+            cursor: pointer;
         }
 
-        .password-toggle:hover,
-        .password-toggle:focus {
-            color:var(--teal);
-            background:#edf7f5;
+        .password-toggle:hover { color: var(--brand-orange); }
+
+        .password-row {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            margin-top: 14px;
+            border: 1px solid var(--line);
         }
 
-        .link-accent {
-            color:#0f766e;
-            font-weight:800;
-            text-decoration:none;
+        .password-row .field { flex: 1; height: 38px; margin: 0; border: 0; }
+
+        .forgot-link {
+            flex: 0 0 auto;
+            padding: 0 13px;
+            border-left: 1px solid var(--line);
+            color: #0055aa;
+            font-size: 12px;
+            text-decoration: none;
         }
 
-        .link-accent:hover {
-            color:var(--brand);
+        .forgot-link:hover { text-decoration: underline; }
+
+        .login-button {
+            width: 100%;
+            height: 40px;
+            margin-top: 34px;
+            border: 0;
+            border-radius: 2px;
+            color: #fff;
+            background: var(--button-coral);
+            font-size: 14px;
+            cursor: pointer;
         }
 
-        .btn-auth {
-            min-height:52px;
-            border:0;
-            border-radius:8px;
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            background:linear-gradient(135deg, var(--brand), var(--teal));
-            color:#fff;
-            font-weight:800;
-            box-shadow:0 16px 26px rgba(37, 99, 235, .22);
+        .login-button:hover { background: #a9462d; }
+
+        .stay-signed {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 11px;
+            color: #555;
+            font-size: 12px;
         }
 
-        .btn-auth:hover,
-        .btn-auth:focus {
-            color:#fff;
-            filter:brightness(.98);
-            box-shadow:0 18px 30px rgba(15, 155, 142, .26);
+        .stay-signed input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--brand-orange);
         }
 
-        .switch-panel {
-            margin-top:24px;
-            padding-top:22px;
-            border-top:1px solid var(--line);
-            color:var(--muted);
-            text-align:center;
+        .help-dot {
+            width: 16px;
+            height: 16px;
+            display: inline-grid;
+            place-items: center;
+            margin-left: 3px;
+            border: 1px solid #999;
+            border-radius: 50%;
+            color: #777;
+            font-size: 11px;
         }
 
-        @media (max-width: 991.98px) {
-            .auth-layout {
-                grid-template-columns:1fr;
-            }
-
-            .visual-panel {
-                min-height:auto;
-            }
-
-            .auth-card {
-                min-height:auto;
-            }
+        .terms {
+            max-width: 255px;
+            margin: 34px auto 0;
+            color: #333;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.25;
         }
 
-        @media (max-width: 575.98px) {
-            .auth-shell {
-                padding:18px 12px;
+        .terms a { color: var(--brand-orange); text-decoration: none; }
+        .terms a:hover { text-decoration: underline; }
+
+        .signup-prompt {
+            margin: 29px 0 0;
+            color: #b5b5b5;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .signup-prompt a {
+            margin-left: 3px;
+            color: var(--brand-orange);
+            text-decoration: none;
+        }
+
+        .signup-prompt a:hover { text-decoration: underline; }
+
+        @media (max-width: 1100px) {
+            .login-stage {
+                grid-template-columns: 1fr;
+                gap: 42px;
+                padding: 64px 0;
             }
 
-            .auth-topbar {
-                align-items:flex-start;
-                flex-direction:column;
-            }
+            .brand-panel { order: 2; }
+            .login-card { max-width: 400px; margin: 0 auto; }
+            .hero-copy { margin-top: 34px; }
+        }
 
-            .visual-panel,
-            .auth-card {
-                padding:24px;
+        @media (max-width: 520px) {
+            .site-header { height: 64px; }
+            .header-inner,
+            .login-stage { width: calc(100% - 28px); }
+            .page-title { font-size: 18px; }
+            .brand-name { font-size: 21px; }
+            .header-divider { margin-left: 14px; margin-right: 10px; }
+            .help-link { font-size: 12px; }
+            .login-stage {
+                min-height: calc(100vh - 64px);
+                min-height: calc(100svh - 64px);
+                gap: 48px;
+                padding: 48px 0;
             }
-
-            .lookbook,
-            .benefit-row {
-                grid-template-columns:1fr;
-            }
-
-            .lookbook-main {
-                min-height:220px;
-            }
+            .login-card { padding: 18px 20px 24px; }
+            .hero-logo { transform: scale(.82); margin-bottom: -12px; }
+            .hero-wordmark { font-size: 54px; }
+            .hero-copy { margin-top: 30px; font-size: 21px; }
         }
     </style>
 </head>
 <body>
-    <jsp:include page="/view/customer/common/header.jsp"/>
-
-    <main class="auth-shell">
-        <div class="auth-topbar">
-            <a class="brand-link" href="<%= ctx %>/home">
-                <span class="brand-logo"><i class="fa-solid fa-shirt"></i></span>
-                <span>Clothing Sale</span>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand-link" href="<%= ctx %>/home" aria-label="Clothing Sale home">
+                <span class="brand-mark"><span>C</span></span>
+                <span class="brand-name">Clothing Sale</span>
             </a>
+            <span class="header-divider" aria-hidden="true"></span>
+            <span class="page-title">Log In</span>
+            <a class="help-link" href="<%= ctx %>/home">Need help?</a>
         </div>
+    </header>
 
-        <div class="auth-layout">
-            <section class="visual-panel" aria-label="Clothing Sale">
-                <div class="visual-copy">
-                    <div class="eyebrow">Customer access</div>
-                    <h1 class="visual-title">Shop faster. Track every order with ease.</h1>
-                    <p class="visual-text">Sign in to return to your cart, review order status, and keep shopping your favorite styles.</p>
+    <main class="login-stage">
+        <section class="brand-panel" aria-label="Clothing Sale introduction">
+            <div class="hero-logo" aria-hidden="true"></div>
+            <h1 class="hero-wordmark">Clothing Sale</h1>
+            <p class="hero-copy">Your favorite clothing store<br>for styles you’ll love every day</p>
+        </section>
+
+        <section class="login-card" aria-label="Customer login form">
+            <div class="card-heading">
+                <h2>Log In</h2>
+            </div>
+
+            <% if (errorMessage != null) { %>
+                <div class="message message-error" role="alert"><%= errorMessage %></div>
+            <% } %>
+            <% if (successMessage != null) { %>
+                <div class="message message-success" role="status"><%= successMessage %></div>
+            <% } %>
+
+            <form action="<%= ctx %>/customer/login" method="post" autocomplete="off">
+                <div class="field">
+                    <input type="text"
+                           name="username"
+                           id="usernameField"
+                           placeholder="Phone number / Username / Email"
+                           value="<c:out value='${requestScope.username}' default='' />"
+                           autocomplete="username"
+                           required>
                 </div>
 
-                <div class="lookbook">
-                    <img class="lookbook-main" src="<%= ctx %>/uploads/product/prod15-main.jpg" alt="Clothing Sale product">
-                    <div class="lookbook-stack">
-                        <img src="<%= ctx %>/uploads/product/prod16-main.jpg" alt="Clothing Sale product">
-                        <img src="<%= ctx %>/uploads/product/prod17-main.jpg" alt="Clothing Sale product">
+                <div class="password-row">
+                    <div class="field password-field">
+                        <input type="password"
+                               name="password"
+                               id="passwordField"
+                               placeholder="Password"
+                               autocomplete="current-password"
+                               required>
+                        <button class="password-toggle" type="button" aria-label="Show password">
+                            <i class="fa-regular fa-eye-slash" aria-hidden="true"></i>
+                        </button>
                     </div>
+                    <a class="forgot-link" href="<%= ctx %>/customer/register">Forgot?</a>
                 </div>
 
-                <div class="benefit-row">
-                    <span><i class="fa-solid fa-lock"></i> Secure</span>
-                    <span><i class="fa-solid fa-bag-shopping"></i> Cart</span>
-                    <span><i class="fa-solid fa-truck-fast"></i> Orders</span>
-                </div>
-            </section>
+                <button class="login-button" type="submit">LOG IN</button>
+            </form>
 
-            <section class="auth-card">
-                <div class="card-kicker">Customer</div>
-                <h2 class="auth-title">Welcome back</h2>
-                <p class="auth-subtitle">Enter your account details to continue shopping.</p>
+            <label class="stay-signed">
+                <input type="checkbox" checked>
+                <span>Stay Signed In</span>
+                <span class="help-dot" title="Keep this device signed in">?</span>
+            </label>
 
-                <% if (errorMessage != null) { %>
-                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        <span><%= errorMessage %></span>
-                    </div>
-                <% } %>
-                <% if (successMessage != null) { %>
-                    <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span><%= successMessage %></span>
-                    </div>
-                <% } %>
-
-                <form action="<%= ctx %>/customer/login" method="post" autocomplete="off">
-                    <div class="mb-3">
-                        <label class="form-label" for="usernameField">Username or email</label>
-                        <div class="field-control">
-                            <i class="fa-regular fa-user field-icon"></i>
-                            <input type="text"
-                                   name="username"
-                                   id="usernameField"
-                                   class="form-control"
-                                   placeholder="Enter username or email"
-                                   value="<%= usernameValue != null ? usernameValue : "" %>"
-                                   required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="passwordField">Password</label>
-                        <div class="field-control password-control">
-                            <i class="fa-solid fa-lock field-icon"></i>
-                            <input type="password"
-                                   name="password"
-                                   id="passwordField"
-                                   class="form-control"
-                                   placeholder="Enter password"
-                                   required>
-                            <button class="password-toggle" type="button" data-toggle-password="passwordField" aria-label="Show password">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end mb-4">
-                        <a href="<%= ctx %>/customer/register" class="link-accent">Create account</a>
-                    </div>
-
-                    <button type="submit" class="btn btn-auth w-100">
-                        <i class="fa-solid fa-right-to-bracket me-2"></i>
-                        Sign in
-                    </button>
-                </form>
-
-                <div class="switch-panel">
-                    Do not have an account?
-                    <a href="<%= ctx %>/customer/register" class="link-accent">Sign up now</a>
-                </div>
-            </section>
-        </div>
+            <p class="terms">By logging in, you agree to Clothing Sale's <a href="<%= ctx %>/home">Terms of Service</a> &amp; <a href="<%= ctx %>/home">Privacy Policy</a></p>
+            <p class="signup-prompt">New to Clothing Sale?<a href="<%= ctx %>/customer/register">Sign Up</a></p>
+        </section>
     </main>
 
     <script>
-        document.querySelectorAll('[data-toggle-password]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var input = document.getElementById(button.dataset.togglePassword);
-                var icon = button.querySelector('i');
-                var showing = input.type === 'text';
-                input.type = showing ? 'password' : 'text';
-                button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-                icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        (function () {
+            var toggle = document.querySelector('.password-toggle');
+            var password = document.getElementById('passwordField');
+            if (!toggle || !password) return;
+
+            toggle.addEventListener('click', function () {
+                var isVisible = password.type === 'text';
+                password.type = isVisible ? 'password' : 'text';
+                toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+                toggle.innerHTML = isVisible
+                    ? '<i class="fa-regular fa-eye-slash" aria-hidden="true"></i>'
+                    : '<i class="fa-regular fa-eye" aria-hidden="true"></i>';
             });
-        });
+        }());
     </script>
 </body>
 </html>

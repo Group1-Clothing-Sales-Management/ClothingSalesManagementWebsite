@@ -122,7 +122,7 @@
     .market-topbar,
     .market-mainbar{
         color:#fff;
-        background:linear-gradient(90deg,#ff4d2d 0%,#ff6438 100%);
+        background:#c65b3d;
     }
 
     .market-topbar{
@@ -215,12 +215,12 @@
         width:64px;
         border:0;
         border-radius:0 2px 2px 0;
-        background:#ee3f25;
+        background:#c65b3d;
         color:#fff;
     }
 
     .market-search button:hover{
-        background:#d93620;
+        background:#a9462d;
     }
 
     .market-cart{
@@ -243,10 +243,10 @@
         min-width:20px;
         height:18px;
         padding:1px 5px;
-        border:2px solid #ff4d2d;
+        border:2px solid #c65b3d;
         border-radius:10px;
         background:#fff;
-        color:#ee3f25;
+        color:#c65b3d;
         font-size:11px;
         line-height:14px;
         text-align:center;
@@ -325,13 +325,13 @@
 
     .market-account-menu a:hover{
         background:#fff2ed;
-        color:#ee4d2d;
+        color:#c65b3d;
     }
 
     .market-account-menu i{
         width:18px;
         margin-right:5px;
-        color:#ee4d2d;
+        color:#c65b3d;
     }
 
     .market-account-menu hr{

@@ -160,7 +160,7 @@
             :root{
                 --checkout-ink:#25211e;
                 --checkout-muted:#6f665e;
-                --checkout-primary:#ee4d2d;
+                --checkout-primary:#c65b3d;
                 --checkout-border:#e5e5e5;
                 --checkout-page:#f5f5f5;
             }
@@ -172,7 +172,7 @@
 
             .checkout-topbar{
                 min-height:34px;
-                background:linear-gradient(90deg,#f4512a,#ff673b);
+                background:#c65b3d;
                 color:#fff;
                 font-size:12px;
             }
@@ -419,7 +419,7 @@
 
             .address-card .card-header{
                 border-top:3px solid transparent;
-                border-image:linear-gradient(90deg,#ff6b55,#f7a1ad,#69a9db) 1;
+                border-image:linear-gradient(90deg,#c65b3d,#f7a1ad,#69a9db) 1;
             }
 
             .address-item{
@@ -550,7 +550,7 @@
             .checkout-page .btn-primary:hover,
             .checkout-page .btn-success:hover,
             .checkout-page .btn-place:hover{
-                background:#d83f25;
+                background:#a9462d;
                 color:#fff;
             }
 

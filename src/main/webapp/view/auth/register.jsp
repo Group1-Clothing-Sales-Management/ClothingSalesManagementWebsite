@@ -1,10 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%
-    String username = (String) request.getAttribute("username");
-    String fullName = (String) request.getAttribute("fullName");
-    String email = (String) request.getAttribute("email");
-    String phone = (String) request.getAttribute("phone");
     String errorMessage = (String) request.getAttribute("errorMessage");
     String ctx = request.getContextPath();
 %>
@@ -13,525 +9,439 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create account | Clothing Sale</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Sign Up | Clothing Sale</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --ink:#172033;
-            --muted:#667085;
-            --line:#e4e7ec;
-            --paper:#ffffff;
-            --soft:#f5f7fb;
-            --brand:#2563eb;
-            --teal:#0f9b8e;
-            --coral:#e8795b;
+            --brand-orange: #c65b3d;
+            --brand-orange-dark: #a9462d;
+            --ink: #222;
+            --muted: #999;
+            --line: #dbdbdb;
         }
 
-        * { box-sizing:border-box; }
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
 
         body {
-            min-height:100vh;
-            min-height:100svh;
-            margin:0;
-            color:var(--ink);
-            background:
-                radial-gradient(circle at 10% 12%, rgba(232, 121, 91, .16), transparent 28%),
-                radial-gradient(circle at 88% 18%, rgba(15, 155, 142, .16), transparent 30%),
-                linear-gradient(135deg, #f7f9fc 0%, #edf6f3 48%, #fff6f1 100%);
-            font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            color: var(--ink);
+            background: var(--brand-orange);
+            font-family: Arial, Helvetica, sans-serif;
         }
 
-        .auth-shell {
-            min-height:100vh;
-            min-height:100svh;
-            padding:28px clamp(16px, 4vw, 48px);
-            display:flex;
-            flex-direction:column;
+        a { color: inherit; }
+
+        .site-header {
+            height: 74px;
+            background: #fff;
         }
 
-        .auth-topbar {
-            width:100%;
-            max-width:1160px;
-            margin:0 auto 24px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:16px;
+        .header-inner {
+            width: min(1160px, calc(100% - 48px));
+            height: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
         }
 
         .brand-link {
-            min-height:42px;
-            display:inline-flex;
-            align-items:center;
-            gap:10px;
-            text-decoration:none;
-            font-weight:800;
-            color:var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--brand-orange);
+            text-decoration: none;
+            white-space: nowrap;
         }
 
-        .brand-logo {
-            width:42px;
-            height:42px;
-            border-radius:8px;
-            display:grid;
-            place-items:center;
-            color:#fff;
-            background:linear-gradient(135deg, var(--brand), var(--teal));
-            box-shadow:0 12px 24px rgba(37, 99, 235, .2);
+        .brand-mark {
+            position: relative;
+            width: 32px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 3px;
+            background: var(--brand-orange);
+            color: #fff;
         }
 
-        .auth-layout {
-            width:100%;
-            max-width:1160px;
-            margin:auto;
-            display:grid;
-            grid-template-columns:repeat(2, minmax(0, 1fr));
-            gap:24px;
-            align-items:stretch;
+        .brand-mark::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            width: 14px;
+            height: 13px;
+            border: 2px solid var(--brand-orange);
+            border-bottom: 0;
+            border-radius: 10px 10px 0 0;
         }
 
-        .visual-panel,
-        .auth-card {
-            border:1px solid rgba(23, 32, 51, .09);
-            border-radius:8px;
-            box-shadow:0 24px 70px rgba(23, 32, 51, .12);
+        .brand-mark span {
+            position: relative;
+            z-index: 1;
+            font-size: 23px;
+            line-height: 1;
         }
 
-        .visual-panel {
-            min-height:660px;
-            position:relative;
-            overflow:hidden;
-            padding:36px;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
-            color:#fff;
-            background:
-                linear-gradient(160deg, rgba(23, 32, 51, .96) 0%, rgba(70, 55, 45, .92) 100%);
+        .brand-name {
+            font-size: 24px;
+            letter-spacing: -.5px;
         }
 
-        .visual-panel::after {
-            content:"";
-            position:absolute;
-            inset:auto -12% -20% 34%;
-            height:260px;
-            background:radial-gradient(circle, rgba(15, 155, 142, .34), transparent 66%);
-            pointer-events:none;
+        .header-divider {
+            width: 1px;
+            height: 27px;
+            margin: 0 14px 0 22px;
+            background: #d8d8d8;
         }
 
-        .visual-copy,
-        .lookbook,
-        .benefit-row {
-            position:relative;
-            z-index:1;
+        .page-title { color: #222; font-size: 22px; }
+
+        .help-link {
+            margin-left: auto;
+            color: var(--brand-orange);
+            font-size: 13px;
+            text-decoration: none;
         }
 
-        .eyebrow {
-            margin-bottom:12px;
-            color:#fed7aa;
-            font-size:.8rem;
-            font-weight:800;
-            letter-spacing:.08em;
-            text-transform:uppercase;
+        .help-link:hover,
+        .text-link:hover { text-decoration: underline; }
+
+        .register-stage {
+            min-height: calc(100vh - 74px);
+            min-height: calc(100svh - 74px);
+            width: min(1160px, calc(100% - 48px));
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 620px) 400px;
+            align-items: start;
+            gap: 70px;
+            padding: 58px 0 70px;
         }
 
-        .visual-title {
-            max-width:430px;
-            margin:0;
-            font-size:clamp(2rem, 4vw, 3.6rem);
-            line-height:1.02;
-            font-weight:900;
+        .brand-panel {
+            min-width: 0;
+            padding-top: 72px;
+            color: #fff;
+            text-align: center;
         }
 
-        .visual-text {
-            max-width:450px;
-            margin:18px 0 0;
-            color:rgba(255, 255, 255, .72);
-            font-size:1.02rem;
+        .hero-logo {
+            position: relative;
+            width: 178px;
+            height: 158px;
+            margin: 0 auto 12px;
+            border-radius: 0 0 18px 18px;
+            background: #fff;
         }
 
-        .lookbook {
-            display:grid;
-            grid-template-columns:.8fr 1.25fr;
-            gap:14px;
-            margin:34px 0;
+        .hero-logo::before {
+            content: "";
+            position: absolute;
+            top: -49px;
+            left: 46px;
+            width: 86px;
+            height: 91px;
+            border: 12px solid #fff;
+            border-bottom: 0;
+            border-radius: 50px 50px 0 0;
         }
 
-        .lookbook img {
-            width:100%;
-            height:100%;
-            display:block;
-            object-fit:cover;
-            border-radius:8px;
-            border:1px solid rgba(255, 255, 255, .16);
+        .hero-logo::after {
+            content: "C";
+            position: absolute;
+            inset: 13px 0 0;
+            color: var(--brand-orange);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 126px;
+            font-weight: 400;
+            line-height: 1;
         }
 
-        .lookbook-main {
-            min-height:320px;
+        .hero-wordmark {
+            margin: 0;
+            font-size: clamp(48px, 5.5vw, 66px);
+            font-weight: 400;
+            letter-spacing: -2px;
+            white-space: nowrap;
         }
 
-        .lookbook-stack {
-            display:grid;
-            grid-template-rows:1fr 1fr;
-            gap:14px;
+        .hero-copy {
+            max-width: 520px;
+            margin: 48px auto 0;
+            font-size: clamp(21px, 2vw, 28px);
+            line-height: 1.5;
         }
 
-        .benefit-row {
-            display:grid;
-            grid-template-columns:repeat(3, minmax(0, 1fr));
-            gap:12px;
-            color:rgba(255, 255, 255, .82);
-            font-size:.9rem;
+        .register-card {
+            width: 100%;
+            padding: 22px 30px 28px;
+            border-radius: 4px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .16);
         }
 
-        .benefit-row span {
-            display:flex;
-            align-items:center;
-            gap:8px;
+        .card-heading {
+            min-height: 46px;
+            display: flex;
+            align-items: flex-start;
         }
 
-        .auth-card {
-            padding:38px;
-            min-height:660px;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            background:rgba(255, 255, 255, .92);
-            backdrop-filter:blur(16px);
+        .card-heading h1 {
+            margin: 16px 0 0;
+            font-size: 20px;
+            font-weight: 400;
         }
 
-        .card-kicker {
-            width:max-content;
-            margin-bottom:16px;
-            padding:8px 12px;
-            border-radius:999px;
-            color:#9a3412;
-            background:#ffedd5;
-            font-size:.82rem;
-            font-weight:800;
+        .message {
+            margin: 0 0 14px;
+            padding: 9px 11px;
+            border-radius: 2px;
+            font-size: 12px;
+            line-height: 1.35;
         }
 
-        .auth-title {
-            margin:0;
-            font-size:clamp(1.9rem, 3vw, 2.45rem);
-            line-height:1.1;
-            font-weight:900;
+        .message-error { color: #b42318; background: #fff1f0; }
+
+        .field {
+            position: relative;
+            display: flex;
+            height: 40px;
+            margin-top: 12px;
+            border: 1px solid var(--line);
+            background: #fff;
         }
 
-        .auth-subtitle {
-            margin:12px 0 26px;
-            color:var(--muted);
-            font-size:1rem;
+        .field:focus-within { border-color: #999; }
+
+        .field input {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            outline: 0;
+            padding: 0 12px;
+            color: #333;
+            font-size: 14px;
         }
 
-        .alert {
-            border:0;
-            border-radius:8px;
-            font-weight:600;
-        }
+        .field input::placeholder { color: #b8b8b8; }
 
-        .form-label {
-            color:#344054;
-            font-size:.92rem;
-            font-weight:800;
-        }
-
-        .field-control {
-            position:relative;
-        }
-
-        .field-control .field-icon {
-            position:absolute;
-            left:16px;
-            top:50%;
-            transform:translateY(-50%);
-            color:#98a2b3;
-            pointer-events:none;
-        }
-
-        .form-control {
-            height:50px;
-            padding-left:46px;
-            border:1px solid #d0d5dd;
-            border-radius:8px;
-            background:#fff;
-            color:var(--ink);
-            box-shadow:0 1px 2px rgba(16, 24, 40, .04);
-        }
-
-        .form-control::placeholder {
-            color:#98a2b3;
-        }
-
-        .form-control:focus {
-            border-color:var(--teal);
-            box-shadow:0 0 0 .22rem rgba(15, 155, 142, .14);
-        }
-
-        .password-control .form-control {
-            padding-right:54px;
-        }
+        .password-field input { padding-right: 46px; }
 
         .password-toggle {
-            position:absolute;
-            right:6px;
-            top:5px;
-            width:40px;
-            height:40px;
-            border:0;
-            border-radius:8px;
-            color:#475467;
-            background:transparent;
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 42px;
+            height: 38px;
+            border: 0;
+            color: #777;
+            background: transparent;
+            cursor: pointer;
         }
 
-        .password-toggle:hover,
-        .password-toggle:focus {
-            color:var(--teal);
-            background:#edf7f5;
+        .password-toggle:hover { color: var(--brand-orange); }
+
+        .form-submit {
+            width: 100%;
+            height: 40px;
+            margin-top: 26px;
+            border: 0;
+            border-radius: 2px;
+            color: #fff;
+            background: var(--brand-orange);
+            font-size: 14px;
+            cursor: pointer;
         }
 
-        .btn-auth {
-            min-height:52px;
-            border:0;
-            border-radius:8px;
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            background:linear-gradient(135deg, var(--brand), var(--teal));
-            color:#fff;
-            font-weight:800;
-            box-shadow:0 16px 26px rgba(37, 99, 235, .22);
+        .form-submit:hover { background: var(--brand-orange-dark); }
+
+        .terms {
+            max-width: 285px;
+            margin: 28px auto 0;
+            color: #333;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.25;
         }
 
-        .btn-auth:hover,
-        .btn-auth:focus {
-            color:#fff;
-            filter:brightness(.98);
-            box-shadow:0 18px 30px rgba(15, 155, 142, .26);
+        .terms a,
+        .switch-link {
+            color: var(--brand-orange);
+            text-decoration: none;
         }
 
-        .btn-switch {
-            min-height:52px;
-            border:1px solid #cfd7e6;
-            border-radius:8px;
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            color:#344054;
-            background:#fff;
-            font-weight:800;
+        .terms a:hover,
+        .switch-link:hover { text-decoration: underline; }
+
+        .switch-prompt {
+            margin: 28px 0 0;
+            color: #b5b5b5;
+            text-align: center;
+            font-size: 14px;
         }
 
-        .btn-switch:hover,
-        .btn-switch:focus {
-            border-color:#b8d8d1;
-            color:#0f766e;
-            background:#f3fbf9;
+        .switch-link { margin-left: 3px; }
+
+        @media (max-width: 1100px) {
+            .register-stage {
+                grid-template-columns: 1fr;
+                gap: 42px;
+                padding: 64px 0;
+            }
+
+            .brand-panel {
+                order: 2;
+                padding-top: 0;
+            }
+
+            .register-card {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .hero-copy { margin-top: 34px; }
         }
 
-        @media (max-width: 991.98px) {
-            .auth-layout {
-                grid-template-columns:1fr;
+        @media (max-width: 520px) {
+            .site-header { height: 64px; }
+
+            .header-inner,
+            .register-stage { width: calc(100% - 28px); }
+
+            .page-title { font-size: 18px; }
+            .brand-name { font-size: 21px; }
+            .header-divider { margin-left: 14px; margin-right: 10px; }
+            .help-link { font-size: 12px; }
+
+            .register-stage {
+                min-height: calc(100vh - 64px);
+                min-height: calc(100svh - 64px);
+                gap: 48px;
+                padding: 48px 0;
             }
 
-            .visual-panel {
-                min-height:auto;
-            }
-
-            .auth-card {
-                min-height:auto;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .auth-shell {
-                padding:18px 12px;
-            }
-
-            .auth-topbar {
-                align-items:flex-start;
-                flex-direction:column;
-            }
-
-            .visual-panel,
-            .auth-card {
-                padding:24px;
-            }
-
-            .lookbook,
-            .benefit-row {
-                grid-template-columns:1fr;
-            }
-
-            .lookbook-main {
-                min-height:220px;
-            }
-
-            .auth-actions {
-                flex-direction:column;
-            }
-
-            .auth-actions > * {
-                width:100%;
-            }
+            .register-card { padding: 18px 20px 24px; }
+            .hero-logo { transform: scale(.82); margin-bottom: -12px; }
+            .hero-wordmark { font-size: 48px; }
+            .hero-copy { margin-top: 30px; font-size: 21px; }
         }
     </style>
 </head>
 <body>
-    <jsp:include page="/view/customer/common/header.jsp"/>
-
-    <main class="auth-shell">
-        <div class="auth-topbar">
-            <a class="brand-link" href="<%= ctx %>/home">
-                <span class="brand-logo"><i class="fa-solid fa-shirt"></i></span>
-                <span>Clothing Sale</span>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand-link" href="<%= ctx %>/home" aria-label="Clothing Sale home">
+                <span class="brand-mark"><span>C</span></span>
+                <span class="brand-name">Clothing Sale</span>
             </a>
+            <span class="header-divider" aria-hidden="true"></span>
+            <span class="page-title">Sign Up</span>
+            <a class="help-link" href="<%= ctx %>/home">Need help?</a>
         </div>
+    </header>
 
-        <div class="auth-layout">
-            <section class="visual-panel" aria-label="Clothing Sale">
-                <div class="visual-copy">
-                    <div class="eyebrow">New account</div>
-                    <h1 class="visual-title">Create your account for a smoother shopping experience.</h1>
-                    <p class="visual-text">Save your details, manage orders, and return to your cart faster next time.</p>
+    <main class="register-stage">
+        <section class="brand-panel" aria-label="Clothing Sale introduction">
+            <div class="hero-logo" aria-hidden="true"></div>
+            <h1 class="hero-wordmark">Clothing Sale</h1>
+            <p class="hero-copy">Your favorite clothing store<br>for styles you’ll love every day</p>
+        </section>
+
+        <section class="register-card" aria-label="Create a customer account">
+            <div class="card-heading">
+                <h1>Create account</h1>
+            </div>
+
+            <% if (errorMessage != null) { %>
+                <div class="message message-error" role="alert"><%= errorMessage %></div>
+            <% } %>
+
+            <form action="<%= ctx %>/customer/register" method="post" autocomplete="off">
+                <div class="field">
+                    <input type="text"
+                           name="username"
+                           id="usernameField"
+                           placeholder="Username"
+                           value="<c:out value='${requestScope.username}' default='' />"
+                           autocomplete="username"
+                           required>
                 </div>
 
-                <div class="lookbook">
-                    <div class="lookbook-stack">
-                        <img src="<%= ctx %>/uploads/product/prod18-main.jpg" alt="Clothing Sale product">
-                        <img src="<%= ctx %>/uploads/product/prod19-main.jpg" alt="Clothing Sale product">
-                    </div>
-                    <img class="lookbook-main" src="<%= ctx %>/uploads/product/prod20-main.jpg" alt="Clothing Sale product">
+                <div class="field password-field">
+                    <input type="password"
+                           name="password"
+                           id="passwordField"
+                           placeholder="Password"
+                           autocomplete="new-password"
+                           required>
+                    <button class="password-toggle" type="button" data-password-target="passwordField" aria-label="Show password">
+                        <i class="fa-regular fa-eye-slash" aria-hidden="true"></i>
+                    </button>
                 </div>
 
-                <div class="benefit-row">
-                    <span><i class="fa-solid fa-user-check"></i> Personalized</span>
-                    <span><i class="fa-solid fa-receipt"></i> Order history</span>
-                    <span><i class="fa-solid fa-bolt"></i> Fast checkout</span>
+                <div class="field password-field">
+                    <input type="password"
+                           name="confirmPassword"
+                           id="confirmPasswordField"
+                           placeholder="Confirm password"
+                           autocomplete="new-password"
+                           required>
+                    <button class="password-toggle" type="button" data-password-target="confirmPasswordField" aria-label="Show confirm password">
+                        <i class="fa-regular fa-eye-slash" aria-hidden="true"></i>
+                    </button>
                 </div>
-            </section>
 
-            <section class="auth-card">
-                <div class="card-kicker">Customer</div>
-                <h2 class="auth-title">Create account</h2>
-                <p class="auth-subtitle">Fill in your information below to start shopping.</p>
+                <div class="field">
+                    <input type="text"
+                           name="fullName"
+                           id="fullNameField"
+                           placeholder="Full name"
+                           value="<c:out value='${requestScope.fullName}' default='' />"
+                           autocomplete="name"
+                           required>
+                </div>
 
-                <% if (errorMessage != null) { %>
-                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        <span><%= errorMessage %></span>
-                    </div>
-                <% } %>
+                <div class="field">
+                    <input type="email"
+                           name="email"
+                           id="emailField"
+                           placeholder="Email"
+                           value="<c:out value='${requestScope.email}' default='' />"
+                           autocomplete="email"
+                           required>
+                </div>
 
-                <form action="<%= ctx %>/customer/register" method="post" autocomplete="off">
-                    <div class="mb-3">
-                        <label class="form-label" for="usernameField">Username</label>
-                        <div class="field-control">
-                            <i class="fa-regular fa-user field-icon"></i>
-                            <input class="form-control"
-                                   id="usernameField"
-                                   name="username"
-                                   value="<%= username != null ? username : "" %>"
-                                   placeholder="Username"
-                                   required>
-                        </div>
-                    </div>
+                <div class="field">
+                    <input type="tel"
+                           name="phone"
+                           id="phoneField"
+                           placeholder="Phone number (optional)"
+                           value="<c:out value='${requestScope.phone}' default='' />"
+                           autocomplete="tel">
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="passwordField">Password</label>
-                        <div class="field-control password-control">
-                            <i class="fa-solid fa-lock field-icon"></i>
-                            <input type="password"
-                                   class="form-control"
-                                   id="passwordField"
-                                   name="password"
-                                   placeholder="Password"
-                                   required>
-                            <button class="password-toggle" type="button" data-toggle-password="passwordField" aria-label="Show password">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
+                <button class="form-submit" type="submit">SIGN UP</button>
+            </form>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="confirmPasswordField">Confirm password</label>
-                        <div class="field-control password-control">
-                            <i class="fa-solid fa-shield-halved field-icon"></i>
-                            <input type="password"
-                                   class="form-control"
-                                   id="confirmPasswordField"
-                                   name="confirmPassword"
-                                   placeholder="Confirm password"
-                                   required>
-                            <button class="password-toggle" type="button" data-toggle-password="confirmPasswordField" aria-label="Show confirm password">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="fullNameField">Full name</label>
-                        <div class="field-control">
-                            <i class="fa-regular fa-id-card field-icon"></i>
-                            <input class="form-control"
-                                   id="fullNameField"
-                                   name="fullName"
-                                   value="<%= fullName != null ? fullName : "" %>"
-                                   placeholder="Full name"
-                                   required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="emailField">Email</label>
-                        <div class="field-control">
-                            <i class="fa-regular fa-envelope field-icon"></i>
-                            <input type="email"
-                                   class="form-control"
-                                   id="emailField"
-                                   name="email"
-                                   value="<%= email != null ? email : "" %>"
-                                   placeholder="email@domain.com"
-                                   required>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label" for="phoneField">Phone number</label>
-                        <div class="field-control">
-                            <i class="fa-solid fa-phone field-icon"></i>
-                            <input class="form-control"
-                                   id="phoneField"
-                                   name="phone"
-                                   value="<%= phone != null ? phone : "" %>"
-                                   placeholder="Phone number">
-                        </div>
-                    </div>
-
-                    <div class="auth-actions d-flex gap-2">
-                        <button class="btn btn-auth flex-grow-1" type="submit">
-                            <i class="fa-solid fa-user-plus me-2"></i>
-                            Create account
-                        </button>
-                        <a class="btn btn-switch" href="<%= ctx %>/customer/login">
-                            Sign in
-                        </a>
-                    </div>
-                </form>
-            </section>
-        </div>
+            <p class="terms">By creating an account, you agree to Clothing Sale's <a href="<%= ctx %>/home">Terms of Service</a> &amp; <a href="<%= ctx %>/home">Privacy Policy</a></p>
+            <p class="switch-prompt">Already have an account?<a class="switch-link" href="<%= ctx %>/customer/login">Log In</a></p>
+        </section>
     </main>
 
     <script>
-        document.querySelectorAll('[data-toggle-password]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var input = document.getElementById(button.dataset.togglePassword);
-                var icon = button.querySelector('i');
-                var showing = input.type === 'text';
-                input.type = showing ? 'password' : 'text';
-                button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-                icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        document.querySelectorAll('[data-password-target]').forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                var password = document.getElementById(toggle.dataset.passwordTarget);
+                var icon = toggle.querySelector('i');
+                var isVisible = password.type === 'text';
+
+                password.type = isVisible ? 'password' : 'text';
+                toggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+                icon.className = isVisible
+                    ? 'fa-regular fa-eye-slash'
+                    : 'fa-regular fa-eye';
             });
         });
     </script>

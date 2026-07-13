@@ -281,7 +281,7 @@
             :root{
                 --detail-ink:#25211e;
                 --detail-muted:#6f665e;
-                --detail-primary:#ee4d2d;
+                --detail-primary:#c65b3d;
                 --detail-border:#e5e5e5;
                 --detail-bg:#f5f5f5;
             }
@@ -328,7 +328,7 @@
             .detail-wishlist-button{
                 width:42px;
                 height:42px;
-                border:1px solid rgba(238,77,45,.28);
+                border:1px solid rgba(198,91,61,.28);
                 border-radius:50%;
                 display:flex;
                 align-items:center;
@@ -594,7 +594,7 @@
 
             .btn-cart:hover{
                 background:#ffe5de;
-                color:#d83f25;
+                color:#a9462d;
             }
 
             .btn-buy-now{
@@ -605,7 +605,7 @@
             }
 
             .btn-buy-now:hover{
-                background:#d83f25;
+                background:#a9462d;
                 color:#fff;
             }
 
