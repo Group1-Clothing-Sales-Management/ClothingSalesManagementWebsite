@@ -156,15 +156,369 @@
 
             }
 
+            /* Shopee-style checkout layout */
+            :root{
+                --checkout-ink:#25211e;
+                --checkout-muted:#6f665e;
+                --checkout-primary:#ee4d2d;
+                --checkout-border:#e5e5e5;
+                --checkout-page:#f5f5f5;
+            }
+
+            body{
+                background:var(--checkout-page);
+                color:var(--checkout-ink);
+            }
+
+            .checkout-topbar{
+                min-height:34px;
+                background:linear-gradient(90deg,#f4512a,#ff673b);
+                color:#fff;
+                font-size:12px;
+            }
+
+            .checkout-topbar-inner{
+                max-width:1200px;
+                min-height:34px;
+                margin:0 auto;
+                padding:0 4px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+            }
+
+            .checkout-topbar-group{
+                display:flex;
+                align-items:center;
+                gap:9px;
+                white-space:nowrap;
+            }
+
+            .checkout-brand{
+                min-height:100px;
+                background:#fff;
+                border-bottom:1px solid var(--checkout-border);
+            }
+
+            .checkout-brand-inner{
+                max-width:1200px;
+                min-height:100px;
+                margin:0 auto;
+                display:flex;
+                align-items:center;
+                gap:14px;
+            }
+
+            .checkout-logo{
+                display:flex;
+                align-items:center;
+                gap:8px;
+                color:var(--checkout-primary);
+                font-size:27px;
+                text-decoration:none;
+            }
+
+            .checkout-logo i{
+                font-size:32px;
+            }
+
+            .checkout-brand-title{
+                padding-left:14px;
+                border-left:1px solid var(--checkout-primary);
+                color:var(--checkout-primary);
+                font-size:20px;
+            }
+
+            .checkout-shell{
+                max-width:1200px;
+                padding-top:14px!important;
+            }
+
+            .checkout-intro{
+                display:none!important;
+            }
+
+            .checkout-layout{
+                display:grid;
+                grid-template-columns:1fr;
+                gap:14px;
+                margin:0!important;
+            }
+
+            .checkout-main{
+                display:contents;
+            }
+
+            .checkout-layout > .checkout-main,
+            .checkout-layout > .checkout-summary,
+            .checkout-main > .card{
+                width:auto;
+                padding-left:0!important;
+                padding-right:0!important;
+            }
+
+            .checkout-main > .address-card{
+                grid-column:1;
+                grid-row:1;
+            }
+
+            .checkout-main > .payment-card{
+                grid-column:1;
+                grid-row:3;
+            }
+
+            .checkout-layout > .checkout-summary{
+                grid-column:1;
+                grid-row:2;
+            }
+
+            .checkout-page .card{
+                border:1px solid var(--checkout-border);
+                border-radius:2px;
+                box-shadow:0 1px 2px rgba(0,0,0,.05);
+            }
+
+            .checkout-page .card-header{
+                padding:18px 30px;
+                border-bottom:1px solid var(--checkout-border);
+                background:#fff;
+                color:var(--checkout-ink);
+                font-size:18px;
+                font-weight:500;
+            }
+
+            .checkout-page .card-header i{
+                color:var(--checkout-primary)!important;
+            }
+
+            .checkout-page .card-body{
+                padding:0;
+            }
+
+            .address-card .card-header{
+                border-top:3px solid transparent;
+                border-image:linear-gradient(90deg,#ff6b55,#f7a1ad,#69a9db) 1;
+            }
+
+            .address-item{
+                margin:0;
+                padding:18px 30px;
+                border:0;
+                border-bottom:1px solid var(--checkout-border);
+                border-radius:0;
+            }
+
+            .address-item:hover{
+                border-color:var(--checkout-border);
+                background:#fffaf8;
+            }
+
+            .recipient{
+                color:var(--checkout-ink);
+                font-size:16px;
+            }
+
+            .address-info{
+                display:inline-block;
+                margin:5px 18px 0 0;
+                color:var(--checkout-muted);
+                font-size:14px;
+            }
+
+            .default-badge{
+                padding:3px 6px;
+                border:1px solid var(--checkout-primary);
+                border-radius:0;
+                background:#fff;
+                color:var(--checkout-primary);
+                font-size:11px;
+            }
+
+            .btn-manage{
+                padding:5px 12px;
+                border:0;
+                border-radius:2px;
+                color:#1769aa;
+            }
+
+            .payment-card .card-body{
+                padding:24px 30px;
+            }
+
+            .checkout-summary .card-header{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+            }
+
+            .checkout-summary .card-body > .d-flex{
+                min-height:104px;
+                margin:0!important;
+                padding:20px 30px!important;
+                border-bottom:1px solid var(--checkout-border)!important;
+            }
+
+            .checkout-summary .card-body > .d-flex img{
+                width:64px!important;
+                height:64px!important;
+                border-radius:0!important;
+                object-fit:cover;
+            }
+
+            .checkout-summary .card-body > .d-flex .ms-3{
+                min-width:0;
+            }
+
+            .checkout-summary .card-body > .d-flex .fw-bold{
+                max-width:560px;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+                color:var(--checkout-ink);
+                font-weight:400!important;
+            }
+
+            .checkout-summary .card-body > .d-flex .text-danger{
+                color:var(--checkout-primary)!important;
+            }
+
+            .checkout-summary .card-body > hr{
+                display:none;
+            }
+
+            .checkout-summary .card-body > .mb-4{
+                margin:0!important;
+                padding:16px 30px;
+                border-bottom:1px solid var(--checkout-border);
+            }
+
+            .checkout-summary .summary-row{
+                margin:0;
+                padding:6px 30px;
+                color:var(--checkout-muted);
+            }
+
+            .checkout-summary .summary-row.total{
+                padding-top:16px;
+                padding-bottom:22px;
+                color:var(--checkout-muted);
+            }
+
+            .checkout-summary .summary-row.total span:last-child{
+                color:var(--checkout-primary);
+                font-size:25px;
+                font-weight:500;
+            }
+
+            .checkout-page .form-control,
+            .checkout-page .form-select{
+                border:1px solid var(--checkout-border);
+                border-radius:2px;
+            }
+
+            .checkout-page .btn-primary,
+            .checkout-page .btn-success,
+            .checkout-page .btn-place{
+                border:0;
+                border-radius:2px;
+                background:var(--checkout-primary);
+                color:#fff;
+            }
+
+            .checkout-page .btn-primary:hover,
+            .checkout-page .btn-success:hover,
+            .checkout-page .btn-place:hover{
+                background:#d83f25;
+                color:#fff;
+            }
+
+            .btn-place{
+                min-width:220px;
+            }
+
+            @media(max-width:767px){
+                .checkout-topbar-inner{
+                    padding:0 16px;
+                }
+
+                .checkout-topbar-group:last-child{
+                    display:none;
+                }
+
+                .checkout-brand-inner{
+                    min-height:82px;
+                    padding:0 16px;
+                }
+
+                .checkout-logo{
+                    font-size:22px;
+                }
+
+                .checkout-brand-title{
+                    font-size:17px;
+                }
+
+                .checkout-page .card-header,
+                .address-item,
+                .payment-card .card-body{
+                    padding-left:16px;
+                    padding-right:16px;
+                }
+
+                .checkout-summary .card-body > .d-flex{
+                    padding-left:16px!important;
+                    padding-right:16px!important;
+                }
+
+                .checkout-summary .summary-row{
+                    padding-left:16px;
+                    padding-right:16px;
+                }
+
+                .address-info{
+                    display:block;
+                }
+            }
+
         </style>
 
     </head>
 
-    <body>
+    <body class="checkout-page">
 
-        <div class="container py-5">
+        <div class="checkout-topbar">
+            <div class="checkout-topbar-inner">
+                <div class="checkout-topbar-group">
+                    <span>Seller Centre</span>
+                    <span>|</span>
+                    <span>Download</span>
+                    <span>|</span>
+                    <span>Follow us on</span>
+                    <i class="bi bi-facebook"></i>
+                    <i class="bi bi-instagram"></i>
+                </div>
+                <div class="checkout-topbar-group">
+                    <span><i class="bi bi-bell me-1"></i>Notifications</span>
+                    <span><i class="bi bi-question-circle me-1"></i>Help</span>
+                    <span><i class="bi bi-globe me-1"></i>English⌄</span>
+                </div>
+            </div>
+        </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="checkout-brand">
+            <div class="checkout-brand-inner">
+                <a href="${pageContext.request.contextPath}/home" class="checkout-logo">
+                    <i class="bi bi-bag-fill"></i>
+                    Clothing Sale
+                </a>
+                <span class="checkout-brand-title">Checkout</span>
+            </div>
+        </div>
+
+        <div class="container checkout-shell py-5">
+
+            <div class="checkout-intro d-flex justify-content-between align-items-center mb-4">
 
                 <div>
 
@@ -187,7 +541,7 @@
             <form method="post"
                   action="${pageContext.request.contextPath}/customer/checkout">
 
-                <div class="row">
+                <div class="row checkout-layout">
 
                     <!-- ================= LEFT ================= -->
 
@@ -195,7 +549,7 @@
 
                         <!-- SHIPPING ADDRESS -->
 
-                        <div class="card mb-4">
+                        <div class="card address-card mb-4">
 
                             <div class="card-header">
 
@@ -214,7 +568,7 @@
 
                                         <i class="bi bi-pencil-square"></i>
 
-                                        Manage Address
+                                        Change
 
                                     </a>
 
@@ -312,7 +666,7 @@
 
                         <!-- PAYMENT & SHIPPING -->
 
-                        <div class="card mb-4">
+                        <div class="card payment-card mb-4">
 
                             <div class="card-header">
 
@@ -439,15 +793,15 @@
 
                     <!-- ================= RIGHT ================= -->
 
-                    <div class="col-lg-4">
+                    <div class="col-lg-4 checkout-summary">
 
-                        <div class="card sticky-top" style="top:25px;">
+                        <div class="card">
 
                             <div class="card-header">
 
                                 <i class="bi bi-bag-check-fill text-success"></i>
 
-                                Order Summary
+                                Products Ordered
 
                             </div>
 

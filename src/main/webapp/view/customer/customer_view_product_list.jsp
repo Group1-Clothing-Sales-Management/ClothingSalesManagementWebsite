@@ -210,6 +210,227 @@
                 }
 
             }
+
+            /* Compact marketplace-style catalog */
+            :root{
+                --catalog-ink:#25211e;
+                --catalog-muted:#6f665e;
+                --catalog-primary:#c65b3d;
+                --catalog-border:#e9e0d7;
+                --catalog-bg:#faf7f2;
+            }
+
+            body{
+                background:var(--catalog-bg);
+                color:var(--catalog-ink);
+            }
+
+            .product-list-page{
+                max-width:1180px;
+            }
+
+            .page-header{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:18px;
+                padding:22px 24px;
+                margin-bottom:16px;
+                border:1px solid var(--catalog-border);
+                border-radius:8px;
+                background:#fff;
+                box-shadow:0 4px 14px rgba(74,54,39,.06);
+            }
+
+            .page-header h2{
+                margin:0;
+                font-size:1.45rem;
+                color:var(--catalog-ink);
+            }
+
+            .page-header p{
+                margin-top:4px;
+                color:var(--catalog-muted)!important;
+                font-size:.86rem;
+            }
+
+            .search-card{
+                padding:14px!important;
+                border:1px solid var(--catalog-border);
+                border-radius:8px;
+                background:#fff;
+                box-shadow:0 4px 14px rgba(74,54,39,.06);
+            }
+
+            .search-card .row{
+                row-gap:10px;
+            }
+
+            .form-control,
+            .form-select{
+                min-height:40px;
+                border:1px solid var(--catalog-border);
+                border-radius:6px;
+                padding:8px 10px;
+            }
+
+            .form-control:focus,
+            .form-select:focus{
+                border-color:var(--catalog-primary);
+                box-shadow:0 0 0 .18rem rgba(198,91,61,.14);
+            }
+
+            .btn-danger{
+                background:var(--catalog-primary)!important;
+                border-color:var(--catalog-primary)!important;
+            }
+
+            .btn-danger:hover{
+                background:#a9462d!important;
+                border-color:#a9462d!important;
+            }
+
+            .product-grid{
+                display:grid;
+                grid-template-columns:repeat(6,minmax(0,1fr));
+                gap:12px;
+            }
+
+            .product-item{
+                min-width:0;
+            }
+
+            .product-card{
+                border:1px solid var(--catalog-border);
+                border-radius:5px;
+                background:#fff;
+                box-shadow:0 1px 3px rgba(74,54,39,.1);
+                transition:transform .2s ease, box-shadow .2s ease;
+            }
+
+            .product-card:hover{
+                transform:translateY(-2px);
+                box-shadow:0 5px 14px rgba(74,54,39,.15);
+            }
+
+            .product-image-link{
+                display:block;
+                position:relative;
+                aspect-ratio:1 / 1;
+                overflow:hidden;
+                background:#f1ebe5;
+            }
+
+            .product-image{
+                width:100%;
+                height:100%;
+                display:block;
+                object-fit:cover;
+                transition:transform .25s ease;
+            }
+
+            .product-card:hover .product-image{
+                transform:scale(1.03);
+            }
+
+            .product-ribbon,
+            .product-stock-badge{
+                position:absolute;
+                z-index:2;
+                top:0;
+                padding:4px 6px;
+                font-size:.66rem;
+                line-height:1;
+                font-weight:800;
+            }
+
+            .product-ribbon{
+                left:0;
+                color:#fff;
+                background:var(--catalog-primary);
+            }
+
+            .product-stock-badge{
+                right:0;
+                color:#8b4a27;
+                background:#fff3dc;
+            }
+
+            .product-card .card-body{
+                padding:8px 9px 7px;
+            }
+
+            .product-card h6{
+                min-height:36px;
+                margin-bottom:4px!important;
+                font-size:.82rem;
+                line-height:1.35;
+                display:-webkit-box;
+                -webkit-box-orient:vertical;
+                -webkit-line-clamp:2;
+                overflow:hidden;
+                white-space:normal;
+            }
+
+            .product-title-link{
+                color:var(--catalog-ink);
+                text-decoration:none;
+            }
+
+            .product-title-link:hover{
+                color:var(--catalog-primary);
+            }
+
+            .price{
+                margin:0;
+                color:var(--catalog-primary);
+                font-size:1rem;
+                line-height:1.2;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+
+            .product-meta{
+                display:flex;
+                justify-content:space-between;
+                gap:8px;
+                margin-top:6px;
+                color:#81766d;
+                font-size:.68rem;
+            }
+
+            .product-meta span:first-child{
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            }
+
+            .product-meta span:last-child{
+                flex:0 0 auto;
+            }
+
+            .product-list-page .wishlist-heart-form,
+            .product-list-page .card-footer{
+                display:none;
+            }
+
+            @media(max-width:1199px){
+                .product-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+            }
+
+            @media(max-width:991px){
+                .product-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+            }
+
+            @media(max-width:767px){
+                .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+                .page-header{align-items:flex-start;flex-direction:column;}
+            }
+
+            @media(max-width:575px){
+                .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+            }
         </style>
 
     </head>
@@ -218,7 +439,7 @@
 
         <jsp:include page="/view/customer/common/header.jsp"/>
 
-        <div class="container mt-4">
+        <div class="container product-list-page mt-4">
 
             <div class="page-header">
 
@@ -304,11 +525,11 @@
 
             </form>
 
-            <div class="row g-4">
+            <div class="product-grid">
 
                 <c:forEach items="${products}" var="p">
 
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="product-item">
 
                         <c:set var="isWishlisted"
                                value="${wishlistProductIds.contains(p.id)}"/>
@@ -329,7 +550,11 @@
                                 </button>
                             </form>
 
-                            <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
+                            <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="product-image-link">
+                                <span class="product-ribbon">Featured</span>
+                                <c:if test="${not empty p.variants}">
+                                    <span class="product-stock-badge">In stock</span>
+                                </c:if>
 
                                 <img
                                     src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
@@ -341,7 +566,9 @@
                             <div class="card-body">
 
                                 <h6 class="fw-bold text-truncate mb-2">
-                                    ${p.productName}
+                                    <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="product-title-link">
+                                        ${p.productName}
+                                    </a>
                                 </h6>
 
                                 <c:if test="${not empty p.variants}">
@@ -350,9 +577,9 @@
                                         ${p.variants[0].salePrice} đ
                                     </div>
 
-                                    <div class="small text-muted mb-2">
-                                        <b>Color / Size:</b>
-                                        ${p.variants[0].attributeDetails}
+                                    <div class="product-meta">
+                                        <span>${p.variants[0].attributeDetails}</span>
+                                        <span>${p.variants[0].stockQuantity} in stock</span>
                                     </div>
 
                                 </c:if>
@@ -426,6 +653,14 @@
                 </c:forEach>
 
             </div>
+
+            <c:if test="${empty products}">
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-box-open fa-3x mb-3"></i>
+                    <h4>No products found</h4>
+                    <p>Try another keyword or price range.</p>
+                </div>
+            </c:if>
 
         </div>
 

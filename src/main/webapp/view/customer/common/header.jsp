@@ -18,7 +18,7 @@
         </a>
 
         <!-- MENU -->
-        <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+        <div class="d-flex align-items-center gap-1 flex-wrap ms-auto nav-actions">
 
             <a href="${pageContext.request.contextPath}/home"
                class="nav-btn">
@@ -147,20 +147,21 @@
 
 <style>
     :root{
-        --navy:#172033;
-        --teal:#0f9b8e;
-        --bg:#f8fafc;
+        --navy:#25211e;
+        --teal:#c65b3d;
+        --bg:#faf7f2;
     }
 
     .custom-navbar{
-        background:rgba(255,255,255,.95);
+        background:rgba(255,253,249,.96);
         backdrop-filter:blur(12px);
-        box-shadow:0 3px 20px rgba(0,0,0,.08);
-        padding:14px 0;
+        border-bottom:1px solid #e9e0d7;
+        box-shadow:0 3px 18px rgba(74,54,39,.06);
+        padding:10px 0;
     }
 
     .brand-logo{
-        font-size:24px;
+        font-size:21px;
         font-weight:800;
         color:var(--navy);
         text-decoration:none;
@@ -173,21 +174,25 @@
 
     .nav-btn{
         text-decoration:none;
-        color:#475569;
-        padding:10px 16px;
-        border-radius:12px;
+        color:#5f5750;
+        padding:9px 12px;
+        border-radius:9px;
         transition:.25s;
         font-weight:600;
     }
 
     .nav-btn:hover{
-        background:#f1f5f9;
+        background:#f4e9df;
         color:var(--teal);
     }
 
+    .nav-actions{
+        row-gap:3px;
+    }
+
     .user-box{
-        background:#f8fafc;
-        border:1px solid #e2e8f0;
+        background:#faf7f2;
+        border:1px solid #e9e0d7;
         padding:10px 16px;
         border-radius:14px;
         color:#334155;
@@ -195,11 +200,7 @@
     }
 
     .btn-login{
-        background:linear-gradient(
-            135deg,
-            var(--navy),
-            var(--teal)
-            );
+        background:var(--teal);
         color:white;
         border:none;
         border-radius:12px;
@@ -209,11 +210,12 @@
 
     .btn-login:hover{
         color:white;
-        opacity:.9;
+        background:#a9462d;
+        opacity:1;
     }
 
     .btn-logout{
-        background:#ef4444;
+        background:#a9462d;
         color:white;
         border:none;
         border-radius:12px;
@@ -222,7 +224,7 @@
     }
 
     .btn-logout:hover{
-        background:#dc2626;
+        background:#873724;
         color:white;
     }
 
@@ -249,7 +251,7 @@
     }
 
     .user-menu:hover{
-        background:#f8fafc;
+        background:#faf7f2;
     }
 
     .dropdown-menu{
@@ -265,11 +267,11 @@
     }
 
     .dropdown-item:hover{
-        background:#f1f5f9;
+        background:#f4e9df;
     }
 
     .dropdown-item.text-danger:hover{
-        background:#fef2f2;
+        background:#fbecea;
     }
     .logout-confirm-modal .modal-dialog {
         max-width: 460px;
@@ -294,22 +296,22 @@
         align-items: center;
         justify-content: center;
         color: #fff;
-        background: linear-gradient(135deg, #172033, #0f9b8e);
-        box-shadow: 0 14px 30px rgba(15, 155, 142, .24);
+        background: linear-gradient(135deg, #25211e, #c65b3d);
+        box-shadow: 0 14px 30px rgba(198, 91, 61, .24);
         flex: 0 0 auto;
         font-size: 22px;
     }
 
     .logout-confirm-title {
         margin: 0 0 6px;
-        color: #172033;
+        color: #25211e;
         font-size: 1.25rem;
         font-weight: 800;
     }
 
     .logout-confirm-text {
         margin: 0;
-        color: #64748b;
+        color: #6f665e;
     }
 
     .logout-confirm-actions {
@@ -328,16 +330,42 @@
     }
 
     .logout-confirm-actions .btn-danger {
-        background: #dc2626;
-        border-color: #dc2626;
+        background: #a9462d;
+        border-color: #a9462d;
     }
 
     .logout-confirm-actions .btn-danger:hover {
-        background: #b91c1c;
-        border-color: #b91c1c;
+        background: #873724;
+        border-color: #873724;
     }
 
     @media (max-width: 576px) {
+        .custom-navbar .container {
+            align-items: flex-start;
+        }
+
+        .brand-logo {
+            font-size: 19px;
+        }
+
+        .nav-actions {
+            justify-content: flex-end;
+            max-width: 100%;
+        }
+
+        .nav-btn {
+            padding: 7px 8px;
+            font-size: .8rem;
+        }
+
+        .user-menu {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 8px 10px;
+        }
+
         .logout-confirm-actions .btn {
             width: 100%;
         }

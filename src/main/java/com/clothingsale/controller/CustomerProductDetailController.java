@@ -57,7 +57,22 @@ public class CustomerProductDetailController extends HttpServlet {
             List<Feedback> feedbacks
                     = feedbackService.getFeedbackByProduct(id);
 
+            int[] ratingCounts = new int[6];
+            int commentsCount = 0;
+            for (Feedback feedback : feedbacks) {
+                if (feedback.getRating() >= 1 && feedback.getRating() <= 5) {
+                    ratingCounts[feedback.getRating()]++;
+                }
+                if (feedback.getComment() != null
+                        && !feedback.getComment().trim().isEmpty()) {
+                    commentsCount++;
+                }
+            }
+
             request.setAttribute("feedbacks", feedbacks);
+            request.setAttribute("averageRating", feedbackService.getAverageRating(id));
+            request.setAttribute("ratingCounts", ratingCounts);
+            request.setAttribute("commentsCount", commentsCount);
             // Gửi dữ liệu sang JSP
             request.setAttribute("product", product);
 

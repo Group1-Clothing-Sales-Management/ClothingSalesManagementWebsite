@@ -14,14 +14,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --cart-accent:#0f9b8e;
-            --cart-accent-dark:#0b7f75;
-            --cart-teal:#172033;
-            --cart-ink:#172033;
-            --cart-muted:#64748b;
-            --cart-line:#e2e8f0;
-            --cart-page:#f8fafc;
-            --cart-soft:#f1f5f9;
+            --cart-accent:#ee4d2d;
+            --cart-accent-dark:#d83f25;
+            --cart-teal:#ee4d2d;
+            --cart-ink:#25211e;
+            --cart-muted:#6f665e;
+            --cart-line:#e5e5e5;
+            --cart-page:#f5f5f5;
+            --cart-soft:#fff3ef;
         }
 
         * { box-sizing:border-box; }
@@ -35,6 +35,44 @@
             padding-bottom:150px;
         }
 
+        .cart-page .custom-navbar{
+            display:none;
+        }
+
+        .cart-topbar{
+            min-height:34px;
+            background:linear-gradient(90deg,#f4512a,#ff673b);
+            color:#fff;
+            font-size:12px;
+        }
+
+        .cart-topbar-inner{
+            max-width:1200px;
+            min-height:34px;
+            margin:0 auto;
+            padding:0 4px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+        }
+
+        .cart-topbar-group{
+            display:flex;
+            align-items:center;
+            gap:9px;
+            white-space:nowrap;
+        }
+
+        .cart-topbar a{
+            color:#fff;
+            text-decoration:none;
+        }
+
+        .cart-topbar-separator{
+            opacity:.55;
+        }
+
         .navbar {
             border-bottom:1px solid rgba(0, 0, 0, .06);
             box-shadow:none!important;
@@ -44,45 +82,78 @@
         .cart-shell {
             max-width:1200px;
             margin:0 auto;
-            padding:24px 16px 0;
+            padding:0 0 24px;
         }
 
         .cart-brand-row {
             display:flex;
             align-items:center;
-            justify-content:flex-start;
-            min-height:86px;
-            margin-bottom:16px;
+            gap:14px;
+            min-height:90px;
+            margin:0 calc((1200px - 100vw) / 2) 20px;
+            padding:0 max(16px, calc((100vw - 1200px) / 2));
             background:#fff;
             border-bottom:1px solid var(--cart-line);
         }
 
-        .cart-brand-title {
-            display:flex;
-            align-items:center;
-            gap:0;
+        .cart-brand-logo,
+        .cart-brand-title-text {
             color:var(--cart-accent);
-            font-size:26px;
-            font-weight:500;
-            padding-left:20px;
+            text-decoration:none;
             white-space:nowrap;
         }
 
-        .cart-brand-title span {
-            padding-left:0;
-            border-left:0;
+        .cart-brand-logo {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-size:27px;
+            font-weight:500;
+        }
+
+        .cart-brand-logo i {
+            font-size:32px;
+        }
+
+        .cart-brand-title-text {
+            padding-left:14px;
+            border-left:1px solid var(--cart-accent);
+            font-size:20px;
+        }
+
+        .cart-search {
+            display:flex;
+            width:min(620px, 52vw);
+            height:40px;
+            margin-left:auto;
+        }
+
+        .cart-search input {
+            flex:1;
+            min-width:0;
+            border:2px solid var(--cart-accent);
+            border-right:0;
+            padding:0 12px;
+            color:var(--cart-ink);
+        }
+
+        .cart-search button {
+            width:82px;
+            border:0;
+            background:var(--cart-accent);
+            color:#fff;
         }
 
         .cart-grid {
             display:grid;
-            grid-template-columns:48px minmax(300px, 1fr) 150px 160px 150px 130px;
-            gap:16px;
+            grid-template-columns:40px minmax(300px, 1fr) 190px 130px 140px 140px 100px;
+            gap:14px;
             align-items:center;
         }
 
         .cart-head {
             min-height:58px;
-            padding:0 24px;
+            padding:0 20px;
             margin-bottom:12px;
             background:#fff;
             border:1px solid var(--cart-line);
@@ -102,9 +173,31 @@
             border-radius:3px;
         }
 
+        .shop-header {
+            min-height:58px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:0 20px;
+            border-bottom:1px solid var(--cart-line);
+            color:var(--cart-ink);
+            font-size:15px;
+        }
+
+        .shop-header i {
+            color:var(--cart-accent);
+        }
+
+        .shop-badge {
+            padding:3px 5px;
+            background:var(--cart-accent);
+            color:#fff;
+            font-size:11px;
+        }
+
         .cart-item {
-            min-height:170px;
-            padding:24px;
+            min-height:132px;
+            padding:20px;
             border-bottom:1px solid var(--cart-line);
         }
 
@@ -116,8 +209,8 @@
         }
 
         .cart-img {
-            width:88px;
-            height:88px;
+            width:80px;
+            height:80px;
             flex:0 0 auto;
             object-fit:cover;
             border:1px solid #eee;
@@ -153,6 +246,7 @@
 
         .variant-block {
             min-width:0;
+            margin:0!important;
         }
 
         .variant-label {
@@ -172,6 +266,10 @@
             box-shadow:none!important;
         }
 
+        .cart-update-form {
+            display:contents;
+        }
+
         .variant-select:focus {
             outline:0;
         }
@@ -180,6 +278,10 @@
         .amount-col,
         .action-col {
             text-align:center;
+        }
+
+        .variant-label {
+            margin-bottom:3px;
         }
 
         .item-price {
@@ -262,6 +364,19 @@
             color:var(--cart-accent);
         }
 
+        .similar-link{
+            display:block;
+            margin-top:5px;
+            color:var(--cart-accent);
+            font-size:13px;
+            text-decoration:none;
+        }
+
+        .similar-link:hover{
+            color:var(--cart-accent-dark);
+            text-decoration:underline;
+        }
+
         .checkout-bar {
             position:fixed;
             left:0;
@@ -323,7 +438,7 @@
             height:50px;
             border:0;
             border-radius:2px;
-            background:linear-gradient(135deg, var(--cart-teal), var(--cart-accent));
+            background:var(--cart-accent);
             color:#fff;
             font-size:16px;
             font-weight:600;
@@ -331,7 +446,7 @@
 
         .checkout-btn:hover,
         .checkout-btn:focus {
-            background:linear-gradient(135deg, #111827, var(--cart-accent-dark));
+            background:var(--cart-accent-dark);
             color:#fff;
         }
 
@@ -401,6 +516,46 @@
             font-size:30px;
         }
 
+        .voucher-row,
+        .shipping-row {
+            min-height:56px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:0 20px;
+            border-bottom:1px solid var(--cart-line);
+            color:#1769aa;
+            font-size:14px;
+        }
+
+        .voucher-row i,
+        .shipping-row i {
+            color:var(--cart-accent);
+        }
+
+        .platform-voucher{
+            min-height:54px;
+            display:flex;
+            align-items:center;
+            justify-content:flex-end;
+            gap:12px;
+            padding:0 20px;
+            background:#fff;
+            border:1px solid var(--cart-line);
+            border-top:0;
+            color:var(--cart-ink);
+            font-size:14px;
+        }
+
+        .platform-voucher i{
+            color:var(--cart-accent);
+        }
+
+        .platform-voucher a{
+            color:#1769aa;
+            text-decoration:none;
+        }
+
         @media (max-width: 992px) {
             body {
                 padding-bottom:190px;
@@ -409,6 +564,31 @@
             .cart-brand-row {
                 display:block;
                 padding:18px 0;
+                margin:0 -16px 16px;
+            }
+
+            .cart-topbar-inner{
+                padding:0 16px;
+                overflow:hidden;
+            }
+
+            .cart-topbar-group:last-child{
+                display:none;
+            }
+
+            .cart-brand-logo,
+            .cart-brand-title-text {
+                margin-left:16px;
+            }
+
+            .cart-search {
+                width:auto;
+                margin:14px 16px 0;
+            }
+
+            .platform-voucher{
+                justify-content:space-between;
+                padding:12px 16px;
             }
 
             .cart-head {
@@ -427,11 +607,15 @@
 
             .variant-block,
             .price-col,
-            .cart-update-form,
+            .quantity-control,
             .amount-col,
             .action-col {
                 grid-column:2;
                 text-align:left;
+            }
+
+            .cart-update-form {
+                display:contents;
             }
 
             .quantity-control {
@@ -463,14 +647,41 @@
         }
     </style>
 </head>
-<body>
+<body class="cart-page">
     <jsp:include page="/view/customer/common/header.jsp"/>
+
+    <div class="cart-topbar">
+        <div class="cart-topbar-inner">
+            <div class="cart-topbar-group">
+                <a href="<%= ctx %>/home">Seller Centre</a>
+                <span class="cart-topbar-separator">|</span>
+                <a href="<%= ctx %>/home">Download</a>
+                <span class="cart-topbar-separator">|</span>
+                <span>Follow us on</span>
+                <i class="fa-brands fa-facebook"></i>
+                <i class="fa-brands fa-instagram"></i>
+            </div>
+            <div class="cart-topbar-group">
+                <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
+                <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
+                <span><i class="fa-solid fa-globe me-1"></i>English</span>
+            </div>
+        </div>
+    </div>
 
     <div class="cart-shell">
         <div class="cart-brand-row">
-            <div class="cart-brand-title">
-                <span>Cart</span>
-            </div>
+            <a href="<%= ctx %>/home" class="cart-brand-logo">
+                <i class="fa-solid fa-bag-shopping"></i>
+                Clothing Sale
+            </a>
+            <span class="cart-brand-title-text">Shopping Cart</span>
+            <form action="<%= ctx %>/home" method="get" class="cart-search">
+                <input type="text" name="keyword" placeholder="Search products">
+                <button type="submit" aria-label="Search products">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
         </div>
 
         <% if (request.getAttribute("cartMessage") != null) { %>
@@ -493,12 +704,19 @@
                 </div>
                 <div class="product-col">Product</div>
                 <div class="text-center">Unit Price</div>
+                <div class="text-center">Variation</div>
                 <div class="text-center">Quantity</div>
                 <div class="text-center">Subtotal</div>
                 <div class="text-center">Action</div>
             </div>
 
             <div class="shop-card">
+                <div class="shop-header">
+                    <input type="checkbox" class="cart-check" id="cartSelectAllShop" checked>
+                    <i class="fa-solid fa-store"></i>
+                    <span>Clothing Sale</span>
+                    <span class="shop-badge">Featured shop</span>
+                </div>
                 <% java.math.BigDecimal total = java.math.BigDecimal.ZERO; int totalQuantity = 0; %>
                 <% for (Object o : items) {
                        com.clothingsale.model.CartItem it = (com.clothingsale.model.CartItem) o;
@@ -649,9 +867,21 @@
                                     Remove
                                 </button>
                             </form>
+                            <a href="<%= ctx %>/products" class="similar-link">
+                                Find Similar <i class="fa-solid fa-caret-down ms-1"></i>
+                            </a>
                         </div>
                     </div>
                 <% } %>
+
+                <div class="voucher-row">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Add shop voucher code</span>
+                </div>
+                <div class="shipping-row">
+                    <i class="fa-solid fa-truck"></i>
+                    <span>Shipping options and promotions will be calculated at checkout.</span>
+                </div>
 
             </div>
 
@@ -660,6 +890,10 @@
             </form>
 
             <div class="checkout-bar">
+                <div class="platform-voucher">
+                    <span><i class="fa-solid fa-ticket me-2"></i>Platform Voucher</span>
+                    <a href="#">Select or enter code</a>
+                </div>
                 <div class="checkout-inner">
                     <label class="select-all-wrap">
                         <input type="checkbox" class="cart-check" id="cartSelectAllBottom" checked>

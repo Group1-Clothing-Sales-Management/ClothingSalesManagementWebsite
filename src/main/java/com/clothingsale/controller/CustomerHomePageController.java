@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpSession;
 )
 public class CustomerHomePageController extends HttpServlet {
 
+    private static final int HOME_PRODUCT_LIMIT = 12;
     private CustomerProductService productService 
             = new CustomerProductService();
     private final WishlistService wishlistService = new WishlistService();
@@ -67,7 +68,7 @@ public class CustomerHomePageController extends HttpServlet {
             }
 
             // Lấy danh sách sản phẩm
-            List<Product> products = productService.getProducts(
+            List<Product> allProducts = productService.getProducts(
                     keyword,
                     categoryId,
                     brandId,
@@ -76,7 +77,13 @@ public class CustomerHomePageController extends HttpServlet {
                     sort
             );
 
+            boolean hasMoreProducts = allProducts.size() > HOME_PRODUCT_LIMIT;
+            List<Product> products = hasMoreProducts
+                    ? allProducts.subList(0, HOME_PRODUCT_LIMIT)
+                    : allProducts;
+
             request.setAttribute("products", products);
+            request.setAttribute("hasMoreProducts", hasMoreProducts);
             populateWishlistState(request);
 
             request.getRequestDispatcher(
