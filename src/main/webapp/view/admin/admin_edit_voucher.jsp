@@ -163,6 +163,10 @@
                                     <label for="endDate" class="font-weight-bold">End Date & Time <span class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" id="endDate" name="endDate" required 
                                            value="${formattedEnd}" ${isExpired ? 'disabled' : ''}>
+
+                                    <small class="text-info font-weight-bold">
+                                        <i class="fas fa-info-circle"></i> Policy: Changes require a minimum 48-hour buffer from now.
+                                    </small>
                                 </div>
                             </div>
 
@@ -205,34 +209,38 @@
                 toggleDiscountFields();
             };
 
+            // Thiết lập thuộc tính 'min' động cho lịch khi Admin click vào ô End Date
+            document.getElementById("endDate").addEventListener("focus", function () {
+                var now = new Date();
+                // Cộng thêm 48 tiếng
+                var minEnd = new Date(now.getTime() + (48 * 60 * 60 * 1000));
+                // Điều chỉnh timezone cho chính xác múi giờ máy tính
+                var tzoffset = minEnd.getTimezoneOffset() * 60000;
+                var localISOTime = (new Date(minEnd - tzoffset)).toISOString().slice(0, 16);
+                this.setAttribute("min", localISOTime);
+            });
+
             document.getElementById("editVoucherForm").addEventListener("submit", function (event) {
                 var start = new Date(document.getElementById("startDate").value);
                 var end = new Date(document.getElementById("endDate").value);
+                var originalEnd = new Date("${formattedEnd}"); // Lấy lại ngày cũ từ server
 
+                var now = new Date();
+                var minEnd = new Date(now.getTime() + (48 * 60 * 60 * 1000));
+
+                // Logic 1: Ngày kết thúc phải sau ngày bắt đầu
                 if (end <= start) {
                     alert("Validation Error: Campaign End Date & Time must occur after the Start Date & Time.");
                     event.preventDefault();
+                    return;
+                }
+
+                // Logic 2: Nếu admin có đổi ngày, phải cách hiện tại ít nhất 48 tiếng
+                if (end.getTime() !== originalEnd.getTime() && end < minEnd) {
+                    alert("Customer Protection Policy: The new End Date must be at least 48 hours from the current time.");
+                    event.preventDefault();
                 }
             });
-            function toggleDiscountFields() {
-                var type = document.getElementById("discountType");
-                if (!type) return;
-
-                var maxDiscountGroup = document.getElementById("maxDiscountGroup");
-                var maxDiscountInput = document.getElementById("maxDiscountAmount");
-
-                if (type.value === "FIXED_AMOUNT") {
-                    maxDiscountGroup.style.display = "none";
-                    maxDiscountInput.removeAttribute("required");
-                } else {
-                    maxDiscountGroup.style.display = "block";
-                    maxDiscountInput.setAttribute("required", "required");
-                }
-            }
-
-            window.onload = function () {
-                toggleDiscountFields();
-            };
         </script>
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
