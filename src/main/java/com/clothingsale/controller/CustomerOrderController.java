@@ -63,14 +63,38 @@ public class CustomerOrderController extends HttpServlet {
                 = service.getCartTotal(userId, selectedVariantIds);
 
         BigDecimal shippingFee = BigDecimal.valueOf(30000);
-        BigDecimal totalPayment = total.add(shippingFee);
+        BigDecimal discount = BigDecimal.ZERO;
+        String voucherCode = request.getParameter("voucherCode");
+
+        if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+            var voucher = service.getAvailableVoucherForUser(userId, voucherCode.trim());
+
+            if (voucher == null) {
+                request.setAttribute("voucherError",
+                        "Voucher không tồn tại, đã hết hạn hoặc đã được sử dụng.");
+                request.setAttribute("voucherCode", voucherCode.trim());
+            } else if (total.compareTo(voucher.getMinOrderValue()) < 0) {
+                request.setAttribute("voucherError",
+                        "Đơn hàng chưa đủ điều kiện áp dụng voucher này.");
+                request.setAttribute("voucherCode", voucherCode.trim());
+            } else {
+                discount = service.calculateDiscount(total, voucher);
+                request.setAttribute("voucherCode", voucherCode.trim());
+                request.setAttribute("discountAmount", discount);
+                request.setAttribute("voucher", voucher);
+            }
+        }
+
+        BigDecimal totalPayment = total.subtract(discount).add(shippingFee);
 
         request.setAttribute("addresses", addresses);
         request.setAttribute("cartItems", cartItems);
         request.setAttribute("cartTotal", total);
         request.setAttribute("shippingFee", shippingFee);
-        request.setAttribute("discountAmount", BigDecimal.ZERO);
+        request.setAttribute("discountAmount", discount);
         request.setAttribute("totalPayment", totalPayment);
+        request.setAttribute("customerVouchers", service.getVouchersForUser(userId));
+        request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, total));
 
         request.getRequestDispatcher(
                 "/view/customer/customer_checkout.jsp"
@@ -114,12 +138,19 @@ public class CustomerOrderController extends HttpServlet {
 
             if (voucherCode != null && !voucherCode.trim().isEmpty()) {
 
-                var voucher = service.getVoucherByCode(voucherCode.trim());
+                var voucher = service.getAvailableVoucherForUser(userId, voucherCode.trim());
 
                 if (voucher == null) {
 
                     request.setAttribute("voucherError",
-                            "This voucher does not exist.");
+                            "Voucher không tồn tại, đã hết hạn hoặc đã được sử dụng.");
+                    request.setAttribute("voucherCode", voucherCode.trim());
+
+                } else if (cartTotal.compareTo(voucher.getMinOrderValue()) < 0) {
+
+                    request.setAttribute("voucherError",
+                            "Đơn hàng chưa đủ điều kiện áp dụng voucher này.");
+                    request.setAttribute("voucherCode", voucherCode.trim());
 
                 } else {
 
@@ -139,6 +170,8 @@ public class CustomerOrderController extends HttpServlet {
             request.setAttribute("totalPayment",
                     cartTotal.subtract(discount)
                             .add(BigDecimal.valueOf(30000)));
+            request.setAttribute("customerVouchers", service.getVouchersForUser(userId));
+            request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, cartTotal));
 
             request.getRequestDispatcher(
                     "/view/customer/customer_checkout.jsp")

@@ -63,6 +63,9 @@ public class CustomerViewOrderController
 
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute(
+                "customerVouchers",
+                service.getVouchersForUser(userId));
+        request.setAttribute(
                 "orders",
                 filterOrders(
                         service.getOrdersByUserId(userId),
@@ -195,9 +198,9 @@ public class CustomerViewOrderController
                 return isAny(displayStatus, "CONFIRMED", "APPROVED", "PREPARING")
                         || isAny(shippingStatus, "PENDING_PICKUP");
             case "COMPLETED":
-                return isAny(orderStatus, "DELIVERED", "COMPLETED", "PAID")
-                        || isAny(displayStatus, "DELIVERED", "RECEIVED", "COMPLETED", "PAID")
-                        || isAny(shippingStatus, "DELIVERED");
+                return isAny(orderStatus, "DELIVERED", "SUCCESS", "COMPLETED", "PAID")
+                        || isAny(displayStatus, "DELIVERED", "SUCCESS", "RECEIVED", "COMPLETED", "PAID")
+                        || isAny(shippingStatus, "DELIVERED", "SUCCESS");
             case "CANCELLED":
                 return isAny(orderStatus, "CANCELLED", "FAILED")
                         || isAny(displayStatus, "CANCELLED")
