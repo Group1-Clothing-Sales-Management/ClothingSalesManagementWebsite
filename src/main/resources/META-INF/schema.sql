@@ -551,3 +551,24 @@ BEGIN
         FOREIGN KEY (import_receipt_detail_id)
         REFERENCES dbo.Import_Receipt_Detail(id);
 END
+
+IF COL_LENGTH(N'dbo.Voucher', N'limit_per_user') IS NULL
+    ALTER TABLE dbo.Voucher ADD limit_per_user INT DEFAULT 1;
+
+IF COL_LENGTH(N'dbo.Voucher', N'terminate_reason') IS NULL
+    ALTER TABLE dbo.Voucher ADD terminate_reason NVARCHAR(255) NULL;
+
+IF COL_LENGTH(N'dbo.Voucher', N'category_id') IS NULL
+    ALTER TABLE dbo.Voucher ADD category_id INT NULL;
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Voucher_Category'
+      AND parent_object_id = OBJECT_ID(N'dbo.Voucher')
+)
+BEGIN
+    ALTER TABLE dbo.Voucher
+        ADD CONSTRAINT FK_Voucher_Category
+        FOREIGN KEY (category_id) REFERENCES dbo.Category(id)
+        ON DELETE SET NULL;
+END
