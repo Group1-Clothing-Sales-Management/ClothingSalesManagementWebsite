@@ -1,5 +1,7 @@
 package com.clothingsale.filter;
 
+import com.clothingsale.dao.UserDAO;
+import com.clothingsale.model.User;
 import java.io.IOException;
 import java.util.Locale;
 import jakarta.servlet.FilterChain;
@@ -14,6 +16,8 @@ import jakarta.servlet.http.HttpSession;
 
 @WebFilter("/*")
 public class AuthFilter extends HttpFilter {
+
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -40,6 +44,15 @@ public class AuthFilter extends HttpFilter {
                 // Mặc định các thao tác customer cần đăng nhập -> gửi đến customer login
                 response.sendRedirect(request.getContextPath() + "/customer/login?error=unauthorized");
             }
+            return;
+        }
+
+        // The role and status stored in the session are only a snapshot from login.
+        // Re-check internal accounts so that an Admin's status change takes effect
+        // immediately for an already logged-in staff member.
+        if (isInternalRole(roleName) && !isActiveInternalAccount(session)) {
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/admin/login?error=inactive");
             return;
         }
 
@@ -156,5 +169,28 @@ public class AuthFilter extends HttpFilter {
 
     private boolean isStaffOrAdminRole(String roleName) {
         return "STAFF".equalsIgnoreCase(roleName) || "ADMIN".equalsIgnoreCase(roleName);
+    }
+
+    private boolean isInternalRole(String roleName) {
+        return isStaffOrAdminRole(roleName);
+    }
+
+    private boolean isActiveInternalAccount(HttpSession session) {
+        Object userIdValue = session.getAttribute("authUserId");
+        if (userIdValue == null) {
+            return false;
+        }
+
+        int userId;
+        try {
+            userId = Integer.parseInt(userIdValue.toString());
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+
+        User user = userDAO.findById(userId);
+        return user != null
+                && isInternalRole(user.getRoleName())
+                && "ACTIVE".equalsIgnoreCase(user.getStatus());
     }
 }
