@@ -425,7 +425,6 @@
                 <button class="form-submit" type="submit">SIGN UP</button>
             </form>
 
-            <p class="terms">By creating an account, you agree to Clothing Sale's <a href="<%= ctx %>/home">Terms of Service</a> &amp; <a href="<%= ctx %>/home">Privacy Policy</a></p>
             <p class="switch-prompt">Already have an account?<a class="switch-link" href="<%= ctx %>/customer/login">Log In</a></p>
         </section>
     </main>
