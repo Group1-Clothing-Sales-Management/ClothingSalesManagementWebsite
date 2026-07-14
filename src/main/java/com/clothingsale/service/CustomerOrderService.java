@@ -15,6 +15,7 @@ import com.clothingsale.model.Voucher;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 public class CustomerOrderService {
 
@@ -212,6 +213,7 @@ public class CustomerOrderService {
         int addedQuantity = 0;
         int skippedLines = 0;
         int adjustedLines = 0;
+        Set<Integer> reorderedVariantIds = new LinkedHashSet<>();
 
         for (OrderDetail detail : details) {
             if (detail == null || detail.getVariantId() <= 0) {
@@ -246,6 +248,7 @@ public class CustomerOrderService {
 
             currentItem.setQuantity(existingQty + addQty);
             cart.put(detail.getVariantId(), currentItem);
+            reorderedVariantIds.add(detail.getVariantId());
             addedQuantity += addQty;
         }
 
@@ -279,7 +282,8 @@ public class CustomerOrderService {
                 true,
                 addedQuantity,
                 skippedLines,
-                message);
+                message,
+                reorderedVariantIds);
     }
 
     public boolean validateCheckout(int userId) {

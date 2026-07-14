@@ -122,10 +122,10 @@ public class CustomerViewOrderController
 
         if (result.isSuccess()) {
             session.setAttribute("cart", service.getCartMap(userId));
-            session.setAttribute("cartMessage", result.getMessage());
+            session.setAttribute("checkoutSelectedVariantIds", result.getVariantIds());
             response.sendRedirect(
                     request.getContextPath()
-                    + "/cart?skipMerge=1");
+                    + "/customer/checkout");
         } else {
             session.setAttribute("orderError", result.getMessage());
             response.sendRedirect(
