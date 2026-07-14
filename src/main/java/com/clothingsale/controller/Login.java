@@ -43,6 +43,8 @@ public class Login extends HttpServlet {
             request.setAttribute("errorMessage", "The current account does not have permission to access this page.");
         } else if ("timeout".equalsIgnoreCase(messageType)) {
             request.setAttribute("errorMessage", "Your session has expired. Please sign in again.");
+        } else if ("inactive".equalsIgnoreCase(messageType)) {
+            request.setAttribute("errorMessage", "Your account is inactive or locked. Please contact an administrator.");
         } else if ("1".equals(logout)) {
             request.setAttribute("successMessage", "You have signed out successfully.");
         }

@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Set;
 import com.clothingsale.model.Voucher;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 public class CustomerOrderService {
 
@@ -69,6 +72,37 @@ public class CustomerOrderService {
         return dao.getVoucherByCode(code);
     }
 
+    public Voucher getAvailableVoucherForUser(int userId, String code) {
+        if (code == null) return null;
+        for (Voucher voucher : dao.getVouchersForUser(userId)) {
+            if (code.trim().equalsIgnoreCase(voucher.getCode())
+                    && "AVAILABLE".equals(voucher.getCustomerStatus())) {
+                return voucher;
+            }
+        }
+        return null;
+    }
+
+    public List<Voucher> getVouchersForUser(int userId) {
+        return dao.getVouchersForUser(userId);
+    }
+
+    public List<Voucher> getEligibleVouchers(int userId, BigDecimal subtotal) {
+        List<Voucher> eligible = new ArrayList<>();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        for (Voucher voucher : dao.getVouchersForUser(userId)) {
+            boolean active = voucher.getStartDate() != null && voucher.getEndDate() != null
+                    && !now.before(voucher.getStartDate()) && !now.after(voucher.getEndDate());
+            if (active && voucher.isAvailable() && voucher.getUserUsedCount() == 0
+                    && subtotal.compareTo(voucher.getMinOrderValue()) >= 0) {
+                voucher.setApplicableDiscount(calculateDiscount(subtotal, voucher));
+                eligible.add(voucher);
+            }
+        }
+        eligible.sort((a, b) -> b.getApplicableDiscount().compareTo(a.getApplicableDiscount()));
+        return eligible;
+    }
+
     // =================== ORDER CORE ===================
     public boolean placeOrder(
             int userId,
@@ -123,7 +157,7 @@ public class CustomerOrderService {
             discount = voucher.getDiscountValue();
         }
 
-        return discount;
+        return discount.min(subtotal).max(BigDecimal.ZERO);
     }
 
     public List<Order> getOrdersByUserId(int userId) {
@@ -179,6 +213,7 @@ public class CustomerOrderService {
         int addedQuantity = 0;
         int skippedLines = 0;
         int adjustedLines = 0;
+        Set<Integer> reorderedVariantIds = new LinkedHashSet<>();
 
         for (OrderDetail detail : details) {
             if (detail == null || detail.getVariantId() <= 0) {
@@ -213,6 +248,7 @@ public class CustomerOrderService {
 
             currentItem.setQuantity(existingQty + addQty);
             cart.put(detail.getVariantId(), currentItem);
+            reorderedVariantIds.add(detail.getVariantId());
             addedQuantity += addQty;
         }
 
@@ -246,7 +282,8 @@ public class CustomerOrderService {
                 true,
                 addedQuantity,
                 skippedLines,
-                message);
+                message,
+                reorderedVariantIds);
     }
 
     public boolean validateCheckout(int userId) {
@@ -312,6 +349,7 @@ public class CustomerOrderService {
 
         return "CANCELLED".equals(normalized)
                 || "DELIVERED".equals(normalized)
+                || "SUCCESS".equals(normalized)
                 || "RECEIVED".equals(normalized)
                 || "COMPLETED".equals(normalized)
                 || "PAID".equals(normalized)

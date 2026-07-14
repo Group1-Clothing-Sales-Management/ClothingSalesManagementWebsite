@@ -93,10 +93,82 @@
             }
 
             .wishlist-image {
+                display:block;
                 width:100%;
-                height:230px;
-                object-fit:cover;
+                height:auto;
+                aspect-ratio:4 / 3;
+                object-fit:contain;
+                object-position:center;
                 background:#fafafa;
+            }
+
+            .wishlist-toast {
+                position:fixed;
+                z-index:1080;
+                top:50%;
+                left:50%;
+                transform:translate(-50%, -50%);
+                width:min(360px, calc(100vw - 40px));
+                min-height:180px;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                gap:18px;
+                padding:28px 30px;
+                border:0;
+                border-radius:3px;
+                background:rgba(0, 0, 0, .68);
+                color:#fff;
+                text-align:center;
+                box-shadow:0 16px 42px rgba(0,0,0,.18);
+                animation:wishlist-toast-in .25s ease-out both;
+            }
+
+            .wishlist-toast.is-danger {
+                background:rgba(0, 0, 0, .72);
+            }
+            .wishlist-toast > i {
+                width:72px;
+                height:72px;
+                display:inline-flex;
+                flex:0 0 72px;
+                align-items:center;
+                justify-content:center;
+                border-radius:50%;
+                background:#00bfa5;
+                color:#fff;
+                font-size:36px;
+                box-shadow:0 8px 18px rgba(0,0,0,.18);
+            }
+            .wishlist-toast.is-danger > i {
+                background:#dc3545;
+                color:#fff;
+            }
+            .wishlist-toast-message {
+                max-width:100%;
+                line-height:1.45;
+                font-size:18px;
+                font-weight:500;
+                color:#fff;
+            }
+            .wishlist-toast-close {
+                border:0;
+                width:1px;
+                height:1px;
+                position:absolute;
+                overflow:hidden;
+                clip:rect(0 0 0 0);
+                background:transparent;
+            }
+            .wishlist-toast.is-hiding { animation:wishlist-toast-out .2s ease-in both; }
+
+            @keyframes wishlist-toast-in {
+                from { opacity:0; transform:translate(-50%, -50%) scale(.94); }
+                to { opacity:1; transform:translate(-50%, -50%) scale(1); }
+            }
+            @keyframes wishlist-toast-out {
+                to { opacity:0; transform:translate(-50%, -50%) scale(.94); }
             }
 
             .wishlist-title {
@@ -173,13 +245,15 @@
                 font-size:24px;
             }
 
-            .alert { border-radius:2px; }
-
             @media (max-width:768px) {
                 .wishlist-page { width:100%; padding-top:12px; }
                 .wishlist-header { padding:18px 16px; }
                 .wishlist-header h2 { font-size:21px; }
-                .wishlist-image { height:210px; }
+                .wishlist-toast {
+                    width:min(320px, calc(100vw - 32px));
+                    min-height:160px;
+                    padding:24px 22px;
+                }
             }
         </style>
     </head>
@@ -206,9 +280,14 @@
             </div>
 
             <c:if test="${not empty wishlistMessage}">
-                <div class="alert alert-${wishlistMessageType} alert-dismissible fade show" role="alert">
-                    ${wishlistMessage}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div id="wishlistFlashMessage"
+                     class="wishlist-toast ${wishlistMessageType eq 'danger' ? 'is-danger' : ''}"
+                     role="status" aria-live="polite">
+                    <i class="fa-solid ${wishlistMessageType eq 'danger' ? 'fa-exclamation' : 'fa-check'}"></i>
+                    <span class="wishlist-toast-message"><c:out value="${wishlistMessage}"/></span>
+                    <button type="button" class="wishlist-toast-close" aria-label="Close notification">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
             </c:if>
 
@@ -358,6 +437,21 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+            (function () {
+                var toast = document.getElementById('wishlistFlashMessage');
+                if (!toast) return;
+
+                var timer;
+                function closeToast() {
+                    clearTimeout(timer);
+                    toast.classList.add('is-hiding');
+                    setTimeout(function () { toast.remove(); }, 220);
+                }
+
+                toast.querySelector('.wishlist-toast-close').addEventListener('click', closeToast);
+                timer = setTimeout(closeToast, 3000);
+            }());
+
             document.querySelectorAll('.wishlist-form').forEach(function (form) {
                 var select = form.querySelector('.variant-select');
                 var cartButton = form.querySelector('.wishlist-cart-button');

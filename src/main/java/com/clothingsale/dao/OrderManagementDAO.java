@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -162,165 +161,6 @@ public class OrderManagementDAO {
     }
 
     /**
-     * Create a direct in-store order.
-     * This path is separate from the online checkout flow because the shop sale
-     * does not rely on a cart or a saved customer account.
-     */
-    public String createInStoreOrder(String recipientName,
-            String recipientPhone,
-            int variantId,
-            int quantity,
-            String paymentMethod,
-            String note) {
-        return createInStoreOrder(recipientName, recipientPhone, variantId, quantity, paymentMethod, note, false, null);
-    }
-
-    /**
-     * Create a direct staff order.
-     * Pickup orders stay shipment-free. Delivery orders create a shipment
-     * record immediately so the Shipment module can take over.
-     */
-    public String createInStoreOrder(String recipientName,
-            String recipientPhone,
-            int variantId,
-            int quantity,
-            String paymentMethod,
-            String note,
-            boolean deliveryOrder,
-            String deliveryAddress) {
-
-        String normalizedName = recipientName == null ? "" : recipientName.trim();
-        String normalizedPhone = recipientPhone == null ? "" : recipientPhone.trim();
-        String normalizedPaymentMethod = paymentMethod == null ? "" : paymentMethod.trim().toUpperCase();
-        // Giữ tương thích ngược nếu dữ liệu cũ vẫn gửi CARD,
-        // nhưng các đơn mới sẽ được lưu với mã VNPay.
-        if ("CARD".equals(normalizedPaymentMethod)) {
-            normalizedPaymentMethod = "VNPAY";
-        }
-        String normalizedNote = note == null ? "" : note.trim();
-        String normalizedDeliveryAddress = deliveryAddress == null ? "" : deliveryAddress.trim();
-
-        if (normalizedName.isEmpty()) {
-            return "Recipient name is required.";
-        }
-        if (normalizedName.length() < 2) {
-            return "Recipient name must be at least 2 characters.";
-        }
-        if (normalizedPhone.isEmpty()) {
-            return "Recipient phone is required.";
-        }
-        if (!normalizedPhone.matches("\\d{10}")) {
-            return "Recipient phone must contain exactly 10 digits.";
-        }
-        if (variantId <= 0) {
-            return "Please select a product variant.";
-        }
-        if (quantity <= 0) {
-            return "Quantity must be greater than zero.";
-        }
-        if (!normalizedPaymentMethod.isEmpty()
-                && !"CASH".equals(normalizedPaymentMethod)
-                && !"VNPAY".equals(normalizedPaymentMethod)) {
-            return "Payment method must be CASH or VNPAY.";
-        }
-        if (normalizedNote.length() > 500) {
-            return "Note cannot exceed 500 characters.";
-        }
-        if (deliveryOrder && normalizedDeliveryAddress.isEmpty()) {
-            return "Delivery address is required for delivery orders.";
-        }
-
-        Connection conn = null;
-
-        try {
-            conn = DBConnection.getConnection();
-            if (conn == null) {
-                return "Database connection is not available.";
-            }
-            conn.setAutoCommit(false);
-
-            StoreOrderItem item = loadStoreOrderItem(conn, variantId);
-            if (item == null) {
-                conn.rollback();
-                return "Selected product variant was not found.";
-            }
-
-            if (!"ACTIVE".equalsIgnoreCase(item.status)) {
-                conn.rollback();
-                return "Selected product variant is not available.";
-            }
-
-            if (item.salePrice == null) {
-                conn.rollback();
-                return "Selected product variant has no sale price.";
-            }
-
-            if (item.stockQuantity < quantity) {
-                conn.rollback();
-                return "Not enough stock for the selected product.";
-            }
-
-            // The order stores the price collected at the counter so later price
-            // changes do not rewrite the receipt.
-            BigDecimal subtotal = item.salePrice.multiply(BigDecimal.valueOf(quantity));
-            BigDecimal shippingFee = deliveryOrder ? BigDecimal.valueOf(30000) : BigDecimal.ZERO;
-            BigDecimal totalPayment = subtotal;
-            if (deliveryOrder) {
-                totalPayment = subtotal.add(shippingFee);
-            }
-
-            String orderCode = "ORD" + System.currentTimeMillis();
-            int orderId = insertStoreOrder(
-                    conn,
-                    orderCode,
-                    normalizedName,
-                    normalizedPhone,
-                    subtotal,
-                    shippingFee,
-                    totalPayment,
-                    normalizedNote,
-                    deliveryOrder ? normalizedDeliveryAddress : "In-store purchase",
-                    deliveryOrder);
-
-            insertStoreOrderDetail(conn, orderId, item, quantity);
-            insertStorePayment(conn, orderId, normalizedPaymentMethod, totalPayment);
-
-            if (deliveryOrder) {
-                int shipmentId = insertShipment(
-                        conn,
-                        "Internal Delivery",
-                        "PENDING_PICKUP",
-                        shippingFee);
-                linkShipmentToOrder(conn, orderId, shipmentId);
-            }
-
-            // Stock must drop immediately because the product has already been
-            // handed to the customer at the store.
-            decreaseStock(conn, variantId, quantity);
-
-            conn.commit();
-            return "SUCCESS";
-        } catch (Exception e) {
-            try {
-                if (conn != null) {
-                    conn.rollback();
-                }
-            } catch (Exception ignore) {
-            }
-
-            e.printStackTrace();
-            return "Failed to create the store order. Please try again.";
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (Exception ignore) {
-            }
-        }
-    }
-
-    /**
      * Lấy trạng thái hiện tại của đơn hàng trước khi cập nhật.
      */
     public String getCurrentOrderStatus(int orderId) {
@@ -466,111 +306,8 @@ public class OrderManagementDAO {
     }
 
     /**
-     * Chuyển trạng thái đơn sang trạng thái shipment tương ứng.
+     * Tạo shipment khi một đơn cần được chuyển sang khâu giao hàng.
      */
-    /**
-     * Load the minimal product and variant data needed to sell an item at the
-     * counter and freeze the snapshot into the order details table.
-     */
-    private StoreOrderItem loadStoreOrderItem(Connection conn, int variantId) throws SQLException {
-        String sql = "SELECT pv.id, pv.sale_price, pv.stock_quantity, pv.status, "
-                + "       p.product_name, "
-                + "       MAX(CASE WHEN a.attribute_name = 'Color' THEN vav.attribute_value END) AS color, "
-                + "       MAX(CASE WHEN a.attribute_name = 'Size' THEN vav.attribute_value END) AS size "
-                + "FROM Product_Variant pv "
-                + "JOIN Product p ON pv.product_id = p.id "
-                + "LEFT JOIN Variant_Attribute_Value vav ON pv.id = vav.variant_id "
-                + "LEFT JOIN Attribute a ON vav.attribute_id = a.id "
-                + "WHERE pv.id = ? "
-                + "GROUP BY pv.id, pv.sale_price, pv.stock_quantity, pv.status, p.product_name";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, variantId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return null;
-                }
-
-                StoreOrderItem item = new StoreOrderItem();
-                item.variantId = rs.getInt("id");
-                item.productName = rs.getString("product_name");
-                item.salePrice = rs.getBigDecimal("sale_price");
-                item.stockQuantity = rs.getInt("stock_quantity");
-                item.status = rs.getString("status");
-
-                String color = rs.getString("color");
-                String size = rs.getString("size");
-                StringBuilder attributes = new StringBuilder();
-                if (color != null && !color.trim().isEmpty()) {
-                    attributes.append("Color: ").append(color.trim());
-                }
-                if (size != null && !size.trim().isEmpty()) {
-                    if (attributes.length() > 0) {
-                        attributes.append(" / ");
-                    }
-                    attributes.append("Size: ").append(size.trim());
-                }
-                if (attributes.length() == 0) {
-                    attributes.append("Standard");
-                }
-                item.attributeSnapshot = attributes.toString();
-                return item;
-            }
-        }
-    }
-
-    /**
-     * Insert the order header for a walk-in purchase.
-     * user_id, voucher_id, and shipment_id are left NULL because this is a
-     * counter sale, not an online checkout.
-     */
-    private int insertStoreOrder(Connection conn,
-            String orderCode,
-            String recipientName,
-            String recipientPhone,
-            BigDecimal subtotal,
-            BigDecimal shippingFee,
-            BigDecimal totalPayment,
-            String note,
-            String addressDetail,
-            boolean deliveryOrder) throws SQLException {
-
-        String sql = "INSERT INTO [Order] "
-                + "(order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, "
-                + " ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, "
-                + " order_status, note) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, orderCode);
-            ps.setNull(2, Types.INTEGER);
-            ps.setNull(3, Types.INTEGER);
-            ps.setNull(4, Types.INTEGER);
-            ps.setString(5, recipientName);
-            ps.setString(6, recipientPhone);
-            ps.setNull(7, Types.VARCHAR);
-            ps.setString(8, addressDetail == null || addressDetail.trim().isEmpty()
-                    ? (deliveryOrder ? "Delivery order" : "In-store purchase")
-                    : addressDetail.trim());
-            ps.setBigDecimal(9, subtotal);
-            ps.setBigDecimal(10, BigDecimal.ZERO);
-            ps.setBigDecimal(11, shippingFee);
-            ps.setBigDecimal(12, totalPayment);
-            ps.setString(13, "CONFIRMED");
-            ps.setString(14, note);
-            ps.executeUpdate();
-
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    return keys.getInt(1);
-                }
-            }
-        }
-
-        throw new SQLException("Failed to create store order header.");
-    }
-
     private int insertShipment(Connection conn,
             String carrierName,
             String shippingStatus,
@@ -595,78 +332,6 @@ public class OrderManagementDAO {
         }
 
         throw new SQLException("Failed to create shipment record.");
-    }
-
-    private void linkShipmentToOrder(Connection conn, int orderId, int shipmentId) throws SQLException {
-        String sql = "UPDATE [Order] SET shipment_id = ?, updated_at = GETDATE() WHERE id = ?";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, shipmentId);
-            ps.setInt(2, orderId);
-            ps.executeUpdate();
-        }
-    }
-
-    /**
-     * Insert the sold item as a frozen order line so later product edits do not
-     * change the historical receipt.
-     */
-    private void insertStoreOrderDetail(Connection conn,
-            int orderId,
-            StoreOrderItem item,
-            int quantity) throws SQLException {
-
-        String sql = "INSERT INTO Order_Detail "
-                + "(order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            ps.setInt(2, item.variantId);
-            ps.setString(3, item.productName);
-            ps.setString(4, item.attributeSnapshot);
-            ps.setInt(5, quantity);
-            ps.setBigDecimal(6, item.salePrice);
-            ps.executeUpdate();
-        }
-    }
-
-    /**
-     * Record the initial payment state for a counter sale.
-     * Cash orders are marked as paid immediately; VNPay orders stay unpaid
-     * until staff confirms the bank transfer.
-     */
-    private void insertStorePayment(Connection conn,
-            int orderId,
-            String paymentMethod,
-            BigDecimal amount) throws SQLException {
-
-        String sql = "INSERT INTO Payment "
-                + "(order_id, payment_method, payment_status, amount, transaction_reference, payment_date) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
-
-        String method = paymentMethod == null || paymentMethod.trim().isEmpty()
-                ? "CASH"
-                : paymentMethod.trim().toUpperCase();
-        boolean isVnpay = "VNPAY".equals(method);
-        String paymentStatus = isVnpay ? "UNPAID" : "PAID";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            ps.setString(2, method);
-            ps.setString(3, paymentStatus);
-            ps.setBigDecimal(4, amount);
-            // VNPay orders stay unpaid until staff confirms the bank transfer.
-            if (isVnpay) {
-                ps.setString(5, "ORDER-" + orderId);
-                ps.setNull(6, Types.TIMESTAMP);
-            } else {
-                // A counter sale does not need an external transaction reference.
-                ps.setNull(5, Types.VARCHAR);
-                ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-            }
-            ps.executeUpdate();
-        }
     }
 
     /**
@@ -731,20 +396,6 @@ public class OrderManagementDAO {
     }
 
     /**
-     * Reduce stock after the store order is committed in the same transaction.
-     * Keeping this helper local avoids depending on the customer checkout DAO.
-     */
-    private void decreaseStock(Connection conn, int variantId, int quantity) throws SQLException {
-        String sql = "UPDATE Product_Variant SET stock_quantity = stock_quantity - ? WHERE id = ?";
-
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, quantity);
-            ps.setInt(2, variantId);
-            ps.executeUpdate();
-        }
-    }
-
-    /**
      * Đổ dữ liệu từ ResultSet vào model Order.
      */
     private Order mapOrderRow(ResultSet rs) throws SQLException {
@@ -802,16 +453,4 @@ public class OrderManagementDAO {
         }
     }
 
-    /**
-     * Small private DTO so the shop-sale flow can reuse one helper query
-     * without adding another public model class.
-     */
-    private static class StoreOrderItem {
-        int variantId;
-        String productName;
-        String attributeSnapshot;
-        BigDecimal salePrice;
-        int stockQuantity;
-        String status;
-    }
 }

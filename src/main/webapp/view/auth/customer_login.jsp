@@ -438,7 +438,6 @@
                 <span class="help-dot" title="Keep this device signed in">?</span>
             </label>
 
-            <p class="terms">By logging in, you agree to Clothing Sale's <a href="<%= ctx %>/home">Terms of Service</a> &amp; <a href="<%= ctx %>/home">Privacy Policy</a></p>
             <p class="signup-prompt">New to Clothing Sale?<a href="<%= ctx %>/customer/register">Sign Up</a></p>
         </section>
     </main>

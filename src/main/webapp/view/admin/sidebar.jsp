@@ -10,13 +10,6 @@
     String rolePrefix = "STAFF".equalsIgnoreCase(roleName) ? "/staff" : "/admin";
     request.setAttribute("rolePrefix", rolePrefix);
 
-    String username = (session != null) ? (String) session.getAttribute("authUsername") : null;
-    String userInitials = "US";
-    if (username != null && !username.isBlank()) {
-        userInitials = username.length() >= 2 ? username.substring(0, 2) : username.substring(0, 1);
-        userInitials = userInitials.toUpperCase();
-    }
-
     // Tự xác định mục đang mở nếu trang cha chưa truyền activeTab.
     String activeTab = request.getParameter("activeTab");
     if (activeTab == null || activeTab.isBlank()) {
@@ -141,17 +134,6 @@
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(15, 23, 42, 0.96);
     }
-    .sidebar-user-pill {
-        width: 40px;
-        height: 40px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 800;
-        flex-shrink: 0;
-    }
     .sidebar-user-role {
         font-size: .78rem;
         color: #94a3b8;
@@ -264,9 +246,6 @@
 
     <div class="sidebar-footer">
         <div class="d-flex align-items-center gap-3">
-            <div class="sidebar-user-pill" style="background-color: #6366f1;">
-                <c:out value="${userInitials}"/>
-            </div>
             <div class="min-w-0 flex-grow-1">
                 <div class="text-sm fw-bold text-white text-truncate">
                     <c:choose>

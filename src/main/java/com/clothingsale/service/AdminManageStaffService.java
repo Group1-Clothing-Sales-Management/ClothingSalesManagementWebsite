@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -173,8 +174,14 @@ public class AdminManageStaffService {
         if (isBlank(status)) {
             // Khi tạo mới, nếu người dùng không chọn trạng thái thì tự hiểu là ACTIVE.
             staff.setStatus("ACTIVE");
-        } else if (!isAllowedStatus(status)) {
-            errors.put("status", "Trạng thái không hợp lệ.");
+        } else {
+            String normalizedStatus = status.trim().toUpperCase(Locale.ROOT);
+            if (!isAllowedStatus(normalizedStatus)) {
+                errors.put("status", "Trạng thái không hợp lệ.");
+            } else {
+                // Keep the value written to the database consistent with login/auth checks.
+                staff.setStatus(normalizedStatus);
+            }
         }
     }
 

@@ -184,7 +184,9 @@ CREATE TABLE dbo.Product_Variant (
     cost_price DECIMAL(18,2) NOT NULL, -- Giá vốn nhập vào (để tính lợi nhuận gộp sau này)
     sale_price DECIMAL(18,2) NOT NULL, -- Giá bán niêm yết
     stock_quantity INT NOT NULL DEFAULT 0,
-    status VARCHAR(30) DEFAULT 'ACTIVE' -- ACTIVE, INACTIVE
+    status VARCHAR(30) DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE
+    color NVARCHAR(100) NULL,
+    size NVARCHAR(100) NULL
 );
 END
 
@@ -394,6 +396,179 @@ CREATE TABLE dbo.Product_Batch (
     sale_price DECIMAL(18,2) NOT NULL, -- Giá bán riêng của lô này
     initial_quantity INT NOT NULL, -- Số lượng nhập ban đầu
     current_quantity INT NOT NULL, -- Số lượng còn lại (Sẽ trừ dần về 0 theo FIFO)
+    import_receipt_id INT NULL,
+    import_receipt_detail_id INT NULL,
     created_at DATETIME DEFAULT GETDATE() -- Sắp xếp theo thời gian tăng dần để tìm lô cũ nhất
 );
+END
+
+-- =========================================================================
+-- V. QUẢN LÝ PHIẾU NHẬP KHO
+--
+-- The inventory feature was added after the original schema. Keep this
+-- section idempotent so it also upgrades an existing ClothesShopDB.
+-- =========================================================================
+
+IF OBJECT_ID(N'dbo.Supplier', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Supplier (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        supplier_name NVARCHAR(200) NOT NULL,
+        phone VARCHAR(30) NULL,
+        address NVARCHAR(500) NULL,
+        status BIT NOT NULL DEFAULT 1
+    );
+END
+
+IF OBJECT_ID(N'dbo.Import_Receipt', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Import_Receipt (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        receipt_code VARCHAR(60) NOT NULL UNIQUE,
+        supplier_id INT NULL,
+        user_id INT NULL,
+        total_amount DECIMAL(18,2) NULL,
+        created_at DATETIME NOT NULL DEFAULT GETDATE(),
+        status VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
+        note NVARCHAR(500) NULL,
+        vendor_reference NVARCHAR(100) NULL,
+        confirmed_by INT NULL,
+        confirmed_at DATETIME NULL
+    );
+END
+
+IF COL_LENGTH(N'dbo.Import_Receipt', N'note') IS NULL
+    ALTER TABLE dbo.Import_Receipt ADD note NVARCHAR(500) NULL;
+
+IF COL_LENGTH(N'dbo.Import_Receipt', N'vendor_reference') IS NULL
+    ALTER TABLE dbo.Import_Receipt ADD vendor_reference NVARCHAR(100) NULL;
+
+IF COL_LENGTH(N'dbo.Import_Receipt', N'confirmed_by') IS NULL
+    ALTER TABLE dbo.Import_Receipt ADD confirmed_by INT NULL;
+
+IF COL_LENGTH(N'dbo.Import_Receipt', N'confirmed_at') IS NULL
+    ALTER TABLE dbo.Import_Receipt ADD confirmed_at DATETIME NULL;
+
+IF OBJECT_ID(N'dbo.Import_Receipt_Detail', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Import_Receipt_Detail (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        import_receipt_id INT NOT NULL,
+        variant_id INT NOT NULL,
+        quantity INT NOT NULL CHECK (quantity > 0),
+        unit_cost DECIMAL(18,2) NOT NULL,
+        line_total DECIMAL(18,2) NOT NULL
+    );
+END
+
+IF COL_LENGTH(N'dbo.Product_Variant', N'color') IS NULL
+    ALTER TABLE dbo.Product_Variant ADD color NVARCHAR(100) NULL;
+
+IF COL_LENGTH(N'dbo.Product_Variant', N'size') IS NULL
+    ALTER TABLE dbo.Product_Variant ADD size NVARCHAR(100) NULL;
+
+IF COL_LENGTH(N'dbo.Product_Batch', N'import_receipt_id') IS NULL
+    ALTER TABLE dbo.Product_Batch ADD import_receipt_id INT NULL;
+
+IF COL_LENGTH(N'dbo.Product_Batch', N'import_receipt_detail_id') IS NULL
+    ALTER TABLE dbo.Product_Batch ADD import_receipt_detail_id INT NULL;
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Import_Receipt_Supplier'
+      AND parent_object_id = OBJECT_ID(N'dbo.Import_Receipt')
+)
+BEGIN
+    ALTER TABLE dbo.Import_Receipt
+        ADD CONSTRAINT FK_Import_Receipt_Supplier
+        FOREIGN KEY (supplier_id) REFERENCES dbo.Supplier(id);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Import_Receipt_User'
+      AND parent_object_id = OBJECT_ID(N'dbo.Import_Receipt')
+)
+BEGIN
+    ALTER TABLE dbo.Import_Receipt
+        ADD CONSTRAINT FK_Import_Receipt_User
+        FOREIGN KEY (user_id) REFERENCES dbo.[User](id);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Import_Receipt_Confirmer'
+      AND parent_object_id = OBJECT_ID(N'dbo.Import_Receipt')
+)
+BEGIN
+    ALTER TABLE dbo.Import_Receipt
+        ADD CONSTRAINT FK_Import_Receipt_Confirmer
+        FOREIGN KEY (confirmed_by) REFERENCES dbo.[User](id);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Import_Receipt_Detail_Receipt'
+      AND parent_object_id = OBJECT_ID(N'dbo.Import_Receipt_Detail')
+)
+BEGIN
+    ALTER TABLE dbo.Import_Receipt_Detail
+        ADD CONSTRAINT FK_Import_Receipt_Detail_Receipt
+        FOREIGN KEY (import_receipt_id)
+        REFERENCES dbo.Import_Receipt(id) ON DELETE CASCADE;
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Import_Receipt_Detail_Variant'
+      AND parent_object_id = OBJECT_ID(N'dbo.Import_Receipt_Detail')
+)
+BEGIN
+    ALTER TABLE dbo.Import_Receipt_Detail
+        ADD CONSTRAINT FK_Import_Receipt_Detail_Variant
+        FOREIGN KEY (variant_id) REFERENCES dbo.Product_Variant(id);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Product_Batch_Import_Receipt'
+      AND parent_object_id = OBJECT_ID(N'dbo.Product_Batch')
+)
+BEGIN
+    ALTER TABLE dbo.Product_Batch
+        ADD CONSTRAINT FK_Product_Batch_Import_Receipt
+        FOREIGN KEY (import_receipt_id) REFERENCES dbo.Import_Receipt(id);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Product_Batch_Import_Receipt_Detail'
+      AND parent_object_id = OBJECT_ID(N'dbo.Product_Batch')
+)
+BEGIN
+    ALTER TABLE dbo.Product_Batch
+        ADD CONSTRAINT FK_Product_Batch_Import_Receipt_Detail
+        FOREIGN KEY (import_receipt_detail_id)
+        REFERENCES dbo.Import_Receipt_Detail(id);
+END
+
+IF COL_LENGTH(N'dbo.Voucher', N'limit_per_user') IS NULL
+    ALTER TABLE dbo.Voucher ADD limit_per_user INT DEFAULT 1;
+
+IF COL_LENGTH(N'dbo.Voucher', N'terminate_reason') IS NULL
+    ALTER TABLE dbo.Voucher ADD terminate_reason NVARCHAR(255) NULL;
+
+IF COL_LENGTH(N'dbo.Voucher', N'category_id') IS NULL
+    ALTER TABLE dbo.Voucher ADD category_id INT NULL;
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Voucher_Category'
+      AND parent_object_id = OBJECT_ID(N'dbo.Voucher')
+)
+BEGIN
+    ALTER TABLE dbo.Voucher
+        ADD CONSTRAINT FK_Voucher_Category
+        FOREIGN KEY (category_id) REFERENCES dbo.Category(id)
+        ON DELETE SET NULL;
 END
