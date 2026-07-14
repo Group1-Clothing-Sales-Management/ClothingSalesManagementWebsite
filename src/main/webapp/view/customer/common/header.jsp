@@ -47,6 +47,9 @@
                                 <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
                                     My Orders
                                 </a>
+                                <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">
+                                    My Wishlist
+                                </a>
                                 <hr>
                                 <a class="js-customer-logout"
                                    href="${pageContext.request.contextPath}/customer/logout"

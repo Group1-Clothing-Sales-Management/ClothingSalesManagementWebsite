@@ -717,6 +717,7 @@
                     <div class="account-dropdown" role="menu">
                         <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">Profile</a>
                         <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">My Orders</a>
+                        <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">My Wishlist</a>
                         <hr>
                         <a href="${pageContext.request.contextPath}/customer/logout" role="menuitem">Logout</a>
                     </div>

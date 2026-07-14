@@ -7,6 +7,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>My Wishlist</title>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -15,133 +17,169 @@
               rel="stylesheet">
 
         <style>
-            :root{
-                --navy:#172033;
-                --teal:#0f9b8e;
-                --bg:#f4f8fb;
-                --muted:#64748b;
-                --danger:#dc2626;
+            :root {
+                --wishlist-primary:#c65b3d;
+                --wishlist-primary-dark:#a9462d;
+                --wishlist-primary-soft:#fff3ed;
+                --wishlist-ink:#222;
+                --wishlist-muted:#6b7280;
+                --wishlist-line:#e7e7e7;
             }
 
-            body{
-                background:
-                    radial-gradient(circle at top left, rgba(15,155,142,.08), transparent 30%),
-                    radial-gradient(circle at right top, rgba(23,32,51,.08), transparent 25%),
-                    var(--bg);
-                font-family:'Segoe UI',sans-serif;
-                color:#1f2937;
+            * { box-sizing:border-box; }
+
+            body {
+                min-height:100vh;
+                margin:0;
+                background:#f5f5f5;
+                color:var(--wishlist-ink);
+                font-family:Arial, Helvetica, sans-serif;
+                font-size:14px;
+            }
+
+            .wishlist-page {
+                width:min(1200px, calc(100% - 32px));
+                max-width:none;
+                padding-top:24px;
+                padding-bottom:48px;
             }
 
             .wishlist-header,
-            .empty-state{
+            .empty-state {
                 background:#fff;
-                border-radius:20px;
-                box-shadow:0 15px 40px rgba(0,0,0,.08);
+                box-shadow:0 1px 2px rgba(0,0,0,.05);
             }
 
-            .wishlist-header{
-                padding:32px;
+            .wishlist-header {
+                min-height:96px;
+                padding:22px 24px;
+                border-bottom:2px solid var(--wishlist-primary);
             }
 
-            .wishlist-header h2{
+            .wishlist-header h2 {
                 margin:0;
-                color:var(--navy);
-                font-weight:800;
+                color:var(--wishlist-ink);
+                font-size:24px;
+                font-weight:600;
             }
 
-            .wishlist-count{
+            .wishlist-header h2 i { color:var(--wishlist-primary) !important; }
+
+            .wishlist-count {
                 display:inline-flex;
                 align-items:center;
                 gap:8px;
-                border-radius:999px;
-                padding:8px 14px;
-                background:rgba(15,155,142,.1);
-                color:var(--teal);
+                min-height:34px;
+                padding:6px 12px;
+                border:1px solid #f0c8bc;
+                border-radius:2px;
+                background:var(--wishlist-primary-soft);
+                color:var(--wishlist-primary-dark);
                 font-weight:700;
             }
 
-            .wishlist-card{
-                border:1px solid #e5e7eb;
-                border-radius:18px;
+            .wishlist-card {
+                border:1px solid var(--wishlist-line);
+                border-radius:0;
                 overflow:hidden;
                 background:#fff;
-                box-shadow:0 12px 30px rgba(23,32,51,.08);
+                box-shadow:0 1px 2px rgba(0,0,0,.05);
+                transition:border-color .2s, box-shadow .2s;
             }
 
-            .wishlist-image{
+            .wishlist-card:hover {
+                border-color:#e1b2a5;
+                box-shadow:0 4px 12px rgba(0,0,0,.08);
+            }
+
+            .wishlist-image {
                 width:100%;
                 height:230px;
                 object-fit:cover;
-                background:#e5e7eb;
+                background:#fafafa;
             }
 
-            .wishlist-title{
-                color:var(--navy);
-                font-size:1.05rem;
-                font-weight:800;
+            .wishlist-title {
+                color:var(--wishlist-ink);
+                font-size:16px;
+                font-weight:600;
             }
 
-            .wishlist-price{
-                color:var(--teal);
-                font-size:1.45rem;
-                font-weight:800;
+            .wishlist-price {
+                color:var(--wishlist-primary);
+                font-size:20px;
+                font-weight:500;
             }
 
-            .variant-note{
+            .variant-note {
                 min-height:42px;
-                color:var(--muted);
+                color:var(--wishlist-muted);
             }
 
-            .form-select{
-                border-radius:12px;
-                padding:11px;
+            .form-select {
+                min-height:42px;
+                border-color:#ddd;
+                border-radius:2px;
+                padding:9px 11px;
+                font-size:14px;
             }
 
-            .form-select:focus{
-                border-color:var(--teal);
-                box-shadow:0 0 0 .25rem rgba(15,155,142,.15);
+            .form-select:focus {
+                border-color:var(--wishlist-primary);
+                box-shadow:0 0 0 .2rem rgba(198,91,61,.12);
             }
 
-            .btn-main{
-                background:linear-gradient(135deg,var(--navy),var(--teal));
-                border:0;
+            .btn-main {
+                border:1px solid var(--wishlist-primary);
+                border-radius:2px;
+                background:var(--wishlist-primary);
                 color:#fff;
-                font-weight:700;
-                border-radius:12px;
+                font-weight:600;
             }
 
-            .btn-main:hover{
+            .btn-main:hover {
+                border-color:var(--wishlist-primary-dark);
+                background:var(--wishlist-primary-dark);
                 color:#fff;
-                opacity:.92;
             }
 
-            .btn-soft{
-                border:1px solid #e5e7eb;
-                border-radius:12px;
-                color:var(--navy);
-                font-weight:700;
+            .btn-soft {
+                border:1px solid #ddd;
+                border-radius:2px;
+                background:#fff;
+                color:#555;
+                font-weight:600;
             }
 
-            .btn-soft:hover{
-                background:#f8fafc;
-                color:var(--teal);
+            .btn-soft:hover {
+                border-color:var(--wishlist-primary);
+                color:var(--wishlist-primary-dark);
             }
 
-            .empty-state{
+            .empty-state {
                 padding:58px 24px;
                 text-align:center;
             }
 
-            .empty-icon{
-                width:70px;
-                height:70px;
-                border-radius:22px;
+            .empty-icon {
+                width:64px;
+                height:64px;
+                border-radius:50%;
                 display:inline-flex;
                 align-items:center;
                 justify-content:center;
-                background:rgba(15,155,142,.1);
-                color:var(--teal);
-                font-size:30px;
+                background:var(--wishlist-primary-soft);
+                color:var(--wishlist-primary);
+                font-size:24px;
+            }
+
+            .alert { border-radius:2px; }
+
+            @media (max-width:768px) {
+                .wishlist-page { width:100%; padding-top:12px; }
+                .wishlist-header { padding:18px 16px; }
+                .wishlist-header h2 { font-size:21px; }
+                .wishlist-image { height:210px; }
             }
         </style>
     </head>
@@ -149,7 +187,7 @@
     <body>
         <jsp:include page="/view/customer/common/header.jsp"/>
 
-        <div class="container my-5">
+        <main class="container wishlist-page">
             <div class="wishlist-header mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h2>
@@ -289,17 +327,11 @@
                                                         </c:forEach>
                                                     </select>
 
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        <button type="submit"
-                                                                class="btn btn-soft flex-fill">
-                                                            <i class="fa-solid fa-rotate me-1"></i>
-                                                            Update
-                                                        </button>
-
+                                                    <div>
                                                         <button type="submit"
                                                                 formaction="${pageContext.request.contextPath}/cart"
                                                                 formmethod="post"
-                                                                class="btn btn-main flex-fill wishlist-cart-button">
+                                                                class="btn btn-main w-100 wishlist-cart-button">
                                                             <i class="fa-solid fa-cart-plus me-1"></i>
                                                             Add To Cart
                                                         </button>
@@ -322,7 +354,7 @@
                     </div>
                 </c:otherwise>
             </c:choose>
-        </div>
+        </main>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
@@ -344,7 +376,10 @@
                 }
 
                 if (select) {
-                    select.addEventListener('change', syncVariant);
+                    select.addEventListener('change', function () {
+                        syncVariant();
+                        form.requestSubmit();
+                    });
                     syncVariant();
                 }
             });
