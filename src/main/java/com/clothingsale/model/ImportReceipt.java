@@ -1,36 +1,34 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.clothingsale.model;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-/**
- *
- * @author Admin
- */
 public class ImportReceipt {
 
     private int id;
     private String receiptCode;
+
     private int supplierId;
+    private String supplierName;
+
     private int userId;
-    private double totalAmount;
+    private String createdByName;
+
+    private BigDecimal totalAmount;
     private Timestamp createdAt;
     private String status;
 
-    public ImportReceipt() {
-    }
+    private String note;
+    private String vendorReference;
 
-    public ImportReceipt(int id, String receiptCode, int supplierId, int userId, double totalAmount, Timestamp createdAt, String status) {
-        this.id = id;
-        this.receiptCode = receiptCode;
-        this.supplierId = supplierId;
-        this.userId = userId;
-        this.totalAmount = totalAmount;
-        this.createdAt = createdAt;
-        this.status = status;
+    private Integer confirmedBy;
+    private String confirmedByName;
+    private Timestamp confirmedAt;
+
+    private int itemCount;
+    private int totalQuantity;
+
+    public ImportReceipt() {
     }
 
     public int getId() {
@@ -57,6 +55,14 @@ public class ImportReceipt {
         this.supplierId = supplierId;
     }
 
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+    }
+
     public int getUserId() {
         return userId;
     }
@@ -65,11 +71,19 @@ public class ImportReceipt {
         this.userId = userId;
     }
 
-    public double getTotalAmount() {
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(double totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 
@@ -89,4 +103,59 @@ public class ImportReceipt {
         this.status = status;
     }
 
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public String getVendorReference() {
+        return vendorReference;
+    }
+
+    public void setVendorReference(String vendorReference) {
+        this.vendorReference = vendorReference;
+    }
+
+    public Integer getConfirmedBy() {
+        return confirmedBy;
+    }
+
+    public void setConfirmedBy(Integer confirmedBy) {
+        this.confirmedBy = confirmedBy;
+    }
+
+    public String getConfirmedByName() {
+        return confirmedByName;
+    }
+
+    public void setConfirmedByName(String confirmedByName) {
+        this.confirmedByName = confirmedByName;
+    }
+
+    public Timestamp getConfirmedAt() {
+        return confirmedAt;
+    }
+
+    public void setConfirmedAt(Timestamp confirmedAt) {
+        this.confirmedAt = confirmedAt;
+    }
+
+    public int getItemCount() {
+        return itemCount;
+    }
+
+    public void setItemCount(int itemCount) {
+        this.itemCount = itemCount;
+    }
+
+    public int getTotalQuantity() {
+        return totalQuantity;
+    }
+
+    public void setTotalQuantity(int totalQuantity) {
+        this.totalQuantity = totalQuantity;
+    }
 }
