@@ -88,7 +88,6 @@
         <c:if test="${not empty errorMessage}">
             <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
         </c:if>
-        <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active">Product Management</li></ol></nav>
         <div class="page-header"><h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Management</h1></div>
 
         <div class="search-bar-wrapper">
