@@ -33,7 +33,7 @@
             background:var(--cart-page);
             color:var(--cart-ink);
             font-family:Arial, Helvetica, sans-serif;
-            padding-bottom:150px;
+            padding-bottom:96px;
         }
 
         .cart-page .custom-navbar{
@@ -437,19 +437,6 @@
             color:var(--cart-accent);
         }
 
-        .similar-link{
-            display:block;
-            margin-top:5px;
-            color:var(--cart-accent);
-            font-size:13px;
-            text-decoration:none;
-        }
-
-        .similar-link:hover{
-            color:var(--cart-accent-dark);
-            text-decoration:underline;
-        }
-
         .checkout-bar {
             position:fixed;
             left:0;
@@ -589,49 +576,9 @@
             font-size:30px;
         }
 
-        .voucher-row,
-        .shipping-row {
-            min-height:56px;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            padding:0 20px;
-            border-bottom:1px solid var(--cart-line);
-            color:#1769aa;
-            font-size:14px;
-        }
-
-        .voucher-row i,
-        .shipping-row i {
-            color:var(--cart-accent);
-        }
-
-        .platform-voucher{
-            min-height:54px;
-            display:flex;
-            align-items:center;
-            justify-content:flex-end;
-            gap:12px;
-            padding:0 20px;
-            background:#fff;
-            border:1px solid var(--cart-line);
-            border-top:0;
-            color:var(--cart-ink);
-            font-size:14px;
-        }
-
-        .platform-voucher i{
-            color:var(--cart-accent);
-        }
-
-        .platform-voucher a{
-            color:#1769aa;
-            text-decoration:none;
-        }
-
         @media (max-width: 992px) {
             body {
-                padding-bottom:190px;
+                padding-bottom:136px;
             }
 
             .cart-brand-row {
@@ -668,11 +615,6 @@
                 display:none;
             }
 
-            .platform-voucher{
-                justify-content:space-between;
-                padding:12px 16px;
-            }
-
             .cart-head {
                 display:none;
             }
@@ -702,11 +644,6 @@
 
             .quantity-control {
                 margin:0;
-            }
-
-            .voucher-row,
-            .shipping-row {
-                padding:14px 16px;
             }
 
             .checkout-inner {
@@ -977,21 +914,9 @@
                                     Remove
                                 </button>
                             </form>
-                            <a href="<%= ctx %>/products" class="similar-link">
-                                Find Similar <i class="fa-solid fa-caret-down ms-1"></i>
-                            </a>
                         </div>
                     </div>
                 <% } %>
-
-                <div class="voucher-row">
-                    <i class="fa-solid fa-ticket"></i>
-                    <span>Add shop voucher code</span>
-                </div>
-                <div class="shipping-row">
-                    <i class="fa-solid fa-truck"></i>
-                    <span>Shipping options and promotions will be calculated at checkout.</span>
-                </div>
 
             </div>
 
@@ -1000,10 +925,6 @@
             </form>
 
             <div class="checkout-bar">
-                <div class="platform-voucher">
-                    <span><i class="fa-solid fa-ticket me-2"></i>Platform Voucher</span>
-                    <a href="#">Select or enter code</a>
-                </div>
                 <div class="checkout-inner">
                     <label class="select-all-wrap">
                         <input type="checkbox" class="cart-check" id="cartSelectAllBottom" checked>
