@@ -173,39 +173,6 @@ public class OrderManagementService {
     }
 
     /**
-     * Create a walk-in order for a purchase made directly at the shop.
-     * The controller passes a small set of fields and the DAO handles the
-     * transaction, stock deduction, order detail insert, and payment record.
-     */
-    public String createStoreOrder(String recipientName,
-            String recipientPhone,
-            int variantId,
-            int quantity,
-            String paymentMethod,
-            String note) {
-        return createStoreOrder(recipientName, recipientPhone, variantId, quantity, paymentMethod, note, false, null);
-    }
-
-    public String createStoreOrder(String recipientName,
-            String recipientPhone,
-            int variantId,
-            int quantity,
-            String paymentMethod,
-            String note,
-            boolean deliveryOrder,
-            String deliveryAddress) {
-        return dao.createInStoreOrder(
-                recipientName,
-                recipientPhone,
-                variantId,
-                quantity,
-                paymentMethod,
-                note,
-                deliveryOrder,
-                deliveryAddress);
-    }
-
-    /**
      * Status options used in the list filter dropdown.
      */
     public Map<String, String> getStatusOptions() {
