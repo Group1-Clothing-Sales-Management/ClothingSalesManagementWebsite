@@ -29,6 +29,8 @@
                 activeTab = "products";
             } else if (path.startsWith("/admin/inventory")) {
                 activeTab = "inventory";
+            } else if (path.startsWith("/admin/prices") || path.startsWith("/AdminPrice")) {
+                activeTab = "prices";
             } else if (path.startsWith("/admin/manage-category")
                     || path.startsWith("/admin/categories")
                     || path.startsWith("/view/admin/admin_category.jsp")) {
@@ -210,6 +212,11 @@
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="sidebar-link ${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
                     <i class="fa-solid fa-warehouse sidebar-icon"></i>Inventory
                 </a>
+                <a href="${pageContext.request.contextPath}/admin/prices"
+   class="sidebar-link ${requestScope.sidebarActiveTab == 'prices' ? 'active' : ''}">
+    <i class="fa-solid fa-coins sidebar-icon"></i>Price Management
+</a>
+                
                 <a href="${pageContext.request.contextPath}/admin/manage-category" class="sidebar-link ${requestScope.sidebarActiveTab == 'categories' ? 'active' : ''}">
                     <i class="fa-solid fa-tags sidebar-icon"></i>Categories
                 </a>

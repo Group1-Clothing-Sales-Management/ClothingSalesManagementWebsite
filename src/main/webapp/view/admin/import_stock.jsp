@@ -225,10 +225,7 @@
                      gap-3 mb-4">
 
                     <div>
-                        <div class="small fw-semibold
-                             text-primary text-uppercase mb-1">
-                            Inventory / Stock Receipts
-                        </div>
+                        
 
                         <h1 class="page-heading mb-1">
                             <i class="fa-solid
@@ -243,11 +240,7 @@
                         </p>
                     </div>
 
-                    <a href="${pageContext.request.contextPath}/admin/inventory?action=list"
-                       class="btn btn-outline-secondary px-4">
-                        <i class="fa-solid fa-arrow-left me-2"></i>
-                        Back to Receipts
-                    </a>
+                    
                 </div>
 
                 <c:if test="${empty supplierList}">
