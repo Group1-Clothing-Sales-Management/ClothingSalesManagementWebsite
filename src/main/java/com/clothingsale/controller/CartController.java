@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -242,6 +244,81 @@ session.setAttribute("cartMessage",
 				}
 
 				response.sendRedirect(buildAddToCartRedirect(request, true));
+				break;
+			}
+
+			case "buy-now": {
+				String variantIdStr = request.getParameter("variantId");
+				String productIdStr = request.getParameter("productId");
+				String productName = request.getParameter("productName");
+				String attributes = request.getParameter("attributes");
+				String priceStr = request.getParameter("price");
+				String qtyStr = request.getParameter("quantity");
+				String imageUrl = request.getParameter("imageUrl");
+
+				int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
+				int productId = Integer.parseInt(productIdStr != null ? productIdStr : "0");
+				int quantity = 1;
+				try { quantity = Integer.parseInt(qtyStr); } catch (Exception e) {}
+				if (quantity < 1) {
+					quantity = 1;
+				}
+				BigDecimal price = BigDecimal.ZERO;
+				try { price = new BigDecimal(priceStr); } catch (Exception e) {}
+
+				CartDAO dao = new CartDAO();
+				int stock = dao.getAvailableStock(variantId);
+
+				if (stock <= 0) {
+					session.setAttribute("cartMessage",
+							"This item is out of stock.");
+					response.sendRedirect(buildAddToCartRedirect(request, false));
+					return;
+				}
+
+				if (quantity > stock) {
+					session.setAttribute("cartMessage",
+							"Only " + stock + " item(s) are available in stock.");
+					response.sendRedirect(buildAddToCartRedirect(request, false));
+					return;
+				}
+
+				CartItem item = cart.get(variantId);
+
+				if (item == null) {
+					item = new CartItem();
+					item.setVariantId(variantId);
+					item.setProductId(productId);
+					cart.put(variantId, item);
+				}
+
+				item.setProductName(productName);
+				item.setAttributes(attributes);
+				item.setPrice(price);
+				item.setQuantity(quantity);
+				item.setImageUrl(imageUrl);
+
+				LOGGER.log(Level.FINE, "[CartController] Cart after buy now: {0}", cartSummary(cart));
+
+				authUserIdObj = session.getAttribute("authUserId");
+				if (authUserIdObj instanceof Integer) {
+					int userId = (Integer) authUserIdObj;
+					try {
+						new CartDAO().saveCart(userId, cart);
+						LOGGER.log(Level.FINE, "[CartController] Persisted cart for user {0} after buy now: {1}", new Object[]{userId, cartSummary(cart)});
+					} catch (Exception ex) {
+						LOGGER.log(Level.WARNING, "[CartController] Failed saving cart for user " + userId + " after buy now", ex);
+					}
+				} else {
+					writeAnonCartCookie(response, cart);
+				}
+
+				Set<Integer> selectedVariantIds = new HashSet<>();
+				selectedVariantIds.add(variantId);
+				session.setAttribute("checkoutSelectedVariantIds", selectedVariantIds);
+				session.removeAttribute("cartMessage");
+
+				response.sendRedirect(request.getContextPath() + "/customer/checkout");
 				break;
 			}
 
