@@ -241,6 +241,10 @@
                 background:#fafafa;
             }
 
+            .order-item-img-placeholder {
+                display:block;
+            }
+
             .item-name {
                 margin:0 0 5px;
                 color:#222;
@@ -579,22 +583,33 @@
                         <div class="order-items">
                             <c:forEach items="${o.details}" var="d">
                                 <div class="order-item">
+                                    <c:set var="orderImageUrl" value="${fn:trim(d.currentImageUrl)}"/>
+                                    <c:set var="contextPathPrefix" value="${pageContext.request.contextPath}/"/>
                                     <c:choose>
-                                        <c:when test="${not empty d.currentImageUrl}">
+                                        <c:when test="${not empty orderImageUrl}">
                                             <c:choose>
-                                                <c:when test="${fn:startsWith(d.currentImageUrl, 'http://') or fn:startsWith(d.currentImageUrl, 'https://')}">
-                                                    <img class="order-item-img" src="${d.currentImageUrl}" alt="${d.productNameSnapshot}">
+                                                <c:when test="${fn:startsWith(orderImageUrl, 'http://') or fn:startsWith(orderImageUrl, 'https://')}">
+                                                    <img class="order-item-img" src="${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:when>
-                                                <c:when test="${fn:startsWith(d.currentImageUrl, '/')}">
-                                                    <img class="order-item-img" src="${pageContext.request.contextPath}${d.currentImageUrl}" alt="${d.productNameSnapshot}">
+                                                <c:when test="${fn:startsWith(orderImageUrl, contextPathPrefix)}">
+                                                    <img class="order-item-img" src="${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
+                                                </c:when>
+                                                <c:when test="${fn:startsWith(orderImageUrl, '/')}">
+                                                    <img class="order-item-img" src="${pageContext.request.contextPath}${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
+                                                </c:when>
+                                                <c:when test="${fn:startsWith(orderImageUrl, 'uploads/')}">
+                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
+                                                </c:when>
+                                                <c:when test="${fn:contains(orderImageUrl, '/')}">
+                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/uploads/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/${d.currentImageUrl}" alt="${d.productNameSnapshot}">
+                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/uploads/product/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:otherwise>
                                             </c:choose>
                                         </c:when>
                                         <c:otherwise>
-                                            <img class="order-item-img" src="${pageContext.request.contextPath}/uploads/product/placeholder.png" alt="${d.productNameSnapshot}">
+                                            <span class="order-item-img order-item-img-placeholder" role="img" aria-label="${d.productNameSnapshot}"></span>
                                         </c:otherwise>
                                     </c:choose>
 
