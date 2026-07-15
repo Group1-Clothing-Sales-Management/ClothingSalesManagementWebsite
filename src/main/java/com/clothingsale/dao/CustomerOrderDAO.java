@@ -3,7 +3,6 @@ package com.clothingsale.dao;
 import com.clothingsale.model.CartItem;
 import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
-import com.clothingsale.model.Shipment;
 import com.clothingsale.model.UserAddress;
 import com.clothingsale.model.Voucher;
 import com.clothingsale.util.DBConnection;
@@ -296,8 +295,7 @@ public class CustomerOrderDAO {
             BigDecimal discount,
             BigDecimal shippingFee,
             BigDecimal totalPayment,
-            String note,
-            Shipment shipment)
+            String note)
             throws SQLException {
 
         String sql = "INSERT INTO [Order] "
@@ -335,11 +333,8 @@ public class CustomerOrderDAO {
         }
 
         // SHIPMENT
-        if (shipment == null) {
-            ps.setNull(4, Types.INTEGER);
-        } else {
-            ps.setInt(4, shipment.getId());
-        }
+        // Shipment is created when staff approves the order, not at checkout.
+        ps.setNull(4, Types.INTEGER);
 
         ps.setString(5, address.getRecipientName());
         ps.setString(6, address.getRecipientPhone());
@@ -446,15 +441,7 @@ public class CustomerOrderDAO {
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
             BigDecimal totalPayment = subtotal.subtract(discount).add(shippingFee);
 
-            // ===== 1. CREATE SHIPMENT (MỚI) =====
-            Shipment shipment = new Shipment();
-            shipment.setCarrierName(carrierName);
-            shipment.setShippingStatus("PENDING_PICKUP");
-
-            int shipmentId = createShipment(con, carrierName);
-            shipment.setId(shipmentId);
-
-            // ===== 2. CREATE ORDER (CÓ shipmentId) =====
+            // ===== 1. CREATE ORDER (shipment is created on approval) =====
             int orderId = createOrder(
                     con,
                     userId,
@@ -464,8 +451,7 @@ public class CustomerOrderDAO {
                     discount,
                     shippingFee,
                     totalPayment,
-                    note,
-                    shipment
+                    note
             );
 
             // ===== 3. ORDER DETAIL =====
@@ -541,30 +527,6 @@ public class CustomerOrderDAO {
 
             ps.executeUpdate();
         }
-    }
-
-    private int createShipment(Connection con, String carrierName) throws SQLException {
-
-        String sql = "INSERT INTO Shipment("
-                + "carrier_name, shipping_status, tracking_code, shipping_cost"
-                + ") VALUES(?,?,?,?)";
-
-        try ( PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, carrierName);
-            ps.setString(2, "PENDING_PICKUP");
-            ps.setString(3, null);
-            ps.setBigDecimal(4, BigDecimal.ZERO);
-
-            ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        }
-
-        return 0;
     }
 
     public Voucher getVoucherByCode(String code) {

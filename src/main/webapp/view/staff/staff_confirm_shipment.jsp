@@ -114,7 +114,7 @@
                                         </div>
                                         
                                         <div class="form-check form-check-custom d-flex align-items-center mb-0">
-                                            <input class="form-check-input me-3" type="radio" name="outcome" id="statusFailed" value="FAILURE" required>
+                                            <input class="form-check-input me-3" type="radio" name="outcome" id="statusFailed" value="FAILED" required>
                                             <label class="form-check-label text-danger fw-bold fs-6 mb-0 w-100" for="statusFailed">
                                                 <i class="fa-solid fa-circle-exclamation me-2"></i>Failure
                                             </label>
@@ -176,7 +176,7 @@
 
     function toggleRemarksVisibility() {
         const selectedRadio = document.querySelector('input[name="outcome"]:checked');
-        if (selectedRadio && selectedRadio.value === 'FAILURE') {
+        if (selectedRadio && selectedRadio.value === 'FAILED') {
             remarksContainer.classList.remove('d-none');
             remarksInput.setAttribute('required', 'true');
         } else {
@@ -215,7 +215,7 @@
         } else if (selectedRadio.value === 'SUCCESS') {
             badge.innerText = "Success";
             badge.classList.add("bg-success", "text-white");
-        } else if (selectedRadio.value === 'FAILURE') {
+        } else if (selectedRadio.value === 'FAILED') {
             badge.innerText = "Failure";
             badge.classList.add("bg-danger", "text-white");
         }
