@@ -254,8 +254,11 @@ public class OrderManagementDAO {
      */
     public boolean cancelOrderByStaff(int orderId) {
         String loadSql = "SELECT o.order_status, o.shipment_id FROM [Order] o WHERE o.id = ?";
-        String updateOrderSql = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() WHERE id = ?";
+        String updateOrderSql = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() "
+                + "WHERE id = ? AND order_status = ?";
         String updateShipmentSql = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
+        String selectDetailsSql = "SELECT variant_id, quantity FROM Order_Detail WHERE order_id = ?";
+        String restoreStockSql = "UPDATE Product_Variant SET stock_quantity = stock_quantity + ? WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -283,10 +286,32 @@ public class OrderManagementDAO {
             try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
                 psOrder.setString(1, OrderStatusHelper.RAW_CANCELLED);
                 psOrder.setInt(2, orderId);
+                psOrder.setString(3, OrderStatusHelper.RAW_PENDING);
                 if (psOrder.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
                 }
+            }
+
+            // Stock is deducted when the order is created, so cancelling it
+            // must return every order-detail quantity in the same transaction.
+            // The PENDING-only status check above prevents a second restore.
+            try (PreparedStatement psDetails = conn.prepareStatement(selectDetailsSql);
+                    PreparedStatement psRestore = conn.prepareStatement(restoreStockSql)) {
+                psDetails.setInt(1, orderId);
+                try (ResultSet rs = psDetails.executeQuery()) {
+                    while (rs.next()) {
+                        int variantId = rs.getInt("variant_id");
+                        boolean variantIsNull = rs.wasNull();
+                        int quantity = rs.getInt("quantity");
+                        if (!variantIsNull && quantity > 0) {
+                            psRestore.setInt(1, quantity);
+                            psRestore.setInt(2, variantId);
+                            psRestore.addBatch();
+                        }
+                    }
+                }
+                psRestore.executeBatch();
             }
 
             if (shipmentId > 0) {

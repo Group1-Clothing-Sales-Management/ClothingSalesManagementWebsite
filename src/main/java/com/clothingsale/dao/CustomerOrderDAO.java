@@ -639,27 +639,80 @@ public class CustomerOrderDAO {
 
         String sql
                 = "UPDATE [Order] "
-                + "SET order_status='CANCELLED' "
+                + "SET order_status='CANCELLED', updated_at=GETDATE() "
                 + "WHERE id=? "
                 + "AND user_id=? "
                 + "AND order_status='PENDING'";
 
-        try (
-                 Connection con
-                = DBConnection.getConnection();  PreparedStatement ps
-                = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
 
-            ps.setInt(1, orderId);
-            ps.setInt(2, userId);
+            try {
+                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                    ps.setInt(1, orderId);
+                    ps.setInt(2, userId);
 
-            return ps.executeUpdate() > 0;
+                    // The status transition is also the idempotency guard. A
+                    // repeated cancel cannot restore the same stock twice.
+                    if (ps.executeUpdate() == 0) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+
+                restoreStockForOrder(con, orderId);
+                con.commit();
+                return true;
+            } catch (Exception transactionError) {
+                con.rollback();
+                throw transactionError;
+            }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 
         return false;
+    }
+
+    /**
+     * Put back the quantities reserved when the order was created.
+     */
+    private void restoreStockForOrder(Connection con, int orderId)
+            throws SQLException {
+
+        String selectSql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=?";
+        String updateSql
+                = "UPDATE Product_Variant "
+                + "SET stock_quantity = stock_quantity + ? "
+                + "WHERE id=?";
+
+        try (PreparedStatement select = con.prepareStatement(selectSql);
+                PreparedStatement update = con.prepareStatement(updateSql)) {
+
+            select.setInt(1, orderId);
+
+            try (ResultSet rs = select.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+
+                    // Order_Detail keeps the row when a variant is deleted;
+                    // there is no stock row left to restore in that case.
+                    if (!variantIsNull && quantity > 0) {
+                        update.setInt(1, quantity);
+                        update.setInt(2, variantId);
+                        update.addBatch();
+                    }
+                }
+            }
+
+            update.executeBatch();
+        }
     }
 
     public void decreaseStock(
