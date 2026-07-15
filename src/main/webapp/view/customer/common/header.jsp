@@ -100,17 +100,20 @@
                 <c:when test="${not empty headerCategories}">
                     <c:forEach items="${headerCategories}" var="category" varStatus="status">
                         <c:if test="${status.index < 7}">
-                            <a href="${pageContext.request.contextPath}/product">
+                            <c:url var="categoryUrl" value="/products">
+                                <c:param name="categoryId" value="${category.id}"/>
+                            </c:url>
+                            <a href="${categoryUrl}" class="${param.categoryId == category.id ? 'active' : ''}">
                                 <c:out value="${category.categoryName}"/>
                             </a>
                         </c:if>
                     </c:forEach>
                     <c:if test="${fn:length(headerCategories) > 7}">
-                        <a href="${pageContext.request.contextPath}/product" aria-label="More categories">...</a>
+                        <a href="${pageContext.request.contextPath}/products" aria-label="More categories">...</a>
                     </c:if>
                 </c:when>
                 <c:otherwise>
-                    <a href="${pageContext.request.contextPath}/product">Products</a>
+                    <a href="${pageContext.request.contextPath}/products">Products</a>
                 </c:otherwise>
             </c:choose>
         </div>
@@ -285,6 +288,12 @@
     .market-category-row a:hover{
         color:#fff;
         text-decoration:underline;
+    }
+
+    .market-category-row a.active{
+        font-weight:700;
+        text-decoration:underline;
+        text-underline-offset:3px;
     }
 
     .market-account{

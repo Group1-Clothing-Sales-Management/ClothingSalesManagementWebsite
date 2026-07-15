@@ -13,8 +13,24 @@ public class CustomerProductDAO {
 
     public List<Category> getActiveCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT id, category_name, slug, status "
-                + "FROM Category WHERE status = 1 ORDER BY id ASC";
+        String sql = "WITH AvailableCategory AS ( "
+                + "SELECT DISTINCT c.id, c.category_name, c.slug, c.status, c.parent_id "
+                + "FROM Category c "
+                + "JOIN Product p ON p.category_id = c.id "
+                + "JOIN Product_Variant pv ON pv.product_id = p.id "
+                + "WHERE c.status = 1 "
+                + "AND p.status = 'ACTIVE' "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND pv.stock_quantity > 0 "
+                + "UNION ALL "
+                + "SELECT parent.id, parent.category_name, parent.slug, parent.status, parent.parent_id "
+                + "FROM Category parent "
+                + "JOIN AvailableCategory child ON child.parent_id = parent.id "
+                + "WHERE parent.status = 1 "
+                + ") "
+                + "SELECT DISTINCT id, category_name, slug, status "
+                + "FROM AvailableCategory "
+                + "ORDER BY id ASC";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql);
@@ -46,8 +62,21 @@ public class CustomerProductDAO {
 
         List<Product> list = new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder(
-                "SELECT DISTINCT p.id, p.product_name, p.slug, "
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        if (categoryId != null) {
+            sql.append("WITH CategoryScope AS ( ")
+                    .append("SELECT id FROM Category WHERE id = ? AND status = 1 ")
+                    .append("UNION ALL ")
+                    .append("SELECT c.id FROM Category c ")
+                    .append("JOIN CategoryScope cs ON c.parent_id = cs.id ")
+                    .append("WHERE c.status = 1 ")
+                    .append(") ");
+            params.add(categoryId);
+        }
+
+        sql.append("SELECT DISTINCT p.id, p.product_name, p.slug, "
                 + "p.brand_id, p.category_id, "
                 + "p.short_description, p.long_description, "
                 + "p.status, p.created_at, p.updated_at, "
@@ -55,12 +84,12 @@ public class CustomerProductDAO {
                 + "FROM Product p "
                 + "LEFT JOIN Product_Image img "
                 + "ON p.id = img.product_id AND img.is_main = 1 "
-                + "LEFT JOIN Product_Variant pv "
+                + "JOIN Product_Variant pv "
                 + "ON p.id = pv.product_id "
-                + "WHERE p.status <> 'DELETED' "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND pv.stock_quantity > 0 "
+                + "WHERE p.status = 'ACTIVE' "
         );
-
-        List<Object> params = new ArrayList<>();
 
         // Search theo tên
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -70,8 +99,7 @@ public class CustomerProductDAO {
 
         // Filter Category
         if (categoryId != null) {
-            sql.append("AND p.category_id = ? ");
-            params.add(categoryId);
+            sql.append("AND p.category_id IN (SELECT id FROM CategoryScope) ");
         }
 
         // Filter Brand
@@ -199,7 +227,9 @@ public class CustomerProductDAO {
                 + "JOIN Attribute a ON vav.attribute_id = a.id "
                 + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') AS size "
                 + "FROM Product_Variant pv "
-                + "WHERE pv.product_id = ? AND pv.status = 'ACTIVE'";
+                + "WHERE pv.product_id = ? "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND pv.stock_quantity > 0";
 
         try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
