@@ -742,6 +742,7 @@
                             <div class="account-dropdown" role="menu">
                                 <a href="<%= ctx %>/customer/profile" role="menuitem">Profile</a>
                                 <a href="<%= ctx %>/customer/orders" role="menuitem">My Orders</a>
+                                <a href="<%= ctx %>/customer/vouchers" role="menuitem">My Vouchers</a>
                                 <a href="<%= ctx %>/wishlist" role="menuitem">My Wishlist</a>
                                 <hr>
                                 <a href="<%= ctx %>/customer/logout" role="menuitem">Logout</a>

@@ -47,6 +47,9 @@
                                 <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
                                     My Orders
                                 </a>
+                                <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">
+                                    My Vouchers
+                                </a>
                                 <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">
                                     My Wishlist
                                 </a>
@@ -316,33 +319,33 @@
     .market-account-menu{
         position:absolute;
         z-index:1050;
-        top:calc(100% + 9px);
+        top:calc(100% + 10px);
         right:0;
-        width:180px;
+        width:170px;
         padding:8px 0;
-        border:1px solid #eee2dc;
-        border-radius:5px;
+        border:1px solid #e5e5e5;
+        border-radius:6px;
         background:#fff;
-        box-shadow:0 10px 25px rgba(68,35,25,.18);
+        box-shadow:0 8px 22px rgba(37,33,30,.16);
     }
 
     .market-account-menu a{
         display:block;
         padding:9px 14px;
-        color:#332b27;
+        color:#25211e;
         font-size:13px;
         text-decoration:none;
     }
 
     .market-account-menu a:hover{
-        background:#fff2ed;
+        background:#fff3ef;
         color:#c65b3d;
     }
 
     .market-account-menu hr{
         margin:5px 0;
         border:0;
-        border-top:1px solid #eee2dc;
+        border-top:1px solid #e5e5e5;
     }
     .logout-confirm-modal .modal-dialog {
         max-width: 460px;
