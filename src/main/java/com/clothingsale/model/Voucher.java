@@ -2,6 +2,7 @@ package com.clothingsale.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
 
 public class Voucher {
 
@@ -23,6 +24,8 @@ public class Voucher {
     private int limitPerUser;       // Giới hạn lượt dùng/mỗi User
     private String terminateReason; // Lý do dừng sớm campaigns
     private Integer categoryId;
+    private int userUsedCount;
+    private BigDecimal applicableDiscount = BigDecimal.ZERO;
 
     public Voucher() {
     }
@@ -159,6 +162,27 @@ public class Voucher {
 
     public void setCategoryId(Integer categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public int getUserUsedCount() { return userUsedCount; }
+    public void setUserUsedCount(int userUsedCount) { this.userUsedCount = userUsedCount; }
+    public BigDecimal getApplicableDiscount() { return applicableDiscount; }
+    public void setApplicableDiscount(BigDecimal applicableDiscount) {
+        this.applicableDiscount = applicableDiscount == null ? BigDecimal.ZERO : applicableDiscount;
+    }
+
+    public String getCustomerStatus() {
+        long now = System.currentTimeMillis();
+        if (userUsedCount > 0) return "USED";
+        if (startDate == null || startDate.getTime() > now || endDate == null
+                || endDate.getTime() < now || usedCount >= usageLimit) return "EXPIRED";
+        return "AVAILABLE";
+    }
+
+    public long getDaysRemaining() {
+        if (endDate == null) return 0;
+        long remaining = endDate.getTime() - System.currentTimeMillis();
+        return Math.max(0, (long) Math.ceil(remaining / (double) TimeUnit.DAYS.toMillis(1)));
     }
     
 }

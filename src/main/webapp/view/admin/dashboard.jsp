@@ -472,9 +472,7 @@
             <div class="dashboard-header">
                 <div>
                     <h1 class="dashboard-title">Business Dashboard</h1>
-                    <p class="dashboard-subtitle">
-                        Monitor sales performance, order operations, inventory risks, and customer activity.
-                    </p>
+                    
                     <div class="date-summary">
                         <i class="fa-regular fa-calendar"></i>
                         <span>${dashboardData.rangeLabel}: ${dashboardData.startDate} to ${dashboardData.endDate}</span>

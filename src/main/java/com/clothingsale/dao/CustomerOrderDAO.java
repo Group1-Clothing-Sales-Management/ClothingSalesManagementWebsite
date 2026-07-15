@@ -122,8 +122,10 @@ public class CustomerOrderDAO {
                 + "       o.recipient_name, o.recipient_phone, o.ward_id, o.address_detail, "
                 + "       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, "
                 + "       o.order_status, o.note, o.created_at, o.updated_at, "
+                + "       v.code AS voucher_code, v.title AS voucher_title, "
                 + "       s.shipping_status, p.payment_status, p.payment_method "
                 + "FROM [Order] o "
+                + "LEFT JOIN Voucher v ON o.voucher_id = v.id "
                 + "LEFT JOIN Shipment s ON o.shipment_id = s.id "
                 + "LEFT JOIN Payment p ON o.id = p.order_id "
                 + "WHERE o.user_id = ? "
@@ -150,6 +152,20 @@ public class CustomerOrderDAO {
                 o.setOrderCode(
                         rs.getString("order_code"));
 
+                o.setUserId(
+                        rs.getInt("user_id"));
+                o.setVoucherId(
+                        rs.getInt("voucher_id"));
+                o.setVoucherCode(
+                        rs.getString("voucher_code"));
+                o.setVoucherTitle(
+                        rs.getString("voucher_title"));
+                o.setTotalItemsPrice(
+                        rs.getBigDecimal("total_items_price"));
+                o.setDiscountAmount(
+                        rs.getBigDecimal("discount_amount"));
+                o.setShippingFee(
+                        rs.getBigDecimal("shipping_fee"));
                 o.setTotalPayment(
                         rs.getBigDecimal(
                                 "total_payment"));
@@ -374,7 +390,7 @@ public class CustomerOrderDAO {
             discount = voucher.getDiscountValue();
         }
 
-        return discount;
+        return discount.min(subtotal).max(BigDecimal.ZERO);
     }
 
     public boolean placeOrder(
@@ -422,6 +438,9 @@ public class CustomerOrderDAO {
 
             // ===== VOUCHER =====
             Voucher voucher = getVoucherByCode(voucherCode);
+            if (voucher != null && hasUserUsedVoucher(userId, voucher.getId())) {
+                voucher = null;
+            }
             BigDecimal discount = calculateDiscount(voucher, subtotal);
 
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
@@ -457,6 +476,16 @@ public class CustomerOrderDAO {
 
             // ===== 4. PAYMENT =====
             createPayment(con, orderId, paymentMethod, totalPayment);
+
+            if (voucher != null) {
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Voucher SET used_count = used_count + 1 WHERE id=? AND used_count < usage_limit")) {
+                    ps.setInt(1, voucher.getId());
+                    if (ps.executeUpdate() == 0) {
+                        throw new SQLException("Voucher usage limit reached");
+                    }
+                }
+            }
 
             // ===== 5. CLEAR CART =====
             if (selectedVariantIds == null) {
@@ -583,6 +612,48 @@ public class CustomerOrderDAO {
         }
 
         return null;
+    }
+
+    public List<Voucher> getVouchersForUser(int userId) {
+        List<Voucher> vouchers = new ArrayList<>();
+        String sql = "SELECT v.*, (SELECT COUNT(*) FROM [Order] o "
+                + "WHERE o.voucher_id=v.id AND o.user_id=? AND o.order_status <> 'CANCELLED') AS user_used_count "
+                + "FROM Voucher v ORDER BY v.end_date ASC";
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Voucher v = new Voucher();
+                    v.setId(rs.getInt("id"));
+                    v.setCode(rs.getString("code"));
+                    v.setTitle(rs.getString("title"));
+                    v.setDiscountType(rs.getString("discount_type"));
+                    v.setDiscountValue(rs.getBigDecimal("discount_value"));
+                    v.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
+                    v.setMinOrderValue(rs.getBigDecimal("min_order_value"));
+                    v.setStartDate(rs.getTimestamp("start_date"));
+                    v.setEndDate(rs.getTimestamp("end_date"));
+                    v.setUsageLimit(rs.getInt("usage_limit"));
+                    v.setUsedCount(rs.getInt("used_count"));
+                    v.setUserUsedCount(rs.getInt("user_used_count"));
+                    vouchers.add(v);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return vouchers;
+    }
+
+    private boolean hasUserUsedVoucher(int userId, int voucherId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM [Order] WHERE user_id=? AND voucher_id=? AND order_status <> 'CANCELLED'";
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, voucherId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
     }
 
     private void createOrderDetail(

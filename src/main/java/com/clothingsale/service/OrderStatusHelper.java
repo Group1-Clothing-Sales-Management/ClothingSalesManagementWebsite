@@ -15,6 +15,7 @@ public final class OrderStatusHelper {
     public static final String RAW_CONFIRMED = "CONFIRMED";
     public static final String RAW_SHIPPING = "SHIPPING";
     public static final String RAW_DELIVERED = "DELIVERED";
+    public static final String RAW_SUCCESS = "SUCCESS";
     public static final String RAW_CANCELLED = "CANCELLED";
     public static final String RAW_RETURNED = "RETURNED";
     public static final String RAW_PAID = "PAID";
@@ -63,12 +64,14 @@ public final class OrderStatusHelper {
         SHIPPING_LABELS.put("PENDING_PICKUP", "Preparing");
         SHIPPING_LABELS.put(RAW_SHIPPING, "Shipping");
         SHIPPING_LABELS.put(RAW_DELIVERED, "Delivered");
+        SHIPPING_LABELS.put(RAW_SUCCESS, "Delivery successful");
         SHIPPING_LABELS.put(RAW_FAILED, "Delivery failed");
         SHIPPING_LABELS.put(RAW_CANCELLED, "Cancelled");
 
         SHIPPING_BADGE_CLASSES.put("PENDING_PICKUP", "status-preparing");
         SHIPPING_BADGE_CLASSES.put(RAW_SHIPPING, "status-shipping");
         SHIPPING_BADGE_CLASSES.put(RAW_DELIVERED, "status-delivered");
+        SHIPPING_BADGE_CLASSES.put(RAW_SUCCESS, "status-delivered");
         SHIPPING_BADGE_CLASSES.put(RAW_FAILED, "status-cancelled");
         SHIPPING_BADGE_CLASSES.put(RAW_CANCELLED, "status-cancelled");
 
@@ -117,6 +120,10 @@ public final class OrderStatusHelper {
             return DISPLAY_PAID;
         }
 
+        if (RAW_SUCCESS.equals(rawStatus)) {
+            return DISPLAY_COMPLETED;
+        }
+
         if (RAW_PENDING.equals(rawStatus)) {
             return DISPLAY_PENDING_APPROVAL;
         }
@@ -130,7 +137,7 @@ public final class OrderStatusHelper {
                 return DISPLAY_SHIPPING;
             }
 
-            if (RAW_DELIVERED.equals(shippingStatus)) {
+            if (RAW_DELIVERED.equals(shippingStatus) || RAW_SUCCESS.equals(shippingStatus)) {
                 return RAW_PAID.equals(paymentStatus) ? DISPLAY_COMPLETED : DISPLAY_RECEIVED;
             }
 
@@ -148,7 +155,7 @@ public final class OrderStatusHelper {
             if (RAW_SHIPPING.equals(shippingStatus)) {
                 return DISPLAY_SHIPPING;
             }
-            if (RAW_DELIVERED.equals(shippingStatus)) {
+            if (RAW_DELIVERED.equals(shippingStatus) || RAW_SUCCESS.equals(shippingStatus)) {
                 return RAW_PAID.equals(paymentStatus) ? DISPLAY_COMPLETED : DISPLAY_RECEIVED;
             }
             return DISPLAY_SHIPPING;

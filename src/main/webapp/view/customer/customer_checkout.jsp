@@ -152,6 +152,26 @@
 
             }
 
+            .voucher-suggestions{margin-top:14px;padding-top:14px;border-top:1px solid #eee}
+            .voucher-suggestions-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;font-weight:700}
+            .voucher-suggestions-title a{color:#c65b3d;text-decoration:none;font-weight:600}
+            .voucher-option{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px;border:1px solid #eadfd9;border-radius:10px;background:#fffaf8}
+            .voucher-option:first-of-type{border-color:#c65b3d;box-shadow:0 0 0 1px rgba(198,91,61,.08)}
+            .voucher-option-icon{width:40px;height:40px;display:grid;place-items:center;flex:0 0 auto;border-radius:8px;background:#c65b3d;color:#fff;font-size:19px}
+            .voucher-option-info{min-width:0;flex:1}.voucher-option-name{font-size:13px;font-weight:750}.voucher-option-save{font-size:12px;color:#198754}
+            .voucher-option button{border:0;background:transparent;color:#c65b3d;font-size:12px;font-weight:750}
+            .voucher-wallet-list{display:grid;gap:8px;margin-top:12px}
+            .voucher-wallet-item{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px;border:1px solid #eadfd9;border-radius:8px;background:#fff}
+            .voucher-wallet-item.inactive{border-color:#e5e7eb;background:#f8f8f8;opacity:.72}
+            .voucher-wallet-value{display:grid;place-items:center;min-height:52px;border-radius:6px;background:#c65b3d;color:#fff;font-size:12px;font-weight:800;text-align:center;line-height:1.2}
+            .voucher-wallet-item.inactive .voucher-wallet-value{background:#9ca3af}
+            .voucher-wallet-main{min-width:0}
+            .voucher-wallet-name{margin:0;color:#25211e;font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .voucher-wallet-meta{margin:2px 0 0;color:#6f665e;font-size:12px;line-height:1.35}
+            .voucher-wallet-expiry{margin:2px 0 0;color:#dc2626;font-size:12px;font-weight:700}
+            .voucher-wallet-action{border:0;background:transparent;color:#c65b3d;font-size:12px;font-weight:800;white-space:nowrap}
+            .voucher-wallet-status{color:#6f665e;font-size:12px;font-weight:800;white-space:nowrap}
+
             .table td{
 
                 vertical-align:middle;
@@ -717,6 +737,7 @@
                     <div class="account-dropdown" role="menu">
                         <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">Profile</a>
                         <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">My Orders</a>
+                        <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">My Vouchers</a>
                         <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">My Wishlist</a>
                         <hr>
                         <a href="${pageContext.request.contextPath}/customer/logout" role="menuitem">Logout</a>
@@ -1145,6 +1166,80 @@
                                         </div>
                                     </c:if>
 
+                                    <c:if test="${not empty suggestedVouchers}">
+                                        <div class="voucher-suggestions">
+                                            <div class="voucher-suggestions-title">
+                                                <span><i class="bi bi-stars"></i> Voucher phù hợp</span>
+                                                <a href="${pageContext.request.contextPath}/customer/vouchers">Xem kho voucher</a>
+                                            </div>
+                                            <c:forEach items="${suggestedVouchers}" var="sv" varStatus="loop" end="2">
+                                                <div class="voucher-option">
+                                                    <span class="voucher-option-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
+                                                    <div class="voucher-option-info">
+                                                        <div class="voucher-option-name"><c:out value="${sv.title}"/> <c:if test="${loop.first}"><span class="badge text-bg-danger">Tốt nhất</span></c:if></div>
+                                                        <div class="voucher-option-save">Tiết kiệm <fmt:formatNumber value="${sv.applicableDiscount}" pattern="#,##0"/> &#8363; · <c:out value="${sv.code}"/></div>
+                                                    </div>
+                                                    <button type="button" class="choose-voucher" data-code="${sv.code}">Chọn</button>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:if>
+
+                                    <c:if test="${not empty customerVouchers}">
+                                        <div class="voucher-suggestions">
+                                            <div class="voucher-suggestions-title">
+                                                <span><i class="bi bi-ticket-perforated"></i> Kho voucher của bạn</span>
+                                                <a href="${pageContext.request.contextPath}/customer/vouchers">Xem tất cả</a>
+                                            </div>
+                                            <div class="voucher-wallet-list">
+                                                <c:forEach items="${customerVouchers}" var="cv" end="3">
+                                                    <article class="voucher-wallet-item ${cv.customerStatus ne 'AVAILABLE' ? 'inactive' : ''}">
+                                                        <div class="voucher-wallet-value">
+                                                            <c:choose>
+                                                                <c:when test="${cv.discountType eq 'PERCENTAGE'}">
+                                                                    -<fmt:formatNumber value="${cv.discountValue}" pattern="#0"/>%
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    -<fmt:formatNumber value="${cv.discountValue}" pattern="#,##0"/>đ
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </div>
+                                                        <div class="voucher-wallet-main">
+                                                            <p class="voucher-wallet-name"><c:out value="${cv.title}"/></p>
+                                                            <p class="voucher-wallet-meta">
+                                                                Đơn tối thiểu <fmt:formatNumber value="${cv.minOrderValue}" pattern="#,##0"/>đ
+                                                                <c:if test="${cv.discountType eq 'PERCENTAGE' and cv.maxDiscountAmount != null}">
+                                                                    · Giảm tối đa <fmt:formatNumber value="${cv.maxDiscountAmount}" pattern="#,##0"/>đ
+                                                                </c:if>
+                                                            </p>
+                                                            <p class="voucher-wallet-expiry">
+                                                                <c:choose>
+                                                                    <c:when test="${cv.customerStatus eq 'EXPIRED'}">Đã hết hạn</c:when>
+                                                                    <c:when test="${cv.customerStatus eq 'USED'}">Đã sử dụng</c:when>
+                                                                    <c:when test="${cv.daysRemaining <= 2}">Hết hạn sau ${cv.daysRemaining} ngày nữa</c:when>
+                                                                    <c:otherwise>Hạn dùng: <fmt:formatDate value="${cv.endDate}" pattern="dd/MM/yyyy"/></c:otherwise>
+                                                                </c:choose>
+                                                            </p>
+                                                        </div>
+                                                        <c:choose>
+                                                            <c:when test="${cv.customerStatus eq 'AVAILABLE'}">
+                                                                <button type="button" class="voucher-wallet-action choose-voucher" data-code="${cv.code}">Chọn</button>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="voucher-wallet-status">
+                                                                    <c:choose>
+                                                                        <c:when test="${cv.customerStatus eq 'USED'}">Đã dùng</c:when>
+                                                                        <c:otherwise>Hết hạn</c:otherwise>
+                                                                    </c:choose>
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </article>
+                                                </c:forEach>
+                                            </div>
+                                        </div>
+                                    </c:if>
+
                                 </div>
 
                                 <hr>
@@ -1253,6 +1348,18 @@
                 });
             }());
         </script>
+
+    <script>
+        document.querySelectorAll('.choose-voucher').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var input = document.querySelector('input[name="voucherCode"]');
+                if (input) {
+                    input.value = button.dataset.code;
+                    button.closest('form').querySelector('button[value="applyVoucher"]').click();
+                }
+            });
+        });
+    </script>
 
     </body>
 

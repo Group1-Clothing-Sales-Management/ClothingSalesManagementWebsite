@@ -66,8 +66,8 @@ public class CustomerOrderHistoryController extends HttpServlet {
 
         if (result.isSuccess()) {
             session.setAttribute("cart", service.getCartMap(userId));
-            session.setAttribute("cartMessage", result.getMessage());
-            response.sendRedirect(request.getContextPath() + "/cart?skipMerge=1");
+            session.setAttribute("checkoutSelectedVariantIds", result.getVariantIds());
+            response.sendRedirect(request.getContextPath() + "/customer/checkout");
         } else {
             session.setAttribute("orderError", result.getMessage());
             response.sendRedirect(buildHistoryRedirect(request));

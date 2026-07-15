@@ -15,6 +15,8 @@ public class Order {
     private String orderCode;
     private int userId;
     private int voucherId;
+    private String voucherCode;
+    private String voucherTitle;
     private int shipmentId;
     private String recipientName;
     private String recipientPhone;
@@ -107,6 +109,22 @@ public class Order {
 
     public void setVoucherId(int voucherId) {
         this.voucherId = voucherId;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
+    }
+
+    public String getVoucherTitle() {
+        return voucherTitle;
+    }
+
+    public void setVoucherTitle(String voucherTitle) {
+        this.voucherTitle = voucherTitle;
     }
 
     public int getShipmentId() {

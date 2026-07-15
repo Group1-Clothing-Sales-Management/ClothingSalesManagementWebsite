@@ -532,25 +532,66 @@
             cursor:pointer;
         }
 
-        .alert {
-            border:1px solid #bae6e1;
+        .cart-toast {
+            position:fixed;
+            z-index:1080;
+            top:50%;
+            left:50%;
+            transform:translate(-50%, -50%);
+            width:min(360px, calc(100vw - 40px));
+            min-height:180px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:18px;
+            padding:28px 30px;
+            border:0;
             border-radius:3px;
-            background:#ecfdf5;
-            color:var(--cart-accent);
-            overflow:hidden;
-            transition:opacity .28s ease, transform .28s ease, max-height .28s ease,
-                       margin .28s ease, padding .28s ease, border-width .28s ease;
+            background:rgba(0, 0, 0, .68);
+            color:#fff;
+            text-align:center;
+            box-shadow:0 16px 42px rgba(0,0,0,.18);
+            animation:cart-toast-in .25s ease-out both;
         }
 
-        .alert.is-hiding {
-            max-height:0;
-            margin-top:0;
-            margin-bottom:0;
-            padding-top:0;
-            padding-bottom:0;
-            border-width:0;
-            opacity:0;
-            transform:translateY(-6px);
+        .cart-toast > i {
+            width:72px;
+            height:72px;
+            display:inline-flex;
+            flex:0 0 72px;
+            align-items:center;
+            justify-content:center;
+            border-radius:50%;
+            background:#00bfa5;
+            color:#fff;
+            font-size:36px;
+            box-shadow:0 8px 18px rgba(0,0,0,.18);
+        }
+        .cart-toast-message {
+            max-width:100%;
+            line-height:1.45;
+            font-size:18px;
+            font-weight:500;
+            color:#fff;
+        }
+        .cart-toast-close {
+            border:0;
+            width:1px;
+            height:1px;
+            position:absolute;
+            overflow:hidden;
+            clip:rect(0 0 0 0);
+            background:transparent;
+        }
+        .cart-toast.is-hiding { animation:cart-toast-out .2s ease-in both; }
+
+        @keyframes cart-toast-in {
+            from { opacity:0; transform:translate(-50%, -50%) scale(.94); }
+            to { opacity:1; transform:translate(-50%, -50%) scale(1); }
+        }
+        @keyframes cart-toast-out {
+            to { opacity:0; transform:translate(-50%, -50%) scale(.94); }
         }
 
         .empty-state {
@@ -579,6 +620,12 @@
         @media (max-width: 992px) {
             body {
                 padding-bottom:136px;
+            }
+
+            .cart-toast {
+                width:min(320px, calc(100vw - 32px));
+                min-height:160px;
+                padding:24px 22px;
             }
 
             .cart-brand-row {
@@ -733,7 +780,13 @@
         </div>
 
         <% if (request.getAttribute("cartMessage") != null) { %>
-            <div id="cartFlashMessage" class="alert alert-info"><%= request.getAttribute("cartMessage") %></div>
+            <div id="cartFlashMessage" class="cart-toast" role="status" aria-live="polite">
+                <i class="fa-solid fa-check"></i>
+                <span class="cart-toast-message"><c:out value="${cartMessage}"/></span>
+                <button type="button" class="cart-toast-close" aria-label="Close notification">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         <% } %>
 
         <% if (items == null || items.isEmpty()) { %>
@@ -1073,12 +1126,17 @@
 
         var cartFlashMessage = document.getElementById('cartFlashMessage');
         if (cartFlashMessage) {
-            setTimeout(function() {
+            var cartFlashTimer;
+            function closeCartFlashMessage() {
+                clearTimeout(cartFlashTimer);
                 cartFlashMessage.classList.add('is-hiding');
                 setTimeout(function() {
                     cartFlashMessage.remove();
-                }, 320);
-            }, 5000);
+                }, 220);
+            }
+            cartFlashMessage.querySelector('.cart-toast-close')
+                    .addEventListener('click', closeCartFlashMessage);
+            cartFlashTimer = setTimeout(closeCartFlashMessage, 3000);
         }
 
         var cartSelectInputs = document.querySelectorAll('.cart-select-input');
