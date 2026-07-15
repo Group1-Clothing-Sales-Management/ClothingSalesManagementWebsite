@@ -139,7 +139,12 @@ public class AdminManageProductDAO {
                 psProd.setString(6, p.getLongDescription());
                 psProd.setString(7, p.getStatus());
                 psProd.setInt(8, p.getId());
-                psProd.executeUpdate();
+                int updatedRows = psProd.executeUpdate();
+
+                if (updatedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
 
                 if (imageName != null) {
                     boolean hasMainImg = false;
@@ -455,15 +460,26 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean updateVariantStatus(int variantId, String status) {
-        String sql = "UPDATE Product_Variant SET status = ? WHERE id = ?";
+    public boolean updateVariantStatus(
+            int productId,
+            int variantId,
+            String status
+    ) {
+        String sql = "UPDATE Product_Variant "
+                + "SET status = ? "
+                + "WHERE id = ? AND product_id = ?";
+
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, status);
             ps.setInt(2, variantId);
+            ps.setInt(3, productId);
+
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Error updating variant status: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println(
+                    "Error updating variant status: " + e.getMessage()
+            );
             return false;
         }
     }

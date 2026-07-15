@@ -27,10 +27,18 @@ public class CustomerViewProductController extends HttpServlet {
 
         String keyword = request.getParameter("keyword");
 
+        Integer categoryId = null;
         Double minPrice = null;
         Double maxPrice = null;
 
         try {
+            if (request.getParameter("categoryId") != null
+                    && !request.getParameter("categoryId").isBlank()) {
+
+                categoryId = Integer.parseInt(
+                        request.getParameter("categoryId"));
+            }
+
             if (request.getParameter("minPrice") != null
                     && !request.getParameter("minPrice").isBlank()) {
 
@@ -53,13 +61,14 @@ public class CustomerViewProductController extends HttpServlet {
         List<Product> products
                 = service.getProducts(
                         keyword,
-                        null,
+                        categoryId,
                         null,
                         minPrice,
                         maxPrice,
                         sort);
 
         request.setAttribute("products", products);
+        request.setAttribute("selectedCategoryId", categoryId);
         populateWishlistState(request);
 
         request.getRequestDispatcher(

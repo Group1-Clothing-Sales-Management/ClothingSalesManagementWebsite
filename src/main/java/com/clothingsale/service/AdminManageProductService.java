@@ -5,6 +5,8 @@ import com.clothingsale.model.Brand;
 import com.clothingsale.model.Category;
 import com.clothingsale.model.Product;
 import java.util.List;
+import java.text.Normalizer;
+import java.util.Locale;
 
 public class AdminManageProductService {
 
@@ -48,9 +50,82 @@ public class AdminManageProductService {
         return productDAO.getVariantsByProductId(productId);
     }
 
-    public boolean updateVariantStatus(int variantId, String status) {
-        return productDAO.updateVariantStatus(variantId, status);
+    public String validateProduct(Product product) {
+    if (product == null) {
+        return "invalid-product";
     }
+
+    String productName = product.getProductName();
+
+    if (productName == null || productName.trim().isEmpty()) {
+        return "name-required";
+    }
+
+    if (productName.trim().length() > 150) {
+        return "name-too-long";
+    }
+
+    if (product.getCategoryId() <= 0) {
+        return "category-required";
+    }
+
+    String status = product.getStatus();
+
+    if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
+        return "invalid-status";
+    }
+
+    product.setProductName(productName.trim());
+
+    if (product.getShortDescription() != null) {
+        product.setShortDescription(product.getShortDescription().trim());
+    }
+
+    if (product.getLongDescription() != null) {
+        product.setLongDescription(product.getLongDescription().trim());
+    }
+
+    return null;
+}
+
+public String generateSlug(String productName, int productId) {
+    String slug = Normalizer.normalize(
+            productName.trim(),
+            Normalizer.Form.NFD
+    );
+
+    slug = slug.replaceAll("\\p{M}", "");
+    slug = slug.replace('đ', 'd').replace('Đ', 'D');
+    slug = slug.toLowerCase(Locale.ROOT);
+    slug = slug.replaceAll("[^a-z0-9]+", "-");
+    slug = slug.replaceAll("^-|-$", "");
+
+    if (slug.isEmpty()) {
+        slug = "product";
+    }
+
+    return slug + "-" + productId;
+}
+
+public boolean updateVariantStatus(
+        int productId,
+        int variantId,
+        String status
+) {
+    if (productId <= 0 || variantId <= 0) {
+        return false;
+    }
+
+    if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
+        return false;
+    }
+
+    return productDAO.updateVariantStatus(
+            productId,
+            variantId,
+            status
+    );
+}
 
     public boolean addSingleVariant(com.clothingsale.model.ProductVariant variant) {
         return productDAO.insertSingleVariant(variant);

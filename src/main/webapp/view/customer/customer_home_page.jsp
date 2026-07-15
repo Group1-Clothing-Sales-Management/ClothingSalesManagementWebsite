@@ -1002,6 +1002,7 @@
                 <c:if test="${hasMoreProducts}">
                     <c:url var="productsPageUrl" value="/products">
                         <c:param name="keyword" value="${param.keyword}"/>
+                        <c:param name="categoryId" value="${param.categoryId}"/>
                         <c:param name="minPrice" value="${param.minPrice}"/>
                         <c:param name="maxPrice" value="${param.maxPrice}"/>
                         <c:param name="sort" value="${param.sort}"/>

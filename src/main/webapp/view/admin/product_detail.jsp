@@ -179,45 +179,45 @@
             </div>
         </div>
 
-        <c:url value="/admin/products" var="adminProductUrl" />
+        <form id="masterStatusForm"
+      action="${pageContext.request.contextPath}/admin/manage-product"
+      method="POST"
+      class="d-none">
 
-        <form id="masterStatusForm" action="${adminProductUrl}" method="POST" style="display:none;">
-            <input type="hidden" name="action" value="updateVariantStatus">
-            <input type="hidden" name="productId" id="submitProductId">
-            <input type="hidden" name="variantId" id="submitVariantId">
-            <input type="hidden" name="newStatus" id="submitNewStatus">
-        </form>
+    <input type="hidden" name="action" value="UPDATE_VARIANT_STATUS">
+    <input type="hidden" name="productId" id="submitProductId">
+    <input type="hidden" name="variantId" id="submitVariantId">
+    <input type="hidden" name="status" id="submitVariantStatus">
+</form>
     </body>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
                    function changeVariantStatus(variantId, nextStatus, productId) {
-                       const statusText = nextStatus === 'Active' ? 'Activate' : 'Deactivate';
-                       const confirmButtonColor = nextStatus === 'Active' ? '#198754' : '#dc3545';
+    const isActivating = nextStatus === 'ACTIVE';
+    const actionText = isActivating ? 'activate' : 'deactivate';
 
-                       Swal.fire({
-                           title: 'Change Status?',
-                           text: `Are you sure you want to change this variant status to ${nextStatus}?`,
-                           icon: 'question',
-                           showCancelButton: true,
-                           confirmButtonColor: confirmButtonColor,
-                           cancelButtonColor: '#6c757d',
-                           confirmButtonText: `Yes, ${statusText}!`,
-                           cancelButtonText: 'Cancel',
-                           background: '#ffffff',
-                           customClass: {
-                               popup: 'rounded-4 shadow-lg'
-                           }
-                       }).then((result) => {
-                           if (result.isConfirmed) {
-                               // Nạp dữ liệu vào form tổng và submit
-                               document.getElementById('submitProductId').value = productId;
-                               document.getElementById('submitVariantId').value = variantId;
-                               document.getElementById('submitNewStatus').value = nextStatus;
+    Swal.fire({
+        title: isActivating ? 'Activate Variant?' : 'Deactivate Variant?',
+        text: `Are you sure you want to ${actionText} this variant?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: isActivating ? '#198754' : '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: isActivating
+                ? 'Yes, activate it'
+                : 'Yes, deactivate it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
 
-                               document.getElementById('masterStatusForm').submit();
-                           }
-                       });
-                   }
+        document.getElementById('submitProductId').value = productId;
+        document.getElementById('submitVariantId').value = variantId;
+        document.getElementById('submitVariantStatus').value = nextStatus;
+        document.getElementById('masterStatusForm').submit();
+    });
+}
 
                    // Hiển thị Toast thông báo thành công sau khi trang reload lại
                    document.addEventListener("DOMContentLoaded", function () {
