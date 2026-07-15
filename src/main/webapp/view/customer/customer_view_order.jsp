@@ -123,144 +123,6 @@
                 color:#b42318;
             }
 
-            .voucher-strip {
-                margin-bottom:12px;
-                padding:16px 18px;
-                background:#fff;
-                box-shadow:0 1px 2px rgba(0,0,0,.05);
-            }
-
-            .voucher-strip-head {
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:12px;
-                margin-bottom:12px;
-            }
-
-            .voucher-strip-title {
-                display:flex;
-                align-items:center;
-                gap:8px;
-                margin:0;
-                color:#222;
-                font-size:16px;
-                font-weight:700;
-            }
-
-            .voucher-strip-title i { color:var(--order-danger); }
-
-            .voucher-strip-link {
-                color:var(--order-danger);
-                font-size:13px;
-                font-weight:700;
-                text-decoration:none;
-                white-space:nowrap;
-            }
-
-            .voucher-list {
-                display:grid;
-                grid-template-columns:repeat(3, minmax(0, 1fr));
-                gap:10px;
-            }
-
-            .voucher-card {
-                display:grid;
-                grid-template-columns:92px minmax(0, 1fr);
-                min-height:118px;
-                overflow:hidden;
-                border:1px solid #f0d3c9;
-                border-radius:8px;
-                background:#fffaf7;
-            }
-
-            .voucher-card.inactive {
-                border-color:#e5e7eb;
-                background:#f8f8f8;
-                opacity:.72;
-            }
-
-            .voucher-value {
-                display:flex;
-                flex-direction:column;
-                align-items:center;
-                justify-content:center;
-                gap:6px;
-                padding:12px 8px;
-                background:var(--order-danger);
-                color:#fff;
-                text-align:center;
-            }
-
-            .voucher-card.inactive .voucher-value { background:#9ca3af; }
-
-            .voucher-value strong {
-                font-size:17px;
-                line-height:1.15;
-            }
-
-            .voucher-value span {
-                font-size:11px;
-                font-weight:700;
-                text-transform:uppercase;
-            }
-
-            .voucher-info {
-                min-width:0;
-                padding:11px 12px;
-            }
-
-            .voucher-name {
-                margin:0 0 5px;
-                font-size:14px;
-                font-weight:700;
-                white-space:nowrap;
-                overflow:hidden;
-                text-overflow:ellipsis;
-            }
-
-            .voucher-condition,
-            .voucher-expiry {
-                margin:0 0 4px;
-                color:#6b7280;
-                font-size:12px;
-                line-height:1.35;
-            }
-
-            .voucher-expiry {
-                color:#dc2626;
-                font-weight:700;
-            }
-
-            .voucher-actions {
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:8px;
-                margin-top:8px;
-            }
-
-            .voucher-status {
-                font-size:12px;
-                font-weight:700;
-                color:#15803d;
-            }
-
-            .voucher-status.expired,
-            .voucher-status.used { color:#6b7280; }
-
-            .voucher-copy,
-            .voucher-use {
-                border:0;
-                background:transparent;
-                color:var(--order-danger);
-                font-size:12px;
-                font-weight:700;
-                text-decoration:none;
-                cursor:pointer;
-                white-space:nowrap;
-            }
-
             .orders-list {
                 display:grid;
                 gap:12px;
@@ -563,9 +425,6 @@
 
                 .orders-tabs { margin-bottom:10px; }
                 .orders-tab { flex-basis:116px; font-size:13px; }
-                .voucher-strip { padding:14px 16px; }
-                .voucher-list { grid-template-columns:1fr; }
-                .voucher-card { grid-template-columns:84px minmax(0, 1fr); }
 
                 .shop-header {
                     align-items:flex-start;
@@ -651,72 +510,6 @@
                 </div>
             </c:if>
 
-            <c:if test="${not empty customerVouchers}">
-                <section class="voucher-strip" aria-label="Customer vouchers">
-                    <div class="voucher-strip-head">
-                        <h2 class="voucher-strip-title">
-                            <i class="fa-solid fa-ticket"></i>
-                            Voucher của bạn
-                        </h2>
-                        <a class="voucher-strip-link" href="${pageContext.request.contextPath}/customer/vouchers">Xem tất cả</a>
-                    </div>
-
-                    <div class="voucher-list">
-                        <c:forEach items="${customerVouchers}" var="v" varStatus="loop" end="2">
-                            <article class="voucher-card ${v.customerStatus ne 'AVAILABLE' ? 'inactive' : ''}">
-                                <div class="voucher-value">
-                                    <span>Voucher</span>
-                                    <strong>
-                                        <c:choose>
-                                            <c:when test="${v.discountType eq 'PERCENTAGE'}">
-                                                Giảm <fmt:formatNumber value="${v.discountValue}" pattern="#0"/>%
-                                            </c:when>
-                                            <c:otherwise>
-                                                Giảm <fmt:formatNumber value="${v.discountValue}" pattern="#,##0"/>đ
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </strong>
-                                </div>
-                                <div class="voucher-info">
-                                    <p class="voucher-name"><c:out value="${v.title}"/></p>
-                                    <p class="voucher-condition">
-                                        Đơn tối thiểu <fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/>đ
-                                        <c:if test="${v.discountType eq 'PERCENTAGE' and v.maxDiscountAmount != null}">
-                                            · Tối đa <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/>đ
-                                        </c:if>
-                                    </p>
-                                    <p class="voucher-expiry">
-                                        <c:choose>
-                                            <c:when test="${v.customerStatus eq 'EXPIRED'}">Đã hết hạn</c:when>
-                                            <c:when test="${v.customerStatus eq 'USED'}">Đã sử dụng</c:when>
-                                            <c:when test="${v.daysRemaining <= 2}">Hết hạn sau ${v.daysRemaining} ngày nữa</c:when>
-                                            <c:otherwise>Hạn dùng: <fmt:formatDate value="${v.endDate}" pattern="dd/MM/yyyy"/></c:otherwise>
-                                        </c:choose>
-                                    </p>
-                                    <div class="voucher-actions">
-                                        <span class="voucher-status ${v.customerStatus eq 'EXPIRED' ? 'expired' : v.customerStatus eq 'USED' ? 'used' : ''}">
-                                            <c:choose>
-                                                <c:when test="${v.customerStatus eq 'AVAILABLE'}">Còn hạn</c:when>
-                                                <c:when test="${v.customerStatus eq 'USED'}">Đã sử dụng</c:when>
-                                                <c:otherwise>Hết hạn</c:otherwise>
-                                            </c:choose>
-                                        </span>
-                                        <c:choose>
-                                            <c:when test="${v.customerStatus eq 'AVAILABLE'}">
-                                                <a class="voucher-use" href="${pageContext.request.contextPath}/customer/checkout?voucherCode=${v.code}">Dùng ngay</a>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <button class="voucher-copy" type="button" data-copy-voucher="${v.code}">Copy mã</button>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                            </article>
-                        </c:forEach>
-                    </div>
-                </section>
-            </c:if>
-
             <c:set var="hasVisibleOrder" value="false"/>
             <section class="orders-list" id="ordersList">
                 <c:forEach items="${orders}" var="o">
@@ -749,6 +542,7 @@
                     <c:if test="${o.orderStatus eq 'RETURNED' or o.displayStatus eq 'RETURNED' or o.shippingStatus eq 'RETURNED'}">
                         <c:set var="statusClass" value="status-returned"/>
                     </c:if>
+                    <c:set var="canBuyAgain" value="${o.displayStatus eq 'COMPLETED' or o.displayStatus eq 'CANCELLED' or o.orderStatus eq 'COMPLETED' or o.orderStatus eq 'SUCCESS' or o.orderStatus eq 'CANCELLED' or o.orderStatus eq 'FAILED' or o.shippingStatus eq 'CANCELLED' or o.shippingStatus eq 'FAILED'}"/>
 
                     <article class="order-card" data-order-search>
                         <header class="shop-header">
@@ -863,14 +657,16 @@
                                     </form>
                                 </c:if>
 
-                                <form method="post" action="${pageContext.request.contextPath}/customer/orders">
-                                    <input type="hidden" name="action" value="reorder">
-                                    <c:if test="${not empty param.status}">
-                                        <input type="hidden" name="status" value="${param.status}">
-                                    </c:if>
-                                    <input type="hidden" name="orderId" value="${o.id}">
-                                    <button class="order-action primary" type="submit">Buy Again</button>
-                                </form>
+                                <c:if test="${canBuyAgain}">
+                                    <form method="post" action="${pageContext.request.contextPath}/customer/orders">
+                                        <input type="hidden" name="action" value="reorder">
+                                        <c:if test="${not empty param.status}">
+                                            <input type="hidden" name="status" value="${param.status}">
+                                        </c:if>
+                                        <input type="hidden" name="orderId" value="${o.id}">
+                                        <button class="order-action primary" type="submit">Buy Again</button>
+                                    </form>
+                                </c:if>
                             </div>
                         </footer>
                     </article>

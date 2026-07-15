@@ -63,9 +63,6 @@ public class CustomerViewOrderController
 
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute(
-                "customerVouchers",
-                service.getVouchersForUser(userId));
-        request.setAttribute(
                 "orders",
                 filterOrders(
                         service.getOrdersByUserId(userId),
