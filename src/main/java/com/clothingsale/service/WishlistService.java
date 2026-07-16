@@ -4,7 +4,10 @@ import com.clothingsale.dao.CustomerProductDAO;
 import com.clothingsale.dao.WishlistDAO;
 import com.clothingsale.model.ProductVariant;
 import com.clothingsale.model.WishlistItem;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class WishlistService {
@@ -14,11 +17,20 @@ public class WishlistService {
 
     public List<WishlistItem> getWishlist(int userId) {
         List<WishlistItem> items = wishlistDAO.findByUserId(userId);
+        List<Integer> productIds = new ArrayList<>();
 
         for (WishlistItem item : items) {
-            List<ProductVariant> variants
-                    = productDAO.getVariantsByProductId(item.getProductId());
-            item.setAvailableVariants(variants);
+            if (item != null && item.getProductId() > 0) {
+                productIds.add(item.getProductId());
+            }
+        }
+
+        Map<Integer, List<ProductVariant>> variantsByProductId
+                = productDAO.getVariantsByProductIds(productIds);
+
+        for (WishlistItem item : items) {
+            List<ProductVariant> variants = variantsByProductId.get(item.getProductId());
+            item.setAvailableVariants(variants != null ? variants : Collections.emptyList());
         }
 
         return items;

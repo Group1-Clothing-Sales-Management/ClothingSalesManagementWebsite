@@ -751,7 +751,9 @@
                                 <img
                                     src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
                                     class="card-img-top product-image"
-                                    alt="${p.productName}">
+                                    alt="${p.productName}"
+                                    loading="lazy"
+                                    decoding="async">
 
                             </a>
 

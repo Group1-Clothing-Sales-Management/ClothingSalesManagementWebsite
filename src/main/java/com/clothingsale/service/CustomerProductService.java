@@ -5,7 +5,10 @@ import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
 import com.clothingsale.model.CartItem;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class CustomerProductService {
 
@@ -28,13 +31,31 @@ public class CustomerProductService {
                 sort
         );
 
-        for (Product product : products) {
+        populateVariants(products);
 
-            List<ProductVariant> variants
-                    = productDAO.getVariantsByProductId(product.getId());
+        return products;
+    }
 
-            product.setVariants(variants);
-        }
+    public List<Product> getProducts(
+            String keyword,
+            Integer categoryId,
+            Integer brandId,
+            Double minPrice,
+            Double maxPrice,
+            String sort,
+            int limit) {
+
+        List<Product> products = productDAO.getProducts(
+                keyword,
+                categoryId,
+                brandId,
+                minPrice,
+                maxPrice,
+                sort,
+                limit
+        );
+
+        populateVariants(products);
 
         return products;
     }
@@ -55,5 +76,26 @@ public class CustomerProductService {
     return productDAO.getBuyNowItem(
             variantId,
             quantity);
-}   
+}
+
+    private void populateVariants(List<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return;
+        }
+
+        List<Integer> productIds = new ArrayList<>();
+        for (Product product : products) {
+            if (product != null) {
+                productIds.add(product.getId());
+            }
+        }
+
+        Map<Integer, List<ProductVariant>> variantsByProductId
+                = productDAO.getVariantsByProductIds(productIds);
+
+        for (Product product : products) {
+            List<ProductVariant> variants = variantsByProductId.get(product.getId());
+            product.setVariants(variants != null ? variants : Collections.emptyList());
+        }
+    }
 }

@@ -18,6 +18,7 @@ import com.clothingsale.model.Voucher;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 
 public class CustomerOrderService {
@@ -198,9 +199,20 @@ public class CustomerOrderService {
 
     public List<Order> getOrdersByUserId(int userId) {
         List<Order> orders = dao.getOrdersByUserId(userId);
+        List<Integer> orderIds = new ArrayList<>();
+        for (Order order : orders) {
+            if (order != null) {
+                orderIds.add(order.getId());
+            }
+        }
+
+        Map<Integer, List<OrderDetail>> detailsByOrderId
+                = dao.getOrderDetailsByOrderIds(userId, orderIds);
+
         for (Order order : orders) {
             enrichOrder(order);
-            order.setDetails(dao.getOrderDetailsByOrderId(order.getId(), userId));
+            List<OrderDetail> details = detailsByOrderId.get(order.getId());
+            order.setDetails(details != null ? details : Collections.emptyList());
         }
         return orders;
     }

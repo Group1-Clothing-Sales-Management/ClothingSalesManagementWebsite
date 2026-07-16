@@ -6,6 +6,7 @@ import com.clothingsale.model.CartItem;
 import com.clothingsale.model.ProductVariant;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,16 +106,15 @@ public class CartController extends HttpServlet {
                 }
             }
             Collection<CartItem> items = cart.values();
-            Map<Integer, List<ProductVariant>> variantsByProductId = new HashMap<>();
+            Set<Integer> productIds = new HashSet<>();
             CustomerProductDAO productDAO = new CustomerProductDAO();
             for (CartItem item : items) {
-                if (item != null && item.getProductId() > 0
-                        && !variantsByProductId.containsKey(item.getProductId())) {
-                    variantsByProductId.put(
-                            item.getProductId(),
-                            productDAO.getVariantsByProductId(item.getProductId()));
+                if (item != null && item.getProductId() > 0) {
+                    productIds.add(item.getProductId());
                 }
             }
+            Map<Integer, List<ProductVariant>> variantsByProductId
+                    = productDAO.getVariantsByProductIds(new ArrayList<>(productIds));
             request.setAttribute("items", items);
             request.setAttribute("variantsByProductId", variantsByProductId);
             request.getRequestDispatcher("/view/cart.jsp").forward(request, response);
@@ -476,6 +476,13 @@ public class CartController extends HttpServlet {
         }
 
         boolean changed = false;
+        Set<Integer> variantIds = new HashSet<>();
+        for (CartItem item : cart.values()) {
+            if (item != null && item.getVariantId() > 0) {
+                variantIds.add(item.getVariantId());
+            }
+        }
+        Map<Integer, Integer> stocksByVariantId = dao.getAvailableStockByVariantIds(variantIds);
         Iterator<Map.Entry<Integer, CartItem>> iterator = cart.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<Integer, CartItem> entry = iterator.next();
@@ -486,7 +493,7 @@ public class CartController extends HttpServlet {
                 continue;
             }
 
-            int stock = dao.getAvailableStock(item.getVariantId());
+            int stock = stocksByVariantId.getOrDefault(item.getVariantId(), 0);
             if (stock <= 0) {
                 iterator.remove();
                 changed = true;

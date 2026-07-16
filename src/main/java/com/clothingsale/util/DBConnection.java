@@ -6,30 +6,38 @@ import java.sql.SQLException;
 
 public class DBConnection {
 
-    // Cấu hình kết nối SQL Server
     private static final String JDBC_URL
             = "jdbc:sqlserver://localhost:1433;databaseName=ClothesShopDB;encrypt=true;trustServerCertificate=true;";
 
     private static final String USER = "sa";
     private static final String PASSWORD = "123456";
+    private static final boolean DRIVER_LOADED = loadDriver();
 
-    public static Connection getConnection() {
-        Connection conn = null;
+    private static boolean loadDriver() {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            conn = DriverManager.getConnection(JDBC_URL, USER, PASSWORD);
-            System.out.println("✅ Kết nối Database ClothingSale thành công!");
+            return true;
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ Không tìm thấy Driver SQL Server!");
+            System.err.println("Could not find SQL Server JDBC driver.");
             e.printStackTrace();
-        } catch (SQLException e) {
-            System.err.println("❌ Lỗi kết nối Database! Kiểm tra tên DB, user, password.");
-            e.printStackTrace();
+            return false;
         }
-        return conn;
     }
 
-    // Đóng connection an toàn
+    public static Connection getConnection() {
+        if (!DRIVER_LOADED) {
+            return null;
+        }
+
+        try {
+            return DriverManager.getConnection(JDBC_URL, USER, PASSWORD);
+        } catch (SQLException e) {
+            System.err.println("Database connection failed. Check DB name, user, or password.");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static void closeConnection(Connection conn) {
         try {
             if (conn != null && !conn.isClosed()) {
@@ -40,22 +48,17 @@ public class DBConnection {
         }
     }
 
-    // Hàm main dùng để test kết nối trực tiếp
     public static void main(String[] args) {
-        System.out.println("Đang kiểm tra kết nối...");
+        System.out.println("Checking database connection...");
 
-        // Gọi hàm getConnection() để mở kết nối
         Connection testConn = DBConnection.getConnection();
 
-        // Kiểm tra kết quả
         if (testConn != null) {
-            System.out.println(" Thử nghiệm thành công: Đối tượng Connection không bị null.");
-
-            // Đóng kết nối sau khi test xong để giải phóng tài nguyên
+            System.out.println("Connection test succeeded.");
             DBConnection.closeConnection(testConn);
-            System.out.println("🔒 Đã đóng kết nối test an toàn.");
+            System.out.println("Test connection closed.");
         } else {
-            System.err.println(" Kết nối thất bại. Vui lòng kiểm tra lại cấu hình SQL Server hoặc Driver.");
+            System.err.println("Connection test failed.");
         }
     }
 }

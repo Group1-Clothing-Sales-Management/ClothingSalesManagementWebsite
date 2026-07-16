@@ -68,19 +68,20 @@ public class CustomerHomePageController extends HttpServlet {
             }
 
             // Lấy danh sách sản phẩm
-            List<Product> allProducts = productService.getProducts(
+            List<Product> loadedProducts = productService.getProducts(
                     keyword,
                     categoryId,
                     brandId,
                     minPrice,
                     maxPrice,
-                    sort
+                    sort,
+                    HOME_PRODUCT_LIMIT + 1
             );
 
-            boolean hasMoreProducts = allProducts.size() > HOME_PRODUCT_LIMIT;
+            boolean hasMoreProducts = loadedProducts.size() > HOME_PRODUCT_LIMIT;
             List<Product> products = hasMoreProducts
-                    ? allProducts.subList(0, HOME_PRODUCT_LIMIT)
-                    : allProducts;
+                    ? loadedProducts.subList(0, HOME_PRODUCT_LIMIT)
+                    : loadedProducts;
 
             request.setAttribute("products", products);
             request.setAttribute("hasMoreProducts", hasMoreProducts);
