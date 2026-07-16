@@ -190,6 +190,81 @@ CREATE TABLE dbo.Product_Variant (
 );
 END
 
+-- 13a. Bổ sung dữ liệu phục vụ quản lý giá biến thể sản phẩm.
+-- Các câu lệnh này có thể chạy lại an toàn trên database đã tồn tại.
+IF COL_LENGTH(N'dbo.Product_Variant', N'list_price') IS NULL
+    ALTER TABLE dbo.Product_Variant ADD list_price DECIMAL(18,2) NULL;
+
+IF COL_LENGTH(N'dbo.Product_Variant', N'price_updated_at') IS NULL
+    ALTER TABLE dbo.Product_Variant ADD price_updated_at DATETIME2 NULL;
+
+IF COL_LENGTH(N'dbo.Product_Variant', N'price_updated_by') IS NULL
+    ALTER TABLE dbo.Product_Variant ADD price_updated_by INT NULL;
+
+-- Các variant cũ chưa có giá niêm yết riêng: giữ nguyên hành vi hiện tại
+-- bằng cách khởi tạo list_price theo sale_price.
+UPDATE dbo.Product_Variant
+SET list_price = sale_price
+WHERE list_price IS NULL;
+
+IF OBJECT_ID(N'dbo.Product_Variant_Price_History', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Product_Variant_Price_History (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    variant_id INT NULL,
+    product_name_snapshot NVARCHAR(255) NOT NULL,
+    sku_snapshot VARCHAR(50) NOT NULL,
+    color_snapshot NVARCHAR(100) NULL,
+    size_snapshot NVARCHAR(100) NULL,
+    old_list_price DECIMAL(18,2) NULL,
+    new_list_price DECIMAL(18,2) NOT NULL,
+    old_sale_price DECIMAL(18,2) NULL,
+    new_sale_price DECIMAL(18,2) NOT NULL,
+    cost_price_snapshot DECIMAL(18,2) NOT NULL,
+    change_type VARCHAR(50) NOT NULL,
+    change_reason NVARCHAR(500) NULL,
+    changed_by INT NULL,
+    changed_by_name_snapshot NVARCHAR(100) NULL,
+    changed_at DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Product_Variant_Price_History_Variant'
+      AND parent_object_id = OBJECT_ID(N'dbo.Product_Variant_Price_History')
+)
+BEGIN
+    ALTER TABLE dbo.Product_Variant_Price_History
+        ADD CONSTRAINT FK_Product_Variant_Price_History_Variant
+        FOREIGN KEY (variant_id) REFERENCES dbo.Product_Variant(id)
+        ON DELETE SET NULL;
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Product_Variant_Price_History_User'
+      AND parent_object_id = OBJECT_ID(N'dbo.Product_Variant_Price_History')
+)
+BEGIN
+    ALTER TABLE dbo.Product_Variant_Price_History
+        ADD CONSTRAINT FK_Product_Variant_Price_History_User
+        FOREIGN KEY (changed_by) REFERENCES dbo.[User](id)
+        ON DELETE SET NULL;
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+    WHERE name = N'FK_Product_Variant_Price_Updated_By'
+      AND parent_object_id = OBJECT_ID(N'dbo.Product_Variant')
+)
+BEGIN
+    ALTER TABLE dbo.Product_Variant
+        ADD CONSTRAINT FK_Product_Variant_Price_Updated_By
+        FOREIGN KEY (price_updated_by) REFERENCES dbo.[User](id)
+        ON DELETE SET NULL;
+END
+
 -- 14. Bảng Thuộc tính (Size, Color, Material...)
 IF OBJECT_ID(N'dbo.Attribute', N'U') IS NULL
 BEGIN

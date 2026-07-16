@@ -142,6 +142,8 @@ public class AuthFilter extends HttpFilter {
                 || path.startsWith("/AdminManageProduct")
                 || path.startsWith("/admin/manage-product")
                 || path.startsWith("/admin/staffs")
+                || path.startsWith("/admin/prices")
+                || path.startsWith("/AdminPrice")
                 || path.startsWith("/view/admin/");
     }
 
