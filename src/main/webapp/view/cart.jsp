@@ -37,7 +37,7 @@
         }
 
         .cart-page .custom-navbar{
-            display:none;
+            display:block;
         }
 
         .cart-topbar{
@@ -711,73 +711,467 @@
                 width:100%;
             }
         }
+
+        /* Home-aligned cart refresh */
+        :root {
+            --cart-accent:#8AAAE5;
+            --cart-accent-dark:#5f84d6;
+            --cart-teal:#8AAAE5;
+            --cart-ink:#1f2937;
+            --cart-muted:#61708a;
+            --cart-line:#d7e1f5;
+            --cart-page:#eef4ff;
+            --cart-soft:#eef4ff;
+        }
+
+        body.cart-page {
+            background:
+                linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
+                linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+            color:var(--cart-ink);
+            font-family:"Segoe UI", Arial, Helvetica, sans-serif;
+        }
+
+        .cart-shell {
+            max-width:1220px;
+            padding:30px 16px 28px;
+        }
+
+        .cart-page-title {
+            min-height:96px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:18px;
+            margin-bottom:18px;
+            padding:22px 24px;
+            border:1px solid rgba(138,170,229,.38);
+            border-radius:8px;
+            background:rgba(255,255,255,.96);
+            box-shadow:0 18px 42px rgba(95,132,214,.14);
+        }
+
+        .cart-page-kicker {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            margin-bottom:7px;
+            color:#5f84d6;
+            font-size:.8rem;
+            font-weight:900;
+            letter-spacing:.08em;
+            text-transform:uppercase;
+        }
+
+        .cart-page-title h1 {
+            margin:0;
+            color:var(--cart-ink);
+            font-size:1.65rem;
+            font-weight:850;
+        }
+
+        .cart-title-link {
+            flex:0 0 auto;
+            color:#365b9f;
+            font-weight:800;
+            text-decoration:none;
+        }
+
+        .cart-title-link:hover {
+            color:#5f84d6;
+            text-decoration:underline;
+            text-underline-offset:4px;
+        }
+
+        .cart-head,
+        .shop-card,
+        .empty-state {
+            border:1px solid rgba(138,170,229,.34);
+            border-radius:8px;
+            background:#fff;
+            box-shadow:0 12px 32px rgba(95,132,214,.12);
+        }
+
+        .cart-head {
+            min-height:62px;
+            margin-bottom:14px;
+            color:var(--cart-muted);
+            font-weight:700;
+        }
+
+        .cart-head .product-col {
+            color:var(--cart-ink);
+            font-weight:850;
+        }
+
+        .shop-header {
+            min-height:62px;
+            border-bottom:1px solid var(--cart-line);
+            font-weight:850;
+        }
+
+        .shop-header i {
+            color:#5f84d6;
+        }
+
+        .shop-badge {
+            padding:5px 8px;
+            border-radius:8px;
+            background:#eef4ff;
+            color:#365b9f;
+            font-weight:800;
+        }
+
+        .cart-item {
+            min-height:146px;
+            border-bottom:1px solid var(--cart-line);
+        }
+
+        .cart-img {
+            width:92px;
+            height:92px;
+            border:1px solid var(--cart-line);
+            border-radius:8px;
+            background:#eef4ff;
+        }
+
+        .product-name {
+            color:var(--cart-ink);
+            font-weight:800;
+        }
+
+        .product-name:hover,
+        .cart-remove-btn:hover,
+        .cart-remove-btn:focus,
+        .continue-link:hover {
+            color:#5f84d6;
+        }
+
+        .stock-note {
+            color:var(--cart-muted);
+        }
+
+        .stock-note strong,
+        .amount-col,
+        .selected-summary-main strong,
+        .saving-line {
+            color:#365b9f;
+        }
+
+        .item-price {
+            color:var(--cart-ink);
+            font-weight:700;
+        }
+
+        .variant-label {
+            color:var(--cart-muted);
+            font-weight:700;
+        }
+
+        .variant-select {
+            max-width:190px;
+            color:#365b9f;
+            font-weight:700;
+        }
+
+        .variant-block {
+            position:relative;
+            z-index:6;
+        }
+
+        .variant-block.is-open {
+            z-index:90;
+        }
+
+        .variant-select {
+            display:none;
+        }
+
+        .variant-trigger {
+            width:min(210px, 100%);
+            min-height:42px;
+            display:grid;
+            grid-template-columns:1fr auto;
+            gap:4px 8px;
+            align-items:center;
+            padding:7px 11px;
+            border:1px solid var(--cart-line);
+            border-radius:8px;
+            background:#fff;
+            color:var(--cart-ink);
+            text-align:left;
+            box-shadow:0 8px 18px rgba(95,132,214,.10);
+        }
+
+        .variant-trigger:hover,
+        .variant-trigger[aria-expanded="true"] {
+            border-color:#8AAAE5;
+            box-shadow:0 0 0 3px rgba(138,170,229,.18);
+        }
+
+        .variant-trigger-label {
+            color:var(--cart-muted);
+            font-size:12px;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:.04em;
+        }
+
+        .variant-trigger-value {
+            grid-column:1;
+            min-width:0;
+            overflow:hidden;
+            color:#365b9f;
+            font-weight:800;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .variant-trigger i {
+            grid-column:2;
+            grid-row:1 / span 2;
+            color:#5f84d6;
+        }
+
+        .variant-popover {
+            position:absolute;
+            z-index:50;
+            top:calc(100% + 14px);
+            left:0;
+            width:min(520px, calc(100vw - 56px));
+            padding:24px 24px 0;
+            border:1px solid var(--cart-line);
+            border-radius:8px;
+            background:#fff;
+            box-shadow:0 26px 70px rgba(31,41,55,.18);
+        }
+
+        .variant-popover-arrow {
+            position:absolute;
+            top:-9px;
+            left:36px;
+            width:18px;
+            height:18px;
+            border-left:1px solid var(--cart-line);
+            border-top:1px solid var(--cart-line);
+            background:#fff;
+            transform:rotate(45deg);
+        }
+
+        .variant-choice-row {
+            display:grid;
+            grid-template-columns:110px 1fr;
+            gap:12px;
+            align-items:start;
+        }
+
+        .variant-choice-label {
+            padding-top:8px;
+            color:var(--cart-muted);
+            font-size:18px;
+        }
+
+        .variant-choice-list {
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
+
+        .variant-choice {
+            min-height:42px;
+            border:1px solid var(--cart-line);
+            border-radius:4px;
+            padding:8px 16px;
+            background:#fff;
+            color:var(--cart-ink);
+            font-size:15px;
+            font-weight:700;
+        }
+
+        .variant-choice:hover:not(:disabled) {
+            border-color:#8AAAE5;
+            color:#365b9f;
+        }
+
+        .variant-choice.is-selected {
+            border-color:#5f84d6;
+            color:#365b9f;
+            background:#eef4ff;
+            box-shadow:inset 0 0 0 1px #5f84d6;
+        }
+
+        .variant-choice:disabled {
+            cursor:not-allowed;
+            opacity:.45;
+        }
+
+        .variant-stock-line {
+            margin-top:22px;
+            color:var(--cart-muted);
+            font-size:16px;
+        }
+
+        .variant-stock-line strong {
+            color:var(--cart-ink);
+        }
+
+        .variant-popover-actions {
+            display:flex;
+            justify-content:flex-end;
+            gap:12px;
+            margin:24px -24px 0;
+            padding:18px 24px;
+            border-top:1px solid var(--cart-line);
+            background:#fff;
+        }
+
+        .variant-cancel,
+        .variant-confirm {
+            min-width:138px;
+            height:48px;
+            border:0;
+            border-radius:8px;
+            font-weight:850;
+            text-transform:uppercase;
+        }
+
+        .variant-cancel {
+            background:#fff;
+            color:var(--cart-muted);
+        }
+
+        .variant-cancel:hover {
+            background:#eef4ff;
+            color:#365b9f;
+        }
+
+        .variant-confirm {
+            background:#8AAAE5;
+            color:#fff;
+            box-shadow:0 12px 24px rgba(95,132,214,.24);
+        }
+
+        .variant-confirm:hover {
+            background:#5f84d6;
+        }
+
+        .variant-static {
+            color:#365b9f;
+            font-weight:800;
+        }
+
+        .quantity-control {
+            border-color:var(--cart-line);
+            border-radius:8px;
+            overflow:hidden;
+            box-shadow:0 8px 18px rgba(95,132,214,.10);
+        }
+
+        .quantity-control .btn:hover:not(:disabled) {
+            background:#eef4ff;
+            color:#5f84d6;
+        }
+
+        .quantity-input {
+            border-color:var(--cart-line);
+        }
+
+        .cart-check {
+            accent-color:#5f84d6;
+        }
+
+        .cart-remove-btn {
+            color:#61708a;
+            font-weight:700;
+        }
+
+        .checkout-bar {
+            border-top:1px solid rgba(138,170,229,.36);
+            background:rgba(255,255,255,.96);
+            box-shadow:0 -12px 34px rgba(95,132,214,.14);
+            backdrop-filter:blur(12px);
+        }
+
+        .checkout-inner {
+            max-width:1220px;
+        }
+
+        .continue-link {
+            color:var(--cart-ink);
+            font-weight:700;
+        }
+
+        .checkout-btn {
+            height:54px;
+            border-radius:8px;
+            background:#8AAAE5;
+            box-shadow:0 14px 28px rgba(95,132,214,.24);
+            font-weight:850;
+        }
+
+        .checkout-btn:hover,
+        .checkout-btn:focus {
+            background:#5f84d6;
+        }
+
+        .checkout-btn:disabled {
+            background:#aab7cc;
+            box-shadow:none;
+        }
+
+        .cart-toast {
+            border-radius:8px;
+            background:rgba(31,41,55,.82);
+            box-shadow:0 22px 54px rgba(31,41,55,.24);
+        }
+
+        .cart-toast > i {
+            background:#8AAAE5;
+        }
+
+        .empty-state {
+            border-radius:8px;
+        }
+
+        .empty-mark {
+            background:#eef4ff;
+            color:#5f84d6;
+        }
+
+        .empty-state .btn-dark {
+            border-color:#8AAAE5;
+            background:#8AAAE5;
+            color:#fff;
+            font-weight:800;
+        }
+
+        .empty-state .btn-dark:hover {
+            border-color:#5f84d6;
+            background:#5f84d6;
+        }
+
+        @media (max-width: 992px) {
+            .cart-shell {
+                padding-top:22px;
+            }
+
+            .cart-page-title {
+                align-items:flex-start;
+                flex-direction:column;
+            }
+        }
     </style>
 </head>
 <body class="cart-page">
     <jsp:include page="/view/customer/common/header.jsp"/>
 
-    <div class="cart-topbar">
-        <div class="cart-topbar-inner">
-            <div class="cart-topbar-group">
-                <a href="<%= ctx %>/home">Seller Centre</a>
-                <span class="cart-topbar-separator">|</span>
-                <a href="<%= ctx %>/product">Shop Now</a>
-                <span class="cart-topbar-separator">|</span>
-                <span>Follow us on</span>
-                <i class="fa-brands fa-facebook"></i>
-                <i class="fa-brands fa-instagram"></i>
-            </div>
-            <div class="cart-topbar-group">
-                <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
-                <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
-                <span>English</span>
-                <c:choose>
-                    <c:when test="${not empty sessionScope.authUserId}">
-                        <details class="account-menu">
-                            <summary aria-haspopup="menu">
-                                <span class="account-avatar">M</span>
-                                <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </summary>
-                            <div class="account-dropdown" role="menu">
-                                <a href="<%= ctx %>/customer/profile" role="menuitem">Profile</a>
-                                <a href="<%= ctx %>/customer/orders" role="menuitem">My Orders</a>
-                                <a href="<%= ctx %>/customer/vouchers" role="menuitem">My Vouchers</a>
-                                <a href="<%= ctx %>/wishlist" role="menuitem">My Wishlist</a>
-                                <hr>
-                                <a href="<%= ctx %>/customer/logout" role="menuitem">Logout</a>
-                            </div>
-                        </details>
-                    </c:when>
-                    <c:otherwise>
-                        <a class="cart-login" href="<%= ctx %>/customer/login">Login</a>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </div>
-    </div>
-
     <div class="cart-shell">
-        <div class="cart-brand-row">
-            <a href="<%= ctx %>/home" class="cart-brand-logo">
-                <i class="fa-solid fa-bag-shopping"></i>
-                Clothing Sale
-            </a>
-            <span class="cart-brand-title-text">Shopping Cart</span>
-            <form action="<%= ctx %>/home" method="get" class="cart-search">
-                <input type="text" name="keyword" placeholder="Search products">
-                <button type="submit" aria-label="Search products">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
-            </form>
-            <div class="cart-category-row">
-                <span>Phone Cases</span>
-                <span>Desktop Microphones</span>
-                <span>Yisong 003</span>
-                <span>iPhone Models</span>
-                <span>Arm sleeve gaming</span>
-                <span>Centaur Gundam Chairs</span>
+        <div class="cart-page-title">
+            <div>
+                <span class="cart-page-kicker"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</span>
+                <h1>Your selected items</h1>
             </div>
+            <a href="<%= ctx %>/products" class="cart-title-link">Browse products</a>
         </div>
 
         <% if (request.getAttribute("cartMessage") != null) { %>
@@ -908,7 +1302,6 @@
                             <input type="hidden" name="imageUrl" value="<%= rawImageUrl != null ? rawImageUrl : imageUrl %>">
 
                             <div class="variant-block mb-3">
-                                <div class="variant-label">Variant:</div>
                                 <% if (variants != null && !variants.isEmpty()) { %>
                                     <select name="newVariantId" class="variant-select">
                                        <% for (Object vo : variants) {
@@ -927,9 +1320,45 @@
                                             </option>
                                         <% } %>
                                     </select>
+                                    <button type="button" class="variant-trigger" aria-expanded="false">
+                                        <span class="variant-trigger-label">Variant</span>
+                                        <span class="variant-trigger-value"><%= attributes %></span>
+                                        <i class="fa-solid fa-caret-down"></i>
+                                    </button>
+                                    <div class="variant-popover" hidden>
+                                        <span class="variant-popover-arrow" aria-hidden="true"></span>
+                                        <div class="variant-choice-row">
+                                            <div class="variant-choice-label">Options:</div>
+                                            <div class="variant-choice-list">
+                                                <% for (Object vo : variants) {
+                                                        com.clothingsale.model.ProductVariant v = (com.clothingsale.model.ProductVariant) vo;
+                                                        String detail = v.getAttributeDetails() != null ? v.getAttributeDetails() : "Standard";
+                                                        java.math.BigDecimal variantPrice = v.getSalePrice() != null ? v.getSalePrice() : java.math.BigDecimal.ZERO;
+                                                        boolean selected = v.getId() == it.getVariantId();
+                                                %>
+                                                    <button type="button"
+                                                            class="variant-choice <%= selected ? "is-selected" : "" %>"
+                                                            data-value="<%= v.getId() %>"
+                                                            data-price="<%= variantPrice %>"
+                                                            data-attributes="<%= detail %>"
+                                                            data-stock="<%= v.getStockQuantity() %>"
+                                                            <%= (v.getStockQuantity() <= 0 && !selected) ? "disabled" : "" %>>
+                                                        <%= detail %>
+                                                    </button>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="variant-stock-line">
+                                            Stock: <strong class="variant-stock-value"><%= currentStock %></strong>
+                                        </div>
+                                        <div class="variant-popover-actions">
+                                            <button type="button" class="variant-cancel">Cancel</button>
+                                            <button type="button" class="variant-confirm">Confirm</button>
+                                        </div>
+                                    </div>
                                 <% } else { %>
                                     <input type="hidden" name="newVariantId" value="<%= it.getVariantId() %>">
-                                    <div class="variant-select"><%= attributes %></div>
+                                    <div class="variant-static"><%= attributes %></div>
                                 <% } %>
                             </div>
 
@@ -1064,26 +1493,155 @@
             buttons[1].disabled = stock <= 0 || value >= stock;
         }
 
-        document.querySelectorAll('.variant-select').forEach(function(select) {
-            function syncVariant() {
-                var form = select.closest('.cart-update-form');
-                var option = select.options[select.selectedIndex];
-                form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
-                form.querySelector('.price-input').value = option.dataset.price || '0';
-                var stock = parseInt(option.dataset.stock, 10);
-                var input = form.querySelector('.quantity-input');
-                if (input && !isNaN(stock)) {
-                    input.max = stock;
-                    input.dataset.stock = stock;
-                    normalizeQuantity(input, stock);
-                }
-                updateQuantityButtons(form);
+        function syncVariantSelect(select) {
+            var form = select.closest('.cart-update-form');
+            var option = select.options[select.selectedIndex];
+            if (!form || !option) {
+                return;
             }
-            select.addEventListener('change', function() {
-                syncVariant();
-                submitCartForm(select.closest('.cart-update-form'));
+
+            form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
+            form.querySelector('.price-input').value = option.dataset.price || '0';
+
+            var triggerValue = form.querySelector('.variant-trigger-value');
+            if (triggerValue) {
+                triggerValue.textContent = option.dataset.attributes || option.textContent.trim() || 'Standard';
+            }
+
+            var stock = parseInt(option.dataset.stock, 10);
+            var stockValue = form.querySelector('.variant-stock-value');
+            if (stockValue && !isNaN(stock)) {
+                stockValue.textContent = stock;
+            }
+
+            var input = form.querySelector('.quantity-input');
+            if (input && !isNaN(stock)) {
+                input.max = stock;
+                input.dataset.stock = stock;
+                normalizeQuantity(input, stock);
+            }
+
+            updateQuantityButtons(form);
+        }
+
+        function markVariantChoice(popover, value) {
+            popover.querySelectorAll('.variant-choice').forEach(function(choice) {
+                choice.classList.toggle('is-selected', choice.dataset.value === String(value));
             });
-            syncVariant();
+        }
+
+        function closeVariantPopover(popover) {
+            if (!popover) {
+                return;
+            }
+
+            var form = popover.closest('.cart-update-form');
+            var block = popover.closest('.variant-block');
+            var trigger = form ? form.querySelector('.variant-trigger') : null;
+            var select = form ? form.querySelector('.variant-select') : null;
+
+            popover.hidden = true;
+            if (block) {
+                block.classList.remove('is-open');
+            }
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+
+            if (select) {
+                popover.dataset.pendingValue = select.value;
+                markVariantChoice(popover, select.value);
+                syncVariantSelect(select);
+            }
+        }
+
+        function closeAllVariantPopovers(except) {
+            document.querySelectorAll('.variant-popover').forEach(function(popover) {
+                if (popover !== except) {
+                    closeVariantPopover(popover);
+                }
+            });
+        }
+
+        document.querySelectorAll('.variant-select').forEach(function(select) {
+            var form = select.closest('.cart-update-form');
+            var trigger = form ? form.querySelector('.variant-trigger') : null;
+            var popover = form ? form.querySelector('.variant-popover') : null;
+            var confirmButton = popover ? popover.querySelector('.variant-confirm') : null;
+            var cancelButton = popover ? popover.querySelector('.variant-cancel') : null;
+
+            syncVariantSelect(select);
+
+            if (!form || !trigger || !popover || !confirmButton || !cancelButton) {
+                return;
+            }
+
+            popover.dataset.pendingValue = select.value;
+
+            trigger.addEventListener('click', function(event) {
+                event.stopPropagation();
+                var shouldOpen = popover.hidden;
+                var block = trigger.closest('.variant-block');
+                closeAllVariantPopovers(popover);
+                popover.hidden = !shouldOpen;
+                trigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                if (block) {
+                    block.classList.toggle('is-open', shouldOpen);
+                }
+                if (shouldOpen) {
+                    popover.dataset.pendingValue = select.value;
+                    markVariantChoice(popover, select.value);
+                }
+            });
+
+            popover.querySelectorAll('.variant-choice').forEach(function(choice) {
+                choice.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    if (choice.disabled) {
+                        return;
+                    }
+
+                    popover.dataset.pendingValue = choice.dataset.value;
+                    markVariantChoice(popover, choice.dataset.value);
+
+                    var stock = parseInt(choice.dataset.stock, 10);
+                    var stockValue = popover.querySelector('.variant-stock-value');
+                    if (stockValue && !isNaN(stock)) {
+                        stockValue.textContent = stock;
+                    }
+                });
+            });
+
+            cancelButton.addEventListener('click', function(event) {
+                event.stopPropagation();
+                closeVariantPopover(popover);
+            });
+
+            confirmButton.addEventListener('click', function(event) {
+                event.stopPropagation();
+                var nextValue = popover.dataset.pendingValue || select.value;
+                if (nextValue && nextValue !== select.value) {
+                    select.value = nextValue;
+                    syncVariantSelect(select);
+                    closeVariantPopover(popover);
+                    submitCartForm(form);
+                    return;
+                }
+
+                closeVariantPopover(popover);
+            });
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.variant-block')) {
+                closeAllVariantPopovers();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeAllVariantPopovers();
+            }
         });
 
         document.querySelectorAll('.cart-update-form').forEach(updateQuantityButtons);

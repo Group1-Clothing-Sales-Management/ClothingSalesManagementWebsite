@@ -1,76 +1,440 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
-<fmt:setLocale value="vi_VN"/>
+<fmt:setLocale value="en_US"/>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Kho voucher</title>
+    <title>Voucher Wallet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        :root{--primary:#c65b3d;--ink:#29231f;--muted:#786f68;--line:#eadfd9;--bg:#f7f4f2}
-        *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",sans-serif}
-        main{max-width:1120px;margin:32px auto 60px;padding:0 20px}
-        h1{margin:0 0 8px;font-size:30px}.lead{margin:0 0 24px;color:var(--muted)}
-        .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}.tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:9px 18px;color:var(--muted);text-decoration:none;font-weight:650}.tab:hover{border-color:var(--primary);color:var(--primary)}.tab.active{border-color:var(--primary);background:var(--primary);color:#fff}.tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#f1ebe7;color:var(--muted);font-size:12px}.tab.active .tab-count{background:rgba(255,255,255,.2);color:#fff}
-        .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-        .voucher{position:relative;display:grid;grid-template-columns:150px 1fr;min-height:205px;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(73,50,39,.06)}
-        .voucher-side{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 12px;background:linear-gradient(145deg,#d66a49,var(--primary));color:#fff;text-align:center;border-right:2px dashed rgba(255,255,255,.7)}
-        .voucher-side i{font-size:34px}.discount{margin-top:8px;font-size:22px;font-weight:800}.code{margin-top:8px;padding:4px 8px;border:1px dashed rgba(255,255,255,.8);font-size:12px;font-weight:700}
-        .voucher-body{padding:20px;display:flex;flex-direction:column}.voucher h2{margin:0 0 10px;font-size:18px}.condition{margin:3px 0;color:var(--muted);font-size:14px}.condition i{width:20px;color:var(--primary)}
-        .expiry{margin-top:10px;color:#d33c35;font-size:13px;font-weight:700}.actions{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
-        .status{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:750}.AVAILABLE{background:#e7f6ec;color:#187743}.EXPIRED{background:#f0f0f0;color:#777}.USED{background:#e9edff;color:#4356a7}
-        .use{padding:9px 16px;border-radius:9px;background:var(--primary);color:#fff;text-decoration:none;font-size:14px;font-weight:750}.use:hover{background:#a9472e}
-        .voucher.inactive{filter:saturate(.45);opacity:.78}.empty{grid-column:1/-1;padding:60px;text-align:center;background:#fff;border-radius:16px;color:var(--muted)}.empty strong{display:block;margin-top:12px;color:var(--ink);font-size:18px}
-        @media(max-width:780px){.grid{grid-template-columns:1fr}}@media(max-width:480px){.voucher{grid-template-columns:112px 1fr}.voucher-side{padding:14px 8px}.discount{font-size:17px}.voucher-body{padding:16px}}
+        :root{
+            --voucher-accent:#8AAAE5;
+            --voucher-accent-dark:#5f84d6;
+            --voucher-ink:#1f2937;
+            --voucher-muted:#61708a;
+            --voucher-line:#d7e1f5;
+            --voucher-soft:#eef4ff;
+            --voucher-page:#f7faff;
+        }
+
+        *{box-sizing:border-box}
+
+        body{
+            margin:0;
+            background:
+                linear-gradient(135deg, rgba(138,170,229,.12) 0 26%, transparent 26% 100%),
+                linear-gradient(180deg, #fff 0%, var(--voucher-page) 100%);
+            color:var(--voucher-ink);
+            font-family:"Segoe UI", Arial, Helvetica, sans-serif;
+        }
+
+        main{
+            width:min(1220px, calc(100% - 32px));
+            margin:34px auto 64px;
+        }
+
+        .wallet-hero{
+            min-height:112px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:18px;
+            margin-bottom:20px;
+            padding:24px 26px;
+            border:1px solid rgba(138,170,229,.36);
+            border-radius:8px;
+            background:rgba(255,255,255,.96);
+            box-shadow:0 18px 42px rgba(95,132,214,.13);
+        }
+
+        .wallet-kicker{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            margin-bottom:7px;
+            color:var(--voucher-accent-dark);
+            font-size:.8rem;
+            font-weight:900;
+            letter-spacing:.08em;
+            text-transform:uppercase;
+        }
+
+        h1{
+            margin:0;
+            color:var(--voucher-ink);
+            font-size:1.8rem;
+            font-weight:850;
+        }
+
+        .lead{
+            margin:7px 0 0;
+            color:var(--voucher-muted);
+            font-size:1rem;
+        }
+
+        .wallet-link{
+            flex:0 0 auto;
+            color:#365b9f;
+            font-weight:800;
+            text-decoration:none;
+        }
+
+        .wallet-link:hover{
+            color:var(--voucher-accent-dark);
+            text-decoration:underline;
+            text-underline-offset:4px;
+        }
+
+        .tabs{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-bottom:22px;
+        }
+
+        .tab{
+            min-height:44px;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            border:1px solid var(--voucher-line);
+            border-radius:999px;
+            background:#fff;
+            padding:9px 18px;
+            color:var(--voucher-muted);
+            text-decoration:none;
+            font-weight:800;
+            box-shadow:0 8px 20px rgba(95,132,214,.08);
+        }
+
+        .tab:hover{
+            border-color:var(--voucher-accent);
+            color:#365b9f;
+        }
+
+        .tab.active{
+            border-color:var(--voucher-accent);
+            background:var(--voucher-accent);
+            color:#fff;
+            box-shadow:0 14px 28px rgba(95,132,214,.22);
+        }
+
+        .tab-count{
+            min-width:24px;
+            height:24px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:0 7px;
+            border-radius:999px;
+            background:var(--voucher-soft);
+            color:#365b9f;
+            font-size:12px;
+            font-weight:850;
+        }
+
+        .tab.active .tab-count{
+            background:rgba(255,255,255,.25);
+            color:#fff;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:18px;
+        }
+
+        .voucher{
+            position:relative;
+            display:grid;
+            grid-template-columns:168px minmax(0,1fr);
+            min-height:214px;
+            overflow:hidden;
+            border:1px solid rgba(138,170,229,.36);
+            border-radius:8px;
+            background:#fff;
+            box-shadow:0 14px 34px rgba(95,132,214,.12);
+        }
+
+        .voucher-side{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            padding:22px 12px;
+            border-right:2px dashed rgba(255,255,255,.72);
+            background:linear-gradient(145deg, #9ab7ec, var(--voucher-accent-dark));
+            color:#fff;
+            text-align:center;
+        }
+
+        .voucher-side i{
+            font-size:34px;
+        }
+
+        .discount{
+            margin-top:10px;
+            font-size:23px;
+            font-weight:900;
+            line-height:1.18;
+        }
+
+        .code{
+            max-width:132px;
+            margin-top:11px;
+            padding:5px 9px;
+            overflow:hidden;
+            border:1px dashed rgba(255,255,255,.85);
+            color:#fff;
+            font-size:12px;
+            font-weight:850;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .voucher-body{
+            min-width:0;
+            display:flex;
+            flex-direction:column;
+            padding:22px 24px;
+        }
+
+        .voucher h2{
+            margin:0 0 12px;
+            color:var(--voucher-ink);
+            font-size:18px;
+            font-weight:850;
+        }
+
+        .condition{
+            margin:4px 0;
+            color:var(--voucher-muted);
+            font-size:14px;
+        }
+
+        .condition i{
+            width:20px;
+            color:var(--voucher-accent-dark);
+        }
+
+        .expiry{
+            margin-top:11px;
+            color:#365b9f;
+            font-size:13px;
+            font-weight:800;
+        }
+
+        .actions{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-top:auto;
+        }
+
+        .status{
+            padding:6px 11px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:850;
+        }
+
+        .AVAILABLE{
+            background:#e9f7ef;
+            color:#187743;
+        }
+
+        .EXPIRED{
+            background:#edf1f7;
+            color:#6b7280;
+        }
+
+        .USED{
+            background:var(--voucher-soft);
+            color:#365b9f;
+        }
+
+        .use{
+            padding:9px 16px;
+            border-radius:8px;
+            background:var(--voucher-accent);
+            color:#fff;
+            text-decoration:none;
+            font-size:14px;
+            font-weight:850;
+            box-shadow:0 12px 22px rgba(95,132,214,.18);
+        }
+
+        .use:hover{
+            background:var(--voucher-accent-dark);
+            color:#fff;
+        }
+
+        .voucher.inactive{
+            opacity:.78;
+        }
+
+        .voucher.inactive .voucher-side{
+            background:linear-gradient(145deg, #c8d2e6, #97a6c4);
+        }
+
+        .empty{
+            grid-column:1/-1;
+            padding:62px 24px;
+            border:1px solid rgba(138,170,229,.36);
+            border-radius:8px;
+            background:#fff;
+            color:var(--voucher-muted);
+            text-align:center;
+            box-shadow:0 14px 34px rgba(95,132,214,.12);
+        }
+
+        .empty i{
+            color:var(--voucher-accent-dark);
+        }
+
+        .empty strong{
+            display:block;
+            margin-top:12px;
+            color:var(--voucher-ink);
+            font-size:18px;
+        }
+
+        @media(max-width:900px){
+            .wallet-hero{
+                align-items:flex-start;
+                flex-direction:column;
+            }
+
+            .grid{
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media(max-width:520px){
+            main{
+                width:min(100% - 20px, 1220px);
+                margin-top:22px;
+            }
+
+            .wallet-hero{
+                padding:20px;
+            }
+
+            .voucher{
+                grid-template-columns:118px minmax(0,1fr);
+            }
+
+            .voucher-side{
+                padding:16px 8px;
+            }
+
+            .discount{
+                font-size:17px;
+            }
+
+            .voucher-body{
+                padding:18px 16px;
+            }
+        }
     </style>
 </head>
 <body>
 <jsp:include page="/view/customer/common/header.jsp"/>
 <main>
-    <h1>Kho voucher của bạn</h1><p class="lead">Chọn ưu đãi phù hợp và sử dụng ngay cho đơn hàng tiếp theo.</p>
-    <div class="tabs" aria-label="Lọc voucher theo trạng thái">
+    <section class="wallet-hero">
+        <div>
+            <span class="wallet-kicker"><i class="bi bi-ticket-perforated-fill"></i> Voucher Wallet</span>
+            <h1>Your vouchers</h1>
+            <p class="lead">Choose a suitable offer and apply it to your next order.</p>
+        </div>
+        <a class="wallet-link" href="${pageContext.request.contextPath}/products">Browse products</a>
+    </section>
+
+    <div class="tabs" aria-label="Filter vouchers by status">
         <a class="tab ${statusFilter eq 'ALL' ? 'active' : ''}" href="${pageContext.request.contextPath}/customer/vouchers">
-            Tất cả <span class="tab-count">${allCount}</span>
+            All <span class="tab-count">${allCount}</span>
         </a>
         <a class="tab ${statusFilter eq 'AVAILABLE' ? 'active' : ''}" href="${pageContext.request.contextPath}/customer/vouchers?status=AVAILABLE">
-            Còn hạn <span class="tab-count">${availableCount}</span>
+            Available <span class="tab-count">${availableCount}</span>
         </a>
         <a class="tab ${statusFilter eq 'EXPIRED' ? 'active' : ''}" href="${pageContext.request.contextPath}/customer/vouchers?status=EXPIRED">
-            Hết hạn <span class="tab-count">${expiredCount}</span>
+            Expired <span class="tab-count">${expiredCount}</span>
         </a>
         <a class="tab ${statusFilter eq 'USED' ? 'active' : ''}" href="${pageContext.request.contextPath}/customer/vouchers?status=USED">
-            Đã sử dụng <span class="tab-count">${usedCount}</span>
+            Used <span class="tab-count">${usedCount}</span>
         </a>
     </div>
+
     <div class="grid" id="voucherGrid">
         <c:forEach items="${vouchers}" var="v">
             <article class="voucher ${v.customerStatus ne 'AVAILABLE' ? 'inactive' : ''}" data-status="${v.customerStatus}">
-                <div class="voucher-side"><i class="bi bi-ticket-perforated-fill"></i>
-                    <div class="discount"><c:choose><c:when test="${v.discountType eq 'PERCENTAGE'}">Giảm <fmt:formatNumber value="${v.discountValue}" pattern="#0"/>%</c:when><c:otherwise>Giảm <fmt:formatNumber value="${v.discountValue}" pattern="#,##0"/>đ</c:otherwise></c:choose></div>
+                <div class="voucher-side">
+                    <i class="bi bi-ticket-perforated-fill"></i>
+                    <div class="discount">
+                        <c:choose>
+                            <c:when test="${v.discountType eq 'PERCENTAGE'}">
+                                <fmt:formatNumber value="${v.discountValue}" pattern="#0"/>% off
+                            </c:when>
+                            <c:otherwise>
+                                <fmt:formatNumber value="${v.discountValue}" pattern="#,##0"/>đ off
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                     <div class="code"><c:out value="${v.code}"/></div>
                 </div>
-                <div class="voucher-body"><h2><c:out value="${v.title}"/></h2>
-                    <p class="condition"><i class="bi bi-bag-check"></i>Đơn tối thiểu <fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/>đ</p>
-                    <c:if test="${v.discountType eq 'PERCENTAGE' && v.maxDiscountAmount != null}"><p class="condition"><i class="bi bi-arrow-down-circle"></i>Giảm tối đa <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/>đ</p></c:if>
-                    <p class="expiry"><i class="bi bi-clock"></i> <c:choose><c:when test="${v.customerStatus eq 'EXPIRED'}">Đã hết hạn</c:when><c:when test="${v.daysRemaining <= 2}">Hết hạn sau ${v.daysRemaining} ngày nữa</c:when><c:otherwise>Hạn dùng: <fmt:formatDate value="${v.endDate}" pattern="dd/MM/yyyy"/></c:otherwise></c:choose></p>
-                    <div class="actions"><span class="status ${v.customerStatus}"><c:choose><c:when test="${v.customerStatus eq 'AVAILABLE'}">Còn hạn</c:when><c:when test="${v.customerStatus eq 'USED'}">Đã sử dụng</c:when><c:otherwise>Hết hạn</c:otherwise></c:choose></span>
-                    <c:if test="${v.customerStatus eq 'AVAILABLE'}"><a class="use" href="${pageContext.request.contextPath}/products?voucherCode=${v.code}">Dùng ngay</a></c:if></div>
+
+                <div class="voucher-body">
+                    <h2><c:out value="${v.title}"/></h2>
+                    <p class="condition">
+                        <i class="bi bi-bag-check"></i>
+                        Minimum order <fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/>đ
+                    </p>
+                    <c:if test="${v.discountType eq 'PERCENTAGE' && v.maxDiscountAmount != null}">
+                        <p class="condition">
+                            <i class="bi bi-arrow-down-circle"></i>
+                            Max discount <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/>đ
+                        </p>
+                    </c:if>
+                    <p class="expiry">
+                        <i class="bi bi-clock"></i>
+                        <c:choose>
+                            <c:when test="${v.customerStatus eq 'USED'}">Already used</c:when>
+                            <c:when test="${v.customerStatus eq 'EXPIRED'}">Expired</c:when>
+                            <c:when test="${v.daysRemaining <= 2}">Expires in ${v.daysRemaining} day(s)</c:when>
+                            <c:otherwise>Valid until <fmt:formatDate value="${v.endDate}" pattern="MM/dd/yyyy"/></c:otherwise>
+                        </c:choose>
+                    </p>
+                    <div class="actions">
+                        <span class="status ${v.customerStatus}">
+                            <c:choose>
+                                <c:when test="${v.customerStatus eq 'AVAILABLE'}">Available</c:when>
+                                <c:when test="${v.customerStatus eq 'USED'}">Used</c:when>
+                                <c:otherwise>Expired</c:otherwise>
+                            </c:choose>
+                        </span>
+                        <c:if test="${v.customerStatus eq 'AVAILABLE'}">
+                            <a class="use" href="${pageContext.request.contextPath}/products?voucherCode=${v.code}">Use now</a>
+                        </c:if>
+                    </div>
                 </div>
             </article>
         </c:forEach>
+
         <c:if test="${empty vouchers}">
             <div class="empty">
                 <i class="bi bi-ticket-perforated fs-1"></i>
-                <strong>Không có voucher phù hợp</strong>
-                <p>Hãy chọn bộ lọc khác để xem các voucher còn lại.</p>
+                <strong>No matching vouchers</strong>
+                <p>Try another filter to see your remaining vouchers.</p>
             </div>
         </c:if>
     </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body></html>
+</body>
+</html>

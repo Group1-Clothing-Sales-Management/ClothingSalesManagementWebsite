@@ -16,15 +16,15 @@
 
         <style>
             :root {
-                --order-primary:#c65b3d;
-                --order-primary-dark:#a9462d;
-                --order-primary-soft:#fff3ed;
-                --order-primary-pale:#fffaf7;
+                --order-primary:#8AAAE5;
+                --order-primary-dark:#5f84d6;
+                --order-primary-soft:#eef4ff;
+                --order-primary-pale:#f7faff;
                 --order-ink:#222222;
                 --order-muted:#6b7280;
                 --order-line:#e7e7e7;
                 --order-teal:#16a6a0;
-                --order-danger:#c65b3d;
+                --order-danger:#5f84d6;
             }
 
             * { box-sizing:border-box; }
@@ -382,8 +382,8 @@
             }
 
             .order-action.primary:hover {
-                border-color:#a9462d;
-                background:#a9462d;
+                border-color:#5f84d6;
+                background:#5f84d6;
                 color:#fff;
             }
 
@@ -468,6 +468,281 @@
                 .order-actions { justify-content:stretch; }
                 .order-action { flex:1 1 140px; min-width:0; }
             }
+
+            /* Baby blue order refresh */
+            :root {
+                --order-primary:#8AAAE5;
+                --order-primary-dark:#5f84d6;
+                --order-primary-soft:#eef4ff;
+                --order-primary-pale:#f7faff;
+                --order-ink:#1f2937;
+                --order-muted:#61708a;
+                --order-line:#d7e1f5;
+                --order-teal:#187743;
+                --order-danger:#5f84d6;
+            }
+
+            body {
+                background:
+                    linear-gradient(135deg, rgba(138,170,229,.12) 0 26%, transparent 26% 100%),
+                    linear-gradient(180deg, #fff 0%, #f7faff 100%);
+                color:var(--order-ink);
+                font-family:"Segoe UI", Arial, Helvetica, sans-serif;
+            }
+
+            .orders-page {
+                width:min(1220px, calc(100% - 32px));
+                padding-top:30px;
+            }
+
+            .orders-page-title {
+                min-height:96px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:18px;
+                margin-bottom:18px;
+                padding:22px 24px;
+                border:1px solid rgba(138,170,229,.36);
+                border-radius:8px;
+                background:rgba(255,255,255,.96);
+                box-shadow:0 18px 42px rgba(95,132,214,.13);
+            }
+
+            .orders-page-kicker {
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                margin-bottom:7px;
+                color:var(--order-primary-dark);
+                font-size:.8rem;
+                font-weight:900;
+                letter-spacing:.08em;
+                text-transform:uppercase;
+            }
+
+            .orders-page-title h1 {
+                margin:0;
+                color:var(--order-ink);
+                font-size:1.7rem;
+                font-weight:850;
+            }
+
+            .orders-page-title p {
+                margin:7px 0 0;
+                color:var(--order-muted);
+            }
+
+            .orders-title-link {
+                flex:0 0 auto;
+                color:#365b9f;
+                font-weight:800;
+                text-decoration:none;
+            }
+
+            .orders-title-link:hover {
+                color:var(--order-primary-dark);
+                text-decoration:underline;
+                text-underline-offset:4px;
+            }
+
+            .orders-tabs {
+                min-height:62px;
+                margin-bottom:14px;
+                border:1px solid rgba(138,170,229,.34);
+                border-radius:8px;
+                background:#fff;
+                box-shadow:0 12px 32px rgba(95,132,214,.10);
+            }
+
+            .orders-tab {
+                min-height:60px;
+                border-bottom:3px solid transparent;
+                color:var(--order-muted);
+                font-weight:800;
+            }
+
+            .orders-tab:hover,
+            .orders-tab.active {
+                color:#365b9f;
+            }
+
+            .orders-tab.active {
+                border-bottom-color:var(--order-primary);
+                background:linear-gradient(180deg, rgba(238,244,255,.45), rgba(255,255,255,0));
+            }
+
+            .order-search {
+                margin-bottom:14px;
+            }
+
+            .order-search i {
+                color:var(--order-primary-dark);
+            }
+
+            .order-search input {
+                height:52px;
+                border:1px solid rgba(138,170,229,.34);
+                border-radius:8px;
+                background:#fff;
+                color:var(--order-ink);
+                box-shadow:0 10px 26px rgba(95,132,214,.10);
+            }
+
+            .order-search input:focus {
+                box-shadow:0 0 0 3px rgba(138,170,229,.22);
+            }
+
+            .flash,
+            .flash.error,
+            .order-card,
+            .empty-state {
+                border:1px solid rgba(138,170,229,.34);
+                border-radius:8px;
+                box-shadow:0 12px 32px rgba(95,132,214,.11);
+            }
+
+            .order-card {
+                background:#fff;
+            }
+
+            .shop-header {
+                border-bottom-color:var(--order-line);
+            }
+
+            .mall-badge {
+                height:22px;
+                padding:0 8px;
+                border-radius:6px;
+                background:var(--order-primary-soft);
+                color:#365b9f;
+                font-size:11px;
+            }
+
+            .shop-name {
+                color:var(--order-ink);
+                font-weight:850;
+            }
+
+            .shop-action {
+                border-color:var(--order-line);
+                border-radius:8px;
+                color:#365b9f;
+                font-weight:700;
+            }
+
+            .shop-action:hover {
+                border-color:var(--order-primary);
+                background:var(--order-primary-soft);
+                color:#365b9f;
+            }
+
+            .shop-status,
+            .shop-status .status-value,
+            .item-price .unit-price,
+            .order-total-value,
+            .order-used-voucher-code,
+            .order-used-voucher-label i {
+                color:#365b9f;
+            }
+
+            .shop-status.delivery-success {
+                color:var(--order-teal);
+            }
+
+            .order-number,
+            .item-meta,
+            .item-price .line-total {
+                color:var(--order-muted);
+            }
+
+            .order-item {
+                border-bottom-color:#edf2fb;
+            }
+
+            .order-item-img {
+                border-color:var(--order-line);
+                border-radius:8px;
+                background:var(--order-primary-soft);
+            }
+
+            .item-name {
+                color:var(--order-ink);
+                font-weight:700;
+            }
+
+            .order-footer {
+                border-top-color:var(--order-line);
+                background:linear-gradient(180deg, #fff, #f7faff);
+            }
+
+            .order-total-label {
+                color:var(--order-ink);
+                font-weight:700;
+            }
+
+            .order-total-value {
+                font-weight:750;
+            }
+
+            .order-action {
+                border-color:var(--order-line);
+                border-radius:8px;
+                color:#365b9f;
+                font-weight:800;
+            }
+
+            .order-action:hover {
+                border-color:var(--order-primary);
+                background:var(--order-primary-soft);
+                color:#365b9f;
+            }
+
+            .order-action.primary {
+                border-color:var(--order-primary);
+                background:var(--order-primary);
+                color:#fff;
+                box-shadow:0 12px 22px rgba(95,132,214,.18);
+            }
+
+            .order-action.primary:hover {
+                border-color:var(--order-primary-dark);
+                background:var(--order-primary-dark);
+                color:#fff;
+            }
+
+            .order-action.danger {
+                border-color:#c9d8f4;
+                color:#365b9f;
+            }
+
+            .empty-mark {
+                background:var(--order-primary-soft);
+                color:var(--order-primary-dark);
+            }
+
+            .empty-state .btn {
+                border-radius:8px;
+                background:var(--order-primary);
+                font-weight:800;
+            }
+
+            .empty-state .btn:hover {
+                background:var(--order-primary-dark);
+            }
+
+            @media (max-width: 768px) {
+                .orders-page {
+                    width:min(100% - 20px, 1220px);
+                    padding-top:22px;
+                }
+
+                .orders-page-title {
+                    align-items:flex-start;
+                    flex-direction:column;
+                    padding:20px;
+                }
+            }
         </style>
     </head>
 
@@ -475,6 +750,15 @@
         <jsp:include page="/view/customer/common/header.jsp"/>
 
         <main class="container orders-page">
+            <section class="orders-page-title">
+                <div>
+                    <span class="orders-page-kicker"><i class="fa-solid fa-receipt"></i> My Orders</span>
+                    <h1>Track your orders</h1>
+                    <p>Review purchases, delivery progress, and reorder your favorite items.</p>
+                </div>
+                <a class="orders-title-link" href="${pageContext.request.contextPath}/products">Browse products</a>
+            </section>
+
             <nav class="orders-tabs" aria-label="Order status filter">
                 <a href="${pageContext.request.contextPath}/customer/orders"
                    class="orders-tab ${empty statusFilter ? 'active' : ''}">All</a>
@@ -645,7 +929,7 @@
                                 <div class="order-used-voucher">
                                     <span class="order-used-voucher-label">
                                         <i class="fa-solid fa-ticket"></i>
-                                        Voucher đã dùng:
+                                        Voucher used:
                                         <span class="order-used-voucher-code">
                                             <c:out value="${not empty o.voucherCode ? o.voucherCode : 'Voucher'}"/>
                                         </span>
@@ -721,7 +1005,7 @@
                         }
 
                         navigator.clipboard.writeText(code).then(() => {
-                            button.textContent = 'Đã copy';
+                            button.textContent = 'Copied';
                         }).catch(() => {
                             button.textContent = code;
                         });
