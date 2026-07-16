@@ -17,6 +17,9 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
               rel="stylesheet">
 
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+              rel="stylesheet">
+
         <style>
 
             body{
@@ -826,10 +829,41 @@
 
             .default-badge{
                 border-color:#8AAAE5;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:6px;
+                min-height:28px;
+                padding:5px 10px;
                 color:#365b9f;
                 background:#eef4ff;
                 border-radius:8px;
                 font-weight:800;
+                line-height:1;
+                white-space:nowrap;
+            }
+
+            .default-badge i{
+                flex:0 0 auto;
+                font-size:13px;
+                line-height:1;
+            }
+
+            .address-item .d-flex.justify-content-between{
+                align-items:flex-start;
+                gap:16px;
+            }
+
+            .address-item .d-flex.justify-content-between > div:first-child{
+                min-width:0;
+                flex:1 1 auto;
+            }
+
+            .address-item .d-flex.justify-content-between > div:last-child{
+                flex:0 0 auto;
+                display:flex;
+                justify-content:flex-end;
+                padding-top:1px;
             }
 
             .btn-manage{
