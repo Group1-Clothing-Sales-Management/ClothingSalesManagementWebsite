@@ -16,10 +16,6 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
         <div class="container admin-page">
-            <div class="mb-3">
-                <a href="${pageContext.request.contextPath}/admin/manage-product" class="btn btn-sm btn-secondary">&larr; Back to Product List</a>
-            </div>
-
             <c:if test="${param.status == 'success'}">
                 <div class="d-none" data-product-toast data-product-toast-type="success">Action performed successfully!</div>
             </c:if>

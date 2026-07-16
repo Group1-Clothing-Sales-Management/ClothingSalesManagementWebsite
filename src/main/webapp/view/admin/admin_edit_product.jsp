@@ -24,9 +24,6 @@
                         <h2 class="mb-1">Edit Product</h2>
                         <p class="text-muted mb-0">Update general product information and the main image.</p>
                     </div>
-                    <a href="${pageContext.request.contextPath}/admin/manage-product?action=view&id=${product.id}" class="btn btn-outline-secondary">
-                        <i class="fa-solid fa-arrow-left mr-1"></i>Back to Details
-                    </a>
                 </div>
 
                 <c:choose>

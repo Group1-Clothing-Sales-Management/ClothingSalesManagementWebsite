@@ -38,10 +38,6 @@
                     <c:out value="${receipt.receiptCode}"/>
                 </p>
             </div>
-            <a class="btn btn-outline-secondary"
-               href="${pageContext.request.contextPath}/admin/inventory?action=list">
-                <i class="fa-solid fa-arrow-left me-2"></i>Back to receipts
-            </a>
         </div>
 
         <c:if test="${not empty inventoryFlashMessage}">

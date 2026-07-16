@@ -46,9 +46,6 @@
                 </p>
             </div>
 
-            <a href="${pageContext.request.contextPath}/admin/prices" class="btn btn-outline-secondary">
-                <i class="fa-solid fa-arrow-left me-2"></i>Back to Price List
-            </a>
         </div>
 
         <c:if test="${not empty priceFlashMessage}">

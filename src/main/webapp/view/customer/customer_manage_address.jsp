@@ -111,23 +111,6 @@
                 background:linear-gradient(135deg, var(--address-primary-dark), var(--address-primary));
             }
 
-            .btn-checkout {
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                padding:0 14px;
-                border:1px solid var(--address-line);
-                color:var(--address-ink);
-                background:#fff;
-            }
-
-            .btn-checkout:hover,
-            .btn-checkout:focus-visible {
-                border-color:#d9b6a4;
-                color:var(--address-primary);
-                background:#fff;
-            }
-
             .address-overview {
                 display:flex;
                 align-items:center;
@@ -567,12 +550,6 @@
                 </div>
 
                 <div class="hero-actions">
-                    <c:if test="${from eq 'checkout'}">
-                        <a class="btn btn-checkout" href="${pageContext.request.contextPath}/customer/checkout">
-                            <i class="fa-solid fa-arrow-left"></i>
-                            Back to checkout
-                        </a>
-                    </c:if>
                     <button class="btn btn-add-address" type="button" data-bs-toggle="modal" data-bs-target="#addAddressModal">
                         <i class="fa-solid fa-plus"></i>
                         Add address

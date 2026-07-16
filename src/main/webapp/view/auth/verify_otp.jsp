@@ -13,14 +13,6 @@
     String pageSubtitle = loginFlow
             ? "Enter the 6-digit code we sent to your email to continue signing in."
             : "Enter the 6-digit code we sent to your email to activate the account.";
-    String primaryFallbackText = loginFlow ? "Back to login" : "Back to register";
-    String primaryFallbackHref = loginFlow
-            ? ctx + "/customer/login"
-            : ctx + "/customer/register";
-    String secondaryFallbackText = loginFlow ? "Go to home" : "Go to login";
-    String secondaryFallbackHref = loginFlow
-            ? ctx + "/home"
-            : ctx + "/customer/login";
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,8 +65,7 @@
             gap:16px;
         }
 
-        .brand-link,
-        .home-link {
+        .brand-link {
             min-height:42px;
             display:inline-flex;
             align-items:center;
@@ -93,20 +84,6 @@
             color:#fff;
             background:linear-gradient(135deg, var(--brand), var(--teal));
             box-shadow:0 12px 24px rgba(37, 99, 235, .2);
-        }
-
-        .home-link {
-            padding:0 16px;
-            border:1px solid var(--line);
-            border-radius:8px;
-            background:rgba(255, 255, 255, .72);
-            color:#344054;
-            font-weight:700;
-        }
-
-        .home-link:hover {
-            border-color:#b8d8d1;
-            color:var(--teal);
         }
 
         .verify-layout {
@@ -344,8 +321,7 @@
         }
 
         .btn-verify,
-        .btn-resend,
-        .btn-fallback {
+        .btn-resend {
             min-height:52px;
             border-radius:8px;
             display:inline-flex;
@@ -354,8 +330,7 @@
             font-weight:800;
         }
 
-        .btn-verify,
-        .btn-fallback-primary {
+        .btn-verify {
             border:0;
             background:linear-gradient(135deg, var(--brand), var(--teal));
             color:#fff;
@@ -363,25 +338,20 @@
         }
 
         .btn-verify:hover,
-        .btn-verify:focus,
-        .btn-fallback-primary:hover,
-        .btn-fallback-primary:focus {
+        .btn-verify:focus {
             color:#fff;
             filter:brightness(.98);
             box-shadow:0 18px 30px rgba(15, 155, 142, .26);
         }
 
-        .btn-resend,
-        .btn-fallback-secondary {
+        .btn-resend {
             border:1px solid #cfd7e6;
             background:#fff;
             color:#344054;
         }
 
         .btn-resend:hover,
-        .btn-resend:focus,
-        .btn-fallback-secondary:hover,
-        .btn-fallback-secondary:focus {
+        .btn-resend:focus {
             border-color:#b8d8d1;
             color:#0f766e;
             background:#f3fbf9;
@@ -455,10 +425,6 @@
             <a class="brand-link" href="<%= ctx %>/home">
                 <span class="brand-logo"><i class="fa-solid fa-shirt"></i></span>
                 <span>Clothing Sale</span>
-            </a>
-            <a class="home-link" href="<%= ctx %>/home">
-                <i class="fa-solid fa-arrow-left"></i>
-                Back to Home
             </a>
         </div>
 
@@ -552,16 +518,6 @@
                             Resend code
                         </button>
                     </form>
-                <% } else { %>
-                    <div class="d-grid gap-2">
-                        <a class="btn btn-fallback btn-fallback-primary" href="<%= primaryFallbackHref %>">
-                            <i class="fa-solid fa-arrow-left me-2"></i>
-                            <%= primaryFallbackText %>
-                        </a>
-                        <a class="btn btn-fallback btn-fallback-secondary" href="<%= secondaryFallbackHref %>">
-                            <%= secondaryFallbackText %>
-                        </a>
-                    </div>
                 <% } %>
             </section>
         </div>
