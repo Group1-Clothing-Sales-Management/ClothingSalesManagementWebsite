@@ -53,18 +53,15 @@
     <jsp:param name="activeTab" value="customers"/>
 </jsp:include>
         <div class="admin-page">
-        <%-- Thông báo thành công --%>
         <c:if test="${not empty sessionScope.successMsg}">
             <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${sessionScope.successMsg}"/></div>
             <c:remove var="successMsg" scope="session"/>
         </c:if>
 
-        <%-- Thông báo lỗi tổng quan --%>
         <c:if test="${not empty errors.general}">
             <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errors.general}"/></div>
         </c:if>
 
-        <%-- 1. GIAO DIỆN DANH SÁCH KHÁCH HÀNG --%>
         <c:if test="${empty pageMode or pageMode eq 'list'}">
             <div class="page-header">
                 <h1 class="page-title"><i class="bi bi-people-fill"></i> Customer Management</h1>
@@ -143,15 +140,7 @@
             </div>
         </c:if>
 
-        <%-- 2. GIAO DIỆN FORM THÊM MỚI / CHỈNH SỬA KHÁCH HÀNG --%>
         <c:if test="${pageMode eq 'add' or pageMode eq 'edit'}">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="${customersBasePath}">Customer Management</a></li>
-                    <li class="breadcrumb-item active">${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer'}</li>
-                </ol>
-            </nav>
 
             <div class="page-header">
                 <h1 class="page-title">
@@ -198,7 +187,6 @@
                                     <label class="form-label fw-semibold small">Status <span class="text-danger">*</span></label>
                                     <select class="form-select ${not empty errors.status ? 'is-invalid' : ''}" name="status">
                                         <option value="ACTIVE" ${customer.status eq 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-                                        <option value="CLOCK" ${customer.status eq 'CLOCK' or customer.status eq 'PENDING' ? 'selected' : ''}>Clock</option>
                                         <option value="LOCKED" ${customer.status eq 'LOCKED' ? 'selected' : ''}>LOCKED</option>
                                     </select>
                                     <div class="invalid-feedback">${errors.status}</div>
