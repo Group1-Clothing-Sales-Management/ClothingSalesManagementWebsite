@@ -3,6 +3,7 @@ package com.clothingsale.service;
 import com.clothingsale.dao.CustomerProductDAO;
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
+import com.clothingsale.model.CartItem;
 
 import java.util.List;
 
@@ -48,4 +49,11 @@ public class CustomerProductService {
 
         return productDAO.getVariantsByProductId(productId);
     }
+    public CartItem getBuyNowItem(int variantId,
+                              int quantity) {
+
+    return productDAO.getBuyNowItem(
+            variantId,
+            quantity);
+}   
 }

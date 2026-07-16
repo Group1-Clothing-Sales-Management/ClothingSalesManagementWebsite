@@ -1,6 +1,11 @@
 package com.clothingsale.controller;
 
 import com.clothingsale.model.UserAddress;
+import com.clothingsale.model.Province;
+import com.clothingsale.model.District;
+import com.clothingsale.model.Ward;
+
+import java.io.PrintWriter;
 import com.clothingsale.service.CustomerOrderService;
 
 import jakarta.servlet.ServletException;
@@ -20,16 +25,32 @@ public class CustomerAddressController extends HttpServlet {
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
-
-        Integer userId = getCustomerUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
+ 
         String action = request.getParameter("action");
 
         if (action == null) {
             action = "list";
+        }
+
+        switch (action) {
+
+            case "provinces":
+                getProvinces(response);
+                return;
+
+            case "districts":
+                getDistricts(request, response);
+                return;
+
+            case "wards":
+                getWards(request, response);
+                return;
+        }
+
+        Integer userId = getCustomerUserId(request, response);
+
+        if (userId == null) {
+            return;
         }
 
         switch (action) {
@@ -44,7 +65,6 @@ public class CustomerAddressController extends HttpServlet {
 
             default:
                 listAddresses(request, response, userId);
-                break;
         }
     }
 
@@ -87,6 +107,8 @@ public class CustomerAddressController extends HttpServlet {
                 = service.getAddressesByUserId(userId);
 
         request.setAttribute("addresses", addresses);
+
+        request.setAttribute("provinces", service.getAllProvinces());
 
         String from = request.getParameter("from");
 
@@ -297,5 +319,119 @@ public class CustomerAddressController extends HttpServlet {
         }
 
         response.sendRedirect(redirect);
+    }
+
+    private void getProvinces(HttpServletResponse response)
+            throws IOException {
+
+        response.setContentType("application/json;charset=UTF-8");
+
+        List<Province> list = service.getAllProvinces();
+
+        PrintWriter out = response.getWriter();
+
+        out.print("[");
+
+        for (int i = 0; i < list.size(); i++) {
+
+            Province p = list.get(i);
+
+            out.print("{");
+
+            out.print("\"id\":\"" + p.getId() + "\",");
+
+            out.print("\"name\":\""
+                    + p.getProvinceName().replace("\"", "\\\"")
+                    + "\"");
+
+            out.print("}");
+
+            if (i < list.size() - 1) {
+                out.print(",");
+            }
+        }
+
+        out.print("]");
+        out.flush();
+        out.close();
+    }
+
+    private void getDistricts(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        response.setContentType("application/json;charset=UTF-8");
+
+        String provinceId = request.getParameter("provinceId");
+
+        List<District> list
+                = service.getDistrictsByProvince(provinceId);
+
+        PrintWriter out = response.getWriter();
+
+        out.print("[");
+
+        for (int i = 0; i < list.size(); i++) {
+
+            District d = list.get(i);
+
+            out.print("{");
+
+            out.print("\"id\":\"" + d.getId() + "\",");
+
+            out.print("\"name\":\""
+                    + d.getDistrictName().replace("\"", "\\\"")
+                    + "\"");
+
+            out.print("}");
+
+            if (i < list.size() - 1) {
+                out.print(",");
+            }
+        }
+
+        out.print("]");
+        out.flush();
+        out.close();
+    }
+
+    private void getWards(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        response.setContentType("application/json;charset=UTF-8");
+
+        String districtId
+                = request.getParameter("districtId");
+
+        List<Ward> list
+                = service.getWardsByDistrict(districtId);
+
+        PrintWriter out = response.getWriter();
+
+        out.print("[");
+
+        for (int i = 0; i < list.size(); i++) {
+
+            Ward w = list.get(i);
+
+            out.print("{");
+
+            out.print("\"id\":\"" + w.getId() + "\",");
+
+            out.print("\"name\":\""
+                    + w.getWardName().replace("\"", "\\\"")
+                    + "\"");
+
+            out.print("}");
+
+            if (i < list.size() - 1) {
+                out.print(",");
+            }
+        }
+
+        out.print("]");
+        out.flush();
+        out.close();
     }
 }

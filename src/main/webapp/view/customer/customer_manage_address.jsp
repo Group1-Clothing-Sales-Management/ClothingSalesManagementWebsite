@@ -22,7 +22,9 @@
                 --address-surface:#fff;
             }
 
-            * { box-sizing:border-box; }
+            * {
+                box-sizing:border-box;
+            }
 
             body {
                 min-height:100vh;
@@ -533,22 +535,49 @@
             }
 
             @media (max-width: 760px) {
-                .address-shell { padding-top:30px; }
-                .address-hero { align-items:flex-start; flex-direction:column; }
-                .hero-actions { justify-content:flex-start; }
-                .address-grid { grid-template-columns:1fr; }
+                .address-shell {
+                    padding-top:30px;
+                }
+                .address-hero {
+                    align-items:flex-start;
+                    flex-direction:column;
+                }
+                .hero-actions {
+                    justify-content:flex-start;
+                }
+                .address-grid {
+                    grid-template-columns:1fr;
+                }
             }
 
             @media (max-width: 480px) {
-                .address-shell { padding-right:14px; padding-left:14px; }
-                .address-overview { align-items:flex-start; flex-direction:column; }
-                .address-card { padding:19px; }
-                .address-card-header { flex-direction:column; }
-                .address-actions { align-items:flex-start; flex-direction:column; }
-                .address-action-group { width:100%; }
+                .address-shell {
+                    padding-right:14px;
+                    padding-left:14px;
+                }
+                .address-overview {
+                    align-items:flex-start;
+                    flex-direction:column;
+                }
+                .address-card {
+                    padding:19px;
+                }
+                .address-card-header {
+                    flex-direction:column;
+                }
+                .address-actions {
+                    align-items:flex-start;
+                    flex-direction:column;
+                }
+                .address-action-group {
+                    width:100%;
+                }
                 .address-modal .modal-header,
                 .address-modal .modal-body,
-                .address-modal .modal-footer { padding-right:18px; padding-left:18px; }
+                .address-modal .modal-footer {
+                    padding-right:18px;
+                    padding-left:18px;
+                }
             }
         </style>
     </head>
@@ -622,7 +651,12 @@
                                     </div>
                                     <div class="address-place">
                                         <i class="fa-solid fa-map-pin me-1"></i>
-                                        Ward / area code: <strong><c:out value="${a.wardId}"/></strong>
+                                        <strong>
+                                            <c:out value="${a.addressDetail}"/>,
+                                            <c:out value="${a.wardName}"/>,
+                                            <c:out value="${a.districtName}"/>,
+                                            <c:out value="${a.provinceName}"/>
+                                        </strong>
                                     </div>
                                 </div>
 
@@ -700,11 +734,22 @@
                                         </div>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label" for="editWard${a.id}">Ward / area code</label>
-                                        <div class="address-field">
-                                            <i class="fa-solid fa-map-pin"></i>
-                                            <input id="editWard${a.id}" class="form-control" type="text" name="wardId" value="${fn:escapeXml(a.wardId)}" required>
-                                        </div>
+                                        <label class="form-label">
+                                            Province
+                                        </label>
+                                        <select id="editProvince${a.id}" class="form-select"> </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">
+                                            District
+                                        </label>
+                                        <select id="editDistrict${a.id}" class="form-select"> </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">
+                                            Ward
+                                        </label>
+                                        <select id="editWard${a.id}" name="wardId" class="form-select" required> </select>
                                     </div>
                                     <div class="col-12">
                                         <div class="default-check">
@@ -760,11 +805,28 @@
                                     </div>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label" for="addWard">Ward / area code</label>
-                                    <div class="address-field">
-                                        <i class="fa-solid fa-map-pin"></i>
-                                        <input id="addWard" class="form-control" type="text" name="wardId" autocomplete="address-level3" required>
-                                    </div>
+                                    <label class="form-label">
+                                        Province
+                                    </label>
+                                    <select id="addProvince" class="form-select">
+                                        <option value=""> Select Province </option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        District
+                                    </label>
+                                    <select id="addDistrict" class="form-select"> 
+                                        <option value="">  Select District  </option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        Ward
+                                    </label>
+                                    <select id="addWard" name="wardId" class="form-select" required>
+                                        <option value=""> Select Ward </option>
+                                    </select>
                                 </div>
                                 <div class="col-12">
                                     <div class="default-check">
@@ -784,5 +846,163 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+
+                                               const baseUrl = "${pageContext.request.contextPath}/customer/address";
+                                               async function loadProvinces(selectId) {
+
+                                                   const select = document.getElementById(selectId);
+                                                   if (!select)
+                                                       return;
+                                                   const res = await fetch(baseUrl + "?action=provinces");
+                                                   const data = await
+                                                           res.json();
+                                                   select.innerHTML = "";
+                                                   const first = document.createElement("option");
+                                                   first.value = "";
+                                                   first.textContent = "Select Province";
+                                                   select.appendChild(first);
+                                                   data.forEach(p => {
+
+                                                       const option = document.createElement("option");
+                                                       option.value = p.id;
+                                                       option.textContent = p.name;
+                                                       select.appendChild(option);
+                                                   });
+                                               }
+
+                                               async function loadDistricts(provinceId, districtSelectId) {
+
+                                                   const district = document.getElementById(districtSelectId);
+
+                                                   if (!district)
+                                                       return;
+
+                                                   district.innerHTML = "";
+
+                                                   const first = document.createElement("option");
+                                                   first.value = "";
+                                                   first.textContent = "Select District";
+                                                   district.appendChild(first);
+
+                                                   if (!provinceId)
+                                                       return;
+
+                                                   const res = await fetch(
+                                                           baseUrl + "?action=districts&provinceId=" + encodeURIComponent(provinceId)
+                                                           );
+
+                                                   const data = await res.json();
+
+                                                   console.log(data);
+
+                                                   data.forEach(d => {
+
+                                                       const option = document.createElement("option");
+                                                       option.value = d.id;
+                                                       option.textContent = d.name;
+
+                                                       district.appendChild(option);
+
+                                                   });
+                                               }
+
+                                               async function loadWards(districtId, wardSelectId) {
+
+                                                   const ward = document.getElementById(wardSelectId);
+
+                                                   if (!ward)
+                                                       return;
+
+                                                   ward.innerHTML = "";
+
+                                                   const first = document.createElement("option");
+                                                   first.value = "";
+                                                   first.textContent = "Select Ward";
+                                                   ward.appendChild(first);
+
+                                                   if (!districtId)
+                                                       return;
+
+                                                   const res = await fetch(
+                                                           baseUrl + "?action=wards&districtId=" + encodeURIComponent(districtId)
+                                                           );
+
+                                                   const data = await res.json();
+
+                                                   console.log(data);
+
+                                                   data.forEach(w => {
+
+                                                       const option = document.createElement("option");
+                                                       option.value = w.id;
+                                                       option.textContent = w.name;
+
+                                                       ward.appendChild(option);
+
+                                                   });
+                                               }
+
+                                               document.addEventListener("DOMContentLoaded", function () {
+
+                                                   //================ ADD ==================
+
+                                                   loadProvinces("addProvince");
+                                                   document.getElementById("addProvince")
+                                                           .addEventListener("change", function () {
+
+                                                               loadDistricts(
+                                                                       this.value,
+                                                                       "addDistrict");
+                                                               document.getElementById("addWard").innerHTML =
+                                                                       "<option value=''>Select Ward</option>";
+                                                           });
+                                                   document.getElementById("addDistrict")
+                                                           .addEventListener("change", function () {
+
+                                                               loadWards(
+                                                                       this.value,
+                                                                       "addWard");
+                                                           });
+                                               });
+        </script>
+        <c:forEach items="${addresses}" var="a">
+            <script>
+
+                (async function () {
+
+                    await loadProvinces("editProvince${a.id}");
+                    document.getElementById("editProvince${a.id}").value =
+                            "${a.provinceId}";
+                    await loadDistricts(
+                            "${a.provinceId}",
+                            "editDistrict${a.id}");
+                    document.getElementById("editDistrict${a.id}").value =
+                            "${a.districtId}";
+                    await loadWards(
+                            "${a.districtId}",
+                            "editWard${a.id}");
+                    document.getElementById("editWard${a.id}").value =
+                            "${a.wardId}";
+                })();
+                document.getElementById("editProvince${a.id}")
+                        .addEventListener("change", function () {
+
+                            loadDistricts(
+                                    this.value,
+                                    "editDistrict${a.id}");
+                            document.getElementById("editWard${a.id}").innerHTML =
+                                    "<option value=''>Select Ward</option>";
+                        });
+                document.getElementById("editDistrict${a.id}")
+                        .addEventListener("change", function () {
+
+                            loadWards(
+                                    this.value,
+                                    "editWard${a.id}");
+                        });
+
+            </script>
+        </c:forEach>
     </body>
 </html>

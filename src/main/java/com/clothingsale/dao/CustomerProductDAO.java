@@ -2,6 +2,7 @@ package com.clothingsale.dao;
 
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
+import com.clothingsale.model.CartItem;
 import com.clothingsale.model.Category;
 import com.clothingsale.util.DBConnection;
 
@@ -13,28 +14,10 @@ public class CustomerProductDAO {
 
     public List<Category> getActiveCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "WITH AvailableCategory AS ( "
-                + "SELECT DISTINCT c.id, c.category_name, c.slug, c.status, c.parent_id "
-                + "FROM Category c "
-                + "JOIN Product p ON p.category_id = c.id "
-                + "JOIN Product_Variant pv ON pv.product_id = p.id "
-                + "WHERE c.status = 1 "
-                + "AND p.status = 'ACTIVE' "
-                + "AND pv.status = 'ACTIVE' "
-                + "AND pv.stock_quantity > 0 "
-                + "UNION ALL "
-                + "SELECT parent.id, parent.category_name, parent.slug, parent.status, parent.parent_id "
-                + "FROM Category parent "
-                + "JOIN AvailableCategory child ON child.parent_id = parent.id "
-                + "WHERE parent.status = 1 "
-                + ") "
-                + "SELECT DISTINCT id, category_name, slug, status "
-                + "FROM AvailableCategory "
-                + "ORDER BY id ASC";
+        String sql = "SELECT id, category_name, slug, status "
+                + "FROM Category WHERE status = 1 ORDER BY id ASC";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Category category = new Category();
@@ -62,21 +45,8 @@ public class CustomerProductDAO {
 
         List<Product> list = new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder();
-        List<Object> params = new ArrayList<>();
-
-        if (categoryId != null) {
-            sql.append("WITH CategoryScope AS ( ")
-                    .append("SELECT id FROM Category WHERE id = ? AND status = 1 ")
-                    .append("UNION ALL ")
-                    .append("SELECT c.id FROM Category c ")
-                    .append("JOIN CategoryScope cs ON c.parent_id = cs.id ")
-                    .append("WHERE c.status = 1 ")
-                    .append(") ");
-            params.add(categoryId);
-        }
-
-        sql.append("SELECT DISTINCT p.id, p.product_name, p.slug, "
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT p.id, p.product_name, p.slug, "
                 + "p.brand_id, p.category_id, "
                 + "p.short_description, p.long_description, "
                 + "p.status, p.created_at, p.updated_at, "
@@ -84,12 +54,12 @@ public class CustomerProductDAO {
                 + "FROM Product p "
                 + "LEFT JOIN Product_Image img "
                 + "ON p.id = img.product_id AND img.is_main = 1 "
-                + "JOIN Product_Variant pv "
+                + "LEFT JOIN Product_Variant pv "
                 + "ON p.id = pv.product_id "
-                + "AND pv.status = 'ACTIVE' "
-                + "AND pv.stock_quantity > 0 "
-                + "WHERE p.status = 'ACTIVE' "
+                + "WHERE p.status <> 'DELETED' "
         );
+
+        List<Object> params = new ArrayList<>();
 
         // Search theo tên
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -99,7 +69,8 @@ public class CustomerProductDAO {
 
         // Filter Category
         if (categoryId != null) {
-            sql.append("AND p.category_id IN (SELECT id FROM CategoryScope) ");
+            sql.append("AND p.category_id = ? ");
+            params.add(categoryId);
         }
 
         // Filter Brand
@@ -227,9 +198,7 @@ public class CustomerProductDAO {
                 + "JOIN Attribute a ON vav.attribute_id = a.id "
                 + "WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size') AS size "
                 + "FROM Product_Variant pv "
-                + "WHERE pv.product_id = ? "
-                + "AND pv.status = 'ACTIVE' "
-                + "AND pv.stock_quantity > 0";
+                + "WHERE pv.product_id = ? AND pv.status = 'ACTIVE'";
 
         try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -287,5 +256,74 @@ public class CustomerProductDAO {
         }
 
         return list;
+    }
+
+    public CartItem getBuyNowItem(int variantId,
+            int quantity) {
+
+        String sql
+                = "SELECT pv.id AS variant_id, "
+                + "pv.product_id, "
+                + "pv.sale_price, "
+                + "p.product_name, "
+                + "img.image_url AS main_image, "
+                + "(SELECT TOP 1 vav.attribute_value "
+                + " FROM Variant_Attribute_Value vav "
+                + " JOIN Attribute a ON a.id=vav.attribute_id "
+                + " WHERE vav.variant_id=pv.id "
+                + " AND a.attribute_name='Color') AS color, "
+                + "(SELECT TOP 1 vav.attribute_value "
+                + " FROM Variant_Attribute_Value vav "
+                + " JOIN Attribute a ON a.id=vav.attribute_id "
+                + " WHERE vav.variant_id=pv.id "
+                + " AND a.attribute_name='Size') AS size "
+                + "FROM Product_Variant pv "
+                + "JOIN Product p ON pv.product_id=p.id "
+                + "LEFT JOIN Product_Image img "
+                + "ON p.id=img.product_id "
+                + "AND img.is_main=1 "
+                + "WHERE pv.id=?";
+
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, variantId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                CartItem item = new CartItem();
+
+                item.setVariantId(
+                        rs.getInt("variant_id"));
+
+                item.setProductId(
+                        rs.getInt("product_id"));
+
+                item.setProductName(
+                        rs.getString("product_name"));
+
+                item.setPrice(
+                        rs.getBigDecimal("sale_price"));
+
+                item.setQuantity(quantity);
+
+                item.setImageUrl(
+                        rs.getString("main_image"));
+
+                item.setColor(
+                        rs.getString("color"));
+
+                item.setSize(
+                        rs.getString("size"));
+
+                return item;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
