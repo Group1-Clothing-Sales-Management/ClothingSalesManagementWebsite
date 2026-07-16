@@ -34,11 +34,6 @@
 
         <div class="main-content admin-page">
             <div class="container-fluid">
-                <div class="mb-3">
-                    <a href="${pageContext.request.contextPath}/StaffManageProducts" class="btn btn-sm btn-secondary">
-                        &larr; Back to Product List
-                    </a>
-                </div>
 
                 <div class="page-header">
                     <div>
