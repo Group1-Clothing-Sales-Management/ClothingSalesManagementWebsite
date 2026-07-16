@@ -645,5 +645,5 @@ BEGIN
     ALTER TABLE dbo.Voucher
         ADD CONSTRAINT FK_Voucher_Category
         FOREIGN KEY (category_id) REFERENCES dbo.Category(id)
-        ON DELETE SET NULL;
+        ON DELETE NO ACTION;
 END
