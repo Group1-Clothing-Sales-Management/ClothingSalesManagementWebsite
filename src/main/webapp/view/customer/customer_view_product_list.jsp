@@ -479,10 +479,13 @@
 
             <!-- SEARCH -->
 
-            <c:if test="${not empty param.keyword}">
+            <c:if test="${not empty param.keyword or not empty param.categoryId}">
             <form action="${pageContext.request.contextPath}/products"
                   method="get"
                   class="card search-card p-4 mb-5">
+                <c:if test="${not empty param.categoryId}">
+                    <input type="hidden" name="categoryId" value="${param.categoryId}">
+                </c:if>
 
                 <div class="row">
 

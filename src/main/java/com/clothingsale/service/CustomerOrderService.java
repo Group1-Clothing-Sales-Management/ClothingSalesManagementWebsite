@@ -7,6 +7,9 @@ import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
 import com.clothingsale.model.ReorderResult;
 import com.clothingsale.model.UserAddress;
+import com.clothingsale.model.Province;
+import com.clothingsale.model.District;
+import com.clothingsale.model.Ward;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,18 @@ public class CustomerOrderService {
         return dao.setDefaultAddress(userId, addressId);
     }
 
+    public List<Province> getAllProvinces() {
+        return dao.getAllProvinces();
+    }
+
+    public List<District> getDistrictsByProvince(String provinceId) {
+        return dao.getDistrictsByProvince(provinceId);
+    }
+
+    public List<Ward> getWardsByDistrict(String districtId) {
+        return dao.getWardsByDistrict(districtId);
+    }
+
     // =================== CART ===================
     public List<CartItem> getCartItems(int userId) {
         return dao.getCartItems(userId);
@@ -73,7 +88,9 @@ public class CustomerOrderService {
     }
 
     public Voucher getAvailableVoucherForUser(int userId, String code) {
-        if (code == null) return null;
+        if (code == null) {
+            return null;
+        }
         for (Voucher voucher : dao.getVouchersForUser(userId)) {
             if (code.trim().equalsIgnoreCase(voucher.getCode())
                     && "AVAILABLE".equals(voucher.getCustomerStatus())) {
@@ -122,6 +139,25 @@ public class CustomerOrderService {
                 carrierName,
                 selectedVariantIds
         );
+    }
+
+    public boolean placeBuyNowOrder(
+            int userId,
+            int addressId,
+            String voucherCode,
+            String note,
+            String paymentMethod,
+            String carrierName,
+            List<CartItem> cartItems) {
+
+        return dao.placeBuyNowOrder(
+                userId,
+                addressId,
+                voucherCode,
+                note,
+                paymentMethod,
+                carrierName,
+                cartItems);
     }
 
     public boolean cancelOrder(int orderId, int userId) {

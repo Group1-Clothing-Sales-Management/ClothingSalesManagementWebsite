@@ -2,6 +2,7 @@ package com.clothingsale.dao;
 
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
+import com.clothingsale.model.CartItem;
 import com.clothingsale.model.Category;
 import com.clothingsale.util.DBConnection;
 
@@ -16,9 +17,7 @@ public class CustomerProductDAO {
         String sql = "SELECT id, category_name, slug, status "
                 + "FROM Category WHERE status = 1 ORDER BY id ASC";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Category category = new Category();
@@ -257,5 +256,74 @@ public class CustomerProductDAO {
         }
 
         return list;
+    }
+
+    public CartItem getBuyNowItem(int variantId,
+            int quantity) {
+
+        String sql
+                = "SELECT pv.id AS variant_id, "
+                + "pv.product_id, "
+                + "pv.sale_price, "
+                + "p.product_name, "
+                + "img.image_url AS main_image, "
+                + "(SELECT TOP 1 vav.attribute_value "
+                + " FROM Variant_Attribute_Value vav "
+                + " JOIN Attribute a ON a.id=vav.attribute_id "
+                + " WHERE vav.variant_id=pv.id "
+                + " AND a.attribute_name='Color') AS color, "
+                + "(SELECT TOP 1 vav.attribute_value "
+                + " FROM Variant_Attribute_Value vav "
+                + " JOIN Attribute a ON a.id=vav.attribute_id "
+                + " WHERE vav.variant_id=pv.id "
+                + " AND a.attribute_name='Size') AS size "
+                + "FROM Product_Variant pv "
+                + "JOIN Product p ON pv.product_id=p.id "
+                + "LEFT JOIN Product_Image img "
+                + "ON p.id=img.product_id "
+                + "AND img.is_main=1 "
+                + "WHERE pv.id=?";
+
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, variantId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                CartItem item = new CartItem();
+
+                item.setVariantId(
+                        rs.getInt("variant_id"));
+
+                item.setProductId(
+                        rs.getInt("product_id"));
+
+                item.setProductName(
+                        rs.getString("product_name"));
+
+                item.setPrice(
+                        rs.getBigDecimal("sale_price"));
+
+                item.setQuantity(quantity);
+
+                item.setImageUrl(
+                        rs.getString("main_image"));
+
+                item.setColor(
+                        rs.getString("color"));
+
+                item.setSize(
+                        rs.getString("size"));
+
+                return item;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

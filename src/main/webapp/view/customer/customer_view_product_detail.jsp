@@ -963,6 +963,7 @@
                     </div>
 
                     <div class="col-lg-7 col-md-6 product-summary">
+
                         <div class="detail-title-row">
                             <h1 class="product-name">
                                 <span class="product-tag">Featured</span>
@@ -971,7 +972,10 @@
                         </div>
 
                         <div class="product-rating" aria-label="Product reviews">
-                            <span><span class="rating-score">Customer reviews</span> <span class="rating-stars">★★★★★</span></span>
+                            <span>
+                                <span class="rating-score">Customer reviews</span>
+                                <span class="rating-stars">★★★★★</span>
+                            </span>
                             <span>${feedbacks.size()} Ratings</span>
                             <span>In stock</span>
                         </div>
@@ -979,80 +983,225 @@
                         <c:choose>
                             <c:when test="${not empty product.variants}">
                                 <div class="price">
-                                    <span id="priceValue"><fmt:formatNumber value="${product.variants[0].salePrice}" pattern="#,##0"/> &#8363;</span>
+                                    <span id="priceValue">
+                                        <fmt:formatNumber value="${product.variants[0].salePrice}"
+                                                          pattern="#,##0"/> &#8363;
+                                    </span>
                                     <span class="price-note">Best price today</span>
                                 </div>
                             </c:when>
+
                             <c:otherwise>
                                 <div class="price">Contact</div>
                             </c:otherwise>
                         </c:choose>
 
                         <c:if test="${not empty product.variants}">
-                            <form action="${pageContext.request.contextPath}/cart" method="post" class="add-cart-form">
-                                <div class="detail-row">
-                                    <div class="detail-row-label">Shipping</div>
-                                    <div>
-                                        <div class="service-line"><i class="fa-solid fa-truck"></i><span>Fast delivery to your address</span></div>
-                                        <div class="service-line mt-1"><i class="fa-solid fa-ticket"></i><span>Free shipping for eligible orders</span></div>
+
+                            <div class="detail-row">
+
+                                <div class="detail-row-label">
+                                    Shipping
+                                </div>
+
+                                <div>
+                                    <div class="service-line">
+                                        <i class="fa-solid fa-truck"></i>
+                                        <span>Fast delivery to your address</span>
                                     </div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-row-label">Guarantee</div>
-                                    <div class="service-line"><i class="fa-solid fa-shield-heart"></i><span>15-day return support</span></div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-row-label">Variant</div>
-                                    <div>
-                                        <div class="variant-options" role="radiogroup" aria-label="Choose variant">
-                                            <c:forEach items="${product.variants}" var="v">
-                                                <button type="button"
-                                                        class="variant-option ${v.id == product.variants[0].id ? 'active' : ''}"
-                                                        data-variant-id="${v.id}">
-                                                    ${v.attributeDetails}
-                                                </button>
-                                            </c:forEach>
-                                        </div>
-                                        <select name="variantId" class="variant-select d-none">
-                                            <c:forEach items="${product.variants}" var="v">
-                                                <option value="${v.id}"
-                                                        data-price="${v.salePrice}"
-                                                        data-stock="${v.stockQuantity}"
-                                                        data-attributes="${v.attributeDetails}">
-                                                    ${v.attributeDetails}
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-row-label">Quantity</div>
-                                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                                        <div class="quantity-control">
-                                            <button type="button" class="quantity-decrease" aria-label="Decrease quantity">−</button>
-                                            <input type="number" name="quantity" class="quantity-input" value="1" min="1" max="${product.variants[0].stockQuantity}" aria-label="Quantity">
-                                            <button type="button" class="quantity-increase" aria-label="Increase quantity">+</button>
-                                        </div>
-                                        <span class="stock-text"><i class="fa-solid fa-box-open me-1"></i><b id="stockText">${product.variants[0].stockQuantity}</b> in stock</span>
+
+                                    <div class="service-line mt-1">
+                                        <i class="fa-solid fa-ticket"></i>
+                                        <span>Free shipping for eligible orders</span>
                                     </div>
                                 </div>
 
-                                <input type="hidden" name="productId" value="${product.id}">
-                                <input type="hidden" name="productName" value="${product.productName}">
-                                <input type="hidden" name="attributes" class="attributes-input" value="${product.variants[0].attributeDetails}">
-                                <input type="hidden" name="price" class="price-input" value="${product.variants[0].salePrice}">
-                                <input type="hidden" name="imageUrl" value="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}">
+                            </div>
 
-                                <div class="detail-actions">
-                                    <button type="submit" class="btn btn-cart">
-                                        <i class="fa-solid fa-cart-shopping me-2"></i>Add to cart
+                            <div class="detail-row">
+
+                                <div class="detail-row-label">
+                                    Guarantee
+                                </div>
+
+                                <div class="service-line">
+                                    <i class="fa-solid fa-shield-heart"></i>
+                                    <span>15-day return support</span>
+                                </div>
+
+                            </div>
+
+                            <div class="detail-row">
+
+                                <div class="detail-row-label">
+                                    Variant
+                                </div>
+
+                                <div>
+
+                                    <div class="variant-options">
+
+                                        <c:forEach items="${product.variants}" var="v">
+
+                                            <button type="button"
+                                                    class="variant-option ${v.id == product.variants[0].id ? 'active' : ''}"
+                                                    data-variant-id="${v.id}">
+
+                                                ${v.attributeDetails}
+
+                                            </button>
+
+                                        </c:forEach>
+
+                                    </div>
+
+                                    <select class="variant-select d-none">
+
+                                        <c:forEach items="${product.variants}" var="v">
+
+                                            <option value="${v.id}"
+                                                    data-price="${v.salePrice}"
+                                                    data-stock="${v.stockQuantity}"
+                                                    data-attributes="${v.attributeDetails}">
+
+                                                ${v.attributeDetails}
+
+                                            </option>
+
+                                        </c:forEach>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                            <div class="detail-row">
+
+                                <div class="detail-row-label">
+                                    Quantity
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+
+                                    <div class="quantity-control">
+
+                                        <button type="button"
+                                                class="quantity-decrease">
+
+                                            −
+
+                                        </button>
+
+                                        <input type="number"
+                                               class="quantity-input"
+                                               value="1"
+                                               min="1"
+                                               max="${product.variants[0].stockQuantity}">
+
+                                        <button type="button"
+                                                class="quantity-increase">
+
+                                            +
+
+                                        </button>
+
+                                    </div>
+
+                                    <span class="stock-text">
+
+                                        <i class="fa-solid fa-box-open me-1"></i>
+
+                                        <b id="stockText">
+                                            ${product.variants[0].stockQuantity}
+                                        </b>
+
+                                        in stock
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <div class="detail-actions">
+
+                                <!-- ADD TO CART -->
+                                <form action="${pageContext.request.contextPath}/cart"
+                                      method="post"
+                                      class="add-cart-form">
+
+                                    <input type="hidden"
+                                           name="variantId"
+                                           class="variant-id-input"
+                                           value="${product.variants[0].id}">
+
+                                    <input type="hidden"
+                                           name="productId"
+                                           value="${product.id}">
+
+                                    <input type="hidden"
+                                           name="productName"
+                                           value="${product.productName}">
+
+                                    <input type="hidden"
+                                           name="attributes"
+                                           class="attributes-input"
+                                           value="${product.variants[0].attributeDetails}">
+
+                                    <input type="hidden"
+                                           name="price"
+                                           class="price-input"
+                                           value="${product.variants[0].salePrice}">
+
+                                    <input type="hidden"
+                                           name="quantity"
+                                           class="quantity-input-hidden"
+                                           value="1">
+
+                                    <input type="hidden"
+                                           name="imageUrl"
+                                           value="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}">
+
+                                    <button type="submit"
+                                            class="btn btn-cart">
+
+                                        <i class="fa-solid fa-cart-shopping me-2"></i>
+                                        Add to cart
+
                                     </button>
-                                    <a href="${pageContext.request.contextPath}/cart" class="btn btn-buy-now">
-                                        <i class="fa-solid fa-bag-shopping me-2"></i>Buy now
-                                    </a>
-                                </div>
-                            </form>
+
+                                </form>
+
+                                <!-- BUY NOW -->
+                                <form action="${pageContext.request.contextPath}/customer/buy-now"
+                                      method="post"
+                                      class="buy-now-form">
+
+                                    <input type="hidden"
+                                           name="variantId"
+                                           class="buy-now-variant-id"
+                                           value="${product.variants[0].id}">
+
+                                    <input type="hidden"
+                                           name="quantity"
+                                           class="buy-now-quantity"
+                                           value="1">
+
+                                    <button type="submit"
+                                            class="btn btn-buy-now">
+
+                                        <i class="fa-solid fa-bag-shopping me-2"></i>
+                                        Buy Now
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
                         </c:if>
+
                     </div>
                 </div>
             </div>
@@ -1146,11 +1295,11 @@
                                     <div class="feedback-meta">
                                         <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
                                         <c:if test="${not empty fb.orderCode}"> · Verified purchase</c:if>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="feedback-comment">
+                                <div class="feedback-comment">
                                 <c:out value="${fb.comment}"/>
                             </div>
 
@@ -1238,126 +1387,227 @@
 
                     var form = select.closest('.add-cart-form');
                     var option = select.options[select.selectedIndex];
+
                     var priceValue = document.getElementById('priceValue');
                     var quantityInput = form.querySelector('.quantity-input');
 
-                    form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
-                    form.querySelector('.price-input').value = option.dataset.price || '0';
+                    // Add To Cart
+                    form.querySelector('.attributes-input').value =
+                            option.dataset.attributes || 'Standard';
 
-                    document.getElementById('stockText').textContent = option.dataset.stock;
+                    form.querySelector('.price-input').value =
+                            option.dataset.price || '0';
+
+                    // Buy Now
+                    document.querySelectorAll(".buy-now-variant-id").forEach(function (input) {
+                        input.value = option.value;
+                    });
+
+                    document.querySelectorAll(".buy-now-attributes").forEach(function (input) {
+                        input.value = option.dataset.attributes || "Standard";
+                    });
+
+                    document.querySelectorAll(".buy-now-price").forEach(function (input) {
+                        input.value = option.dataset.price || "0";
+                    });
+
+                    document.getElementById('stockText').textContent =
+                            option.dataset.stock;
 
                     if (priceValue) {
-                        priceValue.textContent = Number(option.dataset.price || 0).toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' \u20ab';
+                        priceValue.textContent =
+                                Number(option.dataset.price || 0)
+                                .toLocaleString('vi-VN',
+                                        {maximumFractionDigits: 0})
+                                + ' ₫';
                     }
 
                     if (quantityInput) {
+
                         quantityInput.max = option.dataset.stock;
-                        if (parseInt(quantityInput.value, 10) > parseInt(option.dataset.stock, 10)) {
+
+                        if (parseInt(quantityInput.value) >
+                                parseInt(option.dataset.stock)) {
+
                             quantityInput.value = option.dataset.stock;
                         }
+
                     }
 
                     form.querySelectorAll('.variant-option').forEach(function (button) {
-                        button.classList.toggle('active', button.dataset.variantId === option.value);
+
+                        button.classList.toggle(
+                                'active',
+                                button.dataset.variantId === option.value);
+
                     });
 
                 }
 
                 select.addEventListener('change', syncVariant);
 
-                select.closest('.add-cart-form').querySelectorAll('.variant-option').forEach(function (button) {
+                form = select.closest('.add-cart-form');
+
+                form.querySelectorAll('.variant-option').forEach(function (button) {
+
                     button.addEventListener('click', function () {
+
                         select.value = button.dataset.variantId;
+
                         select.dispatchEvent(new Event('change'));
+
                     });
+
                 });
 
                 syncVariant();
 
             });
 
+
             document.querySelectorAll('.add-cart-form').forEach(function (form) {
+
                 var quantityInput = form.querySelector('.quantity-input');
+
                 var decreaseButton = form.querySelector('.quantity-decrease');
+
                 var increaseButton = form.querySelector('.quantity-increase');
 
                 if (!quantityInput) {
                     return;
                 }
 
-                function clampQuantity() {
-                    var min = parseInt(quantityInput.min || '1', 10);
-                    var max = parseInt(quantityInput.max || '999', 10);
-                    var value = parseInt(quantityInput.value || min, 10);
-                    quantityInput.value = Math.min(Math.max(value, min), max);
+                function syncQuantity() {
+
+                    var min = parseInt(quantityInput.min || '1');
+
+                    var max = parseInt(quantityInput.max || '999');
+
+                    var value = parseInt(quantityInput.value || min);
+
+                    if (value < min)
+                        value = min;
+
+                    if (value > max)
+                        value = max;
+
+                    quantityInput.value = value;
+
+                    document.querySelectorAll(".buy-now-quantity").forEach(function (input) {
+                        input.value = value;
+                    });
+
                 }
 
                 decreaseButton.addEventListener('click', function () {
-                    quantityInput.value = parseInt(quantityInput.value || '1', 10) - 1;
-                    clampQuantity();
+
+                    quantityInput.value =
+                            parseInt(quantityInput.value || '1') - 1;
+
+                    syncQuantity();
+
                 });
 
                 increaseButton.addEventListener('click', function () {
-                    quantityInput.value = parseInt(quantityInput.value || '1', 10) + 1;
-                    clampQuantity();
+
+                    quantityInput.value =
+                            parseInt(quantityInput.value || '1') + 1;
+
+                    syncQuantity();
+
                 });
 
-                quantityInput.addEventListener('change', clampQuantity);
+                quantityInput.addEventListener('change', syncQuantity);
+
+                syncQuantity();
+
             });
 
+
             document.querySelectorAll('.feedback-filter').forEach(function (filterButton) {
+
                 filterButton.addEventListener('click', function () {
+
                     var filter = filterButton.dataset.filter;
 
                     document.querySelectorAll('.feedback-filter').forEach(function (button) {
-                        button.classList.toggle('active', button === filterButton);
+
+                        button.classList.toggle('active',
+                                button === filterButton);
+
                     });
 
                     document.querySelectorAll('.feedback-item').forEach(function (item) {
-                        var matches = filter === 'all'
+
+                        var matches =
+                                filter === 'all'
                                 || item.dataset.rating === filter
-                                || (filter === 'comments' && item.dataset.hasComment === 'true');
+                                || (filter === 'comments'
+                                        && item.dataset.hasComment === 'true');
+
                         item.hidden = !matches;
+
                     });
+
                 });
+
             });
 
+
             var params = new URLSearchParams(window.location.search);
-            var wishlistStatusParams = ['wishlistAdded', 'wishlistRemoved', 'wishlistError'];
+
+            var wishlistStatusParams = [
+                'wishlistAdded',
+                'wishlistRemoved',
+                'wishlistError'
+            ];
+
             var hasWishlistStatus = wishlistStatusParams.some(function (key) {
                 return params.has(key);
             });
 
             if (hasWishlistStatus) {
+
                 wishlistStatusParams.forEach(function (key) {
                     params.delete(key);
                 });
 
-                var cleanUrl = window.location.pathname
+                var cleanUrl =
+                        window.location.pathname
                         + (params.toString() ? '?' + params.toString() : '')
                         + window.location.hash;
+
                 window.history.replaceState({}, '', cleanUrl);
+
             }
+
 
             if (params.has('cartAdded') || params.has('cartError')) {
 
-                var modalElement = document.getElementById('cartMessageModal');
-                var isError = params.has('cartError');
+                var modalElement =
+                        document.getElementById('cartMessageModal');
+
+                var isError =
+                        params.has('cartError');
 
                 modalElement.classList.toggle('is-error', isError);
 
-                var icon = modalElement.querySelector('.cart-modal-mark i');
+                var icon =
+                        modalElement.querySelector('.cart-modal-mark i');
 
                 if (icon) {
 
-                    icon.className = isError
+                    icon.className =
+                            isError
                             ? 'fa-solid fa-triangle-exclamation'
                             : 'fa-solid fa-check';
 
                 }
 
                 document.getElementById('cartMessageTitle').textContent =
-                        isError ? 'Could Not Add Item' : 'Cart Updated';
+                        isError
+                        ? 'Could Not Add Item'
+                        : 'Cart Updated';
 
                 document.getElementById('cartMessageText').textContent =
                         params.has('wishlistAdded')
@@ -1375,7 +1625,6 @@
             }
 
         </script>
-
         <jsp:include page="/view/customer/common/footer.jsp"/>
 
     </body>

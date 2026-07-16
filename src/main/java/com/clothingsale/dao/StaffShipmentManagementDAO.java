@@ -23,7 +23,7 @@ public class StaffShipmentManagementDAO {
                         "LEFT JOIN Ward w ON o.ward_id = w.id " +
                         "LEFT JOIN District d ON w.district_id = d.id " +
                         "LEFT JOIN Province pr ON d.province_id = pr.id " +
-                        "WHERE 1=1 ");
+                        "WHERE UPPER(TRIM(o.order_status)) NOT IN ('PENDING', 'CANCELLED') ");
 
         List<Object> params = new ArrayList<>();
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -35,8 +35,11 @@ public class StaffShipmentManagementDAO {
         }
 
         if (statusFilter != null && !statusFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(statusFilter)) {
-            sql.append("AND s.shipping_status = ? ");
-            params.add(statusFilter.trim().toUpperCase());
+            sql.append("AND UPPER(TRIM(s.shipping_status)) = ? ");
+            String normalizedStatus = statusFilter.trim().toUpperCase();
+            // Keep compatibility with the old form value while storing the
+            // schema-consistent FAILED status.
+            params.add("FAILURE".equals(normalizedStatus) ? "FAILED" : normalizedStatus);
         }
 
         sql.append("ORDER BY o.created_at DESC");
@@ -84,7 +87,7 @@ public class StaffShipmentManagementDAO {
                 + "LEFT JOIN Ward w ON o.ward_id = w.id "
                 + "LEFT JOIN District d ON w.district_id = d.id "
                 + "LEFT JOIN Province pr ON d.province_id = pr.id "
-                + "WHERE s.id = ?";
+                + "WHERE s.id = ? AND UPPER(TRIM(o.order_status)) NOT IN ('PENDING', 'CANCELLED')";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, shipmentId);
@@ -112,56 +115,114 @@ public class StaffShipmentManagementDAO {
         return null;
     }
 
-    public boolean updateDeliveryOutcome(int shipmentId, String newShippingStatus, String remarks) {
-        String queryShipment = "SELECT o.id AS order_id, p.payment_method, p.payment_status " +
-                "FROM Shipment s JOIN [Order] o ON o.shipment_id = s.id " +
-                "LEFT JOIN Payment p ON p.order_id = o.id WHERE s.id = ?";
+    public boolean updateDeliveryOutcome(int shipmentId, String requestedStatus, String remarks) {
+        String newShippingStatus = normalizeOutcome(requestedStatus);
+        if (shipmentId <= 0 || newShippingStatus == null) {
+            return false;
+        }
+
+        String queryShipment = "SELECT o.id AS order_id, o.order_status, "
+                + "s.shipping_status, p.payment_method, p.payment_status "
+                + "FROM Shipment s JOIN [Order] o ON o.shipment_id = s.id "
+                + "LEFT JOIN Payment p ON p.order_id = o.id WHERE s.id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psCheck = conn.prepareStatement(queryShipment)) {
-                psCheck.setInt(1, shipmentId);
-                int orderId = 0;
-                String paymentMethod = null;
-                String paymentStatus = null;
-                try (ResultSet rs = psCheck.executeQuery()) {
-                    if (rs.next()) {
+            try {
+                int orderId;
+                String currentOrderStatus;
+                String paymentMethod;
+                String paymentStatus;
+
+                try (PreparedStatement psCheck = conn.prepareStatement(queryShipment)) {
+                    psCheck.setInt(1, shipmentId);
+                    try (ResultSet rs = psCheck.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
                         orderId = rs.getInt("order_id");
-                        paymentMethod = rs.getString("payment_method");
-                        paymentStatus = rs.getString("payment_status");
-                    } else {
+                        currentOrderStatus = normalize(rs.getString("order_status"));
+                        paymentMethod = normalize(rs.getString("payment_method"));
+                        paymentStatus = normalize(rs.getString("payment_status"));
+                    }
+                }
+
+                String expectedShippingStatus;
+                String mappedOrderStatus;
+                if ("SHIPPING".equals(newShippingStatus)) {
+                    expectedShippingStatus = "PENDING_PICKUP";
+                    mappedOrderStatus = "SHIPPING";
+                    if (!"CONFIRMED".equals(currentOrderStatus)) {
+                        conn.rollback();
+                        return false;
+                    }
+                } else if ("SUCCESS".equals(newShippingStatus)) {
+                    expectedShippingStatus = "SHIPPING";
+                    mappedOrderStatus = "SUCCESS";
+                    if (!"SHIPPING".equals(currentOrderStatus)) {
+                        conn.rollback();
+                        return false;
+                    }
+                } else {
+                    expectedShippingStatus = "SHIPPING";
+                    // A failed delivery is a returned order, not an invented
+                    // FAILURE order status. This also makes stock restoration
+                    // visible in the existing customer/order lifecycle.
+                    mappedOrderStatus = "RETURNED";
+                    if (!"SHIPPING".equals(currentOrderStatus)) {
                         conn.rollback();
                         return false;
                     }
                 }
 
-                String updateShipment = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
+                String updateShipment = "UPDATE Shipment SET shipping_status = ? "
+                        + "WHERE id = ? AND UPPER(TRIM(shipping_status)) = ?";
                 try (PreparedStatement psS = conn.prepareStatement(updateShipment)) {
                     psS.setString(1, newShippingStatus);
                     psS.setInt(2, shipmentId);
-                    psS.executeUpdate();
+                    psS.setString(3, expectedShippingStatus);
+                    if (psS.executeUpdate() == 0) {
+                        conn.rollback();
+                        return false;
+                    }
                 }
 
-                String mappedOrderStatus = "SHIPPING";
-                if ("SUCCESS".equalsIgnoreCase(newShippingStatus)) {
-                    mappedOrderStatus = "SUCCESS";
-                } else if ("FAILURE".equalsIgnoreCase(newShippingStatus)) {
-                    mappedOrderStatus = "FAILURE";
+                String note = remarks == null || remarks.trim().isEmpty()
+                        ? null
+                        : "[Staff Note: " + remarks.trim() + "]";
+                String updateOrder;
+                if (note == null) {
+                    updateOrder = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() "
+                            + "WHERE id = ? AND order_status = ?";
+                } else {
+                    updateOrder = "UPDATE [Order] SET order_status = ?, note = ?, updated_at = GETDATE() "
+                            + "WHERE id = ? AND order_status = ?";
                 }
-
-                String updateOrder = "UPDATE [Order] SET order_status = ?, note = ?, updated_at = GETDATE() WHERE id = ?";
                 try (PreparedStatement psO = conn.prepareStatement(updateOrder)) {
                     psO.setString(1, mappedOrderStatus);
-                    psO.setString(2,
-                            remarks != null && !remarks.trim().isEmpty() ? "[Staff Note: " + remarks.trim() + "]" : "");
-
-                    psO.setInt(3, orderId);
-                    psO.executeUpdate();
+                    if (note == null) {
+                        psO.setInt(2, orderId);
+                        psO.setString(3, currentOrderStatus);
+                    } else {
+                        psO.setString(2, note);
+                        psO.setInt(3, orderId);
+                        psO.setString(4, currentOrderStatus);
+                    }
+                    if (psO.executeUpdate() == 0) {
+                        conn.rollback();
+                        return false;
+                    }
                 }
 
-                if ("SUCCESS".equalsIgnoreCase(newShippingStatus) && "COD".equalsIgnoreCase(paymentMethod)
-                        && "UNPAID".equalsIgnoreCase(paymentStatus)) {
-                    String updatePayment = "UPDATE Payment SET payment_status = 'PAID', payment_date = GETDATE() WHERE order_id = ?";
+                if ("FAILED".equals(newShippingStatus)) {
+                    restoreStockForOrder(conn, orderId);
+                    updatePaymentAfterFailure(conn, orderId, paymentMethod, paymentStatus);
+                } else if ("SUCCESS".equals(newShippingStatus)
+                        && "COD".equals(paymentMethod)
+                        && "UNPAID".equals(paymentStatus)) {
+                    String updatePayment = "UPDATE Payment SET payment_status = 'PAID', payment_date = GETDATE() "
+                            + "WHERE order_id = ? AND payment_status = 'UNPAID'";
                     try (PreparedStatement psP = conn.prepareStatement(updatePayment)) {
                         psP.setInt(1, orderId);
                         psP.executeUpdate();
@@ -177,6 +238,63 @@ public class StaffShipmentManagementDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private String normalizeOutcome(String requestedStatus) {
+        String status = normalize(requestedStatus);
+        if ("FAILURE".equals(status)) {
+            return "FAILED";
+        }
+        if ("SHIPPING".equals(status) || "SUCCESS".equals(status) || "FAILED".equals(status)) {
+            return status;
+        }
+        return null;
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toUpperCase();
+    }
+
+    private void restoreStockForOrder(Connection conn, int orderId) throws SQLException {
+        String selectSql = "SELECT variant_id, quantity FROM Order_Detail WHERE order_id = ?";
+        String restoreSql = "UPDATE Product_Variant SET stock_quantity = stock_quantity + ? WHERE id = ?";
+
+        try (PreparedStatement psDetails = conn.prepareStatement(selectSql);
+                PreparedStatement psRestore = conn.prepareStatement(restoreSql)) {
+            psDetails.setInt(1, orderId);
+            try (ResultSet rs = psDetails.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+                    if (!variantIsNull && variantId > 0 && quantity > 0) {
+                        psRestore.setInt(1, quantity);
+                        psRestore.setInt(2, variantId);
+                        psRestore.addBatch();
+                    }
+                }
+            }
+            psRestore.executeBatch();
+        }
+    }
+
+    private void updatePaymentAfterFailure(Connection conn, int orderId,
+            String paymentMethod, String paymentStatus) throws SQLException {
+        if ("PAID".equals(paymentStatus)) {
+            String sql = "UPDATE Payment SET payment_status = 'REFUNDED', payment_date = GETDATE() "
+                    + "WHERE order_id = ? AND payment_status = 'PAID'";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
+        } else if (!"COD".equals(paymentMethod) && "UNPAID".equals(paymentStatus)) {
+            String sql = "UPDATE Payment SET payment_status = 'FAILED', payment_date = GETDATE() "
+                    + "WHERE order_id = ? AND payment_status = 'UNPAID'";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
         }
     }
 }

@@ -62,7 +62,7 @@
                                 <option value="PENDING_PICKUP" ${selectedStatus == 'PENDING_PICKUP' ? 'selected' : ''}>Pending Pickup</option>
                                 <option value="SHIPPING" ${selectedStatus == 'SHIPPING' ? 'selected' : ''}>In Transit</option>
                                 <option value="SUCCESS" ${selectedStatus == 'SUCCESS' ? 'selected' : ''}>Success</option>
-                                <option value="FAILURE" ${selectedStatus == 'FAILURE' ? 'selected' : ''}>Failure</option>
+                                <option value="FAILED" ${selectedStatus == 'FAILED' || selectedStatus == 'FAILURE' ? 'selected' : ''}>Failure</option>
                             </select>
                         </div>
                         <div class="col-md-3 d-grid">
@@ -123,7 +123,7 @@
                                                 </td>
                                                 <td>
     <c:choose>
-        <c:when test="${s.shippingStatus == 'FAILURE' and not empty s.note}">
+        <c:when test="${(s.shippingStatus == 'FAILED' || s.shippingStatus == 'FAILURE') and not empty s.note}">
             <div class="note-failure">${s.note}</div>
         </c:when>
         <c:otherwise>

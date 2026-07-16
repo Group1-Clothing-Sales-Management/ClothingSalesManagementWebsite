@@ -25,7 +25,7 @@ public class StaffShipmentManagementService {
             return "Shipment record not found for this order.";
         }
 
-        boolean success = dao.updateDeliveryOutcome(shipmentId, outcome.toUpperCase(), remarks);
+        boolean success = dao.updateDeliveryOutcome(shipmentId, outcome.trim().toUpperCase(), remarks);
         if (success) {
             return "SUCCESS";
         } else {

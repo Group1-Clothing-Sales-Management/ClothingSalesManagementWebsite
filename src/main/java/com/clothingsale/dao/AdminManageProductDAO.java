@@ -139,7 +139,12 @@ public class AdminManageProductDAO {
                 psProd.setString(6, p.getLongDescription());
                 psProd.setString(7, p.getStatus());
                 psProd.setInt(8, p.getId());
-                psProd.executeUpdate();
+                int updatedRows = psProd.executeUpdate();
+
+                if (updatedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
 
                 if (imageName != null) {
                     boolean hasMainImg = false;
@@ -455,15 +460,26 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean updateVariantStatus(int variantId, String status) {
-        String sql = "UPDATE Product_Variant SET status = ? WHERE id = ?";
+    public boolean updateVariantStatus(
+            int productId,
+            int variantId,
+            String status
+    ) {
+        String sql = "UPDATE Product_Variant "
+                + "SET status = ? "
+                + "WHERE id = ? AND product_id = ?";
+
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, status);
             ps.setInt(2, variantId);
+            ps.setInt(3, productId);
+
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Error updating variant status: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println(
+                    "Error updating variant status: " + e.getMessage()
+            );
             return false;
         }
     }
@@ -537,6 +553,73 @@ public class AdminManageProductDAO {
                 }
             } catch (Exception e) {
             }
+        }
+    }
+
+    public boolean variantCombinationExists(
+            int productId,
+            String size,
+            String color
+    ) {
+        String sql = "SELECT COUNT(*) "
+                + "FROM Product_Variant "
+                + "WHERE product_id = ? "
+                + "AND UPPER(LTRIM(RTRIM(size))) = UPPER(?) "
+                + "AND UPPER(LTRIM(RTRIM(color))) = UPPER(?)";
+
+        try (
+                Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.setString(2, size.trim());
+            ps.setString(3, color.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
+    public boolean insertVariants(
+            List<com.clothingsale.model.ProductVariant> variants
+    ) {
+        String sql = "INSERT INTO Product_Variant "
+                + "(product_id, sku, cost_price, sale_price, "
+                + "stock_quantity, status, color, size) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (com.clothingsale.model.ProductVariant variant : variants) {
+                    ps.setInt(1, variant.getProductId());
+                    ps.setString(2, variant.getSku());
+                    ps.setBigDecimal(3, variant.getCostPrice());
+                    ps.setBigDecimal(4, variant.getSalePrice());
+                    ps.setInt(5, variant.getStockQuantity());
+                    ps.setString(6, variant.getStatus());
+                    ps.setString(7, variant.getColor());
+                    ps.setString(8, variant.getSize());
+
+                    ps.addBatch();
+                }
+
+                ps.executeBatch();
+                conn.commit();
+
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

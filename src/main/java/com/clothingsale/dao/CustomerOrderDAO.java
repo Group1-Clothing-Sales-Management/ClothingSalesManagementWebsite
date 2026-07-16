@@ -5,7 +5,11 @@ import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
 import com.clothingsale.model.Shipment;
 import com.clothingsale.model.UserAddress;
+import com.clothingsale.model.Province;
+import com.clothingsale.model.District;
+import com.clothingsale.model.Ward;
 import com.clothingsale.model.Voucher;
+
 import com.clothingsale.util.DBConnection;
 import java.math.BigDecimal;
 
@@ -253,10 +257,10 @@ public class CustomerOrderDAO {
                     detail.setLineTotal(
                             price.multiply(BigDecimal.valueOf(detail.getQuantity())));
 
-                    boolean activeProduct =
-                            "ACTIVE".equalsIgnoreCase(detail.getCurrentProductStatus());
-                    boolean activeVariant =
-                            "ACTIVE".equalsIgnoreCase(detail.getCurrentVariantStatus());
+                    boolean activeProduct
+                            = "ACTIVE".equalsIgnoreCase(detail.getCurrentProductStatus());
+                    boolean activeVariant
+                            = "ACTIVE".equalsIgnoreCase(detail.getCurrentVariantStatus());
                     boolean hasStock = detail.getCurrentStock() > 0;
 
                     detail.setReorderable(
@@ -478,7 +482,7 @@ public class CustomerOrderDAO {
             createPayment(con, orderId, paymentMethod, totalPayment);
 
             if (voucher != null) {
-                try (PreparedStatement ps = con.prepareStatement(
+                try ( PreparedStatement ps = con.prepareStatement(
                         "UPDATE Voucher SET used_count = used_count + 1 WHERE id=? AND used_count < usage_limit")) {
                     ps.setInt(1, voucher.getId());
                     if (ps.executeUpdate() == 0) {
@@ -515,6 +519,180 @@ public class CustomerOrderDAO {
             } catch (Exception ex) {
             }
         }
+    }
+
+    public boolean placeBuyNowOrder(
+            int userId,
+            int addressId,
+            String voucherCode,
+            String note,
+            String paymentMethod,
+            String carrierName,
+            List<CartItem> cartItems) {
+
+        Connection con = null;
+
+        try {
+
+            con = DBConnection.getConnection();
+            con.setAutoCommit(false);
+
+            if (cartItems == null || cartItems.isEmpty()) {
+                con.rollback();
+                return false;
+            }
+
+            UserAddress address = getAddressById(addressId);
+
+            if (address == null || address.getUserId() != userId) {
+                con.rollback();
+                return false;
+            }
+
+            // ===== CHECK STOCK =====
+            for (CartItem item : cartItems) {
+
+                int availableStock
+                        = cartDAO.getAvailableStock(item.getVariantId());
+
+                if (availableStock < item.getQuantity()) {
+                    con.rollback();
+                    return false;
+                }
+
+            }
+
+            // ===== SUBTOTAL =====
+            BigDecimal subtotal = BigDecimal.ZERO;
+
+            for (CartItem item : cartItems) {
+
+                subtotal = subtotal.add(
+                        item.getPrice().multiply(
+                                BigDecimal.valueOf(item.getQuantity()))
+                );
+
+            }
+
+            // ===== VOUCHER =====
+            Voucher voucher = getVoucherByCode(voucherCode);
+
+            if (voucher != null
+                    && hasUserUsedVoucher(userId, voucher.getId())) {
+
+                voucher = null;
+
+            }
+
+            BigDecimal discount
+                    = calculateDiscount(voucher, subtotal);
+
+            BigDecimal shippingFee
+                    = BigDecimal.valueOf(30000);
+
+            BigDecimal totalPayment
+                    = subtotal.subtract(discount)
+                            .add(shippingFee);
+
+            // ===== CREATE SHIPMENT =====
+            Shipment shipment = new Shipment();
+
+            shipment.setCarrierName(carrierName);
+            shipment.setShippingStatus("PENDING_PICKUP");
+
+            int shipmentId
+                    = createShipment(con, carrierName);
+
+            shipment.setId(shipmentId);
+
+            // ===== CREATE ORDER =====
+            int orderId
+                    = createOrder(
+                            con,
+                            userId,
+                            voucher,
+                            address,
+                            subtotal,
+                            discount,
+                            shippingFee,
+                            totalPayment,
+                            note,
+                            shipment);
+
+            // ===== CREATE ORDER DETAILS =====
+            for (CartItem item : cartItems) {
+
+                createOrderDetail(
+                        con,
+                        orderId,
+                        item);
+
+                decreaseStock(
+                        con,
+                        item.getVariantId(),
+                        item.getQuantity());
+
+            }
+
+            // ===== PAYMENT =====
+            createPayment(
+                    con,
+                    orderId,
+                    paymentMethod,
+                    totalPayment);
+
+            // ===== UPDATE VOUCHER =====
+            if (voucher != null) {
+
+                try ( PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Voucher "
+                        + "SET used_count = used_count + 1 "
+                        + "WHERE id=? "
+                        + "AND used_count < usage_limit")) {
+
+                    ps.setInt(1, voucher.getId());
+
+                    if (ps.executeUpdate() == 0) {
+                        throw new SQLException("Voucher usage limit reached");
+                    }
+
+                }
+
+            }
+
+            // ===== BUY NOW KHÔNG CLEAR CART =====
+            con.commit();
+
+            return true;
+
+        } catch (Exception e) {
+
+            try {
+
+                if (con != null) {
+                    con.rollback();
+                }
+
+            } catch (Exception ex) {
+            }
+
+            e.printStackTrace();
+
+            return false;
+
+        } finally {
+
+            try {
+
+                if (con != null) {
+                    con.close();
+                }
+
+            } catch (Exception ex) {
+            }
+
+        }
+
     }
 
     private void createPayment(
@@ -569,31 +747,29 @@ public class CustomerOrderDAO {
 
     public Voucher getVoucherByCode(String code) {
 
-    if (code == null || code.trim().isEmpty()) {
-        return null;
-    }
+        if (code == null || code.trim().isEmpty()) {
+            return null;
+        }
 
-    String sql =
-        "SELECT * FROM Voucher " +
-        "WHERE code=? " +
-        "AND GETDATE() BETWEEN start_date AND end_date " +
-        "AND used_count < usage_limit";
+        String sql
+                = "SELECT * FROM Voucher "
+                + "WHERE code=? "
+                + "AND GETDATE() BETWEEN start_date AND end_date "
+                + "AND used_count < usage_limit";
 
-    try (
-        Connection con = DBConnection.getConnection();
-        PreparedStatement ps = con.prepareStatement(sql)
-    ) {
+        try (
+                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
-        ps.setString(1, code.trim());
+            ps.setString(1, code.trim());
 
-        ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
-        if (rs.next()) {
+            if (rs.next()) {
 
-            Voucher v = new Voucher();
+                Voucher v = new Voucher();
 
-            v.setId(rs.getInt("id"));
-            v.setCode(rs.getString("code"));
+                v.setId(rs.getInt("id"));
+                v.setCode(rs.getString("code"));
                 v.setTitle(rs.getString("title"));
                 v.setDiscountType(rs.getString("discount_type"));
                 v.setDiscountValue(rs.getBigDecimal("discount_value"));
@@ -619,9 +795,9 @@ public class CustomerOrderDAO {
         String sql = "SELECT v.*, (SELECT COUNT(*) FROM [Order] o "
                 + "WHERE o.voucher_id=v.id AND o.user_id=? AND o.order_status <> 'CANCELLED') AS user_used_count "
                 + "FROM Voucher v ORDER BY v.end_date ASC";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Voucher v = new Voucher();
                     v.setId(rs.getInt("id"));
@@ -647,10 +823,10 @@ public class CustomerOrderDAO {
 
     private boolean hasUserUsedVoucher(int userId, int voucherId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM [Order] WHERE user_id=? AND voucher_id=? AND order_status <> 'CANCELLED'";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, voucherId);
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
             }
         }
@@ -715,11 +891,11 @@ public class CustomerOrderDAO {
                 + "AND user_id=? "
                 + "AND order_status='PENDING'";
 
-        try (Connection con = DBConnection.getConnection()) {
+        try ( Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
 
             try {
-                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                try ( PreparedStatement ps = con.prepareStatement(sql)) {
                     ps.setInt(1, orderId);
                     ps.setInt(2, userId);
 
@@ -761,12 +937,11 @@ public class CustomerOrderDAO {
                 + "SET stock_quantity = stock_quantity + ? "
                 + "WHERE id=?";
 
-        try (PreparedStatement select = con.prepareStatement(selectSql);
-                PreparedStatement update = con.prepareStatement(updateSql)) {
+        try ( PreparedStatement select = con.prepareStatement(selectSql);  PreparedStatement update = con.prepareStatement(updateSql)) {
 
             select.setInt(1, orderId);
 
-            try (ResultSet rs = select.executeQuery()) {
+            try ( ResultSet rs = select.executeQuery()) {
                 while (rs.next()) {
                     int variantId = rs.getInt("variant_id");
                     boolean variantIsNull = rs.wasNull();
@@ -867,10 +1042,18 @@ public class CustomerOrderDAO {
         List<UserAddress> list = new ArrayList<>();
 
         String sql
-                = "SELECT * "
-                + "FROM User_Address "
-                + "WHERE user_id = ? "
-                + "ORDER BY is_default DESC, id DESC";
+                = "SELECT ua.*, "
+                + "w.ward_name, "
+                + "w.district_id, "
+                + "d.district_name, "
+                + "d.province_id, "
+                + "p.province_name "
+                + "FROM User_Address ua "
+                + "JOIN Ward w ON ua.ward_id = w.id "
+                + "JOIN District d ON w.district_id = d.id "
+                + "JOIN Province p ON d.province_id = p.id "
+                + "WHERE ua.user_id = ? "
+                + "ORDER BY ua.is_default DESC, ua.id DESC";
 
         try (
                  Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
@@ -886,20 +1069,18 @@ public class CustomerOrderDAO {
                 a.setId(rs.getInt("id"));
                 a.setUserId(rs.getInt("user_id"));
 
-                a.setRecipientName(
-                        rs.getString("recipient_name"));
+                a.setRecipientName(rs.getString("recipient_name"));
+                a.setRecipientPhone(rs.getString("recipient_phone"));
+                a.setWardId(rs.getString("ward_id"));
+                a.setDistrictId(rs.getString("district_id"));
+                a.setProvinceId(rs.getString("province_id"));
+                a.setWardName(rs.getString("ward_name"));
+                a.setDistrictName(rs.getString("district_name"));
+                a.setProvinceName(rs.getString("province_name"));
 
-                a.setRecipientPhone(
-                        rs.getString("recipient_phone"));
+                a.setAddressDetail(rs.getString("address_detail"));
 
-                a.setWardId(
-                        rs.getString("ward_id"));
-
-                a.setAddressDetail(
-                        rs.getString("address_detail"));
-
-                a.setDefault(
-                        rs.getBoolean("is_default"));
+                a.setDefault(rs.getBoolean("is_default"));
 
                 list.add(a);
             }
@@ -914,9 +1095,17 @@ public class CustomerOrderDAO {
     public UserAddress getAddressById(int id) {
 
         String sql
-                = "SELECT * "
-                + "FROM User_Address "
-                + "WHERE id = ?";
+                = "SELECT ua.*, "
+                + "w.ward_name, "
+                + "w.district_id, "
+                + "d.district_name, "
+                + "d.province_id, "
+                + "p.province_name "
+                + "FROM User_Address ua "
+                + "JOIN Ward w ON ua.ward_id = w.id "
+                + "JOIN District d ON w.district_id = d.id "
+                + "JOIN Province p ON d.province_id = p.id "
+                + "WHERE ua.id = ?";
 
         try (
                  Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
@@ -932,20 +1121,16 @@ public class CustomerOrderDAO {
                 a.setId(rs.getInt("id"));
                 a.setUserId(rs.getInt("user_id"));
 
-                a.setRecipientName(
-                        rs.getString("recipient_name"));
-
-                a.setRecipientPhone(
-                        rs.getString("recipient_phone"));
-
-                a.setWardId(
-                        rs.getString("ward_id"));
-
-                a.setAddressDetail(
-                        rs.getString("address_detail"));
-
-                a.setDefault(
-                        rs.getBoolean("is_default"));
+                a.setRecipientName(rs.getString("recipient_name"));
+                a.setRecipientPhone(rs.getString("recipient_phone"));
+                a.setWardId(rs.getString("ward_id"));
+                a.setDistrictId(rs.getString("district_id"));
+                a.setProvinceId(rs.getString("province_id"));
+                a.setWardName(rs.getString("ward_name"));
+                a.setDistrictName(rs.getString("district_name"));
+                a.setProvinceName(rs.getString("province_name"));
+                a.setAddressDetail(rs.getString("address_detail"));
+                a.setDefault(rs.getBoolean("is_default"));
 
                 return a;
             }
@@ -955,6 +1140,110 @@ public class CustomerOrderDAO {
         }
 
         return null;
+    }
+
+    public List<Province> getAllProvinces() {
+
+        List<Province> list = new ArrayList<>();
+
+        String sql
+                = "SELECT * FROM Province ORDER BY province_name";
+
+        try (
+                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+
+                Province p = new Province();
+
+                p.setId(rs.getString("id"));
+                p.setProvinceName(rs.getString("province_name"));
+                p.setType(rs.getString("type"));
+
+                list.add(p);
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+
+    }
+
+    public List<District> getDistrictsByProvince(String provinceId) {
+
+        List<District> list = new ArrayList<>();
+
+        String sql
+                = "SELECT * FROM District "
+                + "WHERE province_id=? "
+                + "ORDER BY district_name";
+
+        try (
+                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, provinceId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                District d = new District();
+
+                d.setId(rs.getString("id"));
+                d.setDistrictName(rs.getString("district_name"));
+                d.setProvinceId(rs.getString("province_id"));
+                d.setType(rs.getString("type"));
+
+                list.add(d);
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+
+    }
+
+    public List<Ward> getWardsByDistrict(String districtId) {
+
+        List<Ward> list = new ArrayList<>();
+
+        String sql
+                = "SELECT * FROM Ward "
+                + "WHERE district_id=? "
+                + "ORDER BY ward_name";
+
+        try (
+                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, districtId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Ward w = new Ward();
+
+                w.setId(rs.getString("id"));
+                w.setWardName(rs.getString("ward_name"));
+                w.setDistrictId(rs.getString("district_id"));
+                w.setType(rs.getString("type"));
+
+                list.add(w);
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+
     }
 
     private int countAddressByUser(
@@ -1076,19 +1365,24 @@ public class CustomerOrderDAO {
         return false;
     }
 
-    public UserAddress getDefaultAddress(
-            int userId) {
+    public UserAddress getDefaultAddress(int userId) {
 
         String sql
-                = "SELECT * "
-                + "FROM User_Address "
-                + "WHERE user_id = ? "
-                + "AND is_default = 1";
+                = "SELECT ua.*, "
+                + "w.ward_name, "
+                + "w.district_id, "
+                + "d.district_name, "
+                + "d.province_id, "
+                + "p.province_name "
+                + "FROM User_Address ua "
+                + "JOIN Ward w ON ua.ward_id = w.id "
+                + "JOIN District d ON w.district_id = d.id "
+                + "JOIN Province p ON d.province_id = p.id "
+                + "WHERE ua.user_id = ? "
+                + "AND ua.is_default = 1";
 
         try (
-                 Connection con
-                = DBConnection.getConnection();  PreparedStatement ps
-                = con.prepareStatement(sql)) {
+                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
 
@@ -1101,26 +1395,21 @@ public class CustomerOrderDAO {
                 a.setId(rs.getInt("id"));
                 a.setUserId(rs.getInt("user_id"));
 
-                a.setRecipientName(
-                        rs.getString("recipient_name"));
-
-                a.setRecipientPhone(
-                        rs.getString("recipient_phone"));
-
-                a.setWardId(
-                        rs.getString("ward_id"));
-
-                a.setAddressDetail(
-                        rs.getString("address_detail"));
-
-                a.setDefault(
-                        rs.getBoolean("is_default"));
+                a.setRecipientName(rs.getString("recipient_name"));
+                a.setRecipientPhone(rs.getString("recipient_phone"));
+                a.setWardId(rs.getString("ward_id"));
+                a.setDistrictId(rs.getString("district_id"));
+                a.setProvinceId(rs.getString("province_id"));
+                a.setWardName(rs.getString("ward_name"));
+                a.setDistrictName(rs.getString("district_name"));
+                a.setProvinceName(rs.getString("province_name"));
+                a.setAddressDetail(rs.getString("address_detail"));
+                a.setDefault(rs.getBoolean("is_default"));
 
                 return a;
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 

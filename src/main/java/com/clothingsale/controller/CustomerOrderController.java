@@ -33,7 +33,7 @@ public class CustomerOrderController extends HttpServlet {
         }
 
         int userId = (Integer) session.getAttribute("authUserId");
-
+        boolean buyNow = "1".equals(request.getParameter("buyNow"));
         boolean selectionMode = "1".equals(request.getParameter("selectionMode"));
 
         Set<Integer> selectedVariantIds
@@ -41,9 +41,28 @@ public class CustomerOrderController extends HttpServlet {
                         ? parseSelectedVariantIds(request.getParameterValues("selectedVariantId"))
                         : getCheckoutSelectedVariantIds(session);
 
-        List<CartItem> cartItems
-                = service.getCartItems(userId, selectedVariantIds);
-
+        List<CartItem> cartItems;
+        if (buyNow) {
+            cartItems = (List<CartItem>) session.getAttribute("buyNowItems");
+            for (CartItem item : cartItems) {
+                System.out.println("==========");
+                System.out.println(item.getProductName());
+                System.out.println(item.getImageUrl());
+                System.out.println(item.getColor());
+                System.out.println(item.getSize());
+                System.out.println(item.getPrice());
+            }
+        } else {
+            cartItems = service.getCartItems(userId, selectedVariantIds);
+            for (CartItem item : cartItems) {
+                System.out.println("==========");
+                System.out.println(item.getProductName());
+                System.out.println(item.getImageUrl());
+                System.out.println(item.getColor());
+                System.out.println(item.getSize());
+                System.out.println(item.getPrice());
+            }
+        }
         if (cartItems.isEmpty()) {
             session.removeAttribute("checkoutSelectedVariantIds");
             session.setAttribute("cartMessage",
@@ -59,9 +78,22 @@ public class CustomerOrderController extends HttpServlet {
         List<UserAddress> addresses
                 = service.getAddressesByUserId(userId);
 
-        BigDecimal total
-                = service.getCartTotal(userId, selectedVariantIds);
-
+        BigDecimal total;
+        if (buyNow) {
+            total = BigDecimal.ZERO;
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    total = total.add(
+                            item.getPrice()
+                                    .multiply(
+                                            BigDecimal.valueOf(item.getQuantity())
+                                    )
+                    );
+                }
+            }
+        } else {
+            total = service.getCartTotal(userId, selectedVariantIds);
+        }
         BigDecimal shippingFee = BigDecimal.valueOf(30000);
         BigDecimal discount = BigDecimal.ZERO;
         String voucherCode = request.getParameter("voucherCode");
@@ -115,15 +147,48 @@ public class CustomerOrderController extends HttpServlet {
 
         int userId = (Integer) session.getAttribute("authUserId");
 
-        Set<Integer> selectedVariantIds
-                = getCheckoutSelectedVariantIds(session);
+        boolean buyNow = session.getAttribute("buyNowItems") != null;
 
-        List<CartItem> cartItems
-                = service.getCartItems(userId, selectedVariantIds);
+        Set<Integer> selectedVariantIds = buyNow
+                ? null
+                : getCheckoutSelectedVariantIds(session);
 
-        BigDecimal cartTotal
-                = service.getCartTotal(userId, selectedVariantIds);
+        List<CartItem> cartItems;
 
+        BigDecimal cartTotal;
+
+        if (buyNow) {
+
+            cartItems = (List<CartItem>) session.getAttribute("buyNowItems");
+
+            cartTotal = BigDecimal.ZERO;
+
+            if (cartItems != null) {
+
+                for (CartItem item : cartItems) {
+
+                    cartTotal = cartTotal.add(
+                            item.getPrice()
+                                    .multiply(
+                                            BigDecimal.valueOf(item.getQuantity())
+                                    )
+                    );
+
+                }
+
+            }
+
+        } else {
+
+            cartItems = service.getCartItems(
+                    userId,
+                    selectedVariantIds);
+
+            cartTotal = service.getCartTotal(
+                    userId,
+                    selectedVariantIds);
+
+        }
         List<UserAddress> addresses
                 = service.getAddressesByUserId(userId);
 
@@ -195,7 +260,7 @@ public class CustomerOrderController extends HttpServlet {
             return;
         }
 
-        if (!service.validateCheckout(userId, selectedVariantIds)) {
+        if (!buyNow && !service.validateCheckout(userId, selectedVariantIds)) {
 
             response.sendRedirect(
                     request.getContextPath()
@@ -203,7 +268,6 @@ public class CustomerOrderController extends HttpServlet {
 
             return;
         }
-
         String voucherCode
                 = request.getParameter("voucherCode");
 
@@ -224,31 +288,50 @@ public class CustomerOrderController extends HttpServlet {
             carrierName = "GHN";
         }
 
-        boolean success
-                = service.placeOrder(
-                        userId,
-                        addressId,
-                        voucherCode,
-                        note,
-                        paymentMethod,
-                        carrierName,
-                        selectedVariantIds);
+        boolean success;
+
+        if (buyNow) {
+
+            success = service.placeBuyNowOrder(
+                    userId,
+                    addressId,
+                    voucherCode,
+                    note,
+                    paymentMethod,
+                    carrierName,
+                    cartItems);
+
+        } else {
+
+            success = service.placeOrder(
+                    userId,
+                    addressId,
+                    voucherCode,
+                    note,
+                    paymentMethod,
+                    carrierName,
+                    selectedVariantIds);
+
+        }
 
         if (success) {
 
-            pruneSessionCart(session, selectedVariantIds);
+            if (buyNow) {
 
-            session.removeAttribute("checkoutSelectedVariantIds");
+                session.removeAttribute("buyNowItems");
+
+            } else {
+
+                pruneSessionCart(session, selectedVariantIds);
+
+                session.removeAttribute("checkoutSelectedVariantIds");
+
+            }
 
             response.sendRedirect(
                     request.getContextPath()
                     + "/customer/orders");
 
-        } else {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/checkout?error=failed");
         }
     }
 

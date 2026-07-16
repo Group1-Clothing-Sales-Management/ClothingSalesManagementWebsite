@@ -388,7 +388,7 @@
                                                            value="${item.salePrice}">
                                                     <input type="hidden" name="quantity" value="1">
                                                     <input type="hidden" name="imageUrl"
-                                                           value="${pageContext.request.contextPath}/uploads/product/${item.mainImageUrl}">
+                                                           value="${item.mainImageUrl}">
 
                                                     <label class="form-label fw-bold">Variant</label>
                                                     <select name="variantId"
@@ -408,11 +408,11 @@
 
                                                     <div>
                                                         <button type="submit"
-                                                                formaction="${pageContext.request.contextPath}/cart"
+                                                                formaction="${pageContext.request.contextPath}/cart/buy-now"
                                                                 formmethod="post"
                                                                 class="btn btn-main w-100 wishlist-cart-button">
-                                                            <i class="fa-solid fa-cart-plus me-1"></i>
-                                                            Add To Cart
+                                                            <i class="fa-solid fa-bolt me-1"></i>
+                                                            Buy Now
                                                         </button>
                                                     </div>
                                                 </form>
