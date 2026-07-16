@@ -92,7 +92,7 @@
                                     <th>Recipient</th>
                                     <th>Delivery Address</th>
                                     <th>Carrier</th>
-                                    <th>Est. Delivery Time</th>
+                                    <th></th>
                                     <th>Status</th>
                                     <th>Note</th>
                                     <th class="text-center">Action</th>
@@ -112,7 +112,7 @@
                                                 <td>${s.customerName}<br><small class="text-muted">${s.customerPhone}</small></td>
                                                 <td><span class="d-inline-block text-truncate" style="max-width: 250px;" title="${s.deliveryAddress}">${s.deliveryAddress}</span></td>
                                                 <td>${s.carrierName}</td>
-                                                <td>${s.estimatedDeliveryTime}</td>
+                                                <td></td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${s.shippingStatus == 'PENDING_PICKUP'}"><span class="badge bg-warning text-dark">Pending Pickup</span></c:when>
