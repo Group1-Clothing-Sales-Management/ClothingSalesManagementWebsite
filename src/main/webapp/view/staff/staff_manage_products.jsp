@@ -1,167 +1,129 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ page import="java.util.List" %>
-<%@ page import="com.clothingsale.model.StaffProductModel" %>
-<%@ page import="java.text.NumberFormat" %>
-<%@ page import="java.util.Locale" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Management</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
-    <style>
-        html, body { height: 100%; overflow: hidden; }
-        body { background: #f5f6fa; font-family: 'Segoe UI', sans-serif; }
-        .main-wrapper { display: flex; height: 100vh; overflow: hidden; }
-        .content-area { flex: 1; padding: 28px 32px; min-width: 0; height: 100vh; overflow-y: auto; }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Product Management</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+        <style>
+            body {
+                background-color: #f3f4f6;
+                font-family: system-ui, -apple-system, sans-serif;
+                overflow-x: hidden;
+            }
+            .main-content {
+                width: 100%;
+                padding: 25px;
+                min-height: 100vh;
+                background-color: #f3f4f6;
+            }
+            .product-img {
+                width: 50px;
+                height: 50px;
+                object-fit: cover;
+                border-radius: 6px;
+                border: 1px solid #e5e7eb;
+            }
+            .variant-table th {
+                background-color: #1f2937 !important;
+                color: #fff !important;
+            }
+        </style>
+    </head>
+    <body>
+        <jsp:include page="/view/admin/common/admin_layout_start.jsp">
+            <jsp:param name="activeTab" value="products" />
+        </jsp:include>
 
-        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-        .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
-        .page-title .bi { color: #5c6bc0; margin-right: 8px; }
+        <div class="main-content admin-page">
+            <div class="container-fluid">
+                <c:if test="${not empty successMessage}">
+                    <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${successMessage}"/></div>
+                </c:if>
+                <c:if test="${not empty errorMessage}">
+                    <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
+                </c:if>
 
-        .search-bar-wrapper {
-            background: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .search-bar-wrapper .form-control, .search-bar-wrapper .form-select {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-        }
-        .search-bar-wrapper .form-control {
-            flex: 1;
-        }
-        .search-bar-wrapper .btn-primary {
-            background-color: #0d6efd;
-            border: none;
-            padding: 8px 24px;
-            font-weight: 500;
-        }
+                <div class="page-header">
+                    <h2 class="page-title">
+                        <i class="fa-solid fa-box-open me-2 text-primary"></i>Product Management
+                    </h2>
+                </div>
 
-        .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
-        .table thead th {
-            background: #212529;
-            color: #fff;
-            font-weight: 600;
-            font-size: .85rem;
-            border: none;
-            white-space: nowrap;
-        }
-        .table tbody tr:hover { background: #f0f4ff; }
-        .table td { vertical-align: middle; font-size: .9rem; }
+                <div class="card card-main admin-card p-4">
+                    <div class="mb-3">
+                        <h3 class="h5 mb-0 fw-bold text-dark">
+                            <i class="fa-solid fa-list me-2 text-secondary"></i>Product Catalog List
+                        </h3>
+                    </div>
 
-        .badge-active   { background: #d1fae5; color: #065f46; }
-        .badge-inactive { background: #fee2e2; color: #991b1b; }
-        .badge-stock-ok  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-        .badge-stock-out { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-
-        .brand-badge {
-            background: #eef2ff;
-            color: #4338ca;
-            font-size: .75rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 3px;
-        }
-        .empty-state { padding: 56px 0; text-align: center; color: #9ca3af; }
-        .breadcrumb { font-size: .82rem; margin-bottom: 6px; }
-    </style>
-</head>
-<body>
-<jsp:include page="/view/admin/common/admin_layout_start.jsp">
-    <jsp:param name="activeTab" value="products"/>
-</jsp:include>
-        <div class="admin-page">
-        <c:if test="${not empty successMessage}">
-            <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${successMessage}"/></div>
-        </c:if>
-        <c:if test="${not empty errorMessage}">
-            <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMessage}"/></div>
-        </c:if>
-        <div class="page-header"><h1 class="page-title"><i class="bi bi-box-seam-fill"></i>Product Management</h1></div>
-
-        <div class="search-bar-wrapper">
-            <input type="text" id="searchInput" onkeyup="filterProducts()" class="form-control" placeholder="Search by product name..."/>
-            <button class="btn btn-primary" type="button">Search & Filter</button>
-        </div>
-
-        <div class="card card-main">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product & Brand</th>
-                                <th class="text-center">Color / Size</th>
-                                <th class="text-center">Stock</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productTable">
-                            <%
-                                List<StaffProductModel> products = (List<StaffProductModel>) request.getAttribute("productList");
-                                if (products == null || products.isEmpty()) {
-                            %>
-                            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-box-seam"></i><p>No products available</p></div></td></tr>
-                            <%
-                                } else {
-                                    int index = 1;
-                                    for (StaffProductModel item : products) {
-                                        String stockClass = item.getStockQuantity() > 0 ? "badge-stock-ok" : "badge-stock-out";
-                                        String statusClass = "ACTIVE".equals(item.getStatus()) ? "badge-active" : "badge-inactive";
-                            %>
-                            <tr>
-                                <td class="text-muted"><%= index++ %></td>
-                                <td>
-                                    <div class="fw-semibold text-dark product-name"><%= item.getProductName() %></div>
-                                    <span class="brand-badge"><%= item.getBrandName() %></span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge rounded-pill" style="background:#eef2ff;color:#4338ca;"><%= item.getColor() %></span>
-                                    <span class="badge rounded-pill ms-1" style="background:#f0fdf4;color:#166534;"><%= item.getSize() %></span>
-                                </td>
-                                <td class="text-center"><span class="badge px-2 py-1 rounded-pill <%= stockClass %>"><%= item.getStockQuantity() %></span></td>
-                                <td class="text-center"><span class="badge px-2 py-1 rounded-pill <%= statusClass %>"><%= item.getStatus() %></span></td>
-                                <td class="text-center">
-                                    <a href="${pageContext.request.contextPath}/StaffManageProducts?action=view&sku=<%= item.getSku() %>" class="btn btn-sm btn-outline-info"><i class="bi bi-eye-fill"></i> View</a>
-                                    <a href="${pageContext.request.contextPath}/StaffManageProducts?action=edit&sku=<%= item.getSku() %>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-fill"></i> Edit</a>
-                                </td>
-                            </tr>
-                            <%
-                                    }
-                                }
-                            %>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">ID</th>
+                                    <th style="width: 100px;">Image</th>
+                                    <th>Product Name</th>
+                                    <th>Category ID</th>
+                                    <th>Brand ID</th>
+                                    <th>Status</th>
+                                    <th style="width: 230px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="prod" items="${products}">
+                                    <tr>
+                                        <td class="fw-bold text-secondary">#PROD-${prod.id}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty prod.mainImageUrl}">
+                                                    <img src="${pageContext.request.contextPath}/uploads/product/${prod.mainImageUrl}"
+                                                         class="product-img shadow-sm" alt="Product Image">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="${pageContext.request.contextPath}/uploads/product/default.jpg"
+                                                         class="product-img shadow-sm" alt="No Image">
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="text-start"><span class="fw-semibold text-dark">${prod.productName}</span></td>
+                                        <td><span class="badge bg-light text-dark border px-2 py-1">${prod.categoryId}</span></td>
+                                        <td><span class="badge bg-light text-dark border px-2 py-1">${prod.brandId}</span></td>
+                                        <td>
+                                            <span class="badge ${prod.status == 'ACTIVE' ? 'bg-success' : 'bg-secondary'} px-3 py-1">
+                                                ${prod.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="${pageContext.request.contextPath}/StaffManageProducts?action=view&id=${prod.id}"
+                                               class="btn btn-sm btn-outline-info me-1 px-3">
+                                                <i class="fa-solid fa-eye"></i> View
+                                            </a>
+                                            <c:if test="${not empty prod.variants}">
+                                                <a href="${pageContext.request.contextPath}/StaffManageProducts?action=edit&sku=${prod.variants[0].sku}"
+                                                   class="btn btn-sm btn-outline-warning px-3">
+                                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                                </a>
+                                            </c:if>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                                <c:if test="${empty products}">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No products found.</td>
+                                    </tr>
+                                </c:if>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function filterProducts() {
-        const filter = document.getElementById("searchInput").value.toLowerCase();
-        const rows = document.getElementById("productTable").getElementsByTagName("tr");
-        for (let i = 0; i < rows.length; i++) {
-            const nameEl = rows[i].querySelector(".product-name");
-            if (nameEl) {
-                rows[i].style.display = (nameEl.textContent.toLowerCase().includes(filter)) ? "" : "none";
-            }
-        }
-    }
-</script>
-        </div>
-</body>
+
+        <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>
