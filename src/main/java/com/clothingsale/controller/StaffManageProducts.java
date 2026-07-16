@@ -1,5 +1,7 @@
 package com.clothingsale.controller;
 
+import com.clothingsale.model.Product;
+import com.clothingsale.service.AdminManageProductService;
 import com.clothingsale.model.StaffProductModel;
 import com.clothingsale.service.StaffProductService;
 import java.io.IOException;
@@ -14,7 +16,8 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet(name = "StaffManageProducts", urlPatterns = { "/StaffManageProducts", "/staff/products" })
 public class StaffManageProducts extends HttpServlet {
 
-    private StaffProductService productService = new StaffProductService();
+    private final StaffProductService staffProductService = new StaffProductService();
+    private final AdminManageProductService productService = new AdminManageProductService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -27,19 +30,19 @@ public class StaffManageProducts extends HttpServlet {
 
         String action = request.getParameter("action");
         String sku = request.getParameter("sku");
+        String productId = request.getParameter("id");
 
         try {
-            List<StaffProductModel> list = productService.getAllProducts();
-
-            if ("view".equals(action) && sku != null) {
-                for (StaffProductModel item : list) {
-                    if (item.getSku().equalsIgnoreCase(sku)) {
-                        request.setAttribute("product", item);
-                        request.getRequestDispatcher("/view/staff/staff_view_product.jsp").forward(request, response);
-                        return;
-                    }
+            if ("view".equals(action)) {
+                Product product = findProduct(productId, sku);
+                if (product != null) {
+                    request.setAttribute("product", product);
+                    request.setAttribute("variants", productService.getVariantsByProductId(product.getId()));
+                    request.getRequestDispatcher("/view/staff/staff_view_product.jsp").forward(request, response);
+                    return;
                 }
             } else if ("edit".equals(action) && sku != null) {
+                List<StaffProductModel> list = staffProductService.getAllProducts();
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
@@ -49,12 +52,13 @@ public class StaffManageProducts extends HttpServlet {
                 }
             }
 
-            request.setAttribute("productList", list);
+            loadProductCatalog(request);
             request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "E1: System error while loading data.");
+            request.setAttribute("products", java.util.Collections.emptyList());
             request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
         }
     }
@@ -79,11 +83,12 @@ public class StaffManageProducts extends HttpServlet {
             variantId = Integer.parseInt(variantIdStr);
         } catch (NumberFormatException e) {
             request.setAttribute("errorMessage", "Invalid variant ID.");
+            loadProductCatalog(request);
             request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
             return;
         }
 
-        String result = productService.updateProductDetails(sku, variantId, newName, color, size, currentStaff);
+        String result = staffProductService.updateProductDetails(sku, variantId, newName, color, size, currentStaff);
 
         if (result.equals("SUCCESS")) {
             request.setAttribute("successMessage", "Product updated and inventory log saved successfully.");
@@ -92,13 +97,40 @@ public class StaffManageProducts extends HttpServlet {
         }
 
         try {
-            request.setAttribute("productList", productService.getAllProducts());
+            loadProductCatalog(request);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "E1: System error while reloading data.");
         }
 
         request.getRequestDispatcher("/view/staff/staff_manage_products.jsp").forward(request, response);
+    }
+
+    private void loadProductCatalog(HttpServletRequest request) {
+        List<Product> products = productService.getAllProducts();
+        for (Product product : products) {
+            product.setVariants(productService.getVariantsByProductId(product.getId()));
+        }
+        request.setAttribute("products", products);
+    }
+
+    private Product findProduct(String productId, String sku) throws Exception {
+        if (productId != null && !productId.trim().isEmpty()) {
+            try {
+                return productService.getProductById(Integer.parseInt(productId));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+
+        if (sku != null && !sku.trim().isEmpty()) {
+            for (StaffProductModel item : staffProductService.getAllProducts()) {
+                if (sku.equalsIgnoreCase(item.getSku())) {
+                    return productService.getProductById(item.getId());
+                }
+            }
+        }
+        return null;
     }
 
     @Override

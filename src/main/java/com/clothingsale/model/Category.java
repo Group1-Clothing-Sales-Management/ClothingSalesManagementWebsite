@@ -5,11 +5,28 @@ public class Category {
     private int id;
     private String categoryName;
     private String slug;
-    private int status; // Thêm trường này theo đúng thực tế DB đang check
-
+    private int status;
+    private int productCount;
     public Category() {
     }
 
+    public Category(int id, String categoryName, String slug, int status, int productCount) {
+        this.id = id;
+        this.categoryName = categoryName;
+        this.slug = slug;
+        this.status = status;
+        this.productCount = productCount;
+    }
+
+    public int getProductCount() {
+        return productCount;
+    }
+
+    public void setProductCount(int productCount) {
+        this.productCount = productCount;
+    }
+    
+    
     public int getId() {
         return id;
     }

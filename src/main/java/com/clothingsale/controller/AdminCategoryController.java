@@ -1,6 +1,6 @@
 package com.clothingsale.controller;
 
-import com.clothingsale.dao.AdminManageCategoryDAO;
+import com.clothingsale.service.AdminManageCategoryService;
 import com.clothingsale.model.Category;
 import java.io.IOException;
 import java.util.List;
@@ -14,88 +14,116 @@ import jakarta.servlet.http.*;
 )
 public class AdminCategoryController extends HttpServlet {
 
-    private final AdminManageCategoryDAO categoryDAO = new AdminManageCategoryDAO();
+    private final AdminManageCategoryService categoryService
+            = new AdminManageCategoryService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String action = request.getParameter("action");
-        if (action == null) {
-            action = "list";
-        }
+    protected void doGet(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
 
-        List<Category> categories = categoryDAO.getAllCategories();
-        request.setAttribute("categories", categories);
+        List<Category> categories
+                = categoryService.getAllCategories();
 
-        if ("edit".equals(action)) {
-            try {
-                int id = Integer.parseInt(request.getParameter("id"));
-                Category category = categoryDAO.getCategoryById(id);
-                if (category != null) {
-                    // Đẩy đối tượng cần sửa lên request để JSP nhận biết chế độ "Sửa"
-                    request.setAttribute("category", category);
-                }
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
+        int activeCount = 0;
+        int inactiveCount = 0;
+
+        for (Category category : categories) {
+            if (category.getStatus() == 1) {
+                activeCount++;
+            } else {
+                inactiveCount++;
             }
         }
 
-        // TẤT CẢ các hành động GET đều đổ về duy nhất một trang này
-        request.getRequestDispatcher("/view/admin/admin_category.jsp").forward(request, response);
+        request.setAttribute("categories", categories);
+
+        request.setAttribute(
+                "totalCategoryCount",
+                categories.size()
+        );
+
+        request.setAttribute(
+                "activeCategoryCount",
+                activeCount
+        );
+
+        request.setAttribute(
+                "inactiveCategoryCount",
+                inactiveCount
+        );
+
+        request.getRequestDispatcher(
+                "/view/admin/admin_category.jsp"
+        ).forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        String statusRedirect = "success";
+        String status;
 
-        try {
-            if ("ADD".equals(action)) {
-                String name = request.getParameter("categoryName");
-                String slug = request.getParameter("slug");
+        if (action == null) {
+            status = "invalid-action";
+        } else {
+            switch (action.trim().toUpperCase()) {
+                case "ADD":
+                    status = categoryService.addCategory(
+                            request.getParameter("categoryName")
+                    );
+                    break;
 
-                if (categoryDAO.isCategoryNameExists(name)) {
-                    statusRedirect = "duplicate"; // Gán trạng thái trùng lặp dữ liệu
-                } else {
-                    Category c = new Category();
-                    c.setCategoryName(name);
-                    c.setSlug(slug);
+                case "UPDATE":
+                    status = categoryService.updateCategory(
+                            parseId(
+                                    request.getParameter("categoryId")
+                            ),
+                            request.getParameter("categoryName")
+                    );
+                    break;
 
-                    if (!categoryDAO.insertCategory(c)) {
-                        statusRedirect = "error";
-                    }
-                }
+                case "DEACTIVATE":
+                    status = categoryService.deactivateCategory(
+                            parseId(
+                                    request.getParameter("categoryId")
+                            )
+                    );
+                    break;
 
-            } else if ("UPDATE".equals(action)) {
-                int id = Integer.parseInt(request.getParameter("categoryId"));
-                String name = request.getParameter("categoryName");
-                String slug = request.getParameter("slug");
+                case "RESTORE":
+                    status = categoryService.restoreCategory(
+                            parseId(
+                                    request.getParameter("categoryId")
+                            )
+                    );
+                    break;
 
-                Category c = new Category();
-                c.setId(id);
-                c.setCategoryName(name);
-                c.setSlug(slug);
-
-                if (!categoryDAO.updateCategory(c)) {
-                    statusRedirect = "error";
-                }
-
-            } else if ("DELETE".equals(action)) {
-                int id = Integer.parseInt(request.getParameter("categoryId"));
-                if (!categoryDAO.softDeleteCategory(id)) {
-                    statusRedirect = "error";
-                }
+                default:
+                    status = "invalid-action";
+                    break;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            statusRedirect = "error";
         }
 
-        // Post-Redirect-Get pattern chuẩn quy tắc dự án của bạn
-        response.sendRedirect(request.getContextPath() + "/admin/manage-category?status=" + statusRedirect);
+        response.sendRedirect(
+                request.getContextPath()
+                + "/admin/manage-category?status="
+                + status
+        );
+    }
+
+    private int parseId(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 }

@@ -10,9 +10,14 @@ public class UserAddress {
     private int userId;
     private String recipientName;
     private String recipientPhone;
-    private String wardId;
     private String addressDetail;
     private boolean isDefault;
+    private String wardId;
+    private String wardName;
+    private String districtName;
+    private String provinceName;
+    private String districtId;
+    private String provinceId;
 
     public UserAddress() {
     }
@@ -26,6 +31,46 @@ public class UserAddress {
         this.wardId = wardId;
         this.addressDetail = addressDetail;
         this.isDefault = isDefault;
+    }
+
+    public String getWardName() {
+        return wardName;
+    }
+
+    public void setWardName(String wardName) {
+        this.wardName = wardName;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getProvinceName() {
+        return provinceName;
+    }
+
+    public void setProvinceName(String provinceName) {
+        this.provinceName = provinceName;
+    }
+
+    public String getDistrictId() {
+        return districtId;
+    }
+
+    public void setDistrictId(String districtId) {
+        this.districtId = districtId;
+    }
+
+    public String getProvinceId() {
+        return provinceId;
+    }
+
+    public void setProvinceId(String provinceId) {
+        this.provinceId = provinceId;
     }
 
     // Getters and Setters

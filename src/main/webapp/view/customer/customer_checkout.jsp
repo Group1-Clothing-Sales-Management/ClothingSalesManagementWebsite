@@ -836,7 +836,7 @@
 
                             <div class="card-body">
 
-                                <c:forEach items="${addresses}" var="a">
+                                <c:forEach items="${addresses}" var="a" varStatus="status">
 
                                     <label class="address-item d-block">
 
@@ -847,9 +847,10 @@
                                                    name="addressId"
                                                    value="${a.id}"
 
-                                                   <c:if test="${a.isDefault()}">
+                                                   <c:if test="${a.isDefault() || status.first}">
                                                        checked
-                                                   </c:if>>
+                                                   </c:if>
+                                                   >
 
                                             <div class="ms-4">
 
@@ -883,10 +884,13 @@
 
                                                         <div class="address-info">
 
-                                                            <i class="bi bi-pin-map-fill"></i>
+                                                            <i class="bi bi-geo-alt-fill"></i>
 
-                                                            Ward :
-                                                            ${a.wardId}
+                                                            <c:if test="${not empty a.wardName}">
+                                                                ${a.wardName},
+                                                                ${a.districtName},
+                                                                ${a.provinceName}
+                                                            </c:if>
 
                                                         </div>
 
