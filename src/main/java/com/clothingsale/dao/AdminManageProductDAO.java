@@ -555,4 +555,71 @@ public class AdminManageProductDAO {
             }
         }
     }
+
+    public boolean variantCombinationExists(
+            int productId,
+            String size,
+            String color
+    ) {
+        String sql = "SELECT COUNT(*) "
+                + "FROM Product_Variant "
+                + "WHERE product_id = ? "
+                + "AND UPPER(LTRIM(RTRIM(size))) = UPPER(?) "
+                + "AND UPPER(LTRIM(RTRIM(color))) = UPPER(?)";
+
+        try (
+                Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.setString(2, size.trim());
+            ps.setString(3, color.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
+    public boolean insertVariants(
+            List<com.clothingsale.model.ProductVariant> variants
+    ) {
+        String sql = "INSERT INTO Product_Variant "
+                + "(product_id, sku, cost_price, sale_price, "
+                + "stock_quantity, status, color, size) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (com.clothingsale.model.ProductVariant variant : variants) {
+                    ps.setInt(1, variant.getProductId());
+                    ps.setString(2, variant.getSku());
+                    ps.setBigDecimal(3, variant.getCostPrice());
+                    ps.setBigDecimal(4, variant.getSalePrice());
+                    ps.setInt(5, variant.getStockQuantity());
+                    ps.setString(6, variant.getStatus());
+                    ps.setString(7, variant.getColor());
+                    ps.setString(8, variant.getSize());
+
+                    ps.addBatch();
+                }
+
+                ps.executeBatch();
+                conn.commit();
+
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

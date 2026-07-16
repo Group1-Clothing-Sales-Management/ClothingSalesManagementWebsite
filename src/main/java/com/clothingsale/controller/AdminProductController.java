@@ -23,6 +23,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @WebServlet(name = "AdminManageProduct", urlPatterns = {"/AdminManageProduct", "/admin/manage-product", "/admin/products"})
 @MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
@@ -34,7 +35,9 @@ public class AdminProductController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null || action.trim().isEmpty()) action = "list";
+        if (action == null || action.trim().isEmpty()) {
+            action = "list";
+        }
 
         switch (action.toLowerCase(Locale.ROOT)) {
             case "view":
@@ -69,7 +72,8 @@ public class AdminProductController extends HttpServlet {
                     handleUpdateVariantStatus(request, response);
                     break;
                 case "ADD_VARIANT":
-                    handleAddVariant(request, response);
+                case "ADD_VARIANTS":
+                    handleAddVariants(request, response);
                     break;
                 case "ADD":
                     handleAddProduct(request, response);
@@ -122,7 +126,9 @@ public class AdminProductController extends HttpServlet {
 
         try {
             Part imagePart = request.getPart("productImage");
-            if (hasUploadedFile(imagePart)) newImageName = saveProductImage(imagePart);
+            if (hasUploadedFile(imagePart)) {
+                newImageName = saveProductImage(imagePart);
+            }
         } catch (IllegalArgumentException e) {
             redirectToEdit(response, productId, "invalid-image");
             return;
@@ -165,41 +171,72 @@ public class AdminProductController extends HttpServlet {
                 + "/admin/manage-product?action=view&id=" + productId + "&status=" + result);
     }
 
-    private void handleAddVariant(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void handleAddVariants(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+
         int productId;
+
         try {
-            productId = Integer.parseInt(getMultipartParameter(request, "productId"));
+            productId = Integer.parseInt(
+                    getMultipartParameter(request, "productId")
+            );
         } catch (Exception e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
             return;
         }
 
-        String sku = getMultipartParameter(request, "skuCode");
-        String color = getMultipartParameter(request, "color");
-        String size = getMultipartParameter(request, "size");
-        String status = getMultipartParameter(request, "status");
+        Product product = productService.getProductById(productId);
 
-        if (sku == null || sku.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath()
-                    + "/admin/manage-product?action=view&id=" + productId + "&status=variant-invalid");
+        if (product == null) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=product-not-found"
+            );
             return;
         }
 
-        ProductVariant variant = new ProductVariant();
-        variant.setProductId(productId);
-        variant.setSku(sku.trim().toUpperCase(Locale.ROOT));
-        variant.setColor(color == null || color.trim().isEmpty() ? "Standard" : color.trim());
-        variant.setSize(size == null || size.trim().isEmpty() ? "FreeSize" : size.trim());
-        variant.setAttributeDetails(variant.getColor() + "|" + variant.getSize());
-        variant.setStatus("INACTIVE".equalsIgnoreCase(status) ? "INACTIVE" : "ACTIVE");
-        variant.setSalePrice(java.math.BigDecimal.ZERO);
-        variant.setCostPrice(java.math.BigDecimal.ZERO);
-        variant.setStockQuantity(0);
+        List<ProductVariant> variants;
 
-        boolean added = productService.addSingleVariant(variant);
-        String result = added ? "variant-added" : "variant-add-failed";
-        response.sendRedirect(request.getContextPath()
-                + "/admin/manage-product?action=view&id=" + productId + "&status=" + result);
+        try {
+            variants = readVariantsFromRequest(
+                    request,
+                    productId,
+                    product.getProductName()
+            );
+        } catch (IllegalArgumentException e) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?action=view&id="
+                    + productId
+                    + "&status=variant-invalid"
+            );
+            return;
+        }
+
+        if (variants.isEmpty()) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?action=view&id="
+                    + productId
+                    + "&status=variant-required"
+            );
+            return;
+        }
+
+        boolean added = productService.addVariants(productId, variants);
+
+        response.sendRedirect(
+                request.getContextPath()
+                + "/admin/manage-product?action=view&id="
+                + productId
+                + "&status="
+                + (added ? "variants-added" : "variant-duplicate")
+        );
     }
 
     private void handleAddProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -226,7 +263,9 @@ public class AdminProductController extends HttpServlet {
         String savedImageName = null;
         try {
             Part imagePart = request.getPart("productImage");
-            if (hasUploadedFile(imagePart)) savedImageName = saveProductImage(imagePart);
+            if (hasUploadedFile(imagePart)) {
+                savedImageName = saveProductImage(imagePart);
+            }
         } catch (IllegalArgumentException e) {
             response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-image");
             return;
@@ -235,26 +274,22 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        java.util.List<ProductVariant> variants = new java.util.ArrayList<>();
-        for (int index = 0; ; index++) {
-            String sku = getMultipartParameter(request, "variants[" + index + "].skuCode");
-            if (sku == null) break;
-            if (sku.trim().isEmpty()) continue;
+        List<ProductVariant> variants;
 
-            String color = getMultipartParameter(request, "variants[" + index + "].color");
-            String size = getMultipartParameter(request, "variants[" + index + "].size");
-            String status = getMultipartParameter(request, "variants[" + index + "].status");
+        try {
+            variants = readVariantsFromRequest(
+                    request,
+                    0,
+                    product.getProductName()
+            );
+        } catch (IllegalArgumentException e) {
+            deleteProductImage(savedImageName);
 
-            ProductVariant variant = new ProductVariant();
-            variant.setSku(sku.trim().toUpperCase(Locale.ROOT));
-            variant.setColor(color == null || color.trim().isEmpty() ? "Standard" : color.trim());
-            variant.setSize(size == null || size.trim().isEmpty() ? "FreeSize" : size.trim());
-            variant.setAttributeDetails(variant.getColor() + "|" + variant.getSize());
-            variant.setStatus("INACTIVE".equalsIgnoreCase(status) ? "INACTIVE" : "ACTIVE");
-            variant.setSalePrice(java.math.BigDecimal.ZERO);
-            variant.setCostPrice(java.math.BigDecimal.ZERO);
-            variant.setStockQuantity(0);
-            variants.add(variant);
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=variant-invalid"
+            );
+            return;
         }
 
         if (variants.isEmpty()) {
@@ -263,14 +298,18 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        boolean added = productDAO.insertProductWithMatrixVariants(product, savedImageName, variants);
-        if (!added) deleteProductImage(savedImageName);
+        boolean added = productService.createProductWithVariants(product,savedImageName,variants);
+        if (!added) {
+            deleteProductImage(savedImageName);
+        }
         response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + (added ? "success" : "error"));
     }
 
     private void handleDeleteProduct(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String idRaw = request.getParameter("productId");
-        if (idRaw == null || idRaw.trim().isEmpty()) idRaw = request.getParameter("id");
+        if (idRaw == null || idRaw.trim().isEmpty()) {
+            idRaw = request.getParameter("id");
+        }
 
         try {
             int productId = Integer.parseInt(idRaw);
@@ -292,17 +331,23 @@ public class AdminProductController extends HttpServlet {
 
         boolean validExtension = extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png") || extension.equals("webp");
         boolean validContentType = contentType != null && (contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"));
-        if (!validExtension || !validContentType) throw new IllegalArgumentException("Unsupported image format");
+        if (!validExtension || !validContentType) {
+            throw new IllegalArgumentException("Unsupported image format");
+        }
 
         String realPath = getServletContext().getRealPath("/uploads/product");
-        if (realPath == null) throw new IOException("Product upload directory is unavailable");
+        if (realPath == null) {
+            throw new IOException("Product upload directory is unavailable");
+        }
 
         Path uploadDirectory = Paths.get(realPath).toAbsolutePath().normalize();
         Files.createDirectories(uploadDirectory);
 
         String savedName = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + extension;
         Path target = uploadDirectory.resolve(savedName).normalize();
-        if (!target.startsWith(uploadDirectory)) throw new IOException("Invalid upload path");
+        if (!target.startsWith(uploadDirectory)) {
+            throw new IOException("Invalid upload path");
+        }
 
         try (InputStream input = filePart.getInputStream()) {
             Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
@@ -316,10 +361,14 @@ public class AdminProductController extends HttpServlet {
     }
 
     private void deleteProductImage(String imageName) {
-        if (imageName == null || imageName.trim().isEmpty()) return;
+        if (imageName == null || imageName.trim().isEmpty()) {
+            return;
+        }
         try {
             String realPath = getServletContext().getRealPath("/uploads/product");
-            if (realPath == null) return;
+            if (realPath == null) {
+                return;
+            }
             String safeName = Paths.get(imageName).getFileName().toString();
             Files.deleteIfExists(Paths.get(realPath).resolve(safeName).normalize());
         } catch (Exception e) {
@@ -345,11 +394,15 @@ public class AdminProductController extends HttpServlet {
 
     private String getMultipartParameter(HttpServletRequest request, String parameterName) {
         String value = request.getParameter(parameterName);
-        if (value != null) return value.trim();
+        if (value != null) {
+            return value.trim();
+        }
 
         try {
             Part part = request.getPart(parameterName);
-            if (part == null) return null;
+            if (part == null) {
+                return null;
+            }
             try (java.util.Scanner scanner = new java.util.Scanner(part.getInputStream(), "UTF-8")) {
                 return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
             }
@@ -403,5 +456,73 @@ public class AdminProductController extends HttpServlet {
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
         }
+    }
+
+    private List<ProductVariant> readVariantsFromRequest(
+            HttpServletRequest request,
+            int productId,
+            String productName
+    ) {
+        List<ProductVariant> variants = new ArrayList<>();
+
+        for (int index = 0;; index++) {
+            String size = getMultipartParameter(
+                    request,
+                    "variants[" + index + "].size"
+            );
+
+            String color = getMultipartParameter(
+                    request,
+                    "variants[" + index + "].color"
+            );
+
+            if (size == null && color == null) {
+                break;
+            }
+
+            if (size == null || size.trim().isEmpty()
+                    || color == null || color.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Size and color are required"
+                );
+            }
+
+            String status = getMultipartParameter(
+                    request,
+                    "variants[" + index + "].status"
+            );
+
+            ProductVariant variant = new ProductVariant();
+
+            variant.setProductId(productId);
+            variant.setSize(size.trim());
+            variant.setColor(color.trim());
+
+            variant.setSku(
+                    productService.generateVariantSku(
+                            productName,
+                            size,
+                            color
+                    )
+            );
+
+            variant.setStatus(
+                    "INACTIVE".equalsIgnoreCase(status)
+                    ? "INACTIVE"
+                    : "ACTIVE"
+            );
+
+            variant.setCostPrice(java.math.BigDecimal.ZERO);
+            variant.setSalePrice(java.math.BigDecimal.ZERO);
+            variant.setStockQuantity(0);
+
+            variant.setAttributeDetails(
+                    variant.getColor() + "|" + variant.getSize()
+            );
+
+            variants.add(variant);
+        }
+
+        return variants;
     }
 }
