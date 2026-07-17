@@ -1015,46 +1015,6 @@
             color:var(--cart-ink);
         }
 
-        .variant-popover-actions {
-            display:flex;
-            justify-content:flex-end;
-            gap:12px;
-            margin:24px -24px 0;
-            padding:18px 24px;
-            border-top:1px solid var(--cart-line);
-            background:#fff;
-        }
-
-        .variant-cancel,
-        .variant-confirm {
-            min-width:138px;
-            height:48px;
-            border:0;
-            border-radius:8px;
-            font-weight:850;
-            text-transform:uppercase;
-        }
-
-        .variant-cancel {
-            background:#fff;
-            color:var(--cart-muted);
-        }
-
-        .variant-cancel:hover {
-            background:#eef4ff;
-            color:#365b9f;
-        }
-
-        .variant-confirm {
-            background:#8AAAE5;
-            color:#fff;
-            box-shadow:0 12px 24px rgba(95,132,214,.24);
-        }
-
-        .variant-confirm:hover {
-            background:#5f84d6;
-        }
-
         .variant-static {
             color:#365b9f;
             font-weight:800;
@@ -1351,10 +1311,6 @@
                                         <div class="variant-stock-line">
                                             Stock: <strong class="variant-stock-value"><%= currentStock %></strong>
                                         </div>
-                                        <div class="variant-popover-actions">
-                                            <button type="button" class="variant-cancel">Cancel</button>
-                                            <button type="button" class="variant-confirm">Confirm</button>
-                                        </div>
                                     </div>
                                 <% } else { %>
                                     <input type="hidden" name="newVariantId" value="<%= it.getVariantId() %>">
@@ -1549,7 +1505,6 @@
             }
 
             if (select) {
-                popover.dataset.pendingValue = select.value;
                 markVariantChoice(popover, select.value);
                 syncVariantSelect(select);
             }
@@ -1567,16 +1522,12 @@
             var form = select.closest('.cart-update-form');
             var trigger = form ? form.querySelector('.variant-trigger') : null;
             var popover = form ? form.querySelector('.variant-popover') : null;
-            var confirmButton = popover ? popover.querySelector('.variant-confirm') : null;
-            var cancelButton = popover ? popover.querySelector('.variant-cancel') : null;
 
             syncVariantSelect(select);
 
-            if (!form || !trigger || !popover || !confirmButton || !cancelButton) {
+            if (!form || !trigger || !popover) {
                 return;
             }
-
-            popover.dataset.pendingValue = select.value;
 
             trigger.addEventListener('click', function(event) {
                 event.stopPropagation();
@@ -1589,7 +1540,6 @@
                     block.classList.toggle('is-open', shouldOpen);
                 }
                 if (shouldOpen) {
-                    popover.dataset.pendingValue = select.value;
                     markVariantChoice(popover, select.value);
                 }
             });
@@ -1601,34 +1551,17 @@
                         return;
                     }
 
-                    popover.dataset.pendingValue = choice.dataset.value;
-                    markVariantChoice(popover, choice.dataset.value);
-
-                    var stock = parseInt(choice.dataset.stock, 10);
-                    var stockValue = popover.querySelector('.variant-stock-value');
-                    if (stockValue && !isNaN(stock)) {
-                        stockValue.textContent = stock;
+                    if (choice.dataset.value === select.value) {
+                        closeVariantPopover(popover);
+                        return;
                     }
-                });
-            });
 
-            cancelButton.addEventListener('click', function(event) {
-                event.stopPropagation();
-                closeVariantPopover(popover);
-            });
-
-            confirmButton.addEventListener('click', function(event) {
-                event.stopPropagation();
-                var nextValue = popover.dataset.pendingValue || select.value;
-                if (nextValue && nextValue !== select.value) {
-                    select.value = nextValue;
+                    select.value = choice.dataset.value;
+                    markVariantChoice(popover, choice.dataset.value);
                     syncVariantSelect(select);
                     closeVariantPopover(popover);
                     submitCartForm(form);
-                    return;
-                }
-
-                closeVariantPopover(popover);
+                });
             });
         });
 
