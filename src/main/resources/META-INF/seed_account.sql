@@ -1,51 +1,6 @@
-﻿USE ClothesShopDB;
-GO
-
-DELETE FROM Feedback;
-DELETE FROM Inventory_Log;
-DELETE FROM Payment;
-DELETE FROM Order_Detail;
-DELETE FROM [Order];
-DELETE FROM Cart;
-DELETE FROM Wishlist;
-DELETE FROM Voucher;
-DELETE FROM Shipment;
-DELETE FROM Product_Image;
-DELETE FROM Variant_Attribute_Value;
-DELETE FROM Product_Variant;
-DELETE FROM Product;
-DELETE FROM Attribute;
-DELETE FROM Category;
-DELETE FROM Brand;
-DELETE FROM User_Address;
-DELETE FROM Security_Token;
-DELETE FROM Activity_Log;
-DELETE FROM [User];
-DELETE FROM Role;
-DELETE FROM Ward;
-DELETE FROM District;
-DELETE FROM Province;
-GO
-
-DBCC CHECKIDENT ('Role',              RESEED, 0);
-DBCC CHECKIDENT ('[User]',            RESEED, 0);
-DBCC CHECKIDENT ('User_Address',      RESEED, 0);
-DBCC CHECKIDENT ('Security_Token',    RESEED, 0);
-DBCC CHECKIDENT ('Activity_Log',      RESEED, 0);
-DBCC CHECKIDENT ('Brand',             RESEED, 0);
-DBCC CHECKIDENT ('Category',          RESEED, 0);
-DBCC CHECKIDENT ('Product',           RESEED, 0);
-DBCC CHECKIDENT ('Product_Image',     RESEED, 0);
-DBCC CHECKIDENT ('Product_Variant',   RESEED, 0);
-DBCC CHECKIDENT ('Attribute',         RESEED, 0);
-DBCC CHECKIDENT ('Inventory_Log',     RESEED, 0);
-DBCC CHECKIDENT ('Voucher',           RESEED, 0);
-DBCC CHECKIDENT ('Shipment',          RESEED, 0);
-DBCC CHECKIDENT ('[Order]',           RESEED, 0);
-DBCC CHECKIDENT ('Order_Detail',      RESEED, 0);
-DBCC CHECKIDENT ('Payment',           RESEED, 0);
-DBCC CHECKIDENT ('Feedback',          RESEED, 0);
-GO
+/* =========================================================================
+   SEEDED MASTER DATA AND PRODUCTS FROM THE CURRENT PROJECT
+   ========================================================================= */
 
 -- =========================================================================
 -- 1. ADMINISTRATIVE DIVISIONS
@@ -474,182 +429,587 @@ INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
 (21,'prod21-main.jpg', 1, 0), (21,'prod21-detail1.jpg', 0, 1),
 (22,'prod22-main.jpg', 1, 0);
 
--- =========================================================================
--- 9. VOUCHERS, CART, ORDERS & PAYMENTS
--- =========================================================================
-INSERT INTO Voucher (code, title, discount_type, discount_value, max_discount_amount, min_order_value, start_date, end_date, usage_limit, used_count) VALUES
-('XINCHAO50', N'Welcome voucher for new members',        'FIXED_AMOUNT', 50000, 50000, 150000, '2026-01-01', '2026-12-31', 1000,  5),
-('HE2026',    N'Summer collection: 10% off',             'PERCENTAGE',   10,    30000, 200000, '2026-05-01', '2026-08-31',  500, 12);
+/* =========================================================================
+   VIII. SYNCHRONIZE DIRECT SIZE/COLOR FIELDS
+   ========================================================================= */
 
-INSERT INTO Cart (user_id, variant_id, quantity) VALUES
-(4, 1, 2),
-(4, 5, 1);
-
-INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time) VALUES
-(N'Fast Delivery (GHN)', 'SHIPPING', 'GHN998877A', 30000, '2026-06-05');
-
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note) VALUES
-('SHOP-20260601-001', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street', 639000, 50000, 30000, 619000, 'SHIPPING', N'Please deliver during office hours');
-
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) VALUES
-(1, 1, N'Compact Cotton Mens T-Shirt', N'Color: Black, Size: M',        1, 189000),
-(1, 5, N'Slim-Fit Mens Jeans', N'Color: Smoke Gray, Size: 30', 1, 450000);
-
-INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date) VALUES
-(1, 'VNPAY', 'PAID', 619000, 'VNPAY123456789', '2026-06-01 08:30:00');
-
--- =========================================================================
--- 10. INVENTORY LOG & FEEDBACK
--- =========================================================================
-INSERT INTO Inventory_Log (variant_id, user_id, change_quantity, transaction_type, note) VALUES
-(1, 2, 50, 'IMPORT', N'Nhập lô hàng áo thun đen M đầu mùa hè'),
-(5, 2, 20, 'IMPORT', N'Nhập lô hàng quần jean dáng slimfit size 30');
-
-INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status) VALUES
-(5, 1, NULL, 5, N'Light and comfortable to wear, washes well, and I will shop here again!', 1);
+UPDATE pv
+SET
+    pv.color = color_value.attribute_value,
+    pv.size = size_value.attribute_value,
+    pv.list_price = COALESCE(pv.list_price, pv.sale_price)
+FROM dbo.Product_Variant pv
+OUTER APPLY (
+    SELECT TOP 1 vav.attribute_value
+    FROM dbo.Variant_Attribute_Value vav
+    INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
+    WHERE vav.variant_id = pv.id
+      AND a.attribute_name = N'Color'
+) color_value
+OUTER APPLY (
+    SELECT TOP 1 vav.attribute_value
+    FROM dbo.Variant_Attribute_Value vav
+    INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
+    WHERE vav.variant_id = pv.id
+      AND a.attribute_name = N'Size'
+) size_value;
 GO
 
--- =========================================================================
--- BỔ SUNG DỮ LIỆU 
--- =========================================================================
+/* =========================================================================
+   IX. PERMISSIONS
+   These rows define the intended access matrix. Current controllers/filters
+   still need to enforce these permissions at application level.
+   ========================================================================= */
 
-USE ClothesShopDB;
+INSERT INTO dbo.Permission
+    (permission_code, permission_name, description)
+VALUES
+('DASHBOARD_VIEW',   N'View dashboard',           N'View administrative statistics and reports'),
+('PRODUCT_VIEW',     N'View products',            N'View the administrative product list and details'),
+('PRODUCT_MANAGE',   N'Manage products',          N'Create, update and change product status'),
+('CATEGORY_MANAGE',  N'Manage categories',        N'Create, update and change category status'),
+('PRICE_MANAGE',     N'Manage prices',            N'Update list price, sale price and price history'),
+('VOUCHER_MANAGE',   N'Manage vouchers',          N'Create, update and terminate vouchers'),
+('INVENTORY_VIEW',   N'View inventory',           N'View stock balances and inventory history'),
+('INVENTORY_IMPORT', N'Import stock',              N'Create and confirm import receipts'),
+('INVENTORY_ADJUST', N'Adjust stock',              N'Create and approve stock adjustments'),
+('ORDER_MANAGE',     N'Manage orders',             N'Approve, cancel and update order workflow'),
+('FEEDBACK_MANAGE',  N'Manage feedback',           N'Hide, show and respond to feedback');
+
+INSERT INTO dbo.Role_Permission (role_id, permission_id)
+SELECT 1, id
+FROM dbo.Permission;
+
+INSERT INTO dbo.Role_Permission (role_id, permission_id)
+SELECT 2, id
+FROM dbo.Permission
+WHERE permission_code IN (
+    'DASHBOARD_VIEW',
+    'PRODUCT_VIEW',
+    'INVENTORY_VIEW',
+    'INVENTORY_IMPORT',
+    'ORDER_MANAGE',
+    'FEEDBACK_MANAGE'
+);
 GO
 
--- 1. Bổ sung một số Voucher mẫu đúng chuẩn 'PERCENT' hoặc 'FIXED_AMOUNT'
-INSERT INTO Voucher (code, title, discount_type, discount_value, max_discount_amount, min_order_value, start_date, end_date, usage_limit, used_count)
-VALUES 
-('VOUCHER10', N'10% off orders over 500,000 VND', 'PERCENT', 10.00, 50000.00, 500000.00, '2026-01-01', '2026-12-31', 100, 15),
-('FIXED50', N'50,000 VND off for new members', 'FIXED_AMOUNT', 50000.00, NULL, 200000.00, '2026-01-01', '2026-12-31', 200, 30);
+/* =========================================================================
+   X. PRICE HISTORY SAMPLE
+   ========================================================================= */
 
--- 2. Bổ sung một số đơn vị vận chuyển (Shipment)
-INSERT INTO Shipment (carrier_name, shipping_status, tracking_code, shipping_cost, estimated_delivery_time)
-VALUES 
-(N'Fast Delivery (GHN)', 'DELIVERED', 'GHN123456789', 30000.00, '2026-02-15'),
-(N'Economical Delivery (GHTK)', 'DELIVERED', 'GHTK987654321', 30000.00, '2026-03-20'),
-(N'Viettel Post', 'SHIPPING', 'VT777888999', 30000.00, '2026-06-25');
+UPDATE dbo.Product_Variant
+SET price_updated_at = '2026-07-02 09:00:00',
+    price_updated_by = 2
+WHERE id IN (1, 5);
 
--- 3. Bổ sung đơn hàng mẫu (Mã ORD + chuỗi số, Phí ship cố định 30,000đ)
--- Giả định hệ thống của bạn đã có user_id = 1 (hoặc thay bằng id khách hàng hợp lệ trong DB của bạn)
--- Đơn hàng tháng 1/2026 (Thành công -> Tính vào doanh thu)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234100001', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Le Loi Street', 450000.00, 0.00, 30000.00, 480000.00, 'DELIVERED', N'January order', '2026-01-15 10:30:00', '2026-01-17 15:00:00');
-
--- Đơn hàng tháng 2/2026 (Thành công)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234200002', 1, NULL, 1, N'Nguyễn Văn A', '0912345678', NULL, N'123 Le Loi Street', 780000.00, 0.00, 30000.00, 810000.00, 'DELIVERED', N'February order', '2026-02-20 14:15:00', '2026-02-22 16:30:00');
-
--- Đơn hàng tháng 3/2026 (Thành công)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234300003', 1, 1, 2, N'Nguyễn Văn A', '0912345678', NULL, N'123 Le Loi Street', 600000.00, 50000.00, 30000.00, 580000.00, 'DELIVERED', N'March order with voucher', '2026-03-10 09:00:00', '2026-03-12 11:00:00');
-
--- Đơn hàng tháng 4/2026 (Thành công)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234400004', 1, NULL, 2, N'Trần Thị B', '0988888888', NULL, N'456 Tran Hung Dao Street', 1200000.00, 0.00, 30000.00, 1230000.00, 'DELIVERED', N'Large April order', '2026-04-05 18:20:00', '2026-04-07 20:00:00');
-
--- Đơn hàng tháng 5/2026 (Thành công)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES ('ORD1768234500005', 1, 2, 2, N'Trần Thị B', '0988888888', NULL, N'456 Tran Hung Dao Street', 950000.00, 50000.00, 30000.00, 930000.00, 'DELIVERED', N'May order', '2026-05-18 11:10:00', '2026-05-20 14:00:00');
-
--- Các đơn hàng tháng 6/2026 (Tháng hiện tại - Gồm cả đơn đã xong và đơn PENDING mới nhận)
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
-VALUES 
-('ORD1768234600006', 1, NULL, 1, N'Lê Hoàng C', '0901112222', NULL, N'789 Nguyen Trai Street', 350000.00, 0.00, 30000.00, 380000.00, 'DELIVERED', N'Completed June order', '2026-06-02 08:30:00', '2026-06-04 10:00:00'),
-('ORD1768234600007', 1, NULL, 3, N'Phạm Minh D', '0933344455', NULL, N'321 Dien Bien Phu Street', 500000.00, 0.00, 30000.00, 530000.00, 'PENDING', N'New order pending approval 1', '2026-06-21 15:45:00', '2026-06-21 15:45:00'),
-('ORD1768234600008', 1, NULL, NULL, N'Hoàng Thúy E', '0944555666', NULL, N'15 Ba Thang Hai Street', 280000.00, 0.00, 30000.00, 310000.00, 'PENDING', N'New order pending approval 2', '2026-06-22 10:00:00', '2026-06-22 10:00:00'),
-('ORD1768234600009', 1, NULL, NULL, N'Đỗ Tiến F', '0955666777', NULL, N'99 Cong Hoa Street', 620000.00, 0.00, 30000.00, 650000.00, 'CANCELLED', N'Order cancelled by customer', '2026-06-10 13:00:00', '2026-06-10 13:30:00');
-
--- 4. Chi tiết đơn hàng mẫu (Liên kết đến các đơn hàng vừa tạo thông qua ID tự tăng)
--- Đơn 1
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 2, 225000.00);
-
--- Đơn 2
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234200002'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 2, 390000.00);
-
--- Đơn 3
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 2, 200000.00),
-       ((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 1, 200000.00);
-
--- Đơn 4
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234400004'), 3, N'Elegant Flared Womens Skirt', N'Size: S, Color: Red', 3, 400000.00);
-
--- Đơn 5
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 1, 450000.00),
-       ((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Elegant Flared Womens Skirt', N'Size: S, Color: Red', 1, 500000.00);
-
--- Đơn 6 (Đơn hoàn thành trong tháng 6)
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 1, 350000.00);
-
--- Đơn 7, 8 (Các đơn hàng mới đang chờ xử lý)
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 2, N'Slim-Fit Mens Jeans', N'Size: L, Color: Black', 1, 500000.00);
-
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price)
-VALUES ((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 1, N'Korean-Style Mens Blazer', N'Size: M, Color: Blue', 1, 280000.00);
-
--- 5. Đồng bộ bảng thanh toán (Payment) tương ứng cho các đơn thành công
-INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date)
-VALUES 
-((SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 'BANK_TRANSFER', 'PAID', 480000.00, 'TXN2026011501', '2026-01-15 10:35:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234200002'), 'VNPAY', 'PAID', 810000.00, 'TXN2026022002', '2026-02-20 14:20:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 'COD', 'PAID', 580000.00, NULL, '2026-03-12 11:05:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234400004'), 'VNPAY', 'PAID', 1230000.00, 'TXN2026040504', '2026-04-05 18:22:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 'BANK_TRANSFER', 'PAID', 930000.00, 'TXN2026051805', '2026-05-18 11:15:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234600006'), 'COD', 'PAID', 380000.00, NULL, '2026-06-04 10:05:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234600007'), 'COD', 'UNPAID', 530000.00, NULL, NULL),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234600008'), 'VNPAY', 'UNPAID', 310000.00, NULL, NULL);
-
--- =========================================================================
--- 11. DỮ LIỆU MỞ RỘNG CHO ORDER MANAGEMENT & FEEDBACK MANAGEMENT
--- =========================================================================
-
--- Thêm các đơn hàng với nhiều trạng thái để test danh sách, filter và chi tiết xử lý
-INSERT INTO [Order] (order_code, user_id, voucher_id, shipment_id, recipient_name, recipient_phone, ward_id, address_detail, total_items_price, discount_amount, shipping_fee, total_payment, order_status, note, created_at, updated_at)
+INSERT INTO dbo.Product_Variant_Price_History (
+    variant_id,
+    product_name_snapshot,
+    sku_snapshot,
+    color_snapshot,
+    size_snapshot,
+    old_list_price,
+    new_list_price,
+    old_sale_price,
+    new_sale_price,
+    cost_price_snapshot,
+    change_type,
+    change_reason,
+    changed_by,
+    changed_by_name_snapshot,
+    changed_at
+)
 VALUES
-('ORD1768234700010', 4, 1, 1, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street', 438000.00, 50000.00, 30000.00, 418000.00, 'DELIVERED', N'Delivered order for order-history testing', '2026-06-23 09:15:00', '2026-06-25 18:20:00'),
-('ORD1768234700011', 5, 2, 2, N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street', 879000.00, 30000.00, 30000.00, 879000.00, 'SHIPPING', N'In-transit order for shipping-status testing', '2026-06-24 10:00:00', '2026-06-26 12:10:00'),
-('ORD1768234700012', 4, NULL, 3, N'Nguyễn Ngọc Quý', '0933445566', '31162', N'Bitexco Building, Floor 15', 560000.00, 0.00, 30000.00, 590000.00, 'CONFIRMED', N'Confirmed order awaiting warehouse release', '2026-06-25 11:45:00', '2026-06-25 13:00:00'),
-('ORD1768234700013', 5, NULL, NULL, N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street', 379000.00, 0.00, 30000.00, 409000.00, 'PENDING', N'New order awaiting payment approval', '2026-06-26 08:30:00', '2026-06-26 08:30:00'),
-('ORD1768234700014', 4, NULL, 2, N'Nguyễn Ngọc Quý', '0933445566', '26734', N'Bitexco Office, Floor 15', 839000.00, 0.00, 30000.00, 869000.00, 'CANCELLED', N'Cancelled order for completion-flow testing', '2026-06-20 14:05:00', '2026-06-20 14:40:00'),
-('ORD1768234700015', 5, 1, 1, N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street', 588000.00, 50000.00, 30000.00, 568000.00, 'RETURNED', N'Delivered order returned by the customer', '2026-06-18 09:00:00', '2026-06-28 10:15:00');
+(1, N'Compact Cotton Mens T-Shirt', 'CM-TSHIRT-BLK-M',
+ N'Black', N'M', 199000, 189000, 199000, 189000, 90000,
+ 'PRICE_UPDATE', N'Adjusted selling price for the summer campaign',
+ 2, N'Nguyễn Nhật Quy', '2026-07-02 09:00:00'),
+(5, N'Slim-Fit Mens Jeans', 'RT-JEAN-BLU-30',
+ N'Smoke Gray', N'30', 480000, 450000, 480000, 450000, 250000,
+ 'PRICE_UPDATE', N'Updated price to match current sales policy',
+ 2, N'Nguyễn Nhật Quy', '2026-07-02 09:10:00');
+GO
 
--- Chi tiết cho các đơn bổ sung
-INSERT INTO Order_Detail (order_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, price) VALUES
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 12, N'Classic Cotton Crew-Neck T-Shirt', N'Color: White, Size: M', 1, 179000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 15, N'Textured Mens Polo Shirt', N'Color: White, Size: M', 1, 259000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 69, N'Korean-Style Mens Blazer', N'Color: Black, Size: M', 1, 680000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 57, N'Beach Kaki Shorts', N'Color: Beige, Size: M', 1, 199000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 28, N'White Oxford Business Shirt', N'Color: White, Size: L', 2, 280000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 53, N'Warm Winter Fleece Hoodie', N'Color: Gray, Size: M', 1, 379000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 34, N'Rugged Denim Shirt', N'Color: Denim Blue, Size: M', 1, 340000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 46, N'Regular Straight-Leg Mens Jeans', N'Color: Dark Blue, Size: 30', 1, 499000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 73, N'Warm Turtleneck Sweater', N'Color: Cream, Size: M', 1, 359000.00),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 77, N'Dynamic Sport Joggers', N'Color: Black, Size: M', 1, 229000.00);
+/* =========================================================================
+   XI. INVENTORY: SUPPLIERS, RECEIPTS, BATCHES AND ADJUSTMENT
+   ========================================================================= */
 
--- Thanh toán cho các đơn mới để test nhiều trạng thái
-INSERT INTO Payment (order_id, payment_method, payment_status, amount, transaction_reference, payment_date)
+INSERT INTO dbo.Supplier
+    (supplier_name, contact_name, phone, email, address, status)
 VALUES
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 'BANK_TRANSFER', 'PAID', 418000.00, 'TXN2026062301', '2026-06-23 09:20:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 'VNPAY', 'PAID', 879000.00, 'TXN2026062402', '2026-06-24 10:05:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 'COD', 'PAID', 590000.00, NULL, '2026-06-25 11:50:00'),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 'COD', 'UNPAID', 409000.00, NULL, NULL),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 'VNPAY', 'FAILED', 869000.00, NULL, NULL),
-((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 'BANK_TRANSFER', 'REFUNDED', 568000.00, 'TXN2026061803', '2026-06-28 10:30:00');
+(N'Việt Tín Textile', N'Nguyễn Thành Tín', '0901000001',
+ 'sales@viettin.example', N'Ho Chi Minh City', 1),
+(N'Minh Anh Garment', N'Trần Minh Anh', '0901000002',
+ 'contact@minhanh.example', N'Bình Dương', 1),
+(N'Global Fashion Supply', N'Lê Gia Huy', '0901000003',
+ 'support@globalfashion.example', N'Đồng Nai', 1);
 
--- Feedback đa dạng để test hiển thị, ẩn/hiện và trả lời của admin/staff
-INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status, admin_response, response_by, responded_at) VALUES
-(4, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234100001'), 5, N'Great fabric, flattering fit, and fast delivery.', 1, N'Thank you for your review. We will continue improving our service.', 2, '2026-06-02 09:00:00'),
-(4, 4, (SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 4, N'Good fabric, easy-to-style color, and accurate sizing.', 1, NULL, NULL, NULL),
-(5, 20, (SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 2, N'Great shirt, but delivery was slightly slower than expected.', 0, N'We have recorded your feedback and will monitor the carrier.', 1, '2026-06-26 16:20:00'),
-(5, 8, (SELECT id FROM [Order] WHERE order_code='ORD1768234700012'), 5, N'Polished shirt that works perfectly for the office.', 1, NULL, NULL, NULL),
-(4, 16, (SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 1, N'Returned because the size did not fit; support was needed.', 0, N'We received the return request and contacted the customer.', 2, '2026-06-28 10:40:00'),
-(5, 12, (SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Good trousers, but the packaging could be sturdier.', 1, N'Thank you for the feedback. We will improve our packaging.', 2, '2026-05-20 15:10:00'),
-(4, 22, (SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 4, N'Comfortable joggers, great for workouts.', 1, NULL, NULL, NULL),
-(5, 10, (SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 2, N'Good denim, but the fit was a little loose for me.', 0, N'We are sorry about the experience and hid the review while checking its content.', 1, '2026-06-20 18:00:00');
+INSERT INTO dbo.Import_Receipt (
+    receipt_code, supplier_id, user_id, total_amount, created_at,
+    status, note, vendor_reference, confirmed_by, confirmed_at
+)
+VALUES
+('IR-20260701-001', 1, 2, 4300000,
+ '2026-07-01 08:30:00', 'CONFIRMED',
+ N'Confirmed receipt used to test inventory history',
+ N'VT-INV-0701', 1, '2026-07-01 09:00:00'),
+('IR-20260715-002', 2, 2, 1550000,
+ '2026-07-15 14:20:00', 'DRAFT',
+ N'Draft receipt used to test edit and confirm flow',
+ N'MA-DRAFT-0715', NULL, NULL);
+
+INSERT INTO dbo.Import_Receipt_Detail
+    (import_receipt_id, variant_id, quantity, unit_cost, line_total)
+VALUES
+(1, 1, 20,  90000, 1800000),
+(1, 5, 10, 250000, 2500000),
+(2, 7, 10,  95000,  950000),
+(2, 15, 5, 120000,  600000);
+
+-- Opening batches. Variants 1 and 5 receive the remaining quantity from the
+-- confirmed receipt below. Variant 12 started at 47 and lost 2 damaged units.
+INSERT INTO dbo.Product_Batch (
+    variant_id, batch_code, cost_price,
+    initial_quantity, current_quantity,
+    import_receipt_id, import_receipt_detail_id,
+    status, created_at
+)
+SELECT
+    pv.id,
+    CONCAT('OPEN-', pv.sku),
+    pv.cost_price,
+    CASE
+        WHEN pv.id = 1 THEN 30
+        WHEN pv.id = 5 THEN 10
+        WHEN pv.id = 12 THEN 47
+        ELSE pv.stock_quantity
+    END,
+    CASE
+        WHEN pv.id = 1 THEN 30
+        WHEN pv.id = 5 THEN 10
+        WHEN pv.id = 12 THEN 45
+        ELSE pv.stock_quantity
+    END,
+    NULL,
+    NULL,
+    CASE WHEN pv.stock_quantity = 0 THEN 'CLOSED' ELSE 'AVAILABLE' END,
+    '2026-01-01 08:00:00'
+FROM dbo.Product_Variant pv
+WHERE
+    CASE
+        WHEN pv.id = 1 THEN 30
+        WHEN pv.id = 5 THEN 10
+        WHEN pv.id = 12 THEN 47
+        ELSE pv.stock_quantity
+    END > 0;
+
+INSERT INTO dbo.Product_Batch (
+    variant_id, batch_code, cost_price,
+    initial_quantity, current_quantity,
+    import_receipt_id, import_receipt_detail_id,
+    status, created_at
+)
+VALUES
+(1, 'IR-20260701-001-01',  90000, 20, 20, 1, 1, 'AVAILABLE', '2026-07-01 09:00:00'),
+(5, 'IR-20260701-001-02', 250000, 10, 10, 1, 2, 'AVAILABLE', '2026-07-01 09:00:00');
+
+INSERT INTO dbo.Inventory_Log (
+    variant_id, user_id, product_name_snapshot, sku_snapshot,
+    quantity_before, change_quantity, quantity_after,
+    transaction_type, reference_type, reference_id, note, created_at
+)
+SELECT
+    pv.id,
+    1,
+    p.product_name,
+    pv.sku,
+    0,
+    CASE
+        WHEN pv.id = 1 THEN 30
+        WHEN pv.id = 5 THEN 10
+        WHEN pv.id = 12 THEN 47
+        ELSE pv.stock_quantity
+    END,
+    CASE
+        WHEN pv.id = 1 THEN 30
+        WHEN pv.id = 5 THEN 10
+        WHEN pv.id = 12 THEN 47
+        ELSE pv.stock_quantity
+    END,
+    'OPENING_BALANCE',
+    'SYSTEM_SETUP',
+    NULL,
+    N'Opening stock created by the database seed',
+    '2026-01-01 08:00:00'
+FROM dbo.Product_Variant pv
+INNER JOIN dbo.Product p ON p.id = pv.product_id
+WHERE
+    CASE
+        WHEN pv.id = 1 THEN 30
+        WHEN pv.id = 5 THEN 10
+        WHEN pv.id = 12 THEN 47
+        ELSE pv.stock_quantity
+    END > 0;
+
+INSERT INTO dbo.Inventory_Log (
+    variant_id, user_id, product_name_snapshot, sku_snapshot,
+    quantity_before, change_quantity, quantity_after,
+    transaction_type, reference_type, reference_id, note, created_at
+)
+VALUES
+(1, 1, N'Compact Cotton Mens T-Shirt', 'CM-TSHIRT-BLK-M',
+ 30, 20, 50, 'IMPORT', 'IMPORT_RECEIPT', 1,
+ N'Posted from receipt IR-20260701-001', '2026-07-01 09:00:00'),
+(5, 1, N'Slim-Fit Mens Jeans', 'RT-JEAN-BLU-30',
+ 10, 10, 20, 'IMPORT', 'IMPORT_RECEIPT', 1,
+ N'Posted from receipt IR-20260701-001', '2026-07-01 09:00:00');
+
+INSERT INTO dbo.Stock_Adjustment (
+    adjustment_code, adjustment_type, status, reason,
+    created_by, approved_by, created_at, approved_at
+)
+VALUES
+('ADJ-20260710-001', 'DAMAGED', 'APPROVED',
+ N'Two units were damaged during physical stock inspection',
+ 2, 1, '2026-07-10 10:00:00', '2026-07-10 10:20:00');
+
+INSERT INTO dbo.Stock_Adjustment_Detail (
+    adjustment_id, variant_id, quantity_before,
+    change_quantity, quantity_after, note
+)
+VALUES
+(1, 12, 47, -2, 45, N'Damaged units removed from available stock');
+
+INSERT INTO dbo.Inventory_Log (
+    variant_id, user_id, product_name_snapshot, sku_snapshot,
+    quantity_before, change_quantity, quantity_after,
+    transaction_type, reference_type, reference_id, note, created_at
+)
+VALUES
+(12, 1, N'Classic Cotton Crew-Neck T-Shirt', 'CM-CTSHIRT-WHT-M',
+ 47, -2, 45, 'ADJUST_DECREASE', 'STOCK_ADJUSTMENT', 1,
+ N'Two damaged units removed after stock inspection',
+ '2026-07-10 10:20:00');
+GO
+
+/* =========================================================================
+   XII. VOUCHERS
+   ========================================================================= */
+
+INSERT INTO dbo.Voucher (
+    code, title, discount_type, discount_value,
+    max_discount_amount, min_order_value,
+    start_date, end_date, usage_limit, used_count,
+    limit_per_user, terminate_reason, category_id
+)
+VALUES
+('WELCOME50', N'50,000 VND welcome discount', 'FIXED_AMOUNT',
+ 50000, 50000, 150000,
+ '2026-01-01', '2026-12-31 23:59:59', 1000, 1, 1, NULL, NULL),
+
+('SUMMER10', N'10% summer discount', 'PERCENTAGE',
+ 10, 30000, 200000,
+ '2026-03-01', '2026-08-31 23:59:59', 500, 1, 1, NULL, NULL),
+
+('TOPS15', N'15% discount for T-Shirts', 'PERCENTAGE',
+ 15, 50000, 300000,
+ '2026-06-01', '2026-09-30 23:59:59', 300, 1, 1, NULL, 3),
+
+('OLD20', N'Expired 20% campaign', 'PERCENTAGE',
+ 20, 100000, 500000,
+ '2026-01-01', '2026-06-30 23:59:59', 100, 0, 1, NULL, NULL);
+GO
+
+/* =========================================================================
+   XIII. CART AND WISHLIST
+   ========================================================================= */
+
+INSERT INTO dbo.Cart (user_id, variant_id, quantity)
+VALUES
+(4, 3, 1),
+(4, 7, 2),
+(5, 69, 1);
+
+INSERT INTO dbo.Wishlist (user_id, product_id, variant_id)
+VALUES
+(4, 20, 69),
+(5, 1, 1);
+GO
+
+/* =========================================================================
+   XIV. SHIPMENTS, ORDERS, DETAILS AND PAYMENTS
+   ========================================================================= */
+
+INSERT INTO dbo.Shipment (
+    carrier_name, shipping_status, tracking_code,
+    shipping_cost, estimated_delivery_time
+)
+VALUES
+(N'GHN', 'DELIVERED', 'GHN-20260115-001', 30000, '2026-01-17 17:00:00'),
+(N'GHTK', 'DELIVERED', 'GHTK-20260220-002', 30000, '2026-02-22 17:00:00'),
+(N'Viettel Post', 'DELIVERED', 'VTP-20260312-003', 30000, '2026-03-14 17:00:00'),
+(N'GHN', 'DELIVERED', 'GHN-20260405-004', 30000, '2026-04-07 17:00:00'),
+(N'GHTK', 'DELIVERED', 'GHTK-20260518-005', 30000, '2026-05-20 17:00:00'),
+(N'Internal Delivery', 'FAILED', NULL, 30000, NULL),
+(N'GHN', 'SHIPPING', 'GHN-20260712-007', 30000, '2026-07-18 17:00:00'),
+(N'GHTK', 'PENDING_PICKUP', 'GHTK-20260714-008', 30000, '2026-07-20 17:00:00'),
+(N'Internal Delivery', 'PENDING_PICKUP', NULL, 30000, NULL),
+(N'Viettel Post', 'DELIVERED', 'VTP-20260705-010', 30000, '2026-07-07 17:00:00');
+
+INSERT INTO dbo.[Order] (
+    order_code, user_id, voucher_id, shipment_id,
+    recipient_name, recipient_phone, ward_id, address_detail,
+    total_items_price, discount_amount, shipping_fee, total_payment,
+    order_status, note, created_at, updated_at
+)
+VALUES
+('ORD-20260115-001', 4, 1, 1,
+ N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ 378000, 50000, 30000, 358000,
+ 'DELIVERED', N'Completed January order',
+ '2026-01-15 10:30:00', '2026-01-17 15:00:00'),
+
+('ORD-20260220-002', 5, NULL, 2,
+ N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ 450000, 0, 30000, 480000,
+ 'DELIVERED', N'Completed February order',
+ '2026-02-20 14:15:00', '2026-02-22 16:30:00'),
+
+('ORD-20260312-003', 4, 2, 3,
+ N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ 518000, 30000, 30000, 518000,
+ 'DELIVERED', N'Completed March order with summer voucher',
+ '2026-03-12 09:00:00', '2026-03-14 11:00:00'),
+
+('ORD-20260405-004', 5, NULL, 4,
+ N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ 680000, 0, 30000, 710000,
+ 'DELIVERED', N'Completed blazer order',
+ '2026-04-05 18:20:00', '2026-04-07 20:00:00'),
+
+('ORD-20260518-005', 4, 3, 5,
+ N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ 398000, 50000, 30000, 378000,
+ 'DELIVERED', N'Completed category voucher order',
+ '2026-05-18 11:10:00', '2026-05-20 14:00:00'),
+
+('ORD-20260620-006', 5, NULL, 6,
+ N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ 379000, 0, 30000, 409000,
+ 'CANCELLED', N'Cancelled before warehouse release',
+ '2026-06-20 14:05:00', '2026-06-20 14:40:00'),
+
+('ORD-20260712-007', 4, NULL, 7,
+ N'Nguyễn Ngọc Quý', '0933445566', '26734', N'Bitexco Building, Floor 15',
+ 560000, 0, 30000, 590000,
+ 'SHIPPING', N'Currently in transit',
+ '2026-07-12 11:45:00', '2026-07-16 13:00:00'),
+
+('ORD-20260714-008', 5, NULL, 8,
+ N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ 229000, 0, 30000, 259000,
+ 'CONFIRMED', N'Confirmed and waiting for pickup',
+ '2026-07-14 08:30:00', '2026-07-15 09:00:00'),
+
+('ORD-20260716-009', 4, NULL, 9,
+ N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ 179000, 0, 30000, 209000,
+ 'PENDING', N'New order waiting for approval',
+ '2026-07-16 15:20:00', '2026-07-16 15:20:00'),
+
+('ORD-20260705-010', 5, NULL, 10,
+ N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ 340000, 0, 30000, 370000,
+ 'RETURNED', N'Returned after delivery because the size did not fit',
+ '2026-07-05 09:00:00', '2026-07-12 10:15:00');
+
+INSERT INTO dbo.Order_Detail (
+    order_id, variant_id, product_name_snapshot,
+    variant_attributes_snapshot, quantity, price
+)
+VALUES
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260115-001'),
+ 1, N'Compact Cotton Mens T-Shirt', N'Color: Black, Size: M', 2, 189000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260220-002'),
+ 5, N'Slim-Fit Mens Jeans', N'Color: Smoke Gray, Size: 30', 1, 450000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260312-003'),
+ 15, N'Textured Mens Polo Shirt', N'Color: White, Size: M', 2, 259000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260405-004'),
+ 69, N'Korean-Style Mens Blazer', N'Color: Black, Size: M', 1, 680000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260518-005'),
+ 7, N'Pro Mens Performance T-Shirt', N'Color: Black, Size: M', 2, 199000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260620-006'),
+ 53, N'Warm Winter Fleece Hoodie', N'Color: Gray, Size: M', 1, 379000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260712-007'),
+ 28, N'White Oxford Business Shirt', N'Color: White, Size: L', 2, 280000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260714-008'),
+ 77, N'Dynamic Sport Joggers', N'Color: Black, Size: M', 1, 229000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260716-009'),
+ 12, N'Classic Cotton Crew-Neck T-Shirt', N'Color: White, Size: M', 1, 179000),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260705-010'),
+ 34, N'Rugged Denim Shirt', N'Color: Denim Blue, Size: M', 1, 340000);
+
+INSERT INTO dbo.Payment (
+    order_id, payment_method, payment_status,
+    amount, transaction_reference, payment_date
+)
+VALUES
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260115-001'),
+ 'VNPAY', 'PAID', 358000, 'TXN-20260115-001', '2026-01-15 10:35:00'),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260220-002'),
+ 'BANK_TRANSFER', 'PAID', 480000, 'TXN-20260220-002', '2026-02-20 14:20:00'),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260312-003'),
+ 'COD', 'PAID', 518000, NULL, '2026-03-14 11:00:00'),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260405-004'),
+ 'VNPAY', 'PAID', 710000, 'TXN-20260405-004', '2026-04-05 18:25:00'),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260518-005'),
+ 'BANK_TRANSFER', 'PAID', 378000, 'TXN-20260518-005', '2026-05-18 11:15:00'),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260620-006'),
+ 'COD', 'UNPAID', 409000, NULL, NULL),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260712-007'),
+ 'COD', 'UNPAID', 590000, NULL, NULL),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260714-008'),
+ 'VNPAY', 'PAID', 259000, 'TXN-20260714-008', '2026-07-14 08:35:00'),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260716-009'),
+ 'COD', 'UNPAID', 209000, NULL, NULL),
+
+((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260705-010'),
+ 'BANK_TRANSFER', 'REFUNDED', 370000, 'TXN-20260705-010', '2026-07-12 10:30:00');
+
+INSERT INTO dbo.Voucher_Usage (
+    voucher_id, user_id, order_id, discount_amount, used_at
+)
+VALUES
+(1, 4, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260115-001'),
+ 50000, '2026-01-15 10:30:00'),
+(2, 4, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260312-003'),
+ 30000, '2026-03-12 09:00:00'),
+(3, 4, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260518-005'),
+ 50000, '2026-05-18 11:10:00');
+GO
+
+/* =========================================================================
+   XV. FEEDBACK AND ACTIVITY LOG
+   ========================================================================= */
+
+INSERT INTO dbo.Feedback (
+    user_id, product_id, order_id, rating, comment, status,
+    admin_response, response_by, responded_at, created_at
+)
+VALUES
+(4, 1, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260115-001'),
+ 5, N'Comfortable fabric and accurate sizing.', 1,
+ N'Thank you for your review.', 2,
+ '2026-01-18 09:00:00', '2026-01-17 20:00:00'),
+
+(5, 2, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260220-002'),
+ 4, N'Good fit and durable denim.', 1,
+ NULL, NULL, NULL, '2026-02-23 09:00:00'),
+
+(4, 5, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260312-003'),
+ 4, N'The polo keeps its shape after washing.', 1,
+ NULL, NULL, NULL, '2026-03-15 10:00:00'),
+
+(5, 20, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260405-004'),
+ 3, N'Good blazer, but delivery was slightly late.', 1,
+ N'We recorded the carrier issue and will improve delivery coordination.',
+ 1, '2026-04-09 08:30:00', '2026-04-08 18:00:00'),
+
+(5, 10, (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260705-010'),
+ 2, N'The material was good, but the size did not fit.', 0,
+ N'The return was accepted and the payment was refunded.',
+ 2, '2026-07-12 11:00:00', '2026-07-12 10:45:00');
+
+INSERT INTO dbo.Activity_Log (
+    user_id, action_type, description, ip_address, created_at
+)
+VALUES
+(1, 'LOGIN', N'Administrator signed in', '127.0.0.1', '2026-07-16 08:00:00'),
+(2, 'IMPORT_RECEIPT_CREATE', N'Created import receipt IR-20260715-002',
+ '127.0.0.1', '2026-07-15 14:20:00'),
+(2, 'PRICE_UPDATE', N'Updated prices for variants 1 and 5',
+ '127.0.0.1', '2026-07-02 09:10:00');
+GO
+
+/* =========================================================================
+   XVI. VALIDATION
+   ========================================================================= */
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Product_Variant
+    WHERE list_price IS NULL OR color IS NULL OR size IS NULL
+)
+BEGIN
+    THROW 51001,
+        'Seed validation failed: a product variant is missing list_price, color or size.',
+        1;
+END;
+
+IF EXISTS (
+    SELECT pv.id
+    FROM dbo.Product_Variant pv
+    OUTER APPLY (
+        SELECT SUM(pb.current_quantity) AS batch_quantity
+        FROM dbo.Product_Batch pb
+        WHERE pb.variant_id = pv.id
+    ) batch_total
+    WHERE pv.stock_quantity <> ISNULL(batch_total.batch_quantity, 0)
+)
+BEGIN
+    THROW 51002,
+        'Seed validation failed: Product_Variant stock does not match Product_Batch balances.',
+        1;
+END;
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Import_Receipt ir
+    OUTER APPLY (
+        SELECT SUM(ird.line_total) AS detail_total
+        FROM dbo.Import_Receipt_Detail ird
+        WHERE ird.import_receipt_id = ir.id
+    ) detail_sum
+    WHERE ir.total_amount <> ISNULL(detail_sum.detail_total, 0)
+)
+BEGIN
+    THROW 51003,
+        'Seed validation failed: an import receipt total does not match its details.',
+        1;
+END;
+GO
+
+PRINT 'ClothesShopDB was created successfully.';
+PRINT 'Demo password for all seeded accounts: 123456';
+PRINT 'Admin account: admin01 / 123456';
+PRINT 'Secondary admin: admin02 / 123456';
+PRINT 'Staff account: staff01 / 123456';
+GO
+
+SELECT
+    (SELECT COUNT(*) FROM dbo.Product) AS product_count,
+    (SELECT COUNT(*) FROM dbo.Product_Variant) AS variant_count,
+    (SELECT COUNT(*) FROM dbo.Supplier) AS supplier_count,
+    (SELECT COUNT(*) FROM dbo.Import_Receipt) AS import_receipt_count,
+    (SELECT COUNT(*) FROM dbo.Product_Batch) AS batch_count,
+    (SELECT COUNT(*) FROM dbo.Inventory_Log) AS inventory_log_count,
+    (SELECT COUNT(*) FROM dbo.Voucher) AS voucher_count,
+    (SELECT COUNT(*) FROM dbo.[Order]) AS order_count;
 GO

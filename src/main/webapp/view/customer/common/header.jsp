@@ -16,11 +16,6 @@
                 <span>Clothing Sale</span>
             </a>
 
-            <a href="${pageContext.request.contextPath}/products" class="market-catalog">
-                <i class="fa-solid fa-bars"></i>
-                <span>Product List</span>
-            </a>
-
             <div class="market-search-area">
                 <form action="${pageContext.request.contextPath}/products" method="get" class="market-search">
                     <input type="text" name="keyword" placeholder="Search shirts, pants, accessories..." aria-label="Search products">
