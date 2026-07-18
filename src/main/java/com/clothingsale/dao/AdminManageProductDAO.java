@@ -3,6 +3,7 @@ package com.clothingsale.dao;
 import com.clothingsale.model.Product;
 import com.clothingsale.model.Brand;
 import com.clothingsale.model.Category;
+import com.clothingsale.model.ProductVariant;
 import com.clothingsale.util.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
@@ -84,7 +85,8 @@ public class AdminManageProductDAO {
             try (PreparedStatement psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS)) {
                 psProd.setString(1, p.getProductName());
                 psProd.setString(2, p.getSlug());
-                psProd.setInt(3, p.getBrandId());
+                //psProd.setInt(3, p.getBrandId());
+                setNullableInt(psProd, 3, p.getBrandId());
                 psProd.setInt(4, p.getCategoryId());
                 psProd.setString(5, p.getShortDescription());
                 psProd.setString(6, p.getLongDescription());
@@ -133,7 +135,8 @@ public class AdminManageProductDAO {
             try (PreparedStatement psProd = conn.prepareStatement(sqlProd)) {
                 psProd.setString(1, p.getProductName());
                 psProd.setString(2, p.getSlug());
-                psProd.setInt(3, p.getBrandId());
+                //psProd.setInt(3, p.getBrandId());
+                setNullableInt(psProd, 3, p.getBrandId());
                 psProd.setInt(4, p.getCategoryId());
                 psProd.setString(5, p.getShortDescription());
                 psProd.setString(6, p.getLongDescription());
@@ -198,11 +201,43 @@ public class AdminManageProductDAO {
         return false;
     }
 
-    public boolean softDeleteProduct(int id) {
-        String sql = "UPDATE Product SET status = 'DELETED', updated_at = GETDATE() WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
+    public boolean softDeleteProduct(int productId) {
+        String updateVariants
+                = "UPDATE Product_Variant "
+                + "SET status = 'INACTIVE' "
+                + "WHERE product_id = ?";
+
+        String updateProduct
+                = "UPDATE Product "
+                + "SET status = 'DELETED', "
+                + "updated_at = GETDATE() "
+                + "WHERE id = ? "
+                + "AND status <> 'DELETED'";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (
+                    PreparedStatement variantStatement
+                    = conn.prepareStatement(updateVariants); PreparedStatement productStatement
+                    = conn.prepareStatement(updateProduct)) {
+                variantStatement.setInt(1, productId);
+                variantStatement.executeUpdate();
+
+                productStatement.setInt(1, productId);
+                int affectedRows = productStatement.executeUpdate();
+
+                if (affectedRows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -277,59 +312,71 @@ public class AdminManageProductDAO {
         return categories;
     }
 
-    /**
-     * CẬP NHẬT MỚI: Truy vấn cực nhanh, không cần Subquery do Color và Size đã
-     * nằm ngay trong Product_Variant
-     */
-    public List<com.clothingsale.model.ProductVariant> getVariantsByProductId(int productId) {
-        List<com.clothingsale.model.ProductVariant> list = new ArrayList<>();
-        String sql = "SELECT id, product_id, sku, cost_price, sale_price, stock_quantity, status, color, size "
-                + "FROM Product_Variant WHERE product_id = ?";
+    public List<ProductVariant> getVariantsByProductId(int productId) {
+        List<ProductVariant> variants = new ArrayList<>();
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql
+                = "SELECT id, product_id, sku, color, size, "
+                + "cost_price, list_price, sale_price, "
+                + "stock_quantity, status "
+                + "FROM Product_Variant "
+                + "WHERE product_id = ? "
+                + "ORDER BY id DESC";
 
+        try (
+                Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, productId);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    com.clothingsale.model.ProductVariant v = new com.clothingsale.model.ProductVariant();
-                    v.setId(rs.getInt("id"));
-                    v.setProductId(rs.getInt("product_id"));
-                    v.setSku(rs.getString("sku"));
-                    v.setCostPrice(rs.getBigDecimal("cost_price"));
-                    v.setSalePrice(rs.getBigDecimal("sale_price"));
-                    v.setStockQuantity(rs.getInt("stock_quantity"));
-                    v.setStatus(rs.getString("status"));
+                    ProductVariant variant = new ProductVariant();
 
-                    // Lấy trực tiếp từ DB mới
-                    String color = rs.getString("color");
-                    String size = rs.getString("size");
-                    v.setColor(color);
-                    v.setSize(size);
+                    variant.setId(rs.getInt("id"));
+                    variant.setProductId(rs.getInt("product_id"));
+                    variant.setSku(rs.getString("sku"));
+                    variant.setColor(rs.getString("color"));
+                    variant.setSize(rs.getString("size"));
+                    variant.setCostPrice(rs.getBigDecimal("cost_price"));
+                    variant.setListPrice(rs.getBigDecimal("list_price"));
+                    variant.setSalePrice(rs.getBigDecimal("sale_price"));
+                    variant.setStockQuantity(
+                            rs.getInt("stock_quantity")
+                    );
+                    variant.setStatus(rs.getString("status"));
 
-                    // Ghép chuỗi attributeDetails để giữ an toàn không làm hỏng code JSP cũ (tương thích ngược)
                     StringBuilder details = new StringBuilder();
-                    if (color != null && !color.trim().isEmpty()) {
-                        details.append("Color: ").append(color);
+
+                    if (variant.getColor() != null
+                            && !variant.getColor().trim().isEmpty()) {
+                        details.append("Color: ")
+                                .append(variant.getColor().trim());
                     }
-                    if (size != null && !size.trim().isEmpty()) {
+
+                    if (variant.getSize() != null
+                            && !variant.getSize().trim().isEmpty()) {
+
                         if (details.length() > 0) {
                             details.append(" / ");
                         }
-                        details.append("Size: ").append(size);
-                    }
-                    if (details.length() == 0) {
-                        details.append("Standard");
-                    }
-                    v.setAttributeDetails(details.toString());
 
-                    list.add(v);
+                        details.append("Size: ")
+                                .append(variant.getSize().trim());
+                    }
+
+                    variant.setAttributeDetails(
+                            details.length() > 0
+                            ? details.toString()
+                            : "Standard"
+                    );
+
+                    variants.add(variant);
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi SQL tại hàm getVariantsByProductId: " + e.getMessage());
             e.printStackTrace();
         }
-        return list;
+
+        return variants;
     }
 
     /**
@@ -354,7 +401,8 @@ public class AdminManageProductDAO {
             psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS);
             psProd.setString(1, p.getProductName());
             psProd.setString(2, p.getSlug());
-            psProd.setString(3, p.getBrandId() > 0 ? String.valueOf(p.getBrandId()) : null); // Phòng trường hợp form bỏ trống
+            //psProd.setString(3, p.getBrandId() > 0 ? String.valueOf(p.getBrandId()) : null); // Phòng trường hợp form bỏ trống
+            setNullableInt(psProd, 3, p.getBrandId());
             psProd.setInt(4, p.getCategoryId());
             psProd.setString(5, p.getShortDescription());
             psProd.setString(6, p.getLongDescription());
@@ -463,23 +511,40 @@ public class AdminManageProductDAO {
     public boolean updateVariantStatus(
             int productId,
             int variantId,
-            String status
-    ) {
-        String sql = "UPDATE Product_Variant "
-                + "SET status = ? "
-                + "WHERE id = ? AND product_id = ?";
+            String status) {
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql;
 
-            ps.setString(1, status);
-            ps.setInt(2, variantId);
-            ps.setInt(3, productId);
+        if ("ACTIVE".equals(status)) {
+            sql
+                    = "UPDATE pv "
+                    + "SET pv.status = 'ACTIVE' "
+                    + "FROM Product_Variant pv "
+                    + "INNER JOIN Product p "
+                    + "ON p.id = pv.product_id "
+                    + "WHERE pv.id = ? "
+                    + "AND pv.product_id = ? "
+                    + "AND p.status = 'ACTIVE' "
+                    + "AND ISNULL(pv.list_price, 0) > 0 "
+                    + "AND ISNULL(pv.sale_price, 0) > 0";
+        } else if ("INACTIVE".equals(status)) {
+            sql
+                    = "UPDATE Product_Variant "
+                    + "SET status = 'INACTIVE' "
+                    + "WHERE id = ? "
+                    + "AND product_id = ?";
+        } else {
+            return false;
+        }
+
+        try (
+                Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, variantId);
+            ps.setInt(2, productId);
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println(
-                    "Error updating variant status: " + e.getMessage()
-            );
+            e.printStackTrace();
             return false;
         }
     }
@@ -622,4 +687,17 @@ public class AdminManageProductDAO {
             return false;
         }
     }
+
+    private void setNullableInt(
+            PreparedStatement statement,
+            int parameterIndex,
+            int value) throws SQLException {
+
+        if (value > 0) {
+            statement.setInt(parameterIndex, value);
+        } else {
+            statement.setNull(parameterIndex, Types.INTEGER);
+        }
+    }
+
 }
