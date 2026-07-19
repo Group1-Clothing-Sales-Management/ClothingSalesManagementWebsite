@@ -12,18 +12,18 @@ public class StaffProductService {
         return productDAO.getAllProductsFromDB();
     }
 
-    public String updateProductDetails(String sku, int variantId, String name,
-            String color, String size, String currentStaff) {
+    public String updateProductDetails(String sku, int variantId, String color,
+            String size, String currentStaff) {
 
-        if (name == null || name.trim().isEmpty()) {
-            return "Invalid input data. Product name is required.";
+        if (sku == null || sku.trim().isEmpty()) {
+            return "Invalid input data. SKU is required.";
         }
 
         try {
-            boolean isUpdated = productDAO.updateProductInDB(sku, name, color, size);
+            boolean isUpdated = productDAO.updateProductInDB(sku, color, size);
 
             if (isUpdated) {
-                String actionLog = "Staff updated product -> New name: " + name
+                String actionLog = "Staff updated product variant -> SKU: " + sku
                         + " | Color: " + (color != null ? color : "—")
                         + " | Size: " + (size != null ? size : "—");
                 productDAO.saveInventoryLog(variantId, 0, currentStaff, actionLog);

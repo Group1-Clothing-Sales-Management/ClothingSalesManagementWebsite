@@ -50,12 +50,13 @@ public class StaffProductDAO {
         return list;
     }
 
-    public boolean updateProductInDB(String sku, String newName, String newColor, String newSize)
+    /**
+     * Staff can update only the selected variant's color and size.
+     * Product name is deliberately not part of this update.
+     */
+    public boolean updateProductInDB(String sku, String newColor, String newSize)
             throws Exception {
-        String updateProductSql = "UPDATE Product SET product_name = ? " +
-                "WHERE id = (SELECT product_id FROM Product_Variant WHERE sku = ?)";
-
-        // UPDATE attribute value nếu record đã tồn tại, INSERT nếu chưa có
+        String updateVariantSql = "UPDATE Product_Variant SET color = ?, size = ? WHERE sku = ?";
         String upsertAttrSql = "MERGE INTO Variant_Attribute_Value AS target " +
                 "USING (SELECT pv.id AS vid, a.id AS aid " +
                 "       FROM Product_Variant pv " +
@@ -71,34 +72,21 @@ public class StaffProductDAO {
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Cập nhật tên sản phẩm
-                try (PreparedStatement psP = conn.prepareStatement(updateProductSql)) {
-                    psP.setString(1, newName);
-                    psP.setString(2, sku);
-                    psP.executeUpdate();
+                int updatedRows;
+                try (PreparedStatement psVariant = conn.prepareStatement(updateVariantSql)) {
+                    psVariant.setString(1, blankToNull(newColor));
+                    psVariant.setString(2, blankToNull(newSize));
+                    psVariant.setString(3, sku);
+                    updatedRows = psVariant.executeUpdate();
                 }
 
-                // 2. Cập nhật Color
-                if (newColor != null && !newColor.trim().isEmpty()) {
-                    try (PreparedStatement psC = conn.prepareStatement(upsertAttrSql)) {
-                        psC.setString(1, "Color");
-                        psC.setString(2, sku);
-                        psC.setString(3, newColor.trim());
-                        psC.setString(4, newColor.trim());
-                        psC.executeUpdate();
-                    }
+                if (updatedRows == 0) {
+                    conn.rollback();
+                    return false;
                 }
 
-                // 3. Cập nhật Size
-                if (newSize != null && !newSize.trim().isEmpty()) {
-                    try (PreparedStatement psS = conn.prepareStatement(upsertAttrSql)) {
-                        psS.setString(1, "Size");
-                        psS.setString(2, sku);
-                        psS.setString(3, newSize.trim());
-                        psS.setString(4, newSize.trim());
-                        psS.executeUpdate();
-                    }
-                }
+                updateAttribute(conn, upsertAttrSql, sku, "Color", newColor);
+                updateAttribute(conn, upsertAttrSql, sku, "Size", newSize);
 
                 conn.commit();
                 return true;
@@ -107,6 +95,34 @@ public class StaffProductDAO {
                 throw e;
             }
         }
+    }
+
+    private void updateAttribute(Connection conn, String upsertAttrSql, String sku,
+            String attributeName, String value) throws Exception {
+        if (value == null || value.trim().isEmpty()) {
+            String deleteSql = "DELETE target FROM Variant_Attribute_Value target "
+                    + "JOIN Product_Variant pv ON pv.id = target.variant_id "
+                    + "JOIN Attribute a ON a.id = target.attribute_id "
+                    + "WHERE pv.sku = ? AND a.attribute_name = ?";
+            try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                ps.setString(1, sku);
+                ps.setString(2, attributeName);
+                ps.executeUpdate();
+            }
+            return;
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(upsertAttrSql)) {
+            ps.setString(1, attributeName);
+            ps.setString(2, sku);
+            ps.setString(3, value.trim());
+            ps.setString(4, value.trim());
+            ps.executeUpdate();
+        }
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
     }
 
     public void saveInventoryLog(int variantId, int changeQuantity, String staffUsername, String note)

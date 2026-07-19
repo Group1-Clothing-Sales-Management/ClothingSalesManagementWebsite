@@ -46,6 +46,13 @@ public class StaffManageProducts extends HttpServlet {
                 for (StaffProductModel item : list) {
                     if (item.getSku().equalsIgnoreCase(sku)) {
                         request.setAttribute("product", item);
+                        List<StaffProductModel> variants = new java.util.ArrayList<>();
+                        for (StaffProductModel variant : list) {
+                            if (variant.getId() == item.getId()) {
+                                variants.add(variant);
+                            }
+                        }
+                        request.setAttribute("productVariants", variants);
                         request.getRequestDispatcher("/view/staff/staff_edit_product.jsp").forward(request, response);
                         return;
                     }
@@ -74,7 +81,6 @@ public class StaffManageProducts extends HttpServlet {
 
         String sku = request.getParameter("sku");
         String variantIdStr = request.getParameter("variantId");
-        String newName = request.getParameter("productName");
         String color = request.getParameter("color");
         String size = request.getParameter("size");
 
@@ -88,7 +94,7 @@ public class StaffManageProducts extends HttpServlet {
             return;
         }
 
-        String result = staffProductService.updateProductDetails(sku, variantId, newName, color, size, currentStaff);
+        String result = staffProductService.updateProductDetails(sku, variantId, color, size, currentStaff);
 
         if (result.equals("SUCCESS")) {
             request.setAttribute("successMessage", "Product updated and inventory log saved successfully.");

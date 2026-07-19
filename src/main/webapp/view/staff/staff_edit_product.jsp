@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.clothingsale.model.StaffProductModel" %>
+<%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,6 +46,7 @@
 
 <%
     StaffProductModel product = (StaffProductModel) request.getAttribute("product");
+    List<StaffProductModel> productVariants = (List<StaffProductModel>) request.getAttribute("productVariants");
     if (product == null) { response.sendRedirect(request.getContextPath() + "/StaffManageProducts"); return; }
     String statusClass = "ACTIVE".equals(product.getStatus()) ? "badge-active" : "badge-inactive";
 %>
@@ -53,26 +55,18 @@
     <jsp:param name="activeTab" value="products"/>
 </jsp:include>
         <div class="admin-page">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/StaffManageProducts">Product Management</a></li>
-                <li class="breadcrumb-item active">Edit Product</li>
-            </ol>
-        </nav>
-
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h1 class="page-title"><i class="bi bi-pencil-square"></i>Edit Product</h1>
         </div>
 
         <form action="${pageContext.request.contextPath}/StaffManageProducts" method="POST">
-            <input type="hidden" name="sku" value="<%= product.getSku() %>"/>
             <input type="hidden" name="variantId" value="<%= product.getVariantId() %>"/>
 
             <div class="card card-main">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <div>
                         <div class="fw-bold" style="font-size:1rem;">Update product information</div>
-                        <div class="text-white-50 mt-1" style="font-size:.82rem;">Edit only the fields that your role is allowed to change</div>
+                        <div class="text-muted mt-1" style="font-size:.82rem;">Edit only the fields that your role is allowed to change</div>
                     </div>
                     <span class="badge px-3 py-2 rounded-pill <%= statusClass %>"><%= product.getStatus() %></span>
                 </div>
@@ -81,11 +75,18 @@
                     <div class="row g-4">
                         <div class="col-md-6">
                             <div class="field-label">Product Name</div>
-                            <input type="text" name="productName" value="<%= product.getProductName() %>" required class="form-control fw-semibold"/>
+                            <input type="text" value="<%= product.getProductName() %>" readonly class="form-control fw-semibold field-readonly"/>
                         </div>
                         <div class="col-md-6">
                             <div class="field-label">SKU</div>
-                            <div class="field-readonly mono"><%= product.getSku() %></div>
+                            <select name="sku" class="form-select font-monospace" onchange="window.location.href='${pageContext.request.contextPath}/StaffManageProducts?action=edit&sku=' + encodeURIComponent(this.value)" aria-label="Select SKU to edit">
+                                <% if (productVariants != null) {
+                                    for (StaffProductModel variant : productVariants) { %>
+                                <option value="<%= variant.getSku() %>" <%= variant.getSku().equalsIgnoreCase(product.getSku()) ? "selected" : "" %>><%= variant.getSku() %></option>
+                                <%  }
+                                } %>
+                            </select>
+                            <div class="form-text">Select the SKU variant whose color and size you want to edit.</div>
                         </div>
                         <div class="col-md-6">
                             <div class="field-label">Color</div>
