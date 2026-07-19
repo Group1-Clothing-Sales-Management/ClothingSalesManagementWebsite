@@ -1693,13 +1693,13 @@
 
             const variants = [
             <c:forEach items="${product.variants}" var="v">
-            {
-            id:${v.id},
-                    color:"${v.color}",
+                {
+                    id:${v.id},
+                            color: "${v.color}",
                     size:"${v.size}",
-                    price:${v.salePrice},
+                            price:${v.salePrice},
                     stock:${v.stockQuantity}
-            },
+                },
             </c:forEach>
             ];
             let selectedColor = variants[0]?.color;
@@ -1712,150 +1712,192 @@
             const stockText = document.getElementById("stockText");
             const priceValue = document.getElementById("priceValue");
             const quantityInput = document.querySelector(".quantity-input");
-            function renderVariant(){
+            const increaseBtn = document.querySelector(".quantity-increase");
+            const decreaseBtn = document.querySelector(".quantity-decrease");
 
-            const variant = variants.find(v =>
-                    v.color === selectedColor &&
-                    v.size === selectedSize
-                    );
-            if (!variant) return;
-            variantIdInput.value = variant.id;
-            buyNowVariant.value = variant.id;
-            priceInput.value = variant.price;
-            stockText.textContent = variant.stock;
-            priceValue.innerHTML =
-                    Number(variant.price).toLocaleString("vi-VN") + " ₫";
-            quantityInput.max = variant.stock;
-            if ( + quantityInput.value > variant.stock){
-            quantityInput.value = variant.stock;
+            const hiddenQuantity = document.querySelector(".quantity-input-hidden");
+            const buyNowQuantity = document.querySelector(".buy-now-quantity");
+
+            function updateQuantity() {
+
+                let qty = parseInt(quantityInput.value) || 1;
+                let max = parseInt(quantityInput.max) || 1;
+
+                if (qty < 1)
+                    qty = 1;
+                if (qty > max)
+                    qty = max;
+
+                quantityInput.value = qty;
+
+                if (hiddenQuantity)
+                    hiddenQuantity.value = qty;
+
+                if (buyNowQuantity)
+                    buyNowQuantity.value = qty;
             }
 
-            sizeButtons.forEach(btn => {
+            increaseBtn.addEventListener("click", function () {
 
-            const exist = variants.some(v =>
-                    v.color === selectedColor &&
-                    v.size === btn.dataset.size
-                    );
-            btn.disabled = !exist;
-            btn.classList.toggle(
-                    "active",
-                    btn.dataset.size === selectedSize
-                    );
+                quantityInput.value = parseInt(quantityInput.value) + 1;
+                updateQuantity();
+
             });
+
+            decreaseBtn.addEventListener("click", function () {
+
+                quantityInput.value = parseInt(quantityInput.value) - 1;
+                updateQuantity();
+
+            });
+
+            quantityInput.addEventListener("input", updateQuantity);
+
+            updateQuantity();
+            function renderVariant() {
+
+                const variant = variants.find(v =>
+                    v.color === selectedColor &&
+                            v.size === selectedSize
+                );
+                if (!variant)
+                    return;
+                variantIdInput.value = variant.id;
+                buyNowVariant.value = variant.id;
+                priceInput.value = variant.price;
+                stockText.textContent = variant.stock;
+                priceValue.innerHTML =
+                        Number(variant.price).toLocaleString("vi-VN") + " ₫";
+                quantityInput.max = variant.stock;
+
+                updateQuantity();
+                sizeButtons.forEach(btn => {
+
+                    const exist = variants.some(v =>
+                        v.color === selectedColor &&
+                                v.size === btn.dataset.size
+                    );
+                    btn.disabled = !exist;
+                    btn.classList.toggle(
+                            "active",
+                            btn.dataset.size === selectedSize
+                            );
+                });
             }
 
             colorButtons.forEach(btn => {
 
-            btn.onclick = () => {
+                btn.onclick = () => {
 
-            colorButtons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            selectedColor = btn.dataset.color;
-            const first = variants.find(v => v.color === selectedColor);
-            selectedSize = first.size;
-            renderVariant();
-            };
+                    colorButtons.forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    selectedColor = btn.dataset.color;
+                    const first = variants.find(v => v.color === selectedColor);
+                    selectedSize = first.size;
+                    renderVariant();
+                };
             });
             sizeButtons.forEach(btn => {
 
-            btn.onclick = () => {
+                btn.onclick = () => {
 
-            if (btn.disabled) return;
-            selectedSize = btn.dataset.size;
-            renderVariant();
-            };
+                    if (btn.disabled)
+                        return;
+                    selectedSize = btn.dataset.size;
+                    renderVariant();
+                };
             });
-            if (variants.length){
+            if (variants.length) {
 
-            colorButtons.forEach(btn => {
+                colorButtons.forEach(btn => {
 
-            btn.classList.toggle(
-                    "active",
-                    btn.dataset.color === selectedColor
-                    );
-            });
-            renderVariant();
+                    btn.classList.toggle(
+                            "active",
+                            btn.dataset.color === selectedColor
+                            );
+                });
+                renderVariant();
             }
 
             // ================= FEEDBACK FILTER =================
 
             document.querySelectorAll('.feedback-filter').forEach(function (filterButton) {
 
-            filterButton.addEventListener('click', function () {
+                filterButton.addEventListener('click', function () {
 
-            var filter = filterButton.dataset.filter;
-            document.querySelectorAll('.feedback-filter').forEach(function (button) {
+                    var filter = filterButton.dataset.filter;
+                    document.querySelectorAll('.feedback-filter').forEach(function (button) {
 
-            button.classList.toggle('active', button === filterButton);
-            });
-            document.querySelectorAll('.feedback-item').forEach(function (item) {
+                        button.classList.toggle('active', button === filterButton);
+                    });
+                    document.querySelectorAll('.feedback-item').forEach(function (item) {
 
-            var matches =
-                    filter === 'all'
-                    || item.dataset.rating === filter
-                    || (filter === 'comments'
-                            && item.dataset.hasComment === 'true');
-            item.hidden = !matches;
-            });
-            });
+                        var matches =
+                                filter === 'all'
+                                || item.dataset.rating === filter
+                                || (filter === 'comments'
+                                        && item.dataset.hasComment === 'true');
+                        item.hidden = !matches;
+                    });
+                });
             });
             // ================= URL CLEAN =================
 
             var params = new URLSearchParams(window.location.search);
             var wishlistStatusParams = [
-                    'wishlistAdded',
-                    'wishlistRemoved',
-                    'wishlistError'
+                'wishlistAdded',
+                'wishlistRemoved',
+                'wishlistError'
             ];
             var hasWishlistStatus = wishlistStatusParams.some(function (key) {
-            return params.has(key);
+                return params.has(key);
             });
             if (hasWishlistStatus) {
 
-            wishlistStatusParams.forEach(function (key) {
-            params.delete(key);
-            });
-            var cleanUrl =
-                    window.location.pathname
-                    + (params.toString() ? '?' + params.toString() : '')
-                    + window.location.hash;
-            window.history.replaceState({}, '', cleanUrl);
+                wishlistStatusParams.forEach(function (key) {
+                    params.delete(key);
+                });
+                var cleanUrl =
+                        window.location.pathname
+                        + (params.toString() ? '?' + params.toString() : '')
+                        + window.location.hash;
+                window.history.replaceState({}, '', cleanUrl);
             }
 
             // ================= CART MODAL =================
 
             if (params.has('cartAdded') || params.has('cartError')) {
 
-            var modalElement =
-                    document.getElementById('cartMessageModal');
-            var isError =
-                    params.has('cartError');
-            modalElement.classList.toggle('is-error', isError);
-            var icon =
-                    modalElement.querySelector('.cart-modal-mark i');
-            if (icon) {
+                var modalElement =
+                        document.getElementById('cartMessageModal');
+                var isError =
+                        params.has('cartError');
+                modalElement.classList.toggle('is-error', isError);
+                var icon =
+                        modalElement.querySelector('.cart-modal-mark i');
+                if (icon) {
 
-            icon.className =
-                    isError
-                    ? 'fa-solid fa-triangle-exclamation'
-                    : 'fa-solid fa-check';
-            }
+                    icon.className =
+                            isError
+                            ? 'fa-solid fa-triangle-exclamation'
+                            : 'fa-solid fa-check';
+                }
 
-            document.getElementById('cartMessageTitle').textContent =
-                    isError
-                    ? 'Could Not Add Item'
-                    : 'Cart Updated';
-            document.getElementById('cartMessageText').textContent =
-                    params.has('wishlistAdded')
-                    ? 'Added to your wishlist.'
-                    : params.has('wishlistRemoved')
-                    ? 'Removed from wishlist.'
-                    : params.has('wishlistError')
-                    ? 'Unable to update your wishlist.'
-                    : params.has('cartAdded')
-                    ? 'Item added to your cart.'
-                    : 'Could not add this item to your cart. Please check available stock.';
-            new bootstrap.Modal(modalElement).show();
+                document.getElementById('cartMessageTitle').textContent =
+                        isError
+                        ? 'Could Not Add Item'
+                        : 'Cart Updated';
+                document.getElementById('cartMessageText').textContent =
+                        params.has('wishlistAdded')
+                        ? 'Added to your wishlist.'
+                        : params.has('wishlistRemoved')
+                        ? 'Removed from wishlist.'
+                        : params.has('wishlistError')
+                        ? 'Unable to update your wishlist.'
+                        : params.has('cartAdded')
+                        ? 'Item added to your cart.'
+                        : 'Could not add this item to your cart. Please check available stock.';
+                new bootstrap.Modal(modalElement).show();
             }
 
         </script>
