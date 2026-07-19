@@ -98,9 +98,16 @@
                                 <%
                                     String[] sizes = {"XS","S","M","L","XL","XXL","XXXL"};
                                     String currentSize = product.getSize() != null ? product.getSize().trim() : "";
+                                    boolean currentSizeInOptions = false;
                                     for (String s : sizes) {
+                                        if (s.equalsIgnoreCase(currentSize)) {
+                                            currentSizeInOptions = true;
+                                        }
                                 %>
                                 <option value="<%= s %>" <%= s.equalsIgnoreCase(currentSize) ? "selected" : "" %>><%= s %></option>
+                                <% } %>
+                                <% if (!currentSize.isEmpty() && !currentSizeInOptions) { %>
+                                <option value="<%= currentSize %>" selected><%= currentSize %></option>
                                 <% } %>
                             </select>
                         </div>
