@@ -2,7 +2,7 @@ IF DB_ID(N'ClothesShopDB') IS NULL
 BEGIN
     EXEC(N'CREATE DATABASE [ClothesShopDB]');
 END
-GO
+
 USE [ClothesShopDB];
 GO
 
@@ -399,7 +399,7 @@ CREATE TABLE dbo.[Order] (
     shipping_fee DECIMAL(18,2) DEFAULT 0,      -- Phí vận chuyển thực tế
     total_payment DECIMAL(18,2) NOT NULL,      -- Số tiền cuối cùng khách phải trả = (Total - Discount + Shipping)
     
-    order_status VARCHAR(50) DEFAULT 'PENDING', -- PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED, RETURNED
+    order_status VARCHAR(50) DEFAULT 'PENDING', -- PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED, RETURN_REQUESTED, RETURNED
     note NVARCHAR(500),
     created_at DATETIME DEFAULT GETDATE(),
     updated_at DATETIME DEFAULT GETDATE()
@@ -646,4 +646,54 @@ BEGIN
         ADD CONSTRAINT FK_Voucher_Category
         FOREIGN KEY (category_id) REFERENCES dbo.Category(id)
         ON DELETE NO ACTION;
+END
+
+IF OBJECT_ID(N'dbo.Voucher_Usage', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Voucher_Usage (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT NOT NULL FOREIGN KEY REFERENCES [User](id),
+    voucher_id INT NOT NULL FOREIGN KEY REFERENCES Voucher(id),
+    order_id INT NOT NULL FOREIGN KEY REFERENCES [Order](id) ON DELETE CASCADE,
+    discount_amount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'APPLIED',
+    used_at DATETIME NOT NULL DEFAULT GETDATE(),
+    refunded_at DATETIME NULL,
+    note NVARCHAR(255) NULL
+);
+END
+
+IF OBJECT_ID(N'dbo.Return_Request', N'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Return_Request (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT NOT NULL FOREIGN KEY REFERENCES [Order](id) ON DELETE CASCADE,
+    user_id INT NOT NULL FOREIGN KEY REFERENCES [User](id),
+    reason NVARCHAR(500) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    requested_at DATETIME NOT NULL DEFAULT GETDATE(),
+    reviewed_by INT NULL FOREIGN KEY REFERENCES [User](id),
+    reviewed_at DATETIME NULL,
+    admin_note NVARCHAR(500) NULL
+);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = N'IX_Voucher_Usage_User_Voucher_Status'
+      AND object_id = OBJECT_ID(N'dbo.Voucher_Usage')
+)
+BEGIN
+    CREATE INDEX IX_Voucher_Usage_User_Voucher_Status
+        ON dbo.Voucher_Usage(user_id, voucher_id, status);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = N'IX_Return_Request_Order_Status'
+      AND object_id = OBJECT_ID(N'dbo.Return_Request')
+)
+BEGIN
+    CREATE INDEX IX_Return_Request_Order_Status
+        ON dbo.Return_Request(order_id, status);
 END

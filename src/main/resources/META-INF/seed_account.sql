@@ -2,6 +2,8 @@
 GO
 
 DELETE FROM Feedback;
+DELETE FROM Return_Request;
+DELETE FROM Voucher_Usage;
 DELETE FROM Inventory_Log;
 DELETE FROM Payment;
 DELETE FROM Order_Detail;
@@ -45,6 +47,8 @@ DBCC CHECKIDENT ('[Order]',           RESEED, 0);
 DBCC CHECKIDENT ('Order_Detail',      RESEED, 0);
 DBCC CHECKIDENT ('Payment',           RESEED, 0);
 DBCC CHECKIDENT ('Feedback',          RESEED, 0);
+DBCC CHECKIDENT ('Voucher_Usage',     RESEED, 0);
+DBCC CHECKIDENT ('Return_Request',    RESEED, 0);
 GO
 
 -- =========================================================================
@@ -652,4 +656,16 @@ INSERT INTO Feedback (user_id, product_id, order_id, rating, comment, status, ad
 (5, 12, (SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 3, N'Good trousers, but the packaging could be sturdier.', 1, N'Thank you for the feedback. We will improve our packaging.', 2, '2026-05-20 15:10:00'),
 (4, 22, (SELECT id FROM [Order] WHERE order_code='ORD1768234700013'), 4, N'Comfortable joggers, great for workouts.', 1, NULL, NULL, NULL),
 (5, 10, (SELECT id FROM [Order] WHERE order_code='ORD1768234700014'), 2, N'Good denim, but the fit was a little loose for me.', 0, N'We are sorry about the experience and hid the review while checking its content.', 1, '2026-06-20 18:00:00');
+
+-- Lịch sử dùng voucher theo từng đơn hàng; REFUNDED nghĩa là voucher đã được hoàn lại sau hủy/trả.
+INSERT INTO Voucher_Usage (user_id, voucher_id, order_id, discount_amount, status, used_at, refunded_at, note) VALUES
+(4, 1, (SELECT id FROM [Order] WHERE order_code='SHOP-20260601-001'), 50000.00, 'APPLIED',  '2026-06-01 08:25:00', NULL, N'Applied at checkout'),
+(1, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234300003'), 50000.00, 'APPLIED',  '2026-03-10 09:00:00', NULL, N'Applied at checkout'),
+(1, 2, (SELECT id FROM [Order] WHERE order_code='ORD1768234500005'), 50000.00, 'APPLIED',  '2026-05-18 11:10:00', NULL, N'Applied at checkout'),
+(4, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234700010'), 50000.00, 'APPLIED',  '2026-06-23 09:15:00', NULL, N'Applied at checkout'),
+(5, 2, (SELECT id FROM [Order] WHERE order_code='ORD1768234700011'), 30000.00, 'APPLIED',  '2026-06-24 10:00:00', NULL, N'Applied at checkout'),
+(5, 1, (SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 50000.00, 'REFUNDED', '2026-06-18 09:00:00', '2026-06-28 10:30:00', N'Refunded after return approval');
+
+INSERT INTO Return_Request (order_id, user_id, reason, status, requested_at, reviewed_by, reviewed_at, admin_note) VALUES
+((SELECT id FROM [Order] WHERE order_code='ORD1768234700015'), 5, N'Size did not fit and the customer requested a refund.', 'APPROVED', '2026-06-27 09:30:00', 2, '2026-06-28 10:30:00', N'Return approved, stock restored, payment refunded.');
 GO

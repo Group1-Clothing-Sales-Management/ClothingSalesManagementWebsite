@@ -17,6 +17,7 @@ public final class OrderStatusHelper {
     public static final String RAW_DELIVERED = "DELIVERED";
     public static final String RAW_SUCCESS = "SUCCESS";
     public static final String RAW_CANCELLED = "CANCELLED";
+    public static final String RAW_RETURN_REQUESTED = "RETURN_REQUESTED";
     public static final String RAW_RETURNED = "RETURNED";
     public static final String RAW_PAID = "PAID";
     public static final String RAW_FAILED = "FAILED";
@@ -29,6 +30,7 @@ public final class OrderStatusHelper {
     public static final String DISPLAY_COMPLETED = "COMPLETED";
     public static final String DISPLAY_PAID = "PAID";
     public static final String DISPLAY_CANCELLED = "CANCELLED";
+    public static final String DISPLAY_RETURN_REQUESTED = "RETURN_REQUESTED";
     public static final String DISPLAY_RETURNED = "RETURNED";
     public static final String DISPLAY_UNKNOWN = "UNKNOWN";
 
@@ -47,6 +49,7 @@ public final class OrderStatusHelper {
         LABELS.put(DISPLAY_COMPLETED, "Completed");
         LABELS.put(DISPLAY_PAID, "Paid");
         LABELS.put(DISPLAY_CANCELLED, "Cancelled");
+        LABELS.put(DISPLAY_RETURN_REQUESTED, "Return requested");
         LABELS.put(DISPLAY_RETURNED, "Returned");
         LABELS.put(DISPLAY_UNKNOWN, "Unknown");
 
@@ -58,6 +61,7 @@ public final class OrderStatusHelper {
         BADGE_CLASSES.put(DISPLAY_COMPLETED, "status-completed");
         BADGE_CLASSES.put(DISPLAY_PAID, "status-paid");
         BADGE_CLASSES.put(DISPLAY_CANCELLED, "status-cancelled");
+        BADGE_CLASSES.put(DISPLAY_RETURN_REQUESTED, "status-return-requested");
         BADGE_CLASSES.put(DISPLAY_RETURNED, "status-returned");
         BADGE_CLASSES.put(DISPLAY_UNKNOWN, "status-unknown");
 
@@ -84,6 +88,7 @@ public final class OrderStatusHelper {
         STATUS_OPTIONS.put(DISPLAY_COMPLETED, "Completed");
         STATUS_OPTIONS.put(DISPLAY_PAID, "Paid");
         STATUS_OPTIONS.put(DISPLAY_CANCELLED, "Cancelled");
+        STATUS_OPTIONS.put(DISPLAY_RETURN_REQUESTED, "Return requested");
         STATUS_OPTIONS.put(DISPLAY_RETURNED, "Returned");
     }
 
@@ -114,6 +119,10 @@ public final class OrderStatusHelper {
 
         if (RAW_RETURNED.equals(rawStatus)) {
             return DISPLAY_RETURNED;
+        }
+
+        if (RAW_RETURN_REQUESTED.equals(rawStatus)) {
+            return DISPLAY_RETURN_REQUESTED;
         }
 
         if (RAW_PAID.equals(rawStatus)) {
@@ -211,6 +220,9 @@ public final class OrderStatusHelper {
         if (DISPLAY_CANCELLED.equals(normalized)) {
             return RAW_CANCELLED;
         }
+        if (DISPLAY_RETURN_REQUESTED.equals(normalized)) {
+            return RAW_RETURN_REQUESTED;
+        }
         if (DISPLAY_RETURNED.equals(normalized)) {
             return RAW_RETURNED;
         }
@@ -229,6 +241,7 @@ public final class OrderStatusHelper {
                 DISPLAY_COMPLETED,
                 DISPLAY_PAID,
                 DISPLAY_CANCELLED,
+                DISPLAY_RETURN_REQUESTED,
                 DISPLAY_RETURNED)
                 .contains(normalized);
     }

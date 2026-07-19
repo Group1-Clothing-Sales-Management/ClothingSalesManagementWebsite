@@ -63,7 +63,7 @@ public class CustomerOrderController extends HttpServlet {
                 System.out.println(item.getPrice());
             }
         }
-        if (cartItems.isEmpty()) {
+        if (cartItems == null || cartItems.isEmpty()) {
             session.removeAttribute("checkoutSelectedVariantIds");
             session.setAttribute("cartMessage",
                     "Please select at least one product to check out.");
@@ -99,7 +99,7 @@ public class CustomerOrderController extends HttpServlet {
         String voucherCode = request.getParameter("voucherCode");
 
         if (voucherCode != null && !voucherCode.trim().isEmpty()) {
-            var voucher = service.getAvailableVoucherForUser(userId, voucherCode.trim());
+            var voucher = service.getAvailableVoucherForUser(userId, voucherCode.trim(), cartItems, total);
 
             if (voucher == null) {
                 request.setAttribute("voucherError",
@@ -126,7 +126,7 @@ public class CustomerOrderController extends HttpServlet {
         request.setAttribute("discountAmount", discount);
         request.setAttribute("totalPayment", totalPayment);
         request.setAttribute("customerVouchers", service.getVouchersForUser(userId));
-        request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, total));
+        request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, total, cartItems));
 
         request.getRequestDispatcher(
                 "/view/customer/customer_checkout.jsp"
@@ -203,7 +203,7 @@ public class CustomerOrderController extends HttpServlet {
 
             if (voucherCode != null && !voucherCode.trim().isEmpty()) {
 
-                var voucher = service.getAvailableVoucherForUser(userId, voucherCode.trim());
+                var voucher = service.getAvailableVoucherForUser(userId, voucherCode.trim(), cartItems, cartTotal);
 
                 if (voucher == null) {
 
@@ -236,7 +236,7 @@ public class CustomerOrderController extends HttpServlet {
                     cartTotal.subtract(discount)
                             .add(BigDecimal.valueOf(30000)));
             request.setAttribute("customerVouchers", service.getVouchersForUser(userId));
-            request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, cartTotal));
+            request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, cartTotal, cartItems));
 
             request.getRequestDispatcher(
                     "/view/customer/customer_checkout.jsp")

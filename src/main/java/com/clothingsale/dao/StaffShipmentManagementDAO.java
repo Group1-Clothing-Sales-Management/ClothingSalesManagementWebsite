@@ -217,6 +217,7 @@ public class StaffShipmentManagementDAO {
 
                 if ("FAILED".equals(newShippingStatus)) {
                     restoreStockForOrder(conn, orderId);
+                    refundVoucherForOrder(conn, orderId, "Refunded after failed delivery");
                     updatePaymentAfterFailure(conn, orderId, paymentMethod, paymentStatus);
                 } else if ("SUCCESS".equals(newShippingStatus)
                         && "COD".equals(paymentMethod)
@@ -295,6 +296,48 @@ public class StaffShipmentManagementDAO {
                 ps.setInt(1, orderId);
                 ps.executeUpdate();
             }
+        }
+    }
+
+    private void refundVoucherForOrder(Connection conn, int orderId, String note)
+            throws SQLException {
+        String selectSql = "SELECT voucher_id FROM Voucher_Usage WHERE order_id=? AND status='APPLIED'";
+        String updateUsageSql = "UPDATE Voucher_Usage "
+                + "SET status='REFUNDED', refunded_at=GETDATE(), note=? "
+                + "WHERE order_id=? AND status='APPLIED'";
+        String decrementSql = "UPDATE Voucher "
+                + "SET used_count = CASE WHEN used_count > 0 THEN used_count - 1 ELSE 0 END "
+                + "WHERE id=?";
+
+        java.util.List<Integer> voucherIds = new java.util.ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    voucherIds.add(rs.getInt("voucher_id"));
+                }
+            }
+        }
+
+        if (voucherIds.isEmpty()) {
+            return;
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(updateUsageSql)) {
+            ps.setString(1, note);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(decrementSql)) {
+            for (Integer voucherId : voucherIds) {
+                if (voucherId == null) {
+                    continue;
+                }
+                ps.setInt(1, voucherId);
+                ps.addBatch();
+            }
+            ps.executeBatch();
         }
     }
 }

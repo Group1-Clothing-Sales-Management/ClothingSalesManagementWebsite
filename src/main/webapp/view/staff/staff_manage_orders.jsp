@@ -69,6 +69,7 @@
         .status-completed { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-paid { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
         .status-cancelled { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+        .status-return-requested { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
         .status-returned { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
         .status-unknown { background: #f9fafb; color: #4b5563; border-color: #e5e7eb; }
         .badge-soft { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
@@ -214,6 +215,20 @@
                                             </c:choose>
                                         </div>
                                     </div>
+                                    <c:if test="${not empty order.returnRequest}">
+                                        <div class="col-12">
+                                            <div class="alert alert-warning border mb-0">
+                                                <div class="fw-bold mb-1">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                                    Return request: ${order.returnRequest.status}
+                                                </div>
+                                                <div class="mb-1"><strong>Customer reason:</strong> <c:out value="${order.returnRequest.reason}"/></div>
+                                                <c:if test="${not empty order.returnRequest.adminNote}">
+                                                    <div><strong>Staff note:</strong> <c:out value="${order.returnRequest.adminNote}"/></div>
+                                                </c:if>
+                                            </div>
+                                        </div>
+                                    </c:if>
                                 </div>
                             </div>
                         </div>
@@ -303,6 +318,27 @@
                                         <div class="alert alert-light border mb-0">
                                             Chỉ đơn đang ở trạng thái chờ xử lý mới có thể xác nhận hoặc hủy trực tiếp từ màn hình này.
                                         </div>
+                                    </c:when>
+                                    <c:when test="${order.orderStatus eq 'RETURN_REQUESTED'}">
+                                        <form action="${ordersBasePath}" method="post" class="mb-3">
+                                            <input type="hidden" name="action" value="approveReturn">
+                                            <input type="hidden" name="id" value="${order.id}">
+                                            <input type="hidden" name="returnMode" value="detail">
+                                            <label class="form-label fw-semibold">Staff note</label>
+                                            <textarea class="form-control mb-2" name="adminNote" rows="3" placeholder="Refund/restock note..."></textarea>
+                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Approve return and refund this order?');">
+                                                <i class="bi bi-check2-circle me-1"></i>Approve return
+                                            </button>
+                                        </form>
+                                        <form action="${ordersBasePath}" method="post" class="m-0">
+                                            <input type="hidden" name="action" value="rejectReturn">
+                                            <input type="hidden" name="id" value="${order.id}">
+                                            <input type="hidden" name="returnMode" value="detail">
+                                            <input type="hidden" name="adminNote" value="Return request rejected.">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Reject this return request?');">
+                                                <i class="bi bi-x-circle me-1"></i>Reject return
+                                            </button>
+                                        </form>
                                     </c:when>
                                     <c:when test="${order.shipmentId gt 0}">
                                         <div class="d-flex flex-wrap gap-2 mb-3">
@@ -459,6 +495,16 @@
                                                         <a class="btn btn-sm btn-outline-primary" href="${ordersBasePath}?action=view&id=${o.id}">
                                                             <i class="bi bi-eye me-1"></i>View
                                                         </a>
+                                                        <c:if test="${o.orderStatus eq 'RETURN_REQUESTED'}">
+                                                            <form action="${ordersBasePath}" method="post" class="m-0">
+                                                                <input type="hidden" name="action" value="approveReturn">
+                                                                <input type="hidden" name="id" value="${o.id}">
+                                                                <input type="hidden" name="adminNote" value="Approved from order list.">
+                                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve return for ${o.orderCode}?');">
+                                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Approve return
+                                                                </button>
+                                                            </form>
+                                                        </c:if>
                                                         <c:if test="${o.orderStatus eq 'PENDING'}">
                                                             <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="confirm">

@@ -2,6 +2,8 @@ package com.clothingsale.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Voucher {
@@ -24,8 +26,10 @@ public class Voucher {
     private int limitPerUser;       // Giới hạn lượt dùng/mỗi User
     private String terminateReason; // Lý do dừng sớm campaigns
     private Integer categoryId;
+    private String categoryName;
     private int userUsedCount;
     private BigDecimal applicableDiscount = BigDecimal.ZERO;
+    private List<VoucherUsage> usageHistory = new ArrayList<>();
 
     public Voucher() {
     }
@@ -164,11 +168,18 @@ public class Voucher {
         this.categoryId = categoryId;
     }
 
+    public String getCategoryName() { return categoryName; }
+    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+
     public int getUserUsedCount() { return userUsedCount; }
     public void setUserUsedCount(int userUsedCount) { this.userUsedCount = userUsedCount; }
     public BigDecimal getApplicableDiscount() { return applicableDiscount; }
     public void setApplicableDiscount(BigDecimal applicableDiscount) {
         this.applicableDiscount = applicableDiscount == null ? BigDecimal.ZERO : applicableDiscount;
+    }
+    public List<VoucherUsage> getUsageHistory() { return usageHistory; }
+    public void setUsageHistory(List<VoucherUsage> usageHistory) {
+        this.usageHistory = usageHistory == null ? new ArrayList<>() : usageHistory;
     }
 
     public String getCustomerStatus() {

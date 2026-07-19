@@ -49,6 +49,7 @@ public class Order {
     private String provinceName;
     private String districtName;
     private String wardName;
+    private ReturnRequest returnRequest;
     private List<OrderDetail> details = new ArrayList<>();
 
     public Order() {
@@ -365,6 +366,14 @@ public class Order {
 
     public void setWardName(String wardName) {
         this.wardName = wardName;
+    }
+
+    public ReturnRequest getReturnRequest() {
+        return returnRequest;
+    }
+
+    public void setReturnRequest(ReturnRequest returnRequest) {
+        this.returnRequest = returnRequest;
     }
 
     public List<OrderDetail> getDetails() {
