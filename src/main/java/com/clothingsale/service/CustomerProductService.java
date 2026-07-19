@@ -70,13 +70,26 @@ public class CustomerProductService {
 
         return productDAO.getVariantsByProductId(productId);
     }
-    public CartItem getBuyNowItem(int variantId,
-                              int quantity) {
 
-    return productDAO.getBuyNowItem(
-            variantId,
-            quantity);
-}
+    public CartItem getBuyNowItem(int variantId,
+            int quantity) {
+
+        return productDAO.getBuyNowItem(
+                variantId,
+                quantity);
+    }
+
+    public List<String> getColors(int productId) {
+
+        return productDAO.getColors(productId);
+
+    }
+
+    public List<String> getSizes(int productId) {
+
+        return productDAO.getSizes(productId);
+
+    }
 
     private void populateVariants(List<Product> products) {
         if (products == null || products.isEmpty()) {

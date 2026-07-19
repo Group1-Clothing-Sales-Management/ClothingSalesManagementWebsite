@@ -509,26 +509,58 @@
             .variant-options{
                 display:flex;
                 flex-wrap:wrap;
-                gap:8px;
+                gap:10px;
             }
 
-            .variant-option{
-                min-height:38px;
-                padding:7px 12px;
-                border:1px solid #d9d9d9;
-                border-radius:2px;
+            /* Color */
+
+            .color-option{
+                min-width:90px;
+                min-height:40px;
+                padding:8px 18px;
                 background:#fff;
-                color:var(--detail-ink);
+                border:1px solid #d9d9d9;
+                border-radius:4px;
+                transition:.2s;
+                cursor:pointer;
                 font-size:14px;
             }
-
-            .variant-option:hover,
-            .variant-option.active{
+            .color-option:hover{
                 border-color:var(--detail-primary);
+            }
+            .color-option.active{
+                border:2px solid var(--detail-primary);
                 color:var(--detail-primary);
                 background:#fffaf8;
+                box-shadow:0 0 0 1px var(--detail-primary);
             }
-
+            /* Size */
+            .size-option{
+                width:48px;
+                height:42px;
+                border:1px solid #d9d9d9;
+                background:#fff;
+                border-radius:4px;
+                cursor:pointer;
+                transition:.2s;
+                font-weight:600;
+            }
+            .size-option:hover:not(:disabled){
+                border-color:var(--detail-primary);
+            }
+            .size-option.active{
+                border:2px solid var(--detail-primary);
+                color:var(--detail-primary);
+                background:#fffaf8;
+                box-shadow:0 0 0 1px var(--detail-primary);
+            }
+            .size-option:disabled{
+                background:#efefef;
+                color:#999;
+                border-color:#ddd;
+                cursor:not-allowed;
+                opacity:.7;
+            }
             .stock-text{
                 margin:0!important;
                 color:var(--detail-muted);
@@ -1296,46 +1328,60 @@
 
                             </div>
 
+                            <!-- COLOR -->
                             <div class="detail-row">
 
                                 <div class="detail-row-label">
-                                    Variant
+                                    Color
                                 </div>
 
-                                <div>
+                                <div class="variant-options">
 
-                                    <div class="variant-options">
+                                    <c:set var="lastColor" value="" />
 
-                                        <c:forEach items="${product.variants}" var="v">
+                                    <c:forEach items="${product.variants}" var="v">
+
+                                        <c:if test="${lastColor != v.color}">
 
                                             <button type="button"
-                                                    class="variant-option ${v.id == product.variants[0].id ? 'active' : ''}"
-                                                    data-variant-id="${v.id}">
+                                                    class="color-option ${empty lastColor ? 'active' : ''}"
+                                                    data-color="${v.color}">
 
-                                                ${v.attributeDetails}
+                                                ${v.color}
 
                                             </button>
 
-                                        </c:forEach>
+                                            <c:set var="lastColor" value="${v.color}" />
 
-                                    </div>
+                                        </c:if>
 
-                                    <select class="variant-select d-none">
+                                    </c:forEach>
 
-                                        <c:forEach items="${product.variants}" var="v">
+                                </div>
 
-                                            <option value="${v.id}"
-                                                    data-price="${v.salePrice}"
-                                                    data-stock="${v.stockQuantity}"
-                                                    data-attributes="${v.attributeDetails}">
+                            </div>
 
-                                                ${v.attributeDetails}
+                            <!-- SIZE -->
+                            <div class="detail-row">
 
-                                            </option>
+                                <div class="detail-row-label">
+                                    Size
+                                </div>
 
-                                        </c:forEach>
+                                <div class="variant-options">
 
-                                    </select>
+                                    <c:forEach items="${sizes}" var="size">
+
+                                        <button
+                                            type="button"
+                                            class="size-option"
+                                            data-size="${size}">
+
+                                            ${size}
+
+                                        </button>
+
+                                    </c:forEach>
 
                                 </div>
 
@@ -1412,8 +1458,7 @@
                                     <input type="hidden"
                                            name="attributes"
                                            class="attributes-input"
-                                           value="${product.variants[0].attributeDetails}">
-
+                                           value="${product.variants[0].color} - ${product.variants[0].size}">
                                     <input type="hidden"
                                            name="price"
                                            class="price-input"
@@ -1646,252 +1691,173 @@
 
         <script>
 
-            document.querySelectorAll('.variant-select').forEach(function (select) {
+            const variants = [
+            <c:forEach items="${product.variants}" var="v">
+            {
+            id:${v.id},
+                    color:"${v.color}",
+                    size:"${v.size}",
+                    price:${v.salePrice},
+                    stock:${v.stockQuantity}
+            },
+            </c:forEach>
+            ];
+            let selectedColor = variants[0]?.color;
+            let selectedSize = variants[0]?.size;
+            const colorButtons = document.querySelectorAll(".color-option");
+            const sizeButtons = document.querySelectorAll(".size-option");
+            const variantIdInput = document.querySelector(".variant-id-input");
+            const buyNowVariant = document.querySelector(".buy-now-variant-id");
+            const priceInput = document.querySelector(".price-input");
+            const stockText = document.getElementById("stockText");
+            const priceValue = document.getElementById("priceValue");
+            const quantityInput = document.querySelector(".quantity-input");
+            function renderVariant(){
 
-                function syncVariant() {
+            const variant = variants.find(v =>
+                    v.color === selectedColor &&
+                    v.size === selectedSize
+                    );
+            if (!variant) return;
+            variantIdInput.value = variant.id;
+            buyNowVariant.value = variant.id;
+            priceInput.value = variant.price;
+            stockText.textContent = variant.stock;
+            priceValue.innerHTML =
+                    Number(variant.price).toLocaleString("vi-VN") + " ₫";
+            quantityInput.max = variant.stock;
+            if ( + quantityInput.value > variant.stock){
+            quantityInput.value = variant.stock;
+            }
 
-                    var form = select.closest('.add-cart-form');
-                    var option = select.options[select.selectedIndex];
+            sizeButtons.forEach(btn => {
 
-                    var priceValue = document.getElementById('priceValue');
-                    var quantityInput = form.querySelector('.quantity-input');
-
-                    // Add To Cart
-                    form.querySelector('.attributes-input').value =
-                            option.dataset.attributes || 'Standard';
-
-                    form.querySelector('.price-input').value =
-                            option.dataset.price || '0';
-
-                    // Buy Now
-                    document.querySelectorAll(".buy-now-variant-id").forEach(function (input) {
-                        input.value = option.value;
-                    });
-
-                    document.querySelectorAll(".buy-now-attributes").forEach(function (input) {
-                        input.value = option.dataset.attributes || "Standard";
-                    });
-
-                    document.querySelectorAll(".buy-now-price").forEach(function (input) {
-                        input.value = option.dataset.price || "0";
-                    });
-
-                    document.getElementById('stockText').textContent =
-                            option.dataset.stock;
-
-                    if (priceValue) {
-                        priceValue.textContent =
-                                Number(option.dataset.price || 0)
-                                .toLocaleString('vi-VN',
-                                        {maximumFractionDigits: 0})
-                                + ' ₫';
-                    }
-
-                    if (quantityInput) {
-
-                        quantityInput.max = option.dataset.stock;
-
-                        if (parseInt(quantityInput.value) >
-                                parseInt(option.dataset.stock)) {
-
-                            quantityInput.value = option.dataset.stock;
-                        }
-
-                    }
-
-                    form.querySelectorAll('.variant-option').forEach(function (button) {
-
-                        button.classList.toggle(
-                                'active',
-                                button.dataset.variantId === option.value);
-
-                    });
-
-                }
-
-                select.addEventListener('change', syncVariant);
-
-                form = select.closest('.add-cart-form');
-
-                form.querySelectorAll('.variant-option').forEach(function (button) {
-
-                    button.addEventListener('click', function () {
-
-                        select.value = button.dataset.variantId;
-
-                        select.dispatchEvent(new Event('change'));
-
-                    });
-
-                });
-
-                syncVariant();
-
+            const exist = variants.some(v =>
+                    v.color === selectedColor &&
+                    v.size === btn.dataset.size
+                    );
+            btn.disabled = !exist;
+            btn.classList.toggle(
+                    "active",
+                    btn.dataset.size === selectedSize
+                    );
             });
+            }
 
+            colorButtons.forEach(btn => {
 
-            document.querySelectorAll('.add-cart-form').forEach(function (form) {
+            btn.onclick = () => {
 
-                var quantityInput = form.querySelector('.quantity-input');
-
-                var decreaseButton = form.querySelector('.quantity-decrease');
-
-                var increaseButton = form.querySelector('.quantity-increase');
-
-                if (!quantityInput) {
-                    return;
-                }
-
-                function syncQuantity() {
-
-                    var min = parseInt(quantityInput.min || '1');
-
-                    var max = parseInt(quantityInput.max || '999');
-
-                    var value = parseInt(quantityInput.value || min);
-
-                    if (value < min)
-                        value = min;
-
-                    if (value > max)
-                        value = max;
-
-                    quantityInput.value = value;
-
-                    document.querySelectorAll(".buy-now-quantity").forEach(function (input) {
-                        input.value = value;
-                    });
-
-                }
-
-                decreaseButton.addEventListener('click', function () {
-
-                    quantityInput.value =
-                            parseInt(quantityInput.value || '1') - 1;
-
-                    syncQuantity();
-
-                });
-
-                increaseButton.addEventListener('click', function () {
-
-                    quantityInput.value =
-                            parseInt(quantityInput.value || '1') + 1;
-
-                    syncQuantity();
-
-                });
-
-                quantityInput.addEventListener('change', syncQuantity);
-
-                syncQuantity();
-
+            colorButtons.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            selectedColor = btn.dataset.color;
+            const first = variants.find(v => v.color === selectedColor);
+            selectedSize = first.size;
+            renderVariant();
+            };
             });
+            sizeButtons.forEach(btn => {
 
+            btn.onclick = () => {
+
+            if (btn.disabled) return;
+            selectedSize = btn.dataset.size;
+            renderVariant();
+            };
+            });
+            if (variants.length){
+
+            colorButtons.forEach(btn => {
+
+            btn.classList.toggle(
+                    "active",
+                    btn.dataset.color === selectedColor
+                    );
+            });
+            renderVariant();
+            }
+
+            // ================= FEEDBACK FILTER =================
 
             document.querySelectorAll('.feedback-filter').forEach(function (filterButton) {
 
-                filterButton.addEventListener('click', function () {
+            filterButton.addEventListener('click', function () {
 
-                    var filter = filterButton.dataset.filter;
+            var filter = filterButton.dataset.filter;
+            document.querySelectorAll('.feedback-filter').forEach(function (button) {
 
-                    document.querySelectorAll('.feedback-filter').forEach(function (button) {
-
-                        button.classList.toggle('active',
-                                button === filterButton);
-
-                    });
-
-                    document.querySelectorAll('.feedback-item').forEach(function (item) {
-
-                        var matches =
-                                filter === 'all'
-                                || item.dataset.rating === filter
-                                || (filter === 'comments'
-                                        && item.dataset.hasComment === 'true');
-
-                        item.hidden = !matches;
-
-                    });
-
-                });
-
+            button.classList.toggle('active', button === filterButton);
             });
+            document.querySelectorAll('.feedback-item').forEach(function (item) {
 
+            var matches =
+                    filter === 'all'
+                    || item.dataset.rating === filter
+                    || (filter === 'comments'
+                            && item.dataset.hasComment === 'true');
+            item.hidden = !matches;
+            });
+            });
+            });
+            // ================= URL CLEAN =================
 
             var params = new URLSearchParams(window.location.search);
-
             var wishlistStatusParams = [
-                'wishlistAdded',
-                'wishlistRemoved',
-                'wishlistError'
+                    'wishlistAdded',
+                    'wishlistRemoved',
+                    'wishlistError'
             ];
-
             var hasWishlistStatus = wishlistStatusParams.some(function (key) {
-                return params.has(key);
+            return params.has(key);
             });
-
             if (hasWishlistStatus) {
 
-                wishlistStatusParams.forEach(function (key) {
-                    params.delete(key);
-                });
-
-                var cleanUrl =
-                        window.location.pathname
-                        + (params.toString() ? '?' + params.toString() : '')
-                        + window.location.hash;
-
-                window.history.replaceState({}, '', cleanUrl);
-
+            wishlistStatusParams.forEach(function (key) {
+            params.delete(key);
+            });
+            var cleanUrl =
+                    window.location.pathname
+                    + (params.toString() ? '?' + params.toString() : '')
+                    + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl);
             }
 
+            // ================= CART MODAL =================
 
             if (params.has('cartAdded') || params.has('cartError')) {
 
-                var modalElement =
-                        document.getElementById('cartMessageModal');
+            var modalElement =
+                    document.getElementById('cartMessageModal');
+            var isError =
+                    params.has('cartError');
+            modalElement.classList.toggle('is-error', isError);
+            var icon =
+                    modalElement.querySelector('.cart-modal-mark i');
+            if (icon) {
 
-                var isError =
-                        params.has('cartError');
+            icon.className =
+                    isError
+                    ? 'fa-solid fa-triangle-exclamation'
+                    : 'fa-solid fa-check';
+            }
 
-                modalElement.classList.toggle('is-error', isError);
-
-                var icon =
-                        modalElement.querySelector('.cart-modal-mark i');
-
-                if (icon) {
-
-                    icon.className =
-                            isError
-                            ? 'fa-solid fa-triangle-exclamation'
-                            : 'fa-solid fa-check';
-
-                }
-
-                document.getElementById('cartMessageTitle').textContent =
-                        isError
-                        ? 'Could Not Add Item'
-                        : 'Cart Updated';
-
-                document.getElementById('cartMessageText').textContent =
-                        params.has('wishlistAdded')
-                        ? 'Added to your wishlist.'
-                        : params.has('wishlistRemoved')
-                        ? 'Removed from wishlist.'
-                        : params.has('wishlistError')
-                        ? 'Unable to update your wishlist.'
-                        : params.has('cartAdded')
-                        ? 'Item added to your cart.'
-                        : 'Could not add this item to your cart. Please check available stock.';
-
-                new bootstrap.Modal(modalElement).show();
-
+            document.getElementById('cartMessageTitle').textContent =
+                    isError
+                    ? 'Could Not Add Item'
+                    : 'Cart Updated';
+            document.getElementById('cartMessageText').textContent =
+                    params.has('wishlistAdded')
+                    ? 'Added to your wishlist.'
+                    : params.has('wishlistRemoved')
+                    ? 'Removed from wishlist.'
+                    : params.has('wishlistError')
+                    ? 'Unable to update your wishlist.'
+                    : params.has('cartAdded')
+                    ? 'Item added to your cart.'
+                    : 'Could not add this item to your cart. Please check available stock.';
+            new bootstrap.Modal(modalElement).show();
             }
 
         </script>
-        <jsp:include page="/view/customer/common/footer.jsp"/>
-
     </body>
-
 </html>

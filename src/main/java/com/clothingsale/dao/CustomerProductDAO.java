@@ -24,9 +24,7 @@ public class CustomerProductDAO {
         String sql = "SELECT id, category_name, slug, status "
                 + "FROM Category WHERE status = 1 ORDER BY id ASC";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Category category = new Category();
@@ -97,14 +95,13 @@ public class CustomerProductDAO {
 
         appendProductSort(sql, sort);
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
 
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapProduct(rs));
                 }
@@ -131,12 +128,11 @@ public class CustomerProductDAO {
                 + "AND p.status = 'ACTIVE'";
         Product product = null;
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
 
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     product = new Product();
                     product.setId(rs.getInt("id"));
@@ -198,14 +194,13 @@ public class CustomerProductDAO {
                 + "AND pv.status = 'ACTIVE' "
                 + "ORDER BY pv.product_id, pv.id";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (int i = 0; i < cleanProductIds.size(); i++) {
                 ps.setInt(i + 1, cleanProductIds.get(i));
             }
 
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ProductVariant variant = mapVariant(rs);
                     variantsByProductId
@@ -251,12 +246,11 @@ public class CustomerProductDAO {
                 + ") size "
                 + "WHERE pv.id=?";
 
-        try (Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, variantId);
 
-            try (ResultSet rs = ps.executeQuery()) {
+            try ( ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     CartItem item = new CartItem();
                     item.setVariantId(rs.getInt("variant_id"));
@@ -275,6 +269,66 @@ public class CustomerProductDAO {
         }
 
         return null;
+    }
+
+    public List<String> getColors(int productId) {
+
+        List<String> list = new ArrayList<>();
+
+        String sql
+                = "SELECT DISTINCT vav.attribute_value "
+                + "FROM Variant_Attribute_Value vav "
+                + "JOIN Attribute a ON a.id = vav.attribute_id "
+                + "JOIN Product_Variant pv ON pv.id = vav.variant_id "
+                + "WHERE pv.product_id=? "
+                + "AND pv.status='ACTIVE' "
+                + "AND a.attribute_name='Color'";
+
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                list.add(rs.getString(1));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public List<String> getSizes(int productId) {
+
+        List<String> list = new ArrayList<>();
+
+        String sql
+                = "SELECT DISTINCT vav.attribute_value "
+                + "FROM Variant_Attribute_Value vav "
+                + "JOIN Attribute a ON a.id = vav.attribute_id "
+                + "JOIN Product_Variant pv ON pv.id = vav.variant_id "
+                + "WHERE pv.product_id=? "
+                + "AND pv.status='ACTIVE' "
+                + "AND a.attribute_name='Size'";
+
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                list.add(rs.getString(1));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 
     private void appendProductFilters(
