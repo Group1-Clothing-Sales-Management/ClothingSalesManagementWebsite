@@ -118,7 +118,7 @@
                                     <div class="text-center border rounded p-3 mb-3 bg-light">
                                         <c:choose>
                                             <c:when test="${not empty product.mainImageUrl}">
-                                                <img id="imagePreview" src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}" alt="Product Image" class="product-preview img-thumbnail">
+                                                <img id="imagePreview" src="${pageContext.request.contextPath}/media/product/${product.mainImageUrl}" alt="Product Image" class="product-preview img-thumbnail">
                                             </c:when>
                                             <c:otherwise>
                                                 <img id="imagePreview" alt="Product Image Preview" class="product-preview img-thumbnail d-none">

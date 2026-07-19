@@ -17,6 +17,9 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
               rel="stylesheet">
 
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+              rel="stylesheet">
+
         <style>
 
             body{
@@ -706,75 +709,287 @@
                 }
             }
 
+            /* Home-aligned checkout refresh */
+            :root{
+                --checkout-ink:#1f2937;
+                --checkout-muted:#61708a;
+                --checkout-primary:#8AAAE5;
+                --checkout-primary-dark:#5f84d6;
+                --checkout-border:#d7e1f5;
+                --checkout-page:#eef4ff;
+            }
+
+            body.checkout-page{
+                background:
+                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
+                    linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+                color:var(--checkout-ink);
+            }
+
+            .checkout-shell{
+                max-width:1220px;
+                padding-top:30px!important;
+            }
+
+            .checkout-page-title{
+                min-height:96px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:18px;
+                margin-bottom:18px;
+                padding:22px 24px;
+                border:1px solid rgba(138,170,229,.38);
+                border-radius:8px;
+                background:rgba(255,255,255,.96);
+                box-shadow:0 18px 42px rgba(95,132,214,.14);
+            }
+
+            .checkout-page-kicker{
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                margin-bottom:7px;
+                color:#5f84d6;
+                font-size:.8rem;
+                font-weight:900;
+                letter-spacing:.08em;
+                text-transform:uppercase;
+            }
+
+            .checkout-page-title h1{
+                margin:0;
+                color:var(--checkout-ink);
+                font-size:1.65rem;
+                font-weight:850;
+            }
+
+            .checkout-title-link{
+                flex:0 0 auto;
+                color:#365b9f;
+                font-weight:800;
+                text-decoration:none;
+            }
+
+            .checkout-title-link:hover{
+                color:#5f84d6;
+                text-decoration:underline;
+                text-underline-offset:4px;
+            }
+
+            .checkout-page .card{
+                border:1px solid rgba(138,170,229,.34);
+                border-radius:8px;
+                background:#fff;
+                box-shadow:0 12px 32px rgba(95,132,214,.12);
+            }
+
+            .checkout-page .card-header{
+                min-height:62px;
+                display:flex;
+                align-items:center;
+                gap:10px;
+                border-bottom:1px solid var(--checkout-border);
+                color:var(--checkout-ink);
+                font-weight:850;
+            }
+
+            .checkout-page .card-header i{
+                color:#5f84d6!important;
+            }
+
+            .address-card .card-header{
+                border-top:0;
+                border-radius:8px 8px 0 0;
+            }
+
+            .address-item:hover{
+                background:#eef4ff;
+            }
+
+            .address-item .form-check-input,
+            .checkout-page .form-check-input{
+                accent-color:#5f84d6;
+            }
+
+            .checkout-page .form-check-input:checked{
+                background-color:#5f84d6;
+                border-color:#5f84d6;
+            }
+
+            .recipient{
+                color:var(--checkout-ink);
+            }
+
+            .address-info,
+            .checkout-summary .summary-row,
+            .voucher-wallet-meta{
+                color:var(--checkout-muted);
+            }
+
+            .default-badge{
+                border-color:#8AAAE5;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:6px;
+                min-height:28px;
+                padding:5px 10px;
+                color:#365b9f;
+                background:#eef4ff;
+                border-radius:8px;
+                font-weight:800;
+                line-height:1;
+                white-space:nowrap;
+            }
+
+            .default-badge i{
+                flex:0 0 auto;
+                font-size:13px;
+                line-height:1;
+            }
+
+            .address-item .d-flex.justify-content-between{
+                align-items:flex-start;
+                gap:16px;
+            }
+
+            .address-item .d-flex.justify-content-between > div:first-child{
+                min-width:0;
+                flex:1 1 auto;
+            }
+
+            .address-item .d-flex.justify-content-between > div:last-child{
+                flex:0 0 auto;
+                display:flex;
+                justify-content:flex-end;
+                padding-top:1px;
+            }
+
+            .btn-manage{
+                border-color:#9bb4e8;
+                color:#365b9f;
+                background:#fff;
+                font-weight:800;
+            }
+
+            .btn-manage:hover,
+            .btn-manage:focus-visible{
+                border-color:#5f84d6;
+                background:#5f84d6;
+                color:#fff;
+            }
+
+            .checkout-page .form-control,
+            .checkout-page .form-select{
+                border-color:var(--checkout-border);
+                border-radius:8px;
+                background:#fff;
+                color:var(--checkout-ink);
+            }
+
+            .checkout-page .form-control:focus,
+            .checkout-page .form-select:focus{
+                border-color:rgba(138,170,229,.86);
+                box-shadow:0 0 0 .22rem rgba(138,170,229,.20);
+            }
+
+            .checkout-page .btn-primary,
+            .checkout-page .btn-success,
+            .checkout-page .btn-place{
+                border:0;
+                background:#8AAAE5;
+                color:#fff;
+                box-shadow:0 12px 26px rgba(95,132,214,.22);
+                font-weight:850;
+            }
+
+            .checkout-page .btn-primary:hover,
+            .checkout-page .btn-success:hover,
+            .checkout-page .btn-place:hover{
+                background:#5f84d6;
+                color:#fff;
+            }
+
+            .checkout-summary .card-body > .d-flex{
+                border-bottom:1px solid var(--checkout-border)!important;
+            }
+
+            .checkout-summary .card-body > .d-flex img{
+                border-radius:8px!important;
+                border-color:var(--checkout-border)!important;
+                background:#eef4ff;
+            }
+
+            .checkout-summary .card-body > .d-flex .fw-bold{
+                color:var(--checkout-ink);
+                font-weight:800!important;
+            }
+
+            .checkout-summary .card-body > .d-flex .text-danger,
+            .checkout-summary .summary-row.total span:last-child{
+                color:#365b9f!important;
+            }
+
+            .voucher-suggestions{
+                border-top-color:var(--checkout-border);
+            }
+
+            .voucher-suggestions-title a,
+            .voucher-option button,
+            .voucher-wallet-action{
+                color:#365b9f;
+            }
+
+            .voucher-option,
+            .voucher-wallet-item{
+                border-color:var(--checkout-border);
+                background:#fff;
+            }
+
+            .voucher-option:first-of-type{
+                border-color:#8AAAE5;
+                box-shadow:0 0 0 1px rgba(138,170,229,.18);
+            }
+
+            .voucher-option-icon,
+            .voucher-wallet-value{
+                background:#8AAAE5;
+                color:#fff;
+            }
+
+            .voucher-wallet-name{
+                color:var(--checkout-ink);
+            }
+
+            .voucher-wallet-expiry{
+                color:#5f84d6;
+            }
+
+            @media(max-width:991px){
+                .checkout-page-title{
+                    align-items:flex-start;
+                    flex-direction:column;
+                }
+            }
+
         </style>
 
     </head>
 
     <body class="checkout-page">
 
-        <div class="checkout-topbar">
-            <div class="checkout-topbar-inner">
-                <div class="checkout-topbar-group">
-                    <span>Seller Centre</span>
-                    <span>|</span>
-                    <span>Shop Now</span>
-                    <span>|</span>
-                    <span>Follow us on</span>
-                    <i class="bi bi-facebook"></i>
-                    <i class="bi bi-instagram"></i>
-                </div>
-                <div class="checkout-topbar-group">
-                    <span><i class="bi bi-bell me-1"></i>Notifications</span>
-                    <span><i class="bi bi-question-circle me-1"></i>Help</span>
-                    <span>English</span>
-                </div>
-                <details class="account-menu checkout-account-menu">
-                    <summary aria-haspopup="menu">
-                        <span class="account-avatar">M</span>
-                        <span><c:out value="${not empty sessionScope.customerFullName ? sessionScope.customerFullName : sessionScope.authUsername}" default="Account"/></span>
-                        <i class="bi bi-chevron-down"></i>
-                    </summary>
-                    <div class="account-dropdown" role="menu">
-                        <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">Profile</a>
-                        <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">My Orders</a>
-                        <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">My Vouchers</a>
-                        <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">My Wishlist</a>
-                        <hr>
-                        <a href="${pageContext.request.contextPath}/customer/logout" role="menuitem">Logout</a>
-                    </div>
-                </details>
-            </div>
-        </div>
-
-        <div class="checkout-brand">
-            <div class="checkout-brand-inner">
-                <a href="${pageContext.request.contextPath}/home" class="checkout-logo">
-                    <i class="bi bi-bag-fill"></i>
-                    Clothing Sale
-                </a>
-                <span class="checkout-brand-title">Checkout</span>
-                <form action="${pageContext.request.contextPath}/products" method="get" class="checkout-search">
-                    <input type="text" name="keyword" placeholder="Search products">
-                    <button type="submit" aria-label="Search products">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </form>
-                <a href="${pageContext.request.contextPath}/cart" class="checkout-cart-link" aria-label="Cart">
-                    <i class="bi bi-cart3"></i>
-                    <span class="checkout-cart-count">0</span>
-                </a>
-            </div>
-            <div class="checkout-category-row">
-                <span>Phone Cases</span>
-                <span>Desktop Microphones</span>
-                <span>Yisong 003</span>
-                <span>iPhone Models</span>
-                <span>Arm sleeve gaming</span>
-                <span>Centaur Gundam Chairs</span>
-            </div>
-        </div>
+        <jsp:include page="/view/customer/common/header.jsp"/>
 
         <div class="container checkout-shell py-5">
+
+            <div class="checkout-page-title">
+                <div>
+                    <span class="checkout-page-kicker"><i class="bi bi-credit-card-fill"></i> Checkout</span>
+                    <h1>Review and place your order</h1>
+                </div>
+                <a href="${pageContext.request.contextPath}/cart" class="checkout-title-link">Back to cart</a>
+            </div>
 
             <div class="checkout-intro d-flex justify-content-between align-items-center mb-4">
 

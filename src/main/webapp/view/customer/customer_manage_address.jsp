@@ -12,14 +12,15 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <style>
             :root {
-                --address-ink:#25211e;
-                --address-muted:#6f665e;
-                --address-line:#e9e0d7;
-                --address-primary:#c65b3d;
-                --address-primary-dark:#a9462d;
-                --address-accent:#e9a957;
-                --address-bg:#faf7f2;
+                --address-ink:#1f2937;
+                --address-muted:#61708a;
+                --address-line:#d7e1f5;
+                --address-primary:#8AAAE5;
+                --address-primary-dark:#5f84d6;
+                --address-accent:#b8cff7;
+                --address-bg:#eef4ff;
                 --address-surface:#fff;
+                --address-danger:#9f3a38;
             }
 
             * {
@@ -31,17 +32,17 @@
                 margin:0;
                 color:var(--address-ink);
                 background:
-                    radial-gradient(circle at 8% 10%, rgba(230,157,79,.16), transparent 27%),
-                    radial-gradient(circle at 92% 20%, rgba(198,91,61,.08), transparent 25%),
-                    linear-gradient(180deg, #fffdf9 0%, var(--address-bg) 55%, #f5eee7 100%);
+                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
+                    radial-gradient(circle at 88% 14%, rgba(95,132,214,.12), transparent 24%),
+                    linear-gradient(180deg, #ffffff 0%, var(--address-bg) 100%);
                 font-family:"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             }
 
             .address-shell {
                 width:100%;
-                max-width:1120px;
+                max-width:1180px;
                 margin:0 auto;
-                padding:40px 18px 68px;
+                padding:34px 18px 68px;
             }
 
             .address-hero {
@@ -58,21 +59,21 @@
                 gap:8px;
                 margin-bottom:12px;
                 padding:7px 11px;
-                border:1px solid #f0d7c4;
+                border:1px solid rgba(138,170,229,.38);
                 border-radius:999px;
                 color:var(--address-primary-dark);
-                background:#fff3dc;
+                background:#eef4ff;
                 font-size:.78rem;
-                font-weight:800;
-                letter-spacing:.04em;
+                font-weight:900;
+                letter-spacing:.03em;
                 text-transform:uppercase;
             }
 
             .address-hero h1 {
                 margin:0;
-                font-size:clamp(2rem, 4vw, 2.8rem);
-                font-weight:900;
-                letter-spacing:-.04em;
+                font-size:clamp(2.1rem, 4vw, 3.35rem);
+                font-weight:950;
+                letter-spacing:0;
             }
 
             .address-hero p {
@@ -104,7 +105,7 @@
                 padding:0 18px;
                 color:#fff;
                 background:linear-gradient(135deg, var(--address-primary), var(--address-accent));
-                box-shadow:0 14px 24px rgba(198,91,61,.22);
+                box-shadow:0 14px 24px rgba(95,132,214,.22);
             }
 
             .btn-add-address:hover,
@@ -120,9 +121,10 @@
                 gap:18px;
                 margin-bottom:14px;
                 padding:18px 20px;
-                border:1px solid rgba(233,224,215,.95);
-                border-radius:14px;
-                background:rgba(255,255,255,.7);
+                border:1px solid rgba(138,170,229,.38);
+                border-radius:8px;
+                background:rgba(255,255,255,.96);
+                box-shadow:0 18px 42px rgba(95,132,214,.12);
             }
 
             .overview-title {
@@ -139,7 +141,7 @@
                 place-items:center;
                 border-radius:10px;
                 color:var(--address-primary);
-                background:#fff3dc;
+                background:#eef4ff;
             }
 
             .overview-note {
@@ -168,10 +170,10 @@
                 min-height:260px;
                 overflow:hidden;
                 padding:22px;
-                border:1px solid var(--address-line);
-                border-radius:16px;
+                border:1px solid rgba(138,170,229,.30);
+                border-radius:8px;
                 background:rgba(255,255,255,.96);
-                box-shadow:0 16px 40px rgba(74,54,39,.07);
+                box-shadow:0 8px 26px rgba(31,41,55,.08);
                 transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
             }
 
@@ -184,8 +186,8 @@
             }
 
             .address-card.is-default {
-                border-color:#e3b39d;
-                box-shadow:0 18px 42px rgba(198,91,61,.12);
+                border-color:rgba(138,170,229,.82);
+                box-shadow:0 20px 42px rgba(95,132,214,.18);
             }
 
             .address-card.is-default::before {
@@ -193,9 +195,9 @@
             }
 
             .address-card:hover {
-                transform:translateY(-3px);
-                border-color:#d9b6a4;
-                box-shadow:0 22px 48px rgba(74,54,39,.12);
+                transform:translateY(-4px);
+                border-color:rgba(138,170,229,.78);
+                box-shadow:0 20px 38px rgba(95,132,214,.20);
             }
 
             .address-card-header {
@@ -222,7 +224,7 @@
                 flex:0 0 auto;
                 border-radius:10px;
                 color:#fff;
-                background:linear-gradient(135deg, var(--address-ink), var(--address-primary));
+                background:linear-gradient(135deg, var(--address-primary-dark), var(--address-primary));
                 font-size:.9rem;
             }
 
@@ -240,7 +242,7 @@
                 padding:6px 9px;
                 border-radius:999px;
                 color:var(--address-primary-dark);
-                background:#fff3dc;
+                background:#eef4ff;
                 font-size:.72rem;
                 font-weight:900;
                 white-space:nowrap;
@@ -256,7 +258,7 @@
                 display:flex;
                 align-items:flex-start;
                 gap:11px;
-                color:#554b44;
+                color:#344054;
                 font-size:.92rem;
                 line-height:1.45;
             }
@@ -276,9 +278,9 @@
             .address-place {
                 margin-top:2px;
                 padding:11px 13px;
-                border-radius:10px;
+                border-radius:8px;
                 color:var(--address-muted);
-                background:#fcf8f4;
+                background:#f8fbff;
                 font-size:.82rem;
             }
 
@@ -293,7 +295,7 @@
                 gap:12px;
                 margin-top:auto;
                 padding-top:16px;
-                border-top:1px solid #f0e8e1;
+                border-top:1px solid #e8eefb;
             }
 
             .address-action-group {
@@ -314,8 +316,8 @@
 
             .btn-edit {
                 min-width:78px;
-                border:1px solid #d9b6a4;
-                color:var(--address-primary);
+                border:1px solid var(--address-line);
+                color:var(--address-primary-dark);
                 background:#fff;
             }
 
@@ -328,7 +330,7 @@
             .btn-delete {
                 min-width:78px;
                 border:1px solid #f0d5ce;
-                color:#aa5748;
+                color:var(--address-danger);
                 background:#fff;
             }
 
@@ -340,24 +342,25 @@
 
             .btn-default {
                 min-width:126px;
-                border:1px solid #e8c68d;
-                color:#9c6417;
-                background:#fffaf0;
+                border:1px solid rgba(138,170,229,.48);
+                color:var(--address-primary-dark);
+                background:#eef4ff;
             }
 
             .btn-default:hover,
             .btn-default:focus-visible {
-                border-color:var(--address-accent);
-                color:#7e4d0c;
-                background:#fff3dc;
+                border-color:var(--address-primary);
+                color:#365b9f;
+                background:#e4edff;
             }
 
             .empty-state {
                 padding:54px 24px;
-                border:1px dashed #d9b6a4;
-                border-radius:16px;
-                background:rgba(255,255,255,.65);
+                border:1px dashed rgba(138,170,229,.72);
+                border-radius:8px;
+                background:rgba(255,255,255,.86);
                 text-align:center;
+                box-shadow:0 18px 42px rgba(95,132,214,.12);
             }
 
             .empty-icon {
@@ -368,7 +371,7 @@
                 margin:0 auto 15px;
                 border-radius:16px;
                 color:var(--address-primary);
-                background:#fff3dc;
+                background:#eef4ff;
                 font-size:1.35rem;
             }
 
@@ -387,13 +390,13 @@
             .address-modal .modal-content {
                 overflow:hidden;
                 border:1px solid var(--address-line);
-                border-radius:18px;
-                box-shadow:0 26px 80px rgba(37,33,30,.22);
+                border-radius:8px;
+                box-shadow:0 26px 80px rgba(31,41,55,.22);
             }
 
             .address-modal .modal-header {
                 padding:22px 24px 16px;
-                border-bottom:1px solid #f0e8e1;
+                border-bottom:1px solid #e8eefb;
             }
 
             .modal-heading {
@@ -409,7 +412,7 @@
                 place-items:center;
                 border-radius:10px;
                 color:var(--address-primary);
-                background:#fff3dc;
+                background:#eef4ff;
             }
 
             .address-modal .modal-title {
@@ -429,7 +432,7 @@
 
             .address-modal .form-label {
                 margin-bottom:7px;
-                color:#504740;
+                color:#344054;
                 font-size:.86rem;
                 font-weight:800;
             }
@@ -444,16 +447,29 @@
                 left:15px;
                 z-index:1;
                 transform:translateY(-50%);
-                color:#a6968a;
+                color:#98a2b3;
                 pointer-events:none;
             }
 
             .address-field .form-control {
                 min-height:48px;
                 padding-left:42px;
-                border:1px solid #d9cfc6;
-                border-radius:10px;
+                border:1px solid var(--address-line);
+                border-radius:8px;
                 color:var(--address-ink);
+            }
+
+            .address-modal .form-select {
+                min-height:48px;
+                border:1px solid var(--address-line);
+                border-radius:8px;
+                color:var(--address-ink);
+                box-shadow:0 1px 2px rgba(16,24,40,.04);
+            }
+
+            .address-modal .form-select:focus {
+                border-color:var(--address-primary);
+                box-shadow:0 0 0 .22rem rgba(138,170,229,.22);
             }
 
             .address-field textarea.form-control {
@@ -469,7 +485,7 @@
 
             .address-field .form-control:focus {
                 border-color:var(--address-primary);
-                box-shadow:0 0 0 .22rem rgba(198,91,61,.14);
+                box-shadow:0 0 0 .22rem rgba(138,170,229,.22);
             }
 
             .default-check {
@@ -478,13 +494,13 @@
                 gap:9px;
                 margin-top:3px;
                 padding:12px 13px;
-                border-radius:10px;
-                background:#fcf8f4;
+                border-radius:8px;
+                background:#f8fbff;
             }
 
             .default-check .form-check-input {
                 margin-top:3px;
-                border-color:#cbb9aa;
+                border-color:#b8c6e2;
             }
 
             .default-check .form-check-input:checked {
@@ -493,7 +509,7 @@
             }
 
             .default-check label {
-                color:#554b44;
+                color:#344054;
                 font-size:.88rem;
                 font-weight:700;
             }
@@ -508,7 +524,8 @@
                 border:0;
                 padding:0 18px;
                 color:#fff;
-                background:var(--address-primary);
+                background:linear-gradient(135deg, var(--address-primary), var(--address-accent));
+                box-shadow:0 12px 26px rgba(95,132,214,.22);
             }
 
             .modal-save:hover,

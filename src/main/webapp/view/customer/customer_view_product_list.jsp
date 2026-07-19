@@ -454,6 +454,184 @@
             @media(max-width:575px){
                 .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
             }
+
+            /* Home-aligned product list refresh */
+            :root{
+                --catalog-ink:#1f2937;
+                --catalog-muted:#61708a;
+                --catalog-primary:#8AAAE5;
+                --catalog-primary-dark:#5f84d6;
+                --catalog-border:#d7e1f5;
+                --catalog-bg:#eef4ff;
+            }
+
+            body{
+                background:
+                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
+                    linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+                color:var(--catalog-ink);
+            }
+
+            .product-list-page{
+                max-width:1220px;
+                margin-top:30px!important;
+            }
+
+            .page-header{
+                min-height:92px;
+                border:1px solid rgba(138,170,229,.38);
+                border-radius:8px;
+                background:rgba(255,255,255,.96);
+                box-shadow:0 18px 42px rgba(95,132,214,.14);
+            }
+
+            .page-header h2{
+                color:var(--catalog-ink);
+                font-size:1.55rem;
+                letter-spacing:0;
+            }
+
+            .page-header h2 i{
+                color:var(--catalog-primary-dark);
+                margin-right:8px;
+            }
+
+            .page-header p{
+                color:var(--catalog-muted)!important;
+                font-weight:500;
+            }
+
+            .search-card{
+                border:1px solid rgba(138,170,229,.42);
+                background:#fff;
+                box-shadow:0 18px 42px rgba(95,132,214,.14);
+            }
+
+            .form-control,
+            .form-select{
+                border-color:var(--catalog-border);
+                border-radius:8px;
+                background:#fff;
+                color:var(--catalog-ink);
+            }
+
+            .form-control:focus,
+            .form-select:focus{
+                border-color:rgba(138,170,229,.86);
+                box-shadow:0 0 0 .22rem rgba(138,170,229,.20);
+            }
+
+            .btn-danger{
+                background:var(--catalog-primary)!important;
+                border-color:var(--catalog-primary)!important;
+                color:#fff!important;
+                box-shadow:0 12px 26px rgba(95,132,214,.22);
+            }
+
+            .btn-danger:hover,
+            .btn-danger:focus-visible{
+                background:var(--catalog-primary-dark)!important;
+                border-color:var(--catalog-primary-dark)!important;
+            }
+
+            .product-grid{
+                gap:16px;
+            }
+
+            .product-card{
+                border:1px solid rgba(138,170,229,.30);
+                border-radius:8px;
+                background:#fff;
+                box-shadow:0 8px 26px rgba(31,41,55,.08);
+            }
+
+            .product-card:hover{
+                transform:translateY(-4px);
+                border-color:rgba(138,170,229,.78);
+                box-shadow:0 20px 38px rgba(95,132,214,.20);
+            }
+
+            .product-image-link{
+                background:#eef4ff;
+            }
+
+            .product-ribbon,
+            .product-stock-badge{
+                top:8px;
+                border-radius:0 8px 8px 0;
+                padding:6px 8px;
+                font-size:.68rem;
+            }
+
+            .product-ribbon{
+                background:var(--catalog-primary);
+                color:#fff;
+            }
+
+            .product-stock-badge{
+                right:8px;
+                border-radius:8px;
+                background:#fff;
+                color:#365b9f;
+                box-shadow:0 8px 18px rgba(31,41,55,.10);
+            }
+
+            .product-card .card-body{
+                padding:11px 12px 8px;
+            }
+
+            .product-card h6{
+                min-height:40px;
+                font-size:.86rem;
+            }
+
+            .product-title-link{
+                color:var(--catalog-ink);
+            }
+
+            .product-title-link:hover{
+                color:var(--catalog-primary-dark);
+            }
+
+            .price{
+                color:#365b9f;
+                font-size:1.05rem;
+                letter-spacing:.01em;
+            }
+
+            .product-list-page .wishlist-heart-form{
+                margin:8px 0 2px;
+            }
+
+            .product-list-page .wishlist-heart{
+                width:34px;
+                height:34px;
+                border:1px solid #d7e1f5;
+                color:var(--catalog-primary-dark);
+                background:#fff;
+                box-shadow:0 8px 18px rgba(95,132,214,.14);
+            }
+
+            .product-list-page .wishlist-heart:hover,
+            .product-list-page .wishlist-heart.is-active{
+                background:var(--catalog-primary);
+                border-color:var(--catalog-primary);
+                color:#fff;
+            }
+
+            .product-meta{
+                color:var(--catalog-muted);
+                font-weight:500;
+            }
+
+            .wishlist-toast{
+                background:#1f2937;
+                box-shadow:0 18px 40px rgba(31,41,55,.22);
+            }
+
+            .wishlist-toast.is-error{
+                background:#9f3a38;
+            }
         </style>
 
     </head>
@@ -573,13 +751,15 @@
                                 <img
                                     src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
                                     class="card-img-top product-image"
-                                    alt="${p.productName}">
+                                    alt="${p.productName}"
+                                    loading="lazy"
+                                    decoding="async">
 
                             </a>
 
                             <div class="card-body">
 
-                                <h6 class="fw-bold text-truncate mb-2">
+                                <h6 class="fw-bold mb-2">
                                     <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="product-title-link">
                                         ${p.productName}
                                     </a>
@@ -699,13 +879,28 @@
 
         <script>
             var wishlistParams = new URLSearchParams(window.location.search);
+            var wishlistToast = document.getElementById('wishlistToast');
+            var wishlistToastText = document.getElementById('wishlistToastText');
+
+            function showWishlistToast(message, isError) {
+                if (!wishlistToast || !wishlistToastText) {
+                    return;
+                }
+
+                wishlistToast.classList.toggle('is-error', !!isError);
+                wishlistToastText.textContent = message;
+                wishlistToast.classList.add('show');
+                clearTimeout(wishlistToast.hideTimer);
+                wishlistToast.hideTimer = setTimeout(function () {
+                    wishlistToast.classList.remove('show');
+                }, 2600);
+            }
 
             if (wishlistParams.has('wishlistAdded')
                     || wishlistParams.has('wishlistRemoved')
                     || wishlistParams.has('wishlistError')) {
-                var wishlistToast = document.getElementById('wishlistToast');
-                var wishlistToastText = document.getElementById('wishlistToastText');
                 var wishlistMessage = 'Added to your wishlist.';
+                var wishlistIsError = false;
 
                 if (wishlistParams.has('wishlistRemoved')) {
                     wishlistMessage = 'Removed from your wishlist.';
@@ -713,14 +908,24 @@
 
                 if (wishlistParams.has('wishlistError')) {
                     wishlistMessage = 'Unable to update your wishlist.';
-                    wishlistToast.classList.add('is-error');
+                    wishlistIsError = true;
                 }
 
-                wishlistToastText.textContent = wishlistMessage;
-                wishlistToast.classList.add('show');
-                setTimeout(function () {
-                    wishlistToast.classList.remove('show');
-                }, 2600);
+                showWishlistToast(wishlistMessage, wishlistIsError);
+            }
+
+            document.querySelectorAll('.wishlist-heart-form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    sessionStorage.setItem('wishlistScrollY', String(window.scrollY || 0));
+                });
+            });
+
+            var savedWishlistScroll = sessionStorage.getItem('wishlistScrollY');
+            if (savedWishlistScroll !== null) {
+                sessionStorage.removeItem('wishlistScrollY');
+                requestAnimationFrame(function () {
+                    window.scrollTo(0, parseInt(savedWishlistScroll, 10) || 0);
+                });
             }
         </script>
 

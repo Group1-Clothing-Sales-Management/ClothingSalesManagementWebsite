@@ -16,15 +16,15 @@
         <style>
 
             :root{
-                --ink:#25211e;
-                --ink-soft:#5f5750;
-                --primary:#c65b3d;
-                --primary-dark:#a9462d;
-                --accent:#e9a957;
-                --bg:#faf7f2;
+                --ink:#1f2937;
+                --ink-soft:#61708a;
+                --primary:#8AAAE5;
+                --primary-dark:#5f84d6;
+                --accent:#ffffff;
+                --bg:#eef4ff;
                 --surface:#ffffff;
-                --border:#e9e0d7;
-                --shadow:0 12px 30px rgba(74,54,39,.09);
+                --border:#d7e1f5;
+                --shadow:0 18px 42px rgba(95,132,214,.14);
             }
 
             body{
@@ -782,6 +782,237 @@
                 border-color:#a9462d!important;
             }
 
+            /* Baby blue storefront refresh */
+            body{
+                background:
+                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
+                    linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+            }
+
+            .container{
+                max-width:1220px;
+            }
+
+            .btn-danger{
+                background:var(--primary)!important;
+                border-color:var(--primary)!important;
+                color:#fff!important;
+                box-shadow:0 12px 26px rgba(95,132,214,.22);
+            }
+
+            .btn-danger:hover,
+            .btn-danger:focus-visible{
+                background:var(--primary-dark)!important;
+                border-color:var(--primary-dark)!important;
+            }
+
+            .btn-outline-dark{
+                border-color:#9bb4e8;
+                color:#365b9f;
+                background:#fff;
+            }
+
+            .btn-outline-dark:hover,
+            .btn-outline-dark:focus-visible{
+                border-color:var(--primary-dark);
+                background:var(--primary-dark);
+                color:#fff;
+            }
+
+            .hero{
+                padding:30px 0 20px;
+            }
+
+            .hero-panel{
+                border:1px solid rgba(138,170,229,.38);
+                border-radius:8px;
+                background:
+                    linear-gradient(135deg, rgba(255,255,255,.96), rgba(238,244,255,.92)),
+                    #fff;
+                box-shadow:0 24px 70px rgba(95,132,214,.16);
+            }
+
+            .hero-panel:after{
+                right:36%;
+                bottom:-145px;
+                background:rgba(138,170,229,.22);
+            }
+
+            .hero-kicker{
+                color:var(--primary-dark);
+            }
+
+            .hero-kicker:before{
+                background:var(--primary);
+            }
+
+            .hero-image{
+                border-radius:8px;
+                box-shadow:0 20px 42px rgba(95,132,214,.22);
+            }
+
+            .search-card{
+                border-color:rgba(138,170,229,.42);
+                border-radius:8px;
+                box-shadow:var(--shadow);
+            }
+
+            .form-control,
+            .form-select{
+                border-color:var(--border);
+                border-radius:8px;
+                background:#fff;
+            }
+
+            .form-control:focus,
+            .form-select:focus{
+                border-color:rgba(138,170,229,.86);
+                box-shadow:0 0 0 .22rem rgba(138,170,229,.20);
+            }
+
+            .section-heading{
+                margin:34px 0 18px;
+                padding:0 2px;
+            }
+
+            .section-title{
+                color:var(--ink);
+                letter-spacing:0;
+            }
+
+            .result-count{
+                border:1px solid rgba(138,170,229,.36);
+                background:#fff;
+                color:var(--primary-dark);
+            }
+
+            .product-grid{
+                gap:16px;
+            }
+
+            .product-card{
+                border:1px solid rgba(138,170,229,.30);
+                border-radius:8px;
+                background:#fff;
+                box-shadow:0 8px 26px rgba(31,41,55,.08);
+            }
+
+            .product-card:hover{
+                transform:translateY(-4px);
+                border-color:rgba(138,170,229,.78);
+                box-shadow:0 20px 38px rgba(95,132,214,.20);
+            }
+
+            .product-image-link{
+                background:#eef4ff;
+            }
+
+            .product-ribbon,
+            .product-stock-badge{
+                top:8px;
+                border-radius:0 8px 8px 0;
+                padding:6px 8px;
+                font-size:.68rem;
+            }
+
+            .product-ribbon{
+                background:var(--primary);
+                color:#fff;
+            }
+
+            .product-stock-badge{
+                right:8px;
+                border-radius:8px;
+                background:#fff;
+                color:#365b9f;
+                box-shadow:0 8px 18px rgba(31,41,55,.10);
+            }
+
+            .product-card .card-body{
+                padding:11px 12px 8px;
+            }
+
+            .product-card h6{
+                min-height:40px;
+                font-size:.86rem;
+            }
+
+            .product-title-link:hover{
+                color:var(--primary-dark);
+            }
+
+            .product-price{
+                color:#365b9f;
+                font-size:1.05rem;
+                letter-spacing:.01em;
+            }
+
+            .product-card .wishlist-heart-form{
+                margin:8px 0 2px;
+            }
+
+            .product-card .wishlist-heart{
+                width:34px;
+                height:34px;
+                border-color:#d7e1f5;
+                color:var(--primary-dark);
+                background:#fff;
+                box-shadow:0 8px 18px rgba(95,132,214,.14);
+            }
+
+            .product-card .wishlist-heart:hover,
+            .product-card .wishlist-heart.is-active{
+                background:var(--primary);
+                border-color:var(--primary);
+                color:#fff;
+            }
+
+            .product-info .stock-ok{
+                color:#61708a;
+                font-weight:700;
+            }
+
+            .home-more .btn{
+                min-width:240px;
+                border-radius:8px;
+                border-color:#9bb4e8;
+                box-shadow:0 12px 28px rgba(95,132,214,.12);
+            }
+
+            .wishlist-toast{
+                background:#1f2937;
+                box-shadow:0 18px 40px rgba(31,41,55,.22);
+            }
+
+            .wishlist-toast.is-error{
+                background:#9f3a38;
+            }
+
+            .cart-modal-mark{
+                background:#eef4ff;
+                color:var(--primary-dark);
+            }
+
+            .cart-message-modal .modal-footer .btn-outline-dark{
+                border-color:#9bb4e8!important;
+                color:#365b9f!important;
+            }
+
+            .cart-message-modal .modal-footer .btn-outline-dark:hover{
+                background:var(--primary-dark)!important;
+                color:#fff!important;
+            }
+
+            .cart-message-modal .modal-footer .btn-danger{
+                background:var(--primary)!important;
+                border-color:var(--primary)!important;
+            }
+
+            .cart-message-modal .modal-footer .btn-danger:hover{
+                background:var(--primary-dark)!important;
+                border-color:var(--primary-dark)!important;
+            }
+
         </style>
 
     </head>
@@ -1104,10 +1335,26 @@
                 new bootstrap.Modal(modalElement).show();
             }
 
+            var wishlistToast = document.getElementById('wishlistToast');
+            var wishlistToastText = document.getElementById('wishlistToastText');
+
+            function showWishlistToast(message, isError) {
+                if (!wishlistToast || !wishlistToastText) {
+                    return;
+                }
+
+                wishlistToast.classList.toggle('is-error', !!isError);
+                wishlistToastText.textContent = message;
+                wishlistToast.classList.add('show');
+                clearTimeout(wishlistToast.hideTimer);
+                wishlistToast.hideTimer = setTimeout(function () {
+                    wishlistToast.classList.remove('show');
+                }, 2600);
+            }
+
             if (params.has('wishlistAdded') || params.has('wishlistRemoved') || params.has('wishlistError')) {
-                var wishlistToast = document.getElementById('wishlistToast');
-                var wishlistToastText = document.getElementById('wishlistToastText');
                 var wishlistMessage = 'Added to your wishlist.';
+                var wishlistIsError = false;
 
                 if (params.has('wishlistRemoved')) {
                     wishlistMessage = 'Removed from your wishlist.';
@@ -1115,14 +1362,24 @@
 
                 if (params.has('wishlistError')) {
                     wishlistMessage = 'Unable to update your wishlist.';
-                    wishlistToast.classList.add('is-error');
+                    wishlistIsError = true;
                 }
 
-                wishlistToastText.textContent = wishlistMessage;
-                wishlistToast.classList.add('show');
-                setTimeout(function () {
-                    wishlistToast.classList.remove('show');
-                }, 2600);
+                showWishlistToast(wishlistMessage, wishlistIsError);
+            }
+
+            document.querySelectorAll('.wishlist-heart-form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    sessionStorage.setItem('wishlistScrollY', String(window.scrollY || 0));
+                });
+            });
+
+            var savedWishlistScroll = sessionStorage.getItem('wishlistScrollY');
+            if (savedWishlistScroll !== null) {
+                sessionStorage.removeItem('wishlistScrollY');
+                requestAnimationFrame(function () {
+                    window.scrollTo(0, parseInt(savedWishlistScroll, 10) || 0);
+                });
             }
         </script>
         <jsp:include page="/view/customer/common/footer.jsp"/>

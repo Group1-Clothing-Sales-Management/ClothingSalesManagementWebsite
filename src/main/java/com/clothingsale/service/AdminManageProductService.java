@@ -10,6 +10,8 @@ import java.util.Locale;
 import com.clothingsale.model.ProductVariant;
 import java.util.HashSet;
 import java.util.Set;
+import java.math.BigDecimal;
+
 
 public class AdminManageProductService {
 
@@ -31,14 +33,12 @@ public class AdminManageProductService {
         return productDAO.updateProduct(p, imageName);
     }
 
-    public boolean deleteProductSmartly(int id) {
-        if (productDAO.isProductInOrders(id)) {
-            System.out.println("⚠️ Product ID #" + id + " already exists in orders. Switching to soft delete.");
-            return productDAO.softDeleteProduct(id);
-        } else {
-            System.out.println("✅ Product ID #" + id + " is not in any order. Proceeding with hard delete.");
-            return productDAO.hardDeleteProduct(id);
+    public boolean deleteProductSmartly(int productId) {
+        if (productId <= 0) {
+            return false;
         }
+
+        return productDAO.softDeleteProduct(productId);
     }
 
     public List<Brand> getAllBrands() {
@@ -153,23 +153,46 @@ public class AdminManageProductService {
         return sku.isEmpty() ? "PRODUCT" : sku;
     }
 
-    public String generateVariantSku(
-            String productName,
-            String size,
-            String color
-    ) {
-        return generateBaseSku(productName)
-                + "-" + generateBaseSku(size)
-                + "-" + generateBaseSku(color);
+    public String generateVariantSku(String productName, String size, String color) {
+        String productPart = normalizeSkuPart(productName);
+        String sizePart = normalizeSkuPart(size);
+        String colorPart = normalizeSkuPart(color);
+
+        return productPart + "-" + sizePart + "-" + colorPart;
+    }
+
+    private String normalizeSkuPart(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "na";
+        }
+
+        String normalized = java.text.Normalizer.normalize(
+                value.trim(),
+                java.text.Normalizer.Form.NFD
+        );
+
+        normalized = normalized
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-+|-+$", "");
+
+        return normalized.isEmpty() ? "na" : normalized;
     }
 
     public boolean createProductWithVariants(
             Product product,
             String imageName,
-            List<ProductVariant> variants
-    ) {
+            List<ProductVariant> variants) {
+
         if (!validateVariants(variants)) {
             return false;
+        }
+
+        for (ProductVariant variant : variants) {
+            prepareNewVariant(variant);
         }
 
         return productDAO.insertProductWithMatrixVariants(
@@ -181,13 +204,14 @@ public class AdminManageProductService {
 
     public boolean addVariants(
             int productId,
-            List<ProductVariant> variants
-    ) {
+            List<ProductVariant> variants) {
+
         if (productId <= 0 || !validateVariants(variants)) {
             return false;
         }
 
         for (ProductVariant variant : variants) {
+            prepareNewVariant(variant);
             variant.setProductId(productId);
 
             boolean existed = productDAO.variantCombinationExists(
@@ -205,41 +229,83 @@ public class AdminManageProductService {
     }
 
     private boolean validateVariants(List<ProductVariant> variants) {
-        if (variants == null || variants.isEmpty()) {
+    if (variants == null || variants.isEmpty()) {
+        return false;
+    }
+
+    Set<String> combinations = new HashSet<>();
+    Set<String> skuCodes = new HashSet<>();
+
+    for (ProductVariant variant : variants) {
+        if (variant == null
+                || variant.getSize() == null
+                || variant.getSize().trim().isEmpty()
+                || variant.getColor() == null
+                || variant.getColor().trim().isEmpty()
+                || variant.getSku() == null
+                || variant.getSku().trim().isEmpty()) {
+
             return false;
         }
 
-        Set<String> combinations = new HashSet<>();
-        Set<String> skuCodes = new HashSet<>();
+        String size = normalizeVariantValue(variant.getSize());
+        String color = normalizeVariantValue(variant.getColor());
 
-        for (ProductVariant variant : variants) {
-            if (variant == null
-                    || variant.getSize() == null
-                    || variant.getSize().trim().isEmpty()
-                    || variant.getColor() == null
-                    || variant.getColor().trim().isEmpty()
-                    || variant.getSku() == null
-                    || variant.getSku().trim().isEmpty()) {
-                return false;
-            }
+        String combinationKey = size + "|" + color;
+        String skuKey = variant.getSku()
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
-            String combinationKey = (variant.getSize().trim()
-                    + "|"
-                    + variant.getColor().trim()).toUpperCase(Locale.ROOT);
-
-            String skuKey = variant.getSku()
-                    .trim()
-                    .toUpperCase(Locale.ROOT);
-
-            if (!combinations.add(combinationKey)) {
-                return false;
-            }
-
-            if (!skuCodes.add(skuKey)) {
-                return false;
-            }
+        // Không xét status.
+        if (!combinations.add(combinationKey)) {
+            return false;
         }
 
-        return true;
+        if (!skuCodes.add(skuKey)) {
+            return false;
+        }
+
+        variant.setSize(variant.getSize().trim());
+        variant.setColor(variant.getColor().trim());
+        variant.setStatus("INACTIVE");
     }
+
+    return true;
+}
+    private String normalizeVariantValue(String value) {
+    String normalized = Normalizer.normalize(
+            value.trim(),
+            Normalizer.Form.NFD
+    );
+
+    normalized = normalized
+            .replaceAll("\\p{M}", "")
+            .replace('đ', 'd')
+            .replace('Đ', 'D')
+            .toLowerCase(Locale.ROOT)
+            .replaceAll("\\s+", " ");
+
+    return normalized;
+}
+
+    private void prepareNewVariant(ProductVariant variant) {
+        variant.setCostPrice(BigDecimal.ZERO);
+        variant.setSalePrice(BigDecimal.ZERO);
+        variant.setStockQuantity(0);
+        variant.setStatus("INACTIVE");
+
+        variant.setSize(variant.getSize().trim());
+        variant.setColor(variant.getColor().trim());
+    }
+
+    private String limitSkuPart(String value, int maxLength) {
+        if (value == null || value.isEmpty()) {
+            return "NA";
+        }
+
+        return value.length() <= maxLength
+                ? value
+                : value.substring(0, maxLength);
+    }
+
 }

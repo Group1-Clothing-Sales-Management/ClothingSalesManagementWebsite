@@ -369,6 +369,417 @@
             .hero-wordmark { font-size: 54px; }
             .hero-copy { margin-top: 30px; font-size: 21px; }
         }
+        /* Modern customer auth redesign */
+        :root {
+            --auth-ink: #1f2937;
+            --auth-muted: #61708a;
+            --auth-line: #d7e1f5;
+            --auth-coral: #8AAAE5;
+            --auth-coral-dark: #5f84d6;
+            --auth-forest: #8AAAE5;
+            --auth-charcoal: #5f84d6;
+        }
+
+        body {
+            color: var(--auth-ink);
+            background:
+                linear-gradient(135deg, rgba(138, 170, 229, .18) 0 25%, transparent 25% 100%),
+                linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+            font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+        }
+
+        .site-header {
+            height: 86px;
+            border-bottom: 1px solid rgba(45, 49, 55, .08);
+            background: rgba(255, 255, 255, .94);
+            backdrop-filter: blur(12px);
+        }
+
+        .header-inner {
+            width: min(1200px, calc(100% - 40px));
+        }
+
+        .brand-link {
+            gap: 10px;
+            color: var(--auth-ink);
+            font-weight: 800;
+        }
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--auth-charcoal);
+            box-shadow: 0 10px 20px rgba(45, 49, 55, .14);
+        }
+
+        .brand-mark::before {
+            top: -8px;
+            left: 10px;
+            width: 18px;
+            height: 14px;
+            border-color: var(--auth-charcoal);
+        }
+
+        .brand-mark span {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 25px;
+        }
+
+        .brand-name {
+            font-size: 22px;
+            letter-spacing: 0;
+        }
+
+        .header-divider {
+            background: var(--auth-line);
+        }
+
+        .page-title {
+            color: var(--auth-muted);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .help-link {
+            padding: 10px 14px;
+            border: 1px solid var(--auth-line);
+            border-radius: 8px;
+            color: var(--auth-coral-dark);
+            background: #fff;
+            font-weight: 700;
+        }
+
+        .help-link:hover {
+            border-color: rgba(138, 170, 229, .65);
+            text-decoration: none;
+        }
+
+        .login-stage {
+            min-height: calc(100vh - 86px);
+            min-height: calc(100svh - 86px);
+            width: min(1200px, calc(100% - 40px));
+            grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+            align-items: stretch;
+            gap: 44px;
+            padding: 44px 0;
+        }
+
+        .brand-panel {
+            display: grid;
+            align-content: center;
+            gap: 24px;
+            min-height: 650px;
+            padding: 38px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 8px;
+            text-align: left;
+            color: #fff;
+            background:
+                linear-gradient(135deg, rgba(74, 104, 165, .92), rgba(138, 170, 229, .80)),
+                #8AAAE5;
+            box-shadow: 0 24px 60px rgba(95, 132, 214, .20);
+        }
+
+        .hero-logo {
+            display: none;
+        }
+
+        .panel-eyebrow {
+            width: max-content;
+            padding: 7px 10px;
+            border: 1px solid rgba(255, 255, 255, .22);
+            color: #ffffff;
+            background: rgba(255, 255, 255, .14);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .hero-wordmark {
+            max-width: 560px;
+            margin: 0;
+            font-size: clamp(44px, 5vw, 72px);
+            line-height: .98;
+            font-weight: 800;
+            letter-spacing: 0;
+            white-space: normal;
+        }
+
+        .hero-copy {
+            max-width: 520px;
+            margin: 0;
+            color: rgba(255, 255, 255, .78);
+            font-size: clamp(18px, 1.8vw, 24px);
+            line-height: 1.45;
+        }
+
+        .lookbook-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(120px, .75fr);
+            gap: 14px;
+            margin-top: 8px;
+        }
+
+        .lookbook-grid img {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: block;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #eef4ff;
+        }
+
+        .lookbook-main {
+            height: 310px;
+        }
+
+        .lookbook-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .lookbook-stack img {
+            height: 148px;
+        }
+
+        .brand-notes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .brand-notes span {
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .86);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .brand-notes + .hero-copy {
+            display: none;
+        }
+
+        .login-card {
+            align-self: stretch;
+            min-height: 650px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 34px;
+            border: 1px solid rgba(45, 49, 55, .10);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 24px 64px rgba(95, 132, 214, .16);
+        }
+
+        .card-heading {
+            min-height: 0;
+            margin-bottom: 22px;
+        }
+
+        .form-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--auth-coral-dark);
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .card-heading h2 {
+            margin: 0;
+            color: var(--auth-ink);
+            font-size: 34px;
+            line-height: 1.05;
+            font-weight: 850;
+        }
+
+        .form-subtitle {
+            margin: 9px 0 0;
+            color: var(--auth-muted);
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        .message {
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .field,
+        .password-row {
+            height: 50px;
+            margin-top: 14px;
+            border: 1px solid var(--auth-line);
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .field:focus-within,
+        .password-row:focus-within {
+            border-color: rgba(138, 170, 229, .78);
+            box-shadow: 0 0 0 4px rgba(138, 170, 229, .20);
+        }
+
+        .password-row .field {
+            height: 48px;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .field-icon {
+            width: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #7e95c3;
+            flex: 0 0 46px;
+        }
+
+        .field input {
+            height: 100%;
+            padding: 0 14px 0 0;
+            font-size: 15px;
+        }
+
+        .password-field input {
+            padding-right: 48px;
+        }
+
+        .password-toggle {
+            top: 5px;
+            right: 5px;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+        }
+
+        .password-toggle:hover {
+            color: var(--auth-coral-dark);
+            background: #eef4ff;
+        }
+
+        .forgot-link {
+            height: 100%;
+            display: inline-flex;
+            align-items: center;
+            border-left: 1px solid var(--auth-line);
+            color: var(--auth-coral-dark);
+            font-weight: 800;
+        }
+
+        .login-button {
+            height: 50px;
+            margin-top: 24px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--auth-charcoal);
+            font-weight: 900;
+            letter-spacing: .03em;
+            transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-1px);
+            background: var(--auth-coral-dark);
+            box-shadow: 0 16px 28px rgba(95, 132, 214, .26);
+        }
+
+        .stay-signed {
+            margin-top: 16px;
+            color: var(--auth-muted);
+            font-size: 13px;
+        }
+
+        .stay-signed input {
+            accent-color: var(--auth-forest);
+        }
+
+        .help-dot {
+            border-color: var(--auth-line);
+            color: var(--auth-muted);
+            background: #fff;
+        }
+
+        .signup-prompt {
+            margin-top: 24px;
+            color: var(--auth-muted);
+            font-size: 15px;
+        }
+
+        .signup-prompt a {
+            color: var(--auth-coral-dark);
+            font-weight: 800;
+        }
+
+        @media (max-width: 1100px) {
+            .login-stage {
+                grid-template-columns: 1fr;
+            }
+
+            .brand-panel {
+                order: 1;
+                min-height: auto;
+            }
+
+            .login-card {
+                order: 2;
+                max-width: 520px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .site-header {
+                height: auto;
+            }
+
+            .header-inner {
+                width: calc(100% - 28px);
+                min-height: 74px;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px 0;
+            }
+
+            .help-link {
+                margin-left: 0;
+            }
+
+            .login-stage {
+                width: calc(100% - 28px);
+                min-height: auto;
+                padding: 24px 0 40px;
+            }
+
+            .brand-panel,
+            .login-card {
+                padding: 24px;
+            }
+
+            .lookbook-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .lookbook-main,
+            .lookbook-stack img {
+                height: 190px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -380,20 +791,36 @@
             </a>
             <span class="header-divider" aria-hidden="true"></span>
             <span class="page-title">Log In</span>
-            <a class="help-link" href="<%= ctx %>/home">Need help?</a>
         </div>
     </header>
 
     <main class="login-stage">
         <section class="brand-panel" aria-label="Clothing Sale introduction">
             <div class="hero-logo" aria-hidden="true"></div>
-            <h1 class="hero-wordmark">Clothing Sale</h1>
-            <p class="hero-copy">Your favorite clothing store<br>for styles you’ll love every day</p>
+            <div class="panel-eyebrow">New season edit</div>
+            <h1 class="hero-wordmark">Style that feels easy.</h1>
+            <p class="hero-copy">Log in to continue shopping fresh outfits, saved picks, and everyday pieces made for your routine.</p>
+            <div class="lookbook-grid" aria-hidden="true">
+                <img class="lookbook-main" src="<%= ctx %>/uploads/product/prod10-main.jpg" alt="">
+                <div class="lookbook-stack">
+                    <img src="<%= ctx %>/uploads/product/prod16-main.jpg" alt="">
+                    <img src="<%= ctx %>/uploads/product/prod21-main.jpg" alt="">
+                </div>
+            </div>
+            <div class="brand-notes" aria-label="Store highlights">
+                <span>Fresh drops weekly</span>
+                <span>Simple checkout</span>
+                <span>Member-only vouchers</span>
+            </div>
         </section>
 
         <section class="login-card" aria-label="Customer login form">
             <div class="card-heading">
-                <h2>Log In</h2>
+                <div>
+                    <span class="form-kicker"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Customer account</span>
+                    <h2>Welcome back</h2>
+                    <p class="form-subtitle">Access your cart, orders, wishlist, and vouchers.</p>
+                </div>
             </div>
 
             <% if (errorMessage != null) { %>
@@ -405,6 +832,7 @@
 
             <form action="<%= ctx %>/customer/login" method="post" autocomplete="off">
                 <div class="field">
+                    <span class="field-icon"><i class="fa-regular fa-user" aria-hidden="true"></i></span>
                     <input type="text"
                            name="username"
                            id="usernameField"
@@ -416,6 +844,7 @@
 
                 <div class="password-row">
                     <div class="field password-field">
+                        <span class="field-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
                         <input type="password"
                                name="password"
                                id="passwordField"
@@ -429,7 +858,10 @@
                     <a class="forgot-link" href="<%= ctx %>/customer/register">Forgot?</a>
                 </div>
 
-                <button class="login-button" type="submit">LOG IN</button>
+                <button class="login-button" type="submit">
+                    <i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>
+                    LOG IN
+                </button>
             </form>
 
             <label class="stay-signed">

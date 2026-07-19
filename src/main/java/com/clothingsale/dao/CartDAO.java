@@ -7,8 +7,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 public class CartDAO {
 
@@ -246,6 +250,52 @@ public class CartDAO {
         return 0;
     }
 
+    public Map<Integer, Integer> getAvailableStockByVariantIds(Collection<Integer> variantIds) {
+        Map<Integer, Integer> stocks = new HashMap<>();
+        List<Integer> cleanVariantIds = new ArrayList<>();
+
+        if (variantIds != null) {
+            for (Integer variantId : variantIds) {
+                if (variantId != null && variantId > 0 && !cleanVariantIds.contains(variantId)) {
+                    cleanVariantIds.add(variantId);
+                }
+            }
+        }
+
+        if (cleanVariantIds.isEmpty()) {
+            return stocks;
+        }
+
+        String sql = "SELECT pv.id, pv.stock_quantity "
+                + "FROM Product_Variant pv "
+                + "JOIN Product p ON pv.product_id = p.id "
+                + "WHERE pv.id IN (" + placeholders(cleanVariantIds.size()) + ") "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND p.status = 'ACTIVE'";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return stocks;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (int i = 0; i < cleanVariantIds.size(); i++) {
+                    ps.setInt(i + 1, cleanVariantIds.get(i));
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        stocks.put(rs.getInt("id"), rs.getInt("stock_quantity"));
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return stocks;
+    }
+
     public boolean isProductAvailable(int variantId) {
         return getAvailableStock(variantId) > 0;
     }
@@ -310,5 +360,13 @@ public class CartDAO {
         }
 
         return attributes.length() > 0 ? attributes.toString() : "Standard";
+    }
+
+    private String placeholders(int count) {
+        StringJoiner joiner = new StringJoiner(",");
+        for (int i = 0; i < count; i++) {
+            joiner.add("?");
+        }
+        return joiner.toString();
     }
 }

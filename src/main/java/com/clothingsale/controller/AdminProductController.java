@@ -6,6 +6,7 @@ import com.clothingsale.model.Category;
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
 import com.clothingsale.service.AdminManageProductService;
+import com.clothingsale.util.ProductImageStorage;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -298,7 +299,7 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        boolean added = productService.createProductWithVariants(product,savedImageName,variants);
+        boolean added = productService.createProductWithVariants(product, savedImageName, variants);
         if (!added) {
             deleteProductImage(savedImageName);
         }
@@ -325,33 +326,52 @@ public class AdminProductController extends HttpServlet {
     }
 
     private String saveProductImage(Part filePart) throws IOException {
-        String originalName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String extension = getFileExtension(originalName).toLowerCase(Locale.ROOT);
+        String originalName = Paths.get(
+                filePart.getSubmittedFileName()
+        ).getFileName().toString();
+
+        String extension = getFileExtension(originalName)
+                .toLowerCase(Locale.ROOT);
+
         String contentType = filePart.getContentType();
 
-        boolean validExtension = extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png") || extension.equals("webp");
-        boolean validContentType = contentType != null && (contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"));
+        boolean validExtension
+                = extension.equals("jpg")
+                || extension.equals("jpeg")
+                || extension.equals("png")
+                || extension.equals("webp");
+
+        boolean validContentType
+                = contentType != null
+                && (contentType.equals("image/jpeg")
+                || contentType.equals("image/png")
+                || contentType.equals("image/webp"));
+
         if (!validExtension || !validContentType) {
-            throw new IllegalArgumentException("Unsupported image format");
+            throw new IllegalArgumentException(
+                    "Unsupported image format"
+            );
         }
 
-        String realPath = getServletContext().getRealPath("/uploads/product");
-        if (realPath == null) {
-            throw new IOException("Product upload directory is unavailable");
+        String savedName
+                = System.currentTimeMillis()
+                + "_"
+                + UUID.randomUUID()
+                        .toString()
+                        .substring(0, 8)
+                + "."
+                + extension;
+
+        Path targetFile = ProductImageStorage.resolveFile(savedName);
+
+        try (InputStream inputStream = filePart.getInputStream()) {
+            Files.copy(
+                    inputStream,
+                    targetFile,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
         }
 
-        Path uploadDirectory = Paths.get(realPath).toAbsolutePath().normalize();
-        Files.createDirectories(uploadDirectory);
-
-        String savedName = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + extension;
-        Path target = uploadDirectory.resolve(savedName).normalize();
-        if (!target.startsWith(uploadDirectory)) {
-            throw new IOException("Invalid upload path");
-        }
-
-        try (InputStream input = filePart.getInputStream()) {
-            Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
-        }
         return savedName;
     }
 
@@ -364,15 +384,15 @@ public class AdminProductController extends HttpServlet {
         if (imageName == null || imageName.trim().isEmpty()) {
             return;
         }
+
         try {
-            String realPath = getServletContext().getRealPath("/uploads/product");
-            if (realPath == null) {
-                return;
-            }
-            String safeName = Paths.get(imageName).getFileName().toString();
-            Files.deleteIfExists(Paths.get(realPath).resolve(safeName).normalize());
+            Path imageFile = ProductImageStorage.resolveFile(imageName);
+            Files.deleteIfExists(imageFile);
         } catch (Exception e) {
-            System.err.println("Could not delete product image: " + e.getMessage());
+            System.err.println(
+                    "Could not delete product image: "
+                    + e.getMessage()
+            );
         }
     }
 
@@ -461,8 +481,8 @@ public class AdminProductController extends HttpServlet {
     private List<ProductVariant> readVariantsFromRequest(
             HttpServletRequest request,
             int productId,
-            String productName
-    ) {
+            String productName) {
+
         List<ProductVariant> variants = new ArrayList<>();
 
         for (int index = 0;; index++) {
@@ -480,23 +500,23 @@ public class AdminProductController extends HttpServlet {
                 break;
             }
 
-            if (size == null || size.trim().isEmpty()
-                    || color == null || color.trim().isEmpty()) {
+            if (size == null
+                    || size.trim().isEmpty()
+                    || color == null
+                    || color.trim().isEmpty()) {
+
                 throw new IllegalArgumentException(
                         "Size and color are required"
                 );
             }
 
-            String status = getMultipartParameter(
-                    request,
-                    "variants[" + index + "].status"
-            );
+            size = size.trim();
+            color = color.trim();
 
             ProductVariant variant = new ProductVariant();
-
             variant.setProductId(productId);
-            variant.setSize(size.trim());
-            variant.setColor(color.trim());
+            variant.setSize(size);
+            variant.setColor(color);
 
             variant.setSku(
                     productService.generateVariantSku(
@@ -506,19 +526,12 @@ public class AdminProductController extends HttpServlet {
                     )
             );
 
-            variant.setStatus(
-                    "INACTIVE".equalsIgnoreCase(status)
-                    ? "INACTIVE"
-                    : "ACTIVE"
-            );
-
+            // Variant mới luôn chưa sẵn sàng bán.
+            variant.setStatus("INACTIVE");
             variant.setCostPrice(java.math.BigDecimal.ZERO);
             variant.setSalePrice(java.math.BigDecimal.ZERO);
             variant.setStockQuantity(0);
-
-            variant.setAttributeDetails(
-                    variant.getColor() + "|" + variant.getSize()
-            );
+            variant.setAttributeDetails(color + "|" + size);
 
             variants.add(variant);
         }

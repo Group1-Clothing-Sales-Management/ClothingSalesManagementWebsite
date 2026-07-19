@@ -4,75 +4,11 @@
 
 <c:set var="loggedIn"
        value="${not empty sessionScope.authUserId}"/>
+<jsp:useBean id="headerProductDAO" class="com.clothingsale.dao.CustomerProductDAO" scope="page"/>
+<c:set var="navCategories"
+       value="${not empty headerCategories ? headerCategories : headerProductDAO.activeCategories}"/>
 
 <nav class="navbar custom-navbar market-header sticky-top" aria-label="Store navigation">
-    <div class="market-topbar">
-        <div class="market-header-inner market-topbar-inner">
-            <div class="market-topbar-group">
-                <a href="${pageContext.request.contextPath}/home">Seller Centre</a>
-                <span class="market-separator">|</span>
-                <a href="${pageContext.request.contextPath}/product">Shop Now</a>
-                <span class="market-separator">|</span>
-                <span>Follow us on</span>
-                <i class="fa-brands fa-facebook"></i>
-                <i class="fa-brands fa-instagram"></i>
-            </div>
-
-            <div class="market-topbar-group market-topbar-right">
-                <span><i class="fa-regular fa-bell me-1"></i>Notifications</span>
-                <span><i class="fa-regular fa-circle-question me-1"></i>Help</span>
-                <span>English</span>
-
-                <c:choose>
-                    <c:when test="${loggedIn}">
-                        <details class="market-account">
-                            <summary aria-haspopup="menu">
-                                <span class="market-avatar" aria-label="User avatar">
-                                    <c:choose>
-                                        <c:when test="${not empty sessionScope.authUsername}">
-                                            <c:out value="${fn:toUpperCase(fn:substring(sessionScope.authUsername, 0, 1))}"/>
-                                        </c:when>
-                                        <c:otherwise>A</c:otherwise>
-                                    </c:choose>
-                                </span>
-                                <span><c:out value="${not empty sessionScope.customerFullName
-                                                ? sessionScope.customerFullName
-                                                : sessionScope.authUsername}" default="Account"/></span>
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </summary>
-                            <div class="market-account-menu" role="menu">
-                                <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">
-                                    Profile
-                                </a>
-                                <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
-                                    My Orders
-                                </a>
-                                <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">
-                                    My Vouchers
-                                </a>
-                                <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">
-                                    My Wishlist
-                                </a>
-                                <hr>
-                                <a class="js-customer-logout"
-                                   href="${pageContext.request.contextPath}/customer/logout"
-                                   data-logout-url="${pageContext.request.contextPath}/customer/logout"
-                                   role="menuitem">
-                                    Logout
-                                </a>
-                            </div>
-                        </details>
-                    </c:when>
-                    <c:otherwise>
-                        <a class="market-login" href="${pageContext.request.contextPath}/customer/login">
-                            Login
-                        </a>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </div>
-    </div>
-
     <div class="market-mainbar">
         <div class="market-header-inner market-mainbar-inner">
             <a href="${pageContext.request.contextPath}/home" class="market-brand">
@@ -80,42 +16,82 @@
                 <span>Clothing Sale</span>
             </a>
 
-            <form action="${pageContext.request.contextPath}/products" method="get" class="market-search">
-                <input type="text" name="keyword" placeholder="500.000 &#8363; gift" aria-label="Search products">
-                <button type="submit" aria-label="Search products">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
-            </form>
+            <div class="market-search-area">
+                <form action="${pageContext.request.contextPath}/products" method="get" class="market-search">
+                    <input type="text" name="keyword" placeholder="Search shirts, pants, accessories..." aria-label="Search products">
+                    <button type="submit" aria-label="Search products">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </form>
+
+                <div class="market-category-strip" aria-label="Product categories">
+                    <c:forEach items="${navCategories}" var="category">
+                        <a class="${param.categoryId == category.id ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/products?categoryId=${category.id}">
+                            <c:out value="${category.categoryName}"/>
+                        </a>
+                    </c:forEach>
+                </div>
+            </div>
+
+            <c:choose>
+                <c:when test="${loggedIn}">
+                    <details class="market-main-account">
+                        <summary aria-haspopup="menu">
+                            <span class="market-user-dot" aria-label="User avatar">
+                                <c:choose>
+                                    <c:when test="${not empty sessionScope.authUsername}">
+                                        <c:out value="${fn:toUpperCase(fn:substring(sessionScope.authUsername, 0, 1))}"/>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <i class="fa-solid fa-user"></i>
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
+                            <span class="market-main-account-name">
+                                <c:out value="${not empty sessionScope.customerFullName
+                                                ? sessionScope.customerFullName
+                                                : sessionScope.authUsername}" default="Account"/>
+                            </span>
+                            <i class="fa-solid fa-chevron-down market-main-account-chevron"></i>
+                        </summary>
+                        <div class="market-account-menu" role="menu">
+                            <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">
+                                Profile
+                            </a>
+                            <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
+                                My Orders
+                            </a>
+                            <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">
+                                My Vouchers
+                            </a>
+                            <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">
+                                My Wishlist
+                            </a>
+                            <hr>
+                            <a class="js-customer-logout"
+                               href="${pageContext.request.contextPath}/customer/logout"
+                               data-logout-url="${pageContext.request.contextPath}/customer/logout"
+                               role="menuitem">
+                                Logout
+                            </a>
+                        </div>
+                    </details>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}/customer/login" class="market-user-action" aria-label="Login">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                </c:otherwise>
+            </c:choose>
 
             <a href="${pageContext.request.contextPath}/cart" class="market-cart" aria-label="Cart">
                 <i class="fa-solid fa-cart-shopping"></i>
+                <span class="market-cart-text">Cart</span>
                 <c:if test="${loggedIn and sessionScope.cartCount > 0}">
                     <span class="market-cart-badge">${sessionScope.cartCount}</span>
                 </c:if>
             </a>
-        </div>
-
-        <div class="market-header-inner market-category-row" aria-label="Popular categories">
-            <c:choose>
-                <c:when test="${not empty headerCategories}">
-                    <c:forEach items="${headerCategories}" var="category" varStatus="status">
-                        <c:if test="${status.index < 7}">
-                            <c:url var="categoryUrl" value="/products">
-                                <c:param name="categoryId" value="${category.id}"/>
-                            </c:url>
-                            <a href="${categoryUrl}" class="${param.categoryId == category.id ? 'active' : ''}">
-                                <c:out value="${category.categoryName}"/>
-                            </a>
-                        </c:if>
-                    </c:forEach>
-                    <c:if test="${fn:length(headerCategories) > 7}">
-                        <a href="${pageContext.request.contextPath}/products" aria-label="More categories">...</a>
-                    </c:if>
-                </c:when>
-                <c:otherwise>
-                    <a href="${pageContext.request.contextPath}/products">Products</a>
-                </c:otherwise>
-            </c:choose>
         </div>
     </div>
 </nav>
@@ -136,46 +112,19 @@
         margin:0 auto;
     }
 
-    .market-topbar,
     .market-mainbar{
         color:#fff;
         background:#c65b3d;
     }
 
-    .market-topbar{
-        min-height:32px;
-        font-size:12px;
-    }
-
-    .market-topbar-inner{
-        min-height:32px;
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:16px;
-    }
-
-    .market-topbar-group{
-        display:flex;
-        align-items:center;
-        gap:8px;
-        white-space:nowrap;
-    }
-
-    .market-topbar a,
     .market-login{
         color:#fff;
         text-decoration:none;
     }
 
-    .market-topbar a:hover,
     .market-login:hover{
         color:#fff;
         text-decoration:underline;
-    }
-
-    .market-separator{
-        opacity:.65;
     }
 
     .market-mainbar{
@@ -267,33 +216,6 @@
         font-size:11px;
         line-height:14px;
         text-align:center;
-    }
-
-    .market-category-row{
-        min-height:22px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:18px;
-        overflow:hidden;
-        font-size:12px;
-        white-space:nowrap;
-    }
-
-    .market-category-row a{
-        color:#fff;
-        text-decoration:none;
-    }
-
-    .market-category-row a:hover{
-        color:#fff;
-        text-decoration:underline;
-    }
-
-    .market-category-row a.active{
-        font-weight:700;
-        text-decoration:underline;
-        text-underline-offset:3px;
     }
 
     .market-account{
@@ -458,28 +380,9 @@
             margin-left:auto;
         }
 
-        .market-category-row {
-            display:none;
-        }
     }
 
     @media (max-width: 576px) {
-        .market-topbar-inner {
-            min-height:30px;
-            width:calc(100% - 20px);
-            gap:8px;
-            overflow:visible;
-        }
-
-        .market-topbar-group {
-            gap:5px;
-            font-size:11px;
-        }
-
-        .market-topbar-right > span {
-            display:none;
-        }
-
         .market-mainbar-inner {
             min-height:86px;
             width:calc(100% - 20px);
@@ -503,6 +406,599 @@
 
         .logout-confirm-actions .btn {
             width: 100%;
+        }
+    }
+
+    /* Baby blue header refresh */
+    .market-header{
+        background:#fff;
+        box-shadow:0 8px 28px rgba(95,132,214,.16);
+    }
+
+    .market-mainbar{
+        color:#fff;
+        background:#8AAAE5;
+        padding:12px 0 0;
+    }
+
+    .market-login{
+        color:#fff;
+        font-weight:700;
+    }
+
+    .market-mainbar-inner{
+        min-height:70px;
+        gap:18px;
+    }
+
+    .market-brand{
+        color:#fff;
+        font-weight:800;
+        letter-spacing:0;
+        min-width:300px;
+        font-size:32px;
+    }
+
+    .market-brand:hover{
+        color:#fff;
+    }
+
+    .market-brand i{
+        width:58px;
+        height:58px;
+        border-radius:8px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        background:#fff;
+        color:#5f84d6;
+        font-size:31px;
+        box-shadow:0 12px 24px rgba(95,132,214,.22);
+    }
+
+    .market-catalog{
+        min-width:150px;
+        height:54px;
+        border-radius:999px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        color:#fff;
+        background:rgba(54,91,159,.32);
+        text-decoration:none;
+        font-size:18px;
+        font-weight:800;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+        transition:background .18s ease, transform .18s ease;
+    }
+
+    .market-catalog:hover{
+        color:#fff;
+        background:rgba(54,91,159,.48);
+        transform:translateY(-1px);
+    }
+
+    .market-catalog i{
+        font-size:23px;
+    }
+
+    .market-search{
+        height:58px;
+        max-width:none;
+        margin-left:0;
+        border-radius:8px;
+        overflow:hidden;
+        box-shadow:0 12px 28px rgba(95,132,214,.18);
+    }
+
+    .market-search input{
+        border:0;
+        padding:0 22px;
+        color:#1f2937;
+        background:#fff;
+        font-size:16px;
+    }
+
+    .market-search input::placeholder{
+        color:#8b98ad;
+    }
+
+    .market-search button{
+        width:76px;
+        border:0;
+        background:#fff;
+        color:#5f84d6;
+        font-size:24px;
+    }
+
+    .market-search button:hover{
+        background:#eef4ff;
+        color:#365b9f;
+    }
+
+    .market-user-action{
+        width:58px;
+        height:58px;
+        border-radius:50%;
+        flex:0 0 58px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:#fff;
+        background:rgba(54,91,159,.32);
+        text-decoration:none;
+        font-size:24px;
+        font-weight:800;
+        transition:background .18s ease, transform .18s ease;
+    }
+
+    .market-user-action:hover{
+        color:#fff;
+        background:rgba(54,91,159,.48);
+        transform:translateY(-1px);
+    }
+
+    .market-main-account{
+        position:relative;
+        flex:0 0 auto;
+    }
+
+    .market-main-account summary{
+        min-width:190px;
+        height:58px;
+        border-radius:999px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        padding:0 16px 0 10px;
+        color:#fff;
+        background:rgba(54,91,159,.32);
+        cursor:pointer;
+        list-style:none;
+        font-weight:800;
+        transition:background .18s ease, transform .18s ease;
+    }
+
+    .market-main-account summary::-webkit-details-marker{
+        display:none;
+    }
+
+    .market-main-account summary:hover{
+        background:rgba(54,91,159,.48);
+        transform:translateY(-1px);
+    }
+
+    .market-main-account-name{
+        max-width:125px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:16px;
+    }
+
+    .market-main-account-chevron{
+        font-size:12px;
+        opacity:.9;
+    }
+
+    .market-main-account .market-account-menu{
+        top:calc(100% + 10px);
+        right:0;
+    }
+
+    .market-user-dot{
+        width:30px;
+        height:30px;
+        border-radius:50%;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        background:#fff;
+        color:#5f84d6;
+        font-size:14px;
+        font-weight:900;
+    }
+
+    .market-cart{
+        min-width:142px;
+        height:58px;
+        border-radius:999px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        color:#fff;
+        background:rgba(31,41,55,.22);
+        font-size:21px;
+        font-weight:800;
+        transition:transform .18s ease;
+    }
+
+    .market-cart:hover{
+        color:#fff;
+        transform:translateY(-1px);
+        background:rgba(31,41,55,.32);
+    }
+
+    .market-cart i{
+        font-size:25px;
+    }
+
+    .market-cart-text{
+        font-size:18px;
+        line-height:1;
+    }
+
+    .market-cart-badge{
+        border-color:#8AAAE5;
+        color:#5f84d6;
+        background:#fff;
+    }
+
+    .market-avatar{
+        background:#fff;
+        color:#5f84d6;
+    }
+
+    .market-account-menu{
+        border-color:#d7e1f5;
+        border-radius:8px;
+        box-shadow:0 18px 42px rgba(95,132,214,.18);
+    }
+
+    .market-account-menu a{
+        color:#1f2937;
+    }
+
+    .market-account-menu a:hover{
+        background:#eef4ff;
+        color:#365b9f;
+    }
+
+    .logout-confirm-icon{
+        background:linear-gradient(135deg,#5f84d6,#8AAAE5);
+        box-shadow:0 14px 30px rgba(95,132,214,.28);
+    }
+
+    .logout-confirm-title{
+        color:#1f2937;
+    }
+
+    .logout-confirm-text{
+        color:#61708a;
+    }
+
+    .logout-confirm-actions .btn-danger{
+        background:#8AAAE5;
+        border-color:#8AAAE5;
+    }
+
+    .logout-confirm-actions .btn-danger:hover{
+        background:#5f84d6;
+        border-color:#5f84d6;
+    }
+
+    @media (max-width: 900px) {
+        .market-mainbar {
+            padding-bottom:12px;
+        }
+
+        .market-mainbar-inner {
+            min-height:96px;
+            flex-wrap:wrap;
+            padding-top:12px;
+        }
+
+        .market-brand {
+            min-width:0;
+            font-size:24px;
+        }
+
+        .market-brand i {
+            width:40px;
+            height:40px;
+            font-size:24px;
+        }
+
+        .market-search {
+            order:4;
+            flex:0 0 100%;
+            max-width:none;
+            height:44px;
+            margin:0;
+        }
+
+        .market-catalog{
+            order:3;
+            min-width:132px;
+            height:42px;
+            font-size:15px;
+        }
+
+        .market-user-action{
+            width:42px;
+            height:42px;
+            flex-basis:42px;
+            font-size:18px;
+        }
+
+        .market-main-account summary{
+            min-width:42px;
+            width:42px;
+            height:42px;
+            padding:0;
+        }
+
+        .market-main-account-name,
+        .market-main-account-chevron{
+            display:none;
+        }
+
+        .market-main-account .market-user-dot{
+            width:26px;
+            height:26px;
+            font-size:12px;
+        }
+
+        .market-cart {
+            margin-left:auto;
+            min-width:46px;
+            width:46px;
+            height:42px;
+            padding:0;
+            border-radius:50%;
+        }
+
+        .market-cart-text{
+            display:none;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .market-mainbar-inner {
+            min-height:88px;
+        }
+
+        .market-brand {
+            font-size:21px;
+        }
+
+        .market-brand i {
+            width:36px;
+            height:36px;
+            font-size:21px;
+        }
+
+        .market-cart {
+            font-size:25px;
+        }
+
+        .market-catalog{
+            min-width:118px;
+            height:38px;
+            font-size:14px;
+        }
+
+        .market-user-action{
+            width:38px;
+            height:38px;
+            flex-basis:38px;
+            font-size:16px;
+        }
+
+        .market-main-account summary{
+            min-width:38px;
+            width:38px;
+            height:38px;
+        }
+    }
+
+    /* Compact header with inline categories */
+    .market-mainbar{
+        padding:8px 0 7px;
+    }
+
+    .market-mainbar-inner{
+        min-height:68px;
+        gap:14px;
+        align-items:center;
+    }
+
+    .market-brand{
+        min-width:260px;
+        font-size:28px;
+    }
+
+    .market-brand i{
+        width:48px;
+        height:48px;
+        font-size:26px;
+    }
+
+    .market-catalog{
+        min-width:138px;
+        height:44px;
+        gap:8px;
+        font-size:16px;
+    }
+
+    .market-catalog i{
+        font-size:20px;
+    }
+
+    .market-search-area{
+        flex:1 1 420px;
+        min-width:260px;
+        display:flex;
+        flex-direction:column;
+        gap:7px;
+    }
+
+    .market-search{
+        width:100%;
+        height:44px;
+        margin:0;
+    }
+
+    .market-search input{
+        padding:0 18px;
+        font-size:15px;
+    }
+
+    .market-search button{
+        width:62px;
+        font-size:21px;
+    }
+
+    .market-category-strip{
+        min-height:18px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:24px;
+        overflow:hidden;
+        color:#fff;
+    }
+
+    .market-category-strip a{
+        color:#fff;
+        font-size:13px;
+        font-weight:800;
+        line-height:1;
+        text-decoration:none;
+        text-shadow:0 1px 8px rgba(54,91,159,.25);
+        white-space:nowrap;
+    }
+
+    .market-category-strip a:hover{
+        color:#eef4ff;
+        text-decoration:underline;
+        text-underline-offset:4px;
+    }
+
+    .market-category-strip a.active{
+        color:#fff;
+        text-decoration:underline;
+        text-decoration-thickness:2px;
+        text-underline-offset:5px;
+    }
+
+    .market-user-action{
+        width:48px;
+        height:48px;
+        flex-basis:48px;
+        font-size:20px;
+    }
+
+    .market-main-account summary{
+        min-width:176px;
+        height:48px;
+        padding:0 14px 0 9px;
+    }
+
+    .market-user-dot{
+        width:28px;
+        height:28px;
+        font-size:13px;
+    }
+
+    .market-main-account-name{
+        max-width:116px;
+        font-size:15px;
+    }
+
+    .market-cart{
+        min-width:122px;
+        height:48px;
+        gap:9px;
+        font-size:19px;
+    }
+
+    .market-cart i{
+        font-size:22px;
+    }
+
+    .market-cart-text{
+        font-size:16px;
+    }
+
+    @media (max-width: 1100px) {
+        .market-brand{
+            min-width:220px;
+            font-size:24px;
+        }
+
+        .market-category-strip{
+            gap:16px;
+        }
+
+        .market-main-account summary{
+            min-width:150px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .market-mainbar{
+            padding:8px 0 10px;
+        }
+
+        .market-mainbar-inner{
+            min-height:112px;
+            gap:10px;
+        }
+
+        .market-search-area{
+            order:5;
+            flex:0 0 100%;
+            min-width:0;
+            gap:8px;
+        }
+
+        .market-search{
+            height:42px;
+        }
+
+        .market-category-strip{
+            justify-content:flex-start;
+            gap:10px;
+            overflow-x:auto;
+            padding-bottom:2px;
+            scrollbar-width:none;
+        }
+
+        .market-category-strip::-webkit-scrollbar{
+            display:none;
+        }
+
+        .market-category-strip a{
+            padding:6px 10px;
+            border-radius:999px;
+            background:rgba(54,91,159,.22);
+            font-size:12px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .market-brand{
+            font-size:20px;
+        }
+
+        .market-brand i{
+            width:36px;
+            height:36px;
+            font-size:20px;
+        }
+
+        .market-catalog{
+            min-width:112px;
+            height:36px;
+            font-size:13px;
+        }
+
+        .market-search{
+            height:40px;
         }
     }
 </style>
@@ -546,7 +1042,7 @@
 
 <script>
     (function () {
-        document.querySelectorAll('.market-account').forEach(function (account) {
+        document.querySelectorAll('.market-account, .market-main-account').forEach(function (account) {
             var summary = account.querySelector('summary');
 
             if (!summary) {
