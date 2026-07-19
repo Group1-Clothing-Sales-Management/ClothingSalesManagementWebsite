@@ -49,7 +49,8 @@ public class CustomerProductDetailController extends HttpServlet {
             int id = Integer.parseInt(idParam);
 
             Product product = productService.getProductById(id);
-
+            List<String> colors = productService.getColors(id);
+            List<String> sizes = productService.getSizes(id);
             // Không tìm thấy sản phẩm
             if (product == null) {
 
@@ -59,8 +60,7 @@ public class CustomerProductDetailController extends HttpServlet {
 
                 return;
             }
-            List<Feedback> feedbacks
-                    = feedbackService.getFeedbackByProduct(id);
+            List<Feedback> feedbacks = feedbackService.getFeedbackByProduct(id);
 
             int[] ratingCounts = new int[6];
             int commentsCount = 0;
@@ -80,6 +80,8 @@ public class CustomerProductDetailController extends HttpServlet {
             request.setAttribute("commentsCount", commentsCount);
             // Gửi dữ liệu sang JSP
             request.setAttribute("product", product);
+            request.setAttribute("colors", colors);
+            request.setAttribute("sizes", sizes);
             populateWishlistState(request, id);
 
             request.getRequestDispatcher(

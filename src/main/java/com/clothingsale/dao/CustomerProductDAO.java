@@ -227,25 +227,24 @@ public class CustomerProductDAO {
                     );
                     String color = rs.getString("color");
                     String size = rs.getString("size");
-                    StringBuilder details = new StringBuilder();
-                    if (color != null && !color.trim().isEmpty()) {
-                        details.append("Color: ").append(color.trim());
-                    }
-                    if (size != null && !size.trim().isEmpty()) {
-                        if (details.length() > 0) {
-                            details.append(" / ");
-                        }
-                        details.append("Size: ").append(size.trim());
-                    }
-                    variant.setAttributeDetails(
-                            details.length() > 0 ? details.toString() : "Standard"
-                    );
 
+                    variant.setColor(color == null ? "" : color.trim());
+                    variant.setSize(size == null ? "" : size.trim());
+
+                    StringBuilder details = new StringBuilder();
+                    if (color != null && !color.isBlank()) {
+                        details.append(color.trim());
+                    }
+                    if (size != null && !size.isBlank()) {
+                        if (details.length() > 0) {
+                            details.append(" - ");
+                        }
+                        details.append(size.trim());
+                    }
+                    variant.setAttributeDetails(details.toString());
                     list.add(variant);
                 }
-
             }
-
         } catch (SQLException e) {
 
             System.err.println(
@@ -325,5 +324,67 @@ public class CustomerProductDAO {
         }
 
         return null;
+    }
+
+    public List<String> getColors(int productId) {
+
+        List<String> list = new ArrayList<>();
+
+        String sql
+                = "SELECT DISTINCT vav.attribute_value "
+                + "FROM Variant_Attribute_Value vav "
+                + "JOIN Attribute a ON a.id = vav.attribute_id "
+                + "JOIN Product_Variant pv ON pv.id = vav.variant_id "
+                + "WHERE pv.product_id=? "
+                + "AND pv.status='ACTIVE' "
+                + "AND a.attribute_name='Color' "
+                + "ORDER BY vav.attribute_value";
+
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                list.add(rs.getString(1));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public List<String> getSizes(int productId) {
+
+        List<String> list = new ArrayList<>();
+
+        String sql
+                = "SELECT DISTINCT vav.attribute_value "
+                + "FROM Variant_Attribute_Value vav "
+                + "JOIN Attribute a ON a.id = vav.attribute_id "
+                + "JOIN Product_Variant pv ON pv.id = vav.variant_id "
+                + "WHERE pv.product_id=? "
+                + "AND pv.status='ACTIVE' "
+                + "AND a.attribute_name='Size' "
+                + "ORDER BY vav.attribute_value";
+
+        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                list.add(rs.getString(1));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 }
