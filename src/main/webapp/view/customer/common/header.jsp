@@ -62,6 +62,9 @@
                             <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
                                 My Orders
                             </a>
+                            <a href="${pageContext.request.contextPath}/customer/returns" role="menuitem">
+                                Returns & Refunds
+                            </a>
                             <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">
                                 My Vouchers
                             </a>

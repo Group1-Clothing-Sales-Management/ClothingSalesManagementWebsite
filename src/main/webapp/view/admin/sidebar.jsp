@@ -51,6 +51,8 @@
                 activeTab = "customers";
             } else if (path.startsWith("/admin/feedback") || path.startsWith("/staff/feedback")) {
                 activeTab = "feedback";
+            } else if (path.startsWith("/admin/returns") || path.startsWith("/staff/returns")) {
+                activeTab = "returns";
             } else if (path.startsWith("/staff/products")) {
                 activeTab = "products";
             } else if (path.startsWith("/admin/staffs")) {
@@ -245,6 +247,10 @@
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="sidebar-link ${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
             <i class="fa-solid fa-comments sidebar-icon"></i>Feedback
+        </a>
+        <%-- Link này dùng rolePrefix để Staff và Admin đi vào đúng URL của mình. --%>
+        <a href="${pageContext.request.contextPath}${rolePrefix}/returns" class="sidebar-link ${requestScope.sidebarActiveTab == 'returns' ? 'active' : ''}">
+            <i class="fa-solid fa-rotate-left sidebar-icon"></i>Returns & Refunds
         </a>
         <a href="${pageContext.request.contextPath}/staff/reports" class="sidebar-link ${requestScope.sidebarActiveTab == 'reports' ? 'active' : ''}">
             <i class="fa-solid fa-chart-pie sidebar-icon"></i>Revenue Reports

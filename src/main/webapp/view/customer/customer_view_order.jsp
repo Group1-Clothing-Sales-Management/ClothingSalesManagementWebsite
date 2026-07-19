@@ -966,6 +966,11 @@
                                         <button class="order-action primary" type="submit">Buy Again</button>
                                     </form>
                                 </c:if>
+
+                                <%-- Chỉ hiện nút này cho đơn đã giao; controller vẫn kiểm tra lại thời hạn và quyền sở hữu. --%>
+                                <c:if test="${o.orderStatus eq 'DELIVERED' or o.orderStatus eq 'SUCCESS' or o.orderStatus eq 'COMPLETED' or o.displayStatus eq 'DELIVERED' or o.displayStatus eq 'SUCCESS' or o.displayStatus eq 'RECEIVED'}">
+                                    <a class="order-action primary" href="${pageContext.request.contextPath}/customer/returns?action=create&amp;orderId=${o.id}">Request Return</a>
+                                </c:if>
                             </div>
                         </footer>
                     </article>
