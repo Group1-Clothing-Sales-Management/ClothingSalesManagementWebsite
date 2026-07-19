@@ -331,53 +331,6 @@
                 white-space:nowrap;
             }
 
-            .return-request-box {
-                margin-bottom:12px;
-                padding:12px 14px;
-                border:1px solid #d7e1f5;
-                border-radius:8px;
-                background:#fff;
-                color:#61708a;
-                font-size:13px;
-            }
-
-            .return-request-box strong {
-                color:#1f2937;
-            }
-
-            .return-request-form {
-                min-width:min(100%, 420px);
-                padding:12px;
-                border:1px solid #d7e1f5;
-                border-radius:8px;
-                background:#fff;
-            }
-
-            .return-request-form summary {
-                cursor:pointer;
-                color:#365b9f;
-                font-weight:800;
-                list-style:none;
-            }
-
-            .return-request-form summary::-webkit-details-marker {
-                display:none;
-            }
-
-            .return-request-form textarea {
-                width:100%;
-                min-height:86px;
-                margin:10px 0;
-                padding:10px 12px;
-                border:1px solid #d7e1f5;
-                border-radius:8px;
-                resize:vertical;
-            }
-
-            .status-return-requested {
-                color:#7c3aed;
-            }
-
             .order-total-row {
                 display:flex;
                 align-items:baseline;
@@ -510,9 +463,6 @@
                     align-items:flex-start;
                     flex-direction:column;
                     gap:4px;
-                }
-                .return-request-form {
-                    width:100%;
                 }
                 .order-total-row { justify-content:flex-end; }
                 .order-actions { justify-content:stretch; }
@@ -822,8 +772,6 @@
                    class="orders-tab ${statusFilter eq 'COMPLETED' ? 'active' : ''}">Completed</a>
                 <a href="${pageContext.request.contextPath}/customer/orders?status=CANCELLED"
                    class="orders-tab ${statusFilter eq 'CANCELLED' ? 'active' : ''}">Cancelled</a>
-                <a href="${pageContext.request.contextPath}/customer/orders?status=RETURN_REQUESTED"
-                   class="orders-tab ${statusFilter eq 'RETURN_REQUESTED' ? 'active' : ''}">Return requested</a>
                 <a href="${pageContext.request.contextPath}/customer/orders?status=RETURNED"
                    class="orders-tab ${statusFilter eq 'RETURNED' ? 'active' : ''}">Return Refund</a>
             </nav>
@@ -879,14 +827,10 @@
                     <c:if test="${o.orderStatus eq 'CANCELLED' or o.displayStatus eq 'CANCELLED' or o.shippingStatus eq 'CANCELLED'}">
                         <c:set var="statusClass" value="status-cancelled"/>
                     </c:if>
-                    <c:if test="${o.orderStatus eq 'RETURN_REQUESTED' or o.displayStatus eq 'RETURN_REQUESTED'}">
-                        <c:set var="statusClass" value="status-return-requested"/>
-                    </c:if>
                     <c:if test="${o.orderStatus eq 'RETURNED' or o.displayStatus eq 'RETURNED' or o.shippingStatus eq 'RETURNED'}">
                         <c:set var="statusClass" value="status-returned"/>
                     </c:if>
                     <c:set var="canBuyAgain" value="${o.displayStatus eq 'COMPLETED' or o.displayStatus eq 'CANCELLED' or o.orderStatus eq 'COMPLETED' or o.orderStatus eq 'SUCCESS' or o.orderStatus eq 'CANCELLED' or o.orderStatus eq 'FAILED' or o.shippingStatus eq 'CANCELLED' or o.shippingStatus eq 'FAILED'}"/>
-                    <c:set var="canRequestReturn" value="${empty o.returnRequest and (o.displayStatus eq 'COMPLETED' or o.displayStatus eq 'RECEIVED' or o.orderStatus eq 'DELIVERED' or o.orderStatus eq 'SUCCESS' or o.orderStatus eq 'COMPLETED' or o.orderStatus eq 'PAID')}"/>
 
                     <article class="order-card" data-order-search>
                         <header class="shop-header">
@@ -999,18 +943,6 @@
                                 </div>
                             </c:if>
 
-                            <c:if test="${not empty o.returnRequest}">
-                                <div class="return-request-box">
-                                    <strong>Return request:</strong>
-                                    <c:out value="${o.returnRequest.status}"/>
-                                    <span> - </span>
-                                    <c:out value="${o.returnRequest.reason}"/>
-                                    <c:if test="${not empty o.returnRequest.adminNote}">
-                                        <div><strong>Staff note:</strong> <c:out value="${o.returnRequest.adminNote}"/></div>
-                                    </c:if>
-                                </div>
-                            </c:if>
-
                             <div class="order-total-row">
                                 <span class="order-total-label">Order Total:</span>
                                 <span class="order-total-value"><fmt:formatNumber value="${o.totalPayment}" pattern="#,##0"/> &#8363;</span>
@@ -1033,17 +965,6 @@
                                         <input type="hidden" name="orderId" value="${o.id}">
                                         <button class="order-action primary" type="submit">Buy Again</button>
                                     </form>
-                                </c:if>
-
-                                <c:if test="${canRequestReturn}">
-                                    <details class="return-request-form">
-                                        <summary>Request return/refund</summary>
-                                        <form method="post" action="${pageContext.request.contextPath}/customer/return-order">
-                                            <input type="hidden" name="orderId" value="${o.id}">
-                                            <textarea name="reason" maxlength="500" required placeholder="Tell us why you want to return this order..."></textarea>
-                                            <button class="order-action danger" type="submit">Submit Request</button>
-                                        </form>
-                                    </details>
                                 </c:if>
                             </div>
                         </footer>

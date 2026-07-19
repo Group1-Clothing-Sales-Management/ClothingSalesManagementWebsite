@@ -905,18 +905,6 @@ VALUES
  50000, '2026-05-18 11:10:00');
 GO
 
-INSERT INTO dbo.Return_Request (
-    order_id, user_id, reason, status,
-    requested_at, reviewed_by, reviewed_at, admin_note
-)
-VALUES
-((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260705-010'),
- 5, N'The size did not fit and the customer requested a refund.',
- 'APPROVED', '2026-07-11 09:30:00', 2,
- '2026-07-12 10:30:00',
- N'Return approved, stock restored, payment refunded.');
-GO
-
 /* =========================================================================
    XV. FEEDBACK AND ACTIVITY LOG
    ========================================================================= */

@@ -189,8 +189,6 @@ public class OrderManagementService {
         switch (normalized) {
             case "PENDING":
                 return Arrays.asList("CONFIRMED", "CANCELLED");
-            case "RETURN_REQUESTED":
-                return Arrays.asList("RETURNED", "DELIVERED");
             default:
                 return new ArrayList<>();
         }
@@ -242,44 +240,6 @@ public class OrderManagementService {
         return "Invalid order status.";
     }
 
-    public String approveReturnRequest(int orderId, int reviewerId, String adminNote) {
-        if (orderId <= 0) {
-            return "Invalid order ID.";
-        }
-
-        Order order = getOrderById(orderId);
-        if (order == null) {
-            return "The order to update could not be found.";
-        }
-
-        if (!OrderStatusHelper.RAW_RETURN_REQUESTED.equals(normalizeStatus(order.getOrderStatus()))) {
-            return "Only return-requested orders can be approved for refund.";
-        }
-
-        return dao.approveReturnRequest(orderId, reviewerId, adminNote)
-                ? "SUCCESS"
-                : "Failed to approve the return request. Please try again.";
-    }
-
-    public String rejectReturnRequest(int orderId, int reviewerId, String adminNote) {
-        if (orderId <= 0) {
-            return "Invalid order ID.";
-        }
-
-        Order order = getOrderById(orderId);
-        if (order == null) {
-            return "The order to update could not be found.";
-        }
-
-        if (!OrderStatusHelper.RAW_RETURN_REQUESTED.equals(normalizeStatus(order.getOrderStatus()))) {
-            return "Only pending return requests can be rejected.";
-        }
-
-        return dao.rejectReturnRequest(orderId, reviewerId, adminNote)
-                ? "SUCCESS"
-                : "Failed to reject the return request. Please try again.";
-    }
-
     /**
      * Normalize a status value so comparisons stay consistent.
      */
@@ -297,7 +257,6 @@ public class OrderManagementService {
                 OrderStatusHelper.RAW_SHIPPING,
                 OrderStatusHelper.RAW_DELIVERED,
                 OrderStatusHelper.RAW_CANCELLED,
-                OrderStatusHelper.RAW_RETURN_REQUESTED,
                 OrderStatusHelper.RAW_RETURNED)
                 .contains(status);
     }

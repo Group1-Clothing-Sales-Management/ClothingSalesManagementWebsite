@@ -62,10 +62,6 @@ public class StaffManageOrders extends HttpServlet {
             handleStatusChange(request, response, "CONFIRMED");
         } else if ("cancel".equalsIgnoreCase(action)) {
             handleStatusChange(request, response, "CANCELLED");
-        } else if ("approveReturn".equalsIgnoreCase(action)) {
-            handleReturnDecision(request, response, true);
-        } else if ("rejectReturn".equalsIgnoreCase(action)) {
-            handleReturnDecision(request, response, false);
         } else if ("markPaymentPaid".equalsIgnoreCase(action)) {
             handlePaymentConfirmation(request, response);
         } else if ("updateStatus".equalsIgnoreCase(action)) {
@@ -163,33 +159,6 @@ public class StaffManageOrders extends HttpServlet {
 
         if ("SUCCESS".equals(result)) {
             request.getSession().setAttribute("successMsg", "VNPay payment confirmed successfully.");
-        } else {
-            request.getSession().setAttribute("errorMsg", result);
-        }
-
-        if ("detail".equalsIgnoreCase(redirectMode)) {
-            response.sendRedirect(buildOrdersBasePath(request) + "?action=view&id=" + orderId);
-        } else {
-            response.sendRedirect(buildOrdersBasePath(request));
-        }
-    }
-
-    private void handleReturnDecision(HttpServletRequest request, HttpServletResponse response, boolean approve)
-            throws IOException {
-
-        int orderId = parseId(request.getParameter("id"));
-        String redirectMode = request.getParameter("returnMode");
-        String adminNote = request.getParameter("adminNote");
-        int reviewerId = (Integer) request.getSession(false).getAttribute("authUserId");
-
-        String result = approve
-                ? service.approveReturnRequest(orderId, reviewerId, adminNote)
-                : service.rejectReturnRequest(orderId, reviewerId, adminNote);
-
-        if ("SUCCESS".equals(result)) {
-            request.getSession().setAttribute("successMsg",
-                    approve ? "Return approved, stock restored, and refund recorded."
-                            : "Return request rejected.");
         } else {
             request.getSession().setAttribute("errorMsg", result);
         }

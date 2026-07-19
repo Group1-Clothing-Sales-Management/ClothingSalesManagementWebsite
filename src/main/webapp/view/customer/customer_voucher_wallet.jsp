@@ -229,39 +229,6 @@
             font-weight:800;
         }
 
-        .usage-history{
-            margin-top:10px;
-            padding-top:10px;
-            border-top:1px solid var(--voucher-line);
-            color:var(--voucher-muted);
-            font-size:13px;
-        }
-
-        .usage-row{
-            display:flex;
-            justify-content:space-between;
-            gap:10px;
-            margin-top:6px;
-        }
-
-        .usage-order{
-            color:var(--voucher-ink);
-            font-weight:800;
-        }
-
-        .usage-status{
-            flex:0 0 auto;
-            font-weight:850;
-        }
-
-        .usage-status.APPLIED{
-            color:#365b9f;
-        }
-
-        .usage-status.REFUNDED{
-            color:#187743;
-        }
-
         .actions{
             display:flex;
             align-items:center;
@@ -411,7 +378,7 @@
                     <i class="bi bi-ticket-perforated-fill"></i>
                     <div class="discount">
                         <c:choose>
-                            <c:when test="${v.discountType eq 'PERCENTAGE' or v.discountType eq 'PERCENT'}">
+                            <c:when test="${v.discountType eq 'PERCENTAGE'}">
                                 <fmt:formatNumber value="${v.discountValue}" pattern="#0"/>% off
                             </c:when>
                             <c:otherwise>
@@ -428,7 +395,7 @@
                         <i class="bi bi-bag-check"></i>
                         Minimum order <fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/>đ
                     </p>
-                    <c:if test="${(v.discountType eq 'PERCENTAGE' or v.discountType eq 'PERCENT') && v.maxDiscountAmount != null}">
+                    <c:if test="${v.discountType eq 'PERCENTAGE' && v.maxDiscountAmount != null}">
                         <p class="condition">
                             <i class="bi bi-arrow-down-circle"></i>
                             Max discount <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/>đ
@@ -443,33 +410,6 @@
                             <c:otherwise>Valid until <fmt:formatDate value="${v.endDate}" pattern="MM/dd/yyyy"/></c:otherwise>
                         </c:choose>
                     </p>
-                    <p class="condition">
-                        <i class="bi bi-diagram-3"></i>
-                        <c:choose>
-                            <c:when test="${not empty v.categoryName}">Category: <c:out value="${v.categoryName}"/></c:when>
-                            <c:otherwise>Scope: Entire store</c:otherwise>
-                        </c:choose>
-                    </p>
-                    <c:if test="${not empty v.usageHistory}">
-                        <div class="usage-history">
-                            <strong>Usage history</strong>
-                            <c:forEach items="${v.usageHistory}" var="usage">
-                                <div class="usage-row">
-                                    <span>
-                                        Order <span class="usage-order"><c:out value="${usage.orderCode}"/></span>
-                                        <span> - </span>
-                                        <fmt:formatNumber value="${usage.discountAmount}" pattern="#,##0"/>Ä‘
-                                    </span>
-                                    <span class="usage-status ${usage.status}">
-                                        <c:choose>
-                                            <c:when test="${usage.status eq 'REFUNDED'}">Refunded</c:when>
-                                            <c:otherwise>Applied</c:otherwise>
-                                        </c:choose>
-                                    </span>
-                                </div>
-                            </c:forEach>
-                        </div>
-                    </c:if>
                     <div class="actions">
                         <span class="status ${v.customerStatus}">
                             <c:choose>

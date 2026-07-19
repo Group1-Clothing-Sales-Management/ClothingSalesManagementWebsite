@@ -9,8 +9,6 @@ import com.clothingsale.model.Province;
 import com.clothingsale.model.District;
 import com.clothingsale.model.Ward;
 import com.clothingsale.model.Voucher;
-import com.clothingsale.model.VoucherUsage;
-import com.clothingsale.model.ReturnRequest;
 
 import com.clothingsale.util.DBConnection;
 import java.math.BigDecimal;
@@ -132,16 +130,11 @@ public class CustomerOrderDAO {
                 + "       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, "
                 + "       o.order_status, o.note, o.created_at, o.updated_at, "
                 + "       v.code AS voucher_code, v.title AS voucher_title, "
-                + "       s.shipping_status, p.payment_status, p.payment_method, "
-                + "       rr.id AS return_request_id, rr.reason AS return_reason, rr.status AS return_status, "
-                + "       rr.requested_at AS return_requested_at, rr.reviewed_by AS return_reviewed_by, "
-                + "       rr.reviewed_at AS return_reviewed_at, rr.admin_note AS return_admin_note "
+                + "       s.shipping_status, p.payment_status, p.payment_method "
                 + "FROM [Order] o "
                 + "LEFT JOIN Voucher v ON o.voucher_id = v.id "
                 + "LEFT JOIN Shipment s ON o.shipment_id = s.id "
                 + "LEFT JOIN Payment p ON o.id = p.order_id "
-                + "OUTER APPLY (SELECT TOP 1 * FROM Return_Request rr "
-                + "             WHERE rr.order_id = o.id ORDER BY rr.requested_at DESC, rr.id DESC) rr "
                 + "WHERE o.user_id = ? "
                 + "ORDER BY o.created_at DESC";
 
@@ -196,7 +189,6 @@ public class CustomerOrderDAO {
                         rs.getString("payment_status"));
                 o.setPaymentMethod(
                         rs.getString("payment_method"));
-                o.setReturnRequest(mapReturnRequest(rs));
 
                 o.setCreatedAt(
                         rs.getTimestamp(
@@ -364,25 +356,6 @@ public class CustomerOrderDAO {
         return detail;
     }
 
-    private ReturnRequest mapReturnRequest(ResultSet rs) throws SQLException {
-        int id = rs.getInt("return_request_id");
-        if (rs.wasNull()) {
-            return null;
-        }
-
-        ReturnRequest request = new ReturnRequest();
-        request.setId(id);
-        request.setReason(rs.getString("return_reason"));
-        request.setStatus(rs.getString("return_status"));
-        request.setRequestedAt(rs.getTimestamp("return_requested_at"));
-
-        int reviewedBy = rs.getInt("return_reviewed_by");
-        request.setReviewedBy(rs.wasNull() ? null : reviewedBy);
-        request.setReviewedAt(rs.getTimestamp("return_reviewed_at"));
-        request.setAdminNote(rs.getString("return_admin_note"));
-        return request;
-    }
-
     private String placeholders(int count) {
         StringJoiner joiner = new StringJoiner(",");
         for (int i = 0; i < count; i++) {
@@ -480,7 +453,7 @@ public class CustomerOrderDAO {
 
         BigDecimal discount;
 
-        if (isPercentageDiscount(voucher.getDiscountType())) {
+        if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())) {
 
             discount = subtotal.multiply(voucher.getDiscountValue())
                     .divide(BigDecimal.valueOf(100));
@@ -495,11 +468,6 @@ public class CustomerOrderDAO {
         }
 
         return discount.min(subtotal).max(BigDecimal.ZERO);
-    }
-
-    private boolean isPercentageDiscount(String discountType) {
-        return "PERCENTAGE".equalsIgnoreCase(discountType)
-                || "PERCENT".equalsIgnoreCase(discountType);
     }
 
     public boolean placeOrder(
@@ -547,10 +515,7 @@ public class CustomerOrderDAO {
 
             // ===== VOUCHER =====
             Voucher voucher = getVoucherByCode(voucherCode);
-            if (voucher != null
-                    && (hasUserUsedVoucher(userId, voucher.getId())
-                    || !voucherAppliesToItems(con, voucher, cartItems)
-                    || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+            if (voucher != null && hasUserUsedVoucher(userId, voucher.getId())) {
                 voucher = null;
             }
             BigDecimal discount = calculateDiscount(voucher, subtotal);
@@ -597,7 +562,6 @@ public class CustomerOrderDAO {
                         throw new SQLException("Voucher usage limit reached");
                     }
                 }
-                recordVoucherUsage(con, userId, voucher.getId(), orderId, discount);
             }
 
             // ===== 5. CLEAR CART =====
@@ -687,9 +651,7 @@ public class CustomerOrderDAO {
             Voucher voucher = getVoucherByCode(voucherCode);
 
             if (voucher != null
-                    && (hasUserUsedVoucher(userId, voucher.getId())
-                    || !voucherAppliesToItems(con, voucher, cartItems)
-                    || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+                    && hasUserUsedVoucher(userId, voucher.getId())) {
 
                 voucher = null;
 
@@ -768,7 +730,6 @@ public class CustomerOrderDAO {
                     }
 
                 }
-                recordVoucherUsage(con, userId, voucher.getId(), orderId, discount);
 
             }
 
@@ -833,72 +794,6 @@ public class CustomerOrderDAO {
         }
     }
 
-    private void recordVoucherUsage(Connection con, int userId, int voucherId, int orderId, BigDecimal discount)
-            throws SQLException {
-
-        String sql = "INSERT INTO Voucher_Usage "
-                + "(user_id, voucher_id, order_id, discount_amount, status, used_at, note) "
-                + "VALUES (?, ?, ?, ?, 'APPLIED', GETDATE(), ?)";
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, voucherId);
-            ps.setInt(3, orderId);
-            ps.setBigDecimal(4, discount == null ? BigDecimal.ZERO : discount);
-            ps.setString(5, "Applied at checkout");
-            ps.executeUpdate();
-        }
-    }
-
-    private boolean voucherAppliesToItems(Connection con, Voucher voucher, List<CartItem> cartItems)
-            throws SQLException {
-
-        if (voucher == null || voucher.getCategoryId() == null) {
-            return true;
-        }
-
-        List<Integer> productIds = new ArrayList<>();
-        if (cartItems != null) {
-            for (CartItem item : cartItems) {
-                if (item != null && item.getProductId() > 0 && !productIds.contains(item.getProductId())) {
-                    productIds.add(item.getProductId());
-                }
-            }
-        }
-
-        if (productIds.isEmpty()) {
-            return false;
-        }
-
-        String sql = "WITH CategoryTree AS ("
-                + "SELECT id FROM Category WHERE id = ? "
-                + "UNION ALL "
-                + "SELECT c.id FROM Category c JOIN CategoryTree ct ON c.parent_id = ct.id"
-                + ") "
-                + "SELECT TOP 1 1 FROM Product p "
-                + "WHERE p.id IN (" + placeholders(productIds.size()) + ") "
-                + "AND p.category_id IN (SELECT id FROM CategoryTree)";
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, voucher.getCategoryId());
-            for (int i = 0; i < productIds.size(); i++) {
-                ps.setInt(i + 2, productIds.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        }
-    }
-
-    public boolean isVoucherApplicableToItems(Voucher voucher, List<CartItem> cartItems) {
-        try (Connection con = DBConnection.getConnection()) {
-            return voucherAppliesToItems(con, voucher, cartItems);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     private int createShipment(Connection con, String carrierName) throws SQLException {
 
         String sql = "INSERT INTO Shipment("
@@ -930,9 +825,8 @@ public class CustomerOrderDAO {
         }
 
         String sql
-                = "SELECT v.*, c.category_name FROM Voucher v "
-                + "LEFT JOIN Category c ON v.category_id = c.id "
-                + "WHERE v.code=? "
+                = "SELECT * FROM Voucher "
+                + "WHERE code=? "
                 + "AND GETDATE() BETWEEN start_date AND end_date "
                 + "AND used_count < usage_limit";
 
@@ -958,10 +852,6 @@ public class CustomerOrderDAO {
                 v.setEndDate(rs.getTimestamp("end_date"));
                 v.setUsageLimit(rs.getInt("usage_limit"));
                 v.setUsedCount(rs.getInt("used_count"));
-                v.setLimitPerUser(rs.getInt("limit_per_user"));
-                int categoryId = rs.getInt("category_id");
-                v.setCategoryId(rs.wasNull() ? null : categoryId);
-                v.setCategoryName(rs.getString("category_name"));
 
                 return v;
             }
@@ -975,12 +865,9 @@ public class CustomerOrderDAO {
 
     public List<Voucher> getVouchersForUser(int userId) {
         List<Voucher> vouchers = new ArrayList<>();
-        String sql = "SELECT v.*, c.category_name, "
-                + "(SELECT COUNT(*) FROM Voucher_Usage vu "
-                + " WHERE vu.voucher_id = v.id AND vu.user_id = ? AND vu.status = 'APPLIED') AS user_used_count "
-                + "FROM Voucher v "
-                + "LEFT JOIN Category c ON v.category_id = c.id "
-                + "ORDER BY v.end_date ASC";
+        String sql = "SELECT v.*, (SELECT COUNT(*) FROM [Order] o "
+                + "WHERE o.voucher_id=v.id AND o.user_id=? AND o.order_status <> 'CANCELLED') AS user_used_count "
+                + "FROM Voucher v ORDER BY v.end_date ASC";
         try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try ( ResultSet rs = ps.executeQuery()) {
@@ -997,11 +884,6 @@ public class CustomerOrderDAO {
                     v.setEndDate(rs.getTimestamp("end_date"));
                     v.setUsageLimit(rs.getInt("usage_limit"));
                     v.setUsedCount(rs.getInt("used_count"));
-                    v.setLimitPerUser(rs.getInt("limit_per_user"));
-                    v.setTerminateReason(rs.getString("terminate_reason"));
-                    int categoryId = rs.getInt("category_id");
-                    v.setCategoryId(rs.wasNull() ? null : categoryId);
-                    v.setCategoryName(rs.getString("category_name"));
                     v.setUserUsedCount(rs.getInt("user_used_count"));
                     vouchers.add(v);
                 }
@@ -1009,69 +891,17 @@ public class CustomerOrderDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        attachVoucherUsageHistory(userId, vouchers);
         return vouchers;
     }
 
     private boolean hasUserUsedVoucher(int userId, int voucherId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Voucher_Usage vu "
-                + "JOIN Voucher v ON vu.voucher_id = v.id "
-                + "WHERE vu.user_id=? AND vu.voucher_id=? AND vu.status = 'APPLIED' "
-                + "HAVING COUNT(*) >= ISNULL(MAX(v.limit_per_user), 1)";
+        String sql = "SELECT COUNT(*) FROM [Order] WHERE user_id=? AND voucher_id=? AND order_status <> 'CANCELLED'";
         try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, voucherId);
             try ( ResultSet rs = ps.executeQuery()) {
-                return rs.next();
+                return rs.next() && rs.getInt(1) > 0;
             }
-        }
-    }
-
-    private void attachVoucherUsageHistory(int userId, List<Voucher> vouchers) {
-        if (vouchers == null || vouchers.isEmpty()) {
-            return;
-        }
-
-        Map<Integer, Voucher> voucherById = new LinkedHashMap<>();
-        for (Voucher voucher : vouchers) {
-            if (voucher != null) {
-                voucherById.put(voucher.getId(), voucher);
-            }
-        }
-
-        String sql = "SELECT vu.id, vu.user_id, vu.voucher_id, vu.order_id, o.order_code, "
-                + "vu.discount_amount, vu.status, vu.used_at, vu.refunded_at, vu.note "
-                + "FROM Voucher_Usage vu "
-                + "JOIN [Order] o ON vu.order_id = o.id "
-                + "WHERE vu.user_id = ? "
-                + "ORDER BY vu.used_at DESC, vu.id DESC";
-
-        try (Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Voucher voucher = voucherById.get(rs.getInt("voucher_id"));
-                    if (voucher == null) {
-                        continue;
-                    }
-
-                    VoucherUsage usage = new VoucherUsage();
-                    usage.setId(rs.getInt("id"));
-                    usage.setUserId(rs.getInt("user_id"));
-                    usage.setVoucherId(rs.getInt("voucher_id"));
-                    usage.setOrderId(rs.getInt("order_id"));
-                    usage.setOrderCode(rs.getString("order_code"));
-                    usage.setDiscountAmount(rs.getBigDecimal("discount_amount"));
-                    usage.setStatus(rs.getString("status"));
-                    usage.setUsedAt(rs.getTimestamp("used_at"));
-                    usage.setRefundedAt(rs.getTimestamp("refunded_at"));
-                    usage.setNote(rs.getString("note"));
-                    voucher.getUsageHistory().add(usage);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -1151,7 +981,6 @@ public class CustomerOrderDAO {
                 }
 
                 restoreStockForOrder(con, orderId);
-                refundVoucherForOrder(con, orderId, "Order cancelled by customer");
                 con.commit();
                 return true;
             } catch (Exception transactionError) {
@@ -1164,124 +993,6 @@ public class CustomerOrderDAO {
         }
 
         return false;
-    }
-
-    public boolean requestReturnOrder(int orderId, int userId, String reason) {
-        if (reason == null || reason.trim().isEmpty()) {
-            return false;
-        }
-
-        String loadSql = "SELECT order_status FROM [Order] WHERE id=? AND user_id=?";
-        String existingSql = "SELECT COUNT(*) FROM Return_Request "
-                + "WHERE order_id=? AND status IN ('PENDING', 'APPROVED')";
-        String insertSql = "INSERT INTO Return_Request (order_id, user_id, reason, status, requested_at) "
-                + "VALUES (?, ?, ?, 'PENDING', GETDATE())";
-        String updateOrderSql = "UPDATE [Order] SET order_status='RETURN_REQUESTED', updated_at=GETDATE() "
-                + "WHERE id=? AND user_id=? AND order_status IN ('DELIVERED', 'SUCCESS', 'COMPLETED', 'PAID')";
-
-        try (Connection con = DBConnection.getConnection()) {
-            con.setAutoCommit(false);
-            try {
-                String currentStatus = null;
-                try (PreparedStatement ps = con.prepareStatement(loadSql)) {
-                    ps.setInt(1, orderId);
-                    ps.setInt(2, userId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            currentStatus = rs.getString("order_status");
-                        }
-                    }
-                }
-
-                if (currentStatus == null
-                        || !("DELIVERED".equalsIgnoreCase(currentStatus)
-                        || "SUCCESS".equalsIgnoreCase(currentStatus)
-                        || "COMPLETED".equalsIgnoreCase(currentStatus)
-                        || "PAID".equalsIgnoreCase(currentStatus))) {
-                    con.rollback();
-                    return false;
-                }
-
-                try (PreparedStatement ps = con.prepareStatement(existingSql)) {
-                    ps.setInt(1, orderId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next() && rs.getInt(1) > 0) {
-                            con.rollback();
-                            return false;
-                        }
-                    }
-                }
-
-                try (PreparedStatement ps = con.prepareStatement(insertSql)) {
-                    ps.setInt(1, orderId);
-                    ps.setInt(2, userId);
-                    ps.setString(3, reason.trim());
-                    ps.executeUpdate();
-                }
-
-                try (PreparedStatement ps = con.prepareStatement(updateOrderSql)) {
-                    ps.setInt(1, orderId);
-                    ps.setInt(2, userId);
-                    if (ps.executeUpdate() == 0) {
-                        con.rollback();
-                        return false;
-                    }
-                }
-
-                con.commit();
-                return true;
-            } catch (Exception transactionError) {
-                con.rollback();
-                throw transactionError;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private void refundVoucherForOrder(Connection con, int orderId, String note)
-            throws SQLException {
-
-        String selectSql = "SELECT voucher_id FROM Voucher_Usage "
-                + "WHERE order_id=? AND status='APPLIED'";
-        String updateUsageSql = "UPDATE Voucher_Usage "
-                + "SET status='REFUNDED', refunded_at=GETDATE(), note=? "
-                + "WHERE order_id=? AND status='APPLIED'";
-        String decrementSql = "UPDATE Voucher "
-                + "SET used_count = CASE WHEN used_count > 0 THEN used_count - 1 ELSE 0 END "
-                + "WHERE id=?";
-
-        List<Integer> voucherIds = new ArrayList<>();
-        try (PreparedStatement ps = con.prepareStatement(selectSql)) {
-            ps.setInt(1, orderId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    voucherIds.add(rs.getInt("voucher_id"));
-                }
-            }
-        }
-
-        if (voucherIds.isEmpty()) {
-            return;
-        }
-
-        try (PreparedStatement ps = con.prepareStatement(updateUsageSql)) {
-            ps.setString(1, note);
-            ps.setInt(2, orderId);
-            ps.executeUpdate();
-        }
-
-        try (PreparedStatement ps = con.prepareStatement(decrementSql)) {
-            for (Integer voucherId : voucherIds) {
-                if (voucherId == null) {
-                    continue;
-                }
-                ps.setInt(1, voucherId);
-                ps.addBatch();
-            }
-            ps.executeBatch();
-        }
     }
 
     /**

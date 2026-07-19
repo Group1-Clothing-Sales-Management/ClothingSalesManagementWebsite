@@ -89,18 +89,12 @@ public class CustomerOrderService {
     }
 
     public Voucher getAvailableVoucherForUser(int userId, String code) {
-        return getAvailableVoucherForUser(userId, code, null, null);
-    }
-
-    public Voucher getAvailableVoucherForUser(int userId, String code, List<CartItem> cartItems, BigDecimal subtotal) {
         if (code == null) {
             return null;
         }
         for (Voucher voucher : dao.getVouchersForUser(userId)) {
             if (code.trim().equalsIgnoreCase(voucher.getCode())
-                    && "AVAILABLE".equals(voucher.getCustomerStatus())
-                    && (subtotal == null || subtotal.compareTo(voucher.getMinOrderValue()) >= 0)
-                    && (cartItems == null || dao.isVoucherApplicableToItems(voucher, cartItems))) {
+                    && "AVAILABLE".equals(voucher.getCustomerStatus())) {
                 return voucher;
             }
         }
@@ -112,18 +106,13 @@ public class CustomerOrderService {
     }
 
     public List<Voucher> getEligibleVouchers(int userId, BigDecimal subtotal) {
-        return getEligibleVouchers(userId, subtotal, null);
-    }
-
-    public List<Voucher> getEligibleVouchers(int userId, BigDecimal subtotal, List<CartItem> cartItems) {
         List<Voucher> eligible = new ArrayList<>();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         for (Voucher voucher : dao.getVouchersForUser(userId)) {
             boolean active = voucher.getStartDate() != null && voucher.getEndDate() != null
                     && !now.before(voucher.getStartDate()) && !now.after(voucher.getEndDate());
             if (active && voucher.isAvailable() && voucher.getUserUsedCount() == 0
-                    && subtotal.compareTo(voucher.getMinOrderValue()) >= 0
-                    && (cartItems == null || dao.isVoucherApplicableToItems(voucher, cartItems))) {
+                    && subtotal.compareTo(voucher.getMinOrderValue()) >= 0) {
                 voucher.setApplicableDiscount(calculateDiscount(subtotal, voucher));
                 eligible.add(voucher);
             }
@@ -176,10 +165,6 @@ public class CustomerOrderService {
         return dao.cancelOrder(orderId, userId);
     }
 
-    public boolean requestReturnOrder(int orderId, int userId, String reason) {
-        return dao.requestReturnOrder(orderId, userId, reason);
-    }
-
     public BigDecimal calculateDiscount(BigDecimal subtotal, Voucher voucher) {
 
         if (voucher == null) {
@@ -192,8 +177,7 @@ public class CustomerOrderService {
 
         BigDecimal discount;
 
-        if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())
-                || "PERCENT".equalsIgnoreCase(voucher.getDiscountType())) {
+        if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())) {
 
             discount = subtotal
                     .multiply(voucher.getDiscountValue())
@@ -418,7 +402,6 @@ public class CustomerOrderService {
                 || "COMPLETED".equals(normalized)
                 || "PAID".equals(normalized)
                 || "RETURNED".equals(normalized)
-                || "RETURN_REQUESTED".equals(normalized)
                 || "FAILED".equals(normalized);
     }
 }

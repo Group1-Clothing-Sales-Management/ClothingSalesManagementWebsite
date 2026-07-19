@@ -206,9 +206,6 @@ public class CustomerViewOrderController
                 return isAny(orderStatus, "RETURNED")
                         || isAny(displayStatus, "RETURNED")
                         || isAny(shippingStatus, "RETURNED");
-            case "RETURN_REQUESTED":
-                return isAny(orderStatus, "RETURN_REQUESTED")
-                        || isAny(displayStatus, "RETURN_REQUESTED");
             default:
                 return isAny(orderStatus, statusFilter)
                         || isAny(displayStatus, statusFilter)

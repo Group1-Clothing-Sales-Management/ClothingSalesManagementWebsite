@@ -1415,7 +1415,7 @@
                                                     <article class="voucher-wallet-item ${cv.customerStatus ne 'AVAILABLE' ? 'inactive' : ''}">
                                                         <div class="voucher-wallet-value">
                                                             <c:choose>
-                                                                <c:when test="${cv.discountType eq 'PERCENTAGE' or cv.discountType eq 'PERCENT'}">
+                                                                <c:when test="${cv.discountType eq 'PERCENTAGE'}">
                                                                     -<fmt:formatNumber value="${cv.discountValue}" pattern="#0"/>%
                                                                 </c:when>
                                                                 <c:otherwise>
@@ -1427,7 +1427,7 @@
                                                             <p class="voucher-wallet-name"><c:out value="${cv.title}"/></p>
                                                             <p class="voucher-wallet-meta">
                                                                 Đơn tối thiểu <fmt:formatNumber value="${cv.minOrderValue}" pattern="#,##0"/>đ
-                                                                <c:if test="${(cv.discountType eq 'PERCENTAGE' or cv.discountType eq 'PERCENT') and cv.maxDiscountAmount != null}">
+                                                                <c:if test="${cv.discountType eq 'PERCENTAGE' and cv.maxDiscountAmount != null}">
                                                                     · Giảm tối đa <fmt:formatNumber value="${cv.maxDiscountAmount}" pattern="#,##0"/>đ
                                                                 </c:if>
                                                             </p>

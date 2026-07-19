@@ -608,44 +608,17 @@ CREATE TABLE dbo.Voucher_Usage (
     user_id INT NULL,
     order_id INT NOT NULL,
     discount_amount DECIMAL(18,2) NOT NULL,
-    status VARCHAR(20) NOT NULL
-        CONSTRAINT DF_VoucherUsage_Status DEFAULT ('APPLIED'),
     used_at DATETIME NOT NULL
         CONSTRAINT DF_VoucherUsage_UsedAt DEFAULT (GETDATE()),
-    refunded_at DATETIME NULL,
-    note NVARCHAR(255) NULL,
     CONSTRAINT PK_Voucher_Usage PRIMARY KEY (id),
     CONSTRAINT UQ_VoucherUsage_Order UNIQUE (order_id),
     CONSTRAINT CK_VoucherUsage_Discount CHECK (discount_amount >= 0),
-    CONSTRAINT CK_VoucherUsage_Status CHECK (status IN ('APPLIED', 'REFUNDED')),
     CONSTRAINT FK_VoucherUsage_Voucher FOREIGN KEY (voucher_id)
         REFERENCES dbo.Voucher(id),
     CONSTRAINT FK_VoucherUsage_User FOREIGN KEY (user_id)
         REFERENCES dbo.[User](id) ON DELETE SET NULL,
     CONSTRAINT FK_VoucherUsage_Order FOREIGN KEY (order_id)
         REFERENCES dbo.[Order](id)
-);
-
-CREATE TABLE dbo.Return_Request (
-    id INT IDENTITY(1,1) NOT NULL,
-    order_id INT NOT NULL,
-    user_id INT NOT NULL,
-    reason NVARCHAR(500) NOT NULL,
-    status VARCHAR(20) NOT NULL
-        CONSTRAINT DF_ReturnRequest_Status DEFAULT ('PENDING'),
-    requested_at DATETIME NOT NULL
-        CONSTRAINT DF_ReturnRequest_RequestedAt DEFAULT (GETDATE()),
-    reviewed_by INT NULL,
-    reviewed_at DATETIME NULL,
-    admin_note NVARCHAR(500) NULL,
-    CONSTRAINT PK_Return_Request PRIMARY KEY (id),
-    CONSTRAINT CK_ReturnRequest_Status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
-    CONSTRAINT FK_ReturnRequest_Order FOREIGN KEY (order_id)
-        REFERENCES dbo.[Order](id) ON DELETE CASCADE,
-    CONSTRAINT FK_ReturnRequest_User FOREIGN KEY (user_id)
-        REFERENCES dbo.[User](id),
-    CONSTRAINT FK_ReturnRequest_Reviewer FOREIGN KEY (reviewed_by)
-        REFERENCES dbo.[User](id)
 );
 
 CREATE TABLE dbo.Feedback (
@@ -705,10 +678,6 @@ CREATE INDEX IX_StockAdjustment_StatusDate
 CREATE INDEX IX_Wishlist_Variant ON dbo.Wishlist(variant_id);
 CREATE INDEX IX_Voucher_ActiveWindow
     ON dbo.Voucher(start_date, end_date, used_count, usage_limit);
-CREATE INDEX IX_VoucherUsage_UserVoucherStatus
-    ON dbo.Voucher_Usage(user_id, voucher_id, status);
-CREATE INDEX IX_ReturnRequest_OrderStatus
-    ON dbo.Return_Request(order_id, status);
 CREATE INDEX IX_Order_UserDate ON dbo.[Order](user_id, created_at DESC);
 CREATE INDEX IX_Order_StatusDate ON dbo.[Order](order_status, created_at DESC);
 CREATE INDEX IX_OrderDetail_Variant ON dbo.Order_Detail(variant_id);
