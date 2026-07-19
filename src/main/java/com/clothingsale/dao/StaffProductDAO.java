@@ -54,9 +54,10 @@ public class StaffProductDAO {
      * Staff can update only the selected variant's color and size.
      * Product name is deliberately not part of this update.
      */
-    public boolean updateProductInDB(String sku, String newColor, String newSize)
+    public boolean updateProductInDB(String currentSku, String newSku,
+            String newColor, String newSize)
             throws Exception {
-        String updateVariantSql = "UPDATE Product_Variant SET color = ?, size = ? WHERE sku = ?";
+        String updateVariantSql = "UPDATE Product_Variant SET sku = ?, color = ?, size = ? WHERE sku = ?";
         String upsertAttrSql = "MERGE INTO Variant_Attribute_Value AS target " +
                 "USING (SELECT pv.id AS vid, a.id AS aid " +
                 "       FROM Product_Variant pv " +
@@ -74,9 +75,10 @@ public class StaffProductDAO {
             try {
                 int updatedRows;
                 try (PreparedStatement psVariant = conn.prepareStatement(updateVariantSql)) {
-                    psVariant.setString(1, blankToNull(newColor));
-                    psVariant.setString(2, blankToNull(newSize));
-                    psVariant.setString(3, sku);
+                    psVariant.setString(1, newSku);
+                    psVariant.setString(2, blankToNull(newColor));
+                    psVariant.setString(3, blankToNull(newSize));
+                    psVariant.setString(4, currentSku);
                     updatedRows = psVariant.executeUpdate();
                 }
 
@@ -85,8 +87,8 @@ public class StaffProductDAO {
                     return false;
                 }
 
-                updateAttribute(conn, upsertAttrSql, sku, "Color", newColor);
-                updateAttribute(conn, upsertAttrSql, sku, "Size", newSize);
+                updateAttribute(conn, upsertAttrSql, newSku, "Color", newColor);
+                updateAttribute(conn, upsertAttrSql, newSku, "Size", newSize);
 
                 conn.commit();
                 return true;
