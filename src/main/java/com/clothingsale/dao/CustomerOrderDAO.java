@@ -68,7 +68,7 @@ public class CustomerOrderDAO {
                 + "WHERE c.user_id=?";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
 
@@ -139,8 +139,8 @@ public class CustomerOrderDAO {
                 + "ORDER BY o.created_at DESC";
 
         try (
-                 Connection con
-                = DBConnection.getConnection();  PreparedStatement ps
+                Connection con
+                = DBConnection.getConnection(); PreparedStatement ps
                 = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
@@ -228,12 +228,12 @@ public class CustomerOrderDAO {
                 + "ORDER BY od.id ASC";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
             ps.setInt(2, userId);
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
                     list.add(mapOrderDetail(rs));
@@ -284,8 +284,7 @@ public class CustomerOrderDAO {
                 + "AND od.order_id IN (" + placeholders(cleanOrderIds.size()) + ") "
                 + "ORDER BY od.order_id DESC, od.id ASC";
 
-        try (Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             for (int i = 0; i < cleanOrderIds.size(); i++) {
@@ -555,7 +554,7 @@ public class CustomerOrderDAO {
             createPayment(con, orderId, paymentMethod, totalPayment);
 
             if (voucher != null) {
-                try ( PreparedStatement ps = con.prepareStatement(
+                try (PreparedStatement ps = con.prepareStatement(
                         "UPDATE Voucher SET used_count = used_count + 1 WHERE id=? AND used_count < usage_limit")) {
                     ps.setInt(1, voucher.getId());
                     if (ps.executeUpdate() == 0) {
@@ -717,7 +716,7 @@ public class CustomerOrderDAO {
             // ===== UPDATE VOUCHER =====
             if (voucher != null) {
 
-                try ( PreparedStatement ps = con.prepareStatement(
+                try (PreparedStatement ps = con.prepareStatement(
                         "UPDATE Voucher "
                         + "SET used_count = used_count + 1 "
                         + "WHERE id=? "
@@ -777,7 +776,7 @@ public class CustomerOrderDAO {
         String sql = "INSERT INTO Payment(order_id, payment_method, payment_status, amount) "
                 + "VALUES(?,?,?,?)";
 
-        try ( PreparedStatement ps = con.prepareStatement(sql)) {
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
             ps.setString(2, method);
@@ -800,7 +799,7 @@ public class CustomerOrderDAO {
                 + "carrier_name, shipping_status, tracking_code, shipping_cost"
                 + ") VALUES(?,?,?,?)";
 
-        try ( PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, carrierName);
             ps.setString(2, "PENDING_PICKUP");
@@ -831,7 +830,7 @@ public class CustomerOrderDAO {
                 + "AND used_count < usage_limit";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, code.trim());
 
@@ -868,9 +867,9 @@ public class CustomerOrderDAO {
         String sql = "SELECT v.*, (SELECT COUNT(*) FROM [Order] o "
                 + "WHERE o.voucher_id=v.id AND o.user_id=? AND o.order_status <> 'CANCELLED') AS user_used_count "
                 + "FROM Voucher v ORDER BY v.end_date ASC";
-        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Voucher v = new Voucher();
                     v.setId(rs.getInt("id"));
@@ -896,10 +895,10 @@ public class CustomerOrderDAO {
 
     private boolean hasUserUsedVoucher(int userId, int voucherId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM [Order] WHERE user_id=? AND voucher_id=? AND order_status <> 'CANCELLED'";
-        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, voucherId);
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
             }
         }
@@ -964,11 +963,11 @@ public class CustomerOrderDAO {
                 + "AND user_id=? "
                 + "AND order_status='PENDING'";
 
-        try ( Connection con = DBConnection.getConnection()) {
+        try (Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
 
             try {
-                try ( PreparedStatement ps = con.prepareStatement(sql)) {
+                try (PreparedStatement ps = con.prepareStatement(sql)) {
                     ps.setInt(1, orderId);
                     ps.setInt(2, userId);
 
@@ -1010,11 +1009,11 @@ public class CustomerOrderDAO {
                 + "SET stock_quantity = stock_quantity + ? "
                 + "WHERE id=?";
 
-        try ( PreparedStatement select = con.prepareStatement(selectSql);  PreparedStatement update = con.prepareStatement(updateSql)) {
+        try (PreparedStatement select = con.prepareStatement(selectSql); PreparedStatement update = con.prepareStatement(updateSql)) {
 
             select.setInt(1, orderId);
 
-            try ( ResultSet rs = select.executeQuery()) {
+            try (ResultSet rs = select.executeQuery()) {
                 while (rs.next()) {
                     int variantId = rs.getInt("variant_id");
                     boolean variantIsNull = rs.wasNull();
@@ -1092,7 +1091,7 @@ public class CustomerOrderDAO {
                 + "WHERE user_id=? "
                 + "AND variant_id=?";
 
-        try ( PreparedStatement ps
+        try (PreparedStatement ps
                 = con.prepareStatement(sql)) {
 
             for (Integer variantId : selectedVariantIds) {
@@ -1109,112 +1108,6 @@ public class CustomerOrderDAO {
         }
     }
 
-    //=====================Address========================
-    public List<UserAddress> getAddressesByUserId(int userId) {
-
-        List<UserAddress> list = new ArrayList<>();
-
-        String sql
-                = "SELECT ua.*, "
-                + "w.ward_name, "
-                + "w.district_id, "
-                + "d.district_name, "
-                + "d.province_id, "
-                + "p.province_name "
-                + "FROM User_Address ua "
-                + "JOIN Ward w ON ua.ward_id = w.id "
-                + "JOIN District d ON w.district_id = d.id "
-                + "JOIN Province p ON d.province_id = p.id "
-                + "WHERE ua.user_id = ? "
-                + "ORDER BY ua.is_default DESC, ua.id DESC";
-
-        try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                UserAddress a = new UserAddress();
-
-                a.setId(rs.getInt("id"));
-                a.setUserId(rs.getInt("user_id"));
-
-                a.setRecipientName(rs.getString("recipient_name"));
-                a.setRecipientPhone(rs.getString("recipient_phone"));
-                a.setWardId(rs.getString("ward_id"));
-                a.setDistrictId(rs.getString("district_id"));
-                a.setProvinceId(rs.getString("province_id"));
-                a.setWardName(rs.getString("ward_name"));
-                a.setDistrictName(rs.getString("district_name"));
-                a.setProvinceName(rs.getString("province_name"));
-
-                a.setAddressDetail(rs.getString("address_detail"));
-
-                a.setDefault(rs.getBoolean("is_default"));
-
-                list.add(a);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
-
-    public UserAddress getAddressById(int id) {
-
-        String sql
-                = "SELECT ua.*, "
-                + "w.ward_name, "
-                + "w.district_id, "
-                + "d.district_name, "
-                + "d.province_id, "
-                + "p.province_name "
-                + "FROM User_Address ua "
-                + "JOIN Ward w ON ua.ward_id = w.id "
-                + "JOIN District d ON w.district_id = d.id "
-                + "JOIN Province p ON d.province_id = p.id "
-                + "WHERE ua.id = ?";
-
-        try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                UserAddress a = new UserAddress();
-
-                a.setId(rs.getInt("id"));
-                a.setUserId(rs.getInt("user_id"));
-
-                a.setRecipientName(rs.getString("recipient_name"));
-                a.setRecipientPhone(rs.getString("recipient_phone"));
-                a.setWardId(rs.getString("ward_id"));
-                a.setDistrictId(rs.getString("district_id"));
-                a.setProvinceId(rs.getString("province_id"));
-                a.setWardName(rs.getString("ward_name"));
-                a.setDistrictName(rs.getString("district_name"));
-                a.setProvinceName(rs.getString("province_name"));
-                a.setAddressDetail(rs.getString("address_detail"));
-                a.setDefault(rs.getBoolean("is_default"));
-
-                return a;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
     public List<Province> getAllProvinces() {
 
         List<Province> list = new ArrayList<>();
@@ -1223,7 +1116,7 @@ public class CustomerOrderDAO {
                 = "SELECT * FROM Province ORDER BY province_name";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
+                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
 
@@ -1255,7 +1148,7 @@ public class CustomerOrderDAO {
                 + "ORDER BY district_name";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, provinceId);
 
@@ -1292,7 +1185,7 @@ public class CustomerOrderDAO {
                 + "ORDER BY ward_name";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, districtId);
 
@@ -1330,7 +1223,7 @@ public class CustomerOrderDAO {
                 + "WHERE user_id = ?";
 
         try (
-                 PreparedStatement ps
+                PreparedStatement ps
                 = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
@@ -1343,261 +1236,6 @@ public class CustomerOrderDAO {
         }
 
         return 0;
-    }
-
-    private void clearDefaultAddress(
-            Connection con,
-            int userId)
-            throws SQLException {
-
-        String sql
-                = "UPDATE User_Address "
-                + "SET is_default = 0 "
-                + "WHERE user_id = ?";
-
-        try (
-                 PreparedStatement ps
-                = con.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-            ps.executeUpdate();
-        }
-    }
-
-    public boolean addAddress(
-            UserAddress address) {
-
-        String sql
-                = "INSERT INTO User_Address "
-                + "("
-                + "user_id,"
-                + "recipient_name,"
-                + "recipient_phone,"
-                + "ward_id,"
-                + "address_detail,"
-                + "is_default"
-                + ")"
-                + "VALUES(?,?,?,?,?,?)";
-
-        try (
-                 Connection con
-                = DBConnection.getConnection()) {
-
-            con.setAutoCommit(false);
-
-            int count
-                    = countAddressByUser(
-                            con,
-                            address.getUserId());
-
-            if (count == 0) {
-
-                address.setDefault(true);
-
-            } else if (address.isDefault()) {
-
-                clearDefaultAddress(
-                        con,
-                        address.getUserId());
-            }
-
-            try (
-                     PreparedStatement ps
-                    = con.prepareStatement(sql)) {
-
-                ps.setInt(1,
-                        address.getUserId());
-
-                ps.setString(2,
-                        address.getRecipientName());
-
-                ps.setString(3,
-                        address.getRecipientPhone());
-
-                ps.setString(4,
-                        address.getWardId());
-
-                ps.setString(5,
-                        address.getAddressDetail());
-
-                ps.setBoolean(6,
-                        address.isDefault());
-
-                ps.executeUpdate();
-            }
-
-            con.commit();
-
-            return true;
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    public UserAddress getDefaultAddress(int userId) {
-
-        String sql
-                = "SELECT ua.*, "
-                + "w.ward_name, "
-                + "w.district_id, "
-                + "d.district_name, "
-                + "d.province_id, "
-                + "p.province_name "
-                + "FROM User_Address ua "
-                + "JOIN Ward w ON ua.ward_id = w.id "
-                + "JOIN District d ON w.district_id = d.id "
-                + "JOIN Province p ON d.province_id = p.id "
-                + "WHERE ua.user_id = ? "
-                + "AND ua.is_default = 1";
-
-        try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                UserAddress a = new UserAddress();
-
-                a.setId(rs.getInt("id"));
-                a.setUserId(rs.getInt("user_id"));
-
-                a.setRecipientName(rs.getString("recipient_name"));
-                a.setRecipientPhone(rs.getString("recipient_phone"));
-                a.setWardId(rs.getString("ward_id"));
-                a.setDistrictId(rs.getString("district_id"));
-                a.setProvinceId(rs.getString("province_id"));
-                a.setWardName(rs.getString("ward_name"));
-                a.setDistrictName(rs.getString("district_name"));
-                a.setProvinceName(rs.getString("province_name"));
-                a.setAddressDetail(rs.getString("address_detail"));
-                a.setDefault(rs.getBoolean("is_default"));
-
-                return a;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public boolean updateAddress(
-            UserAddress address) {
-
-        String sql
-                = "UPDATE User_Address "
-                + "SET recipient_name=?, "
-                + "recipient_phone=?, "
-                + "ward_id=?, "
-                + "address_detail=?, "
-                + "is_default=? "
-                + "WHERE id=?";
-
-        try (
-                 Connection con
-                = DBConnection.getConnection()) {
-
-            con.setAutoCommit(false);
-
-            if (address.isDefault()) {
-
-                clearDefaultAddress(
-                        con,
-                        address.getUserId());
-            }
-
-            try (
-                     PreparedStatement ps
-                    = con.prepareStatement(sql)) {
-
-                ps.setString(
-                        1,
-                        address.getRecipientName());
-
-                ps.setString(
-                        2,
-                        address.getRecipientPhone());
-
-                ps.setString(
-                        3,
-                        address.getWardId());
-
-                ps.setString(
-                        4,
-                        address.getAddressDetail());
-
-                ps.setBoolean(
-                        5,
-                        address.isDefault());
-
-                ps.setInt(
-                        6,
-                        address.getId());
-
-                int rows
-                        = ps.executeUpdate();
-
-                con.commit();
-
-                return rows > 0;
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    public boolean setDefaultAddress(
-            int userId,
-            int addressId) {
-
-        try (
-                 Connection con
-                = DBConnection.getConnection()) {
-
-            con.setAutoCommit(false);
-
-            clearDefaultAddress(
-                    con,
-                    userId);
-
-            String sql
-                    = "UPDATE User_Address "
-                    + "SET is_default = 1 "
-                    + "WHERE id = ?";
-
-            try (
-                     PreparedStatement ps
-                    = con.prepareStatement(sql)) {
-
-                ps.setInt(
-                        1,
-                        addressId);
-
-                ps.executeUpdate();
-            }
-
-            con.commit();
-
-            return true;
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
-
-        return false;
     }
 
     private Integer getAnotherAddressId(
@@ -1613,7 +1251,7 @@ public class CustomerOrderDAO {
                 + "AND id<>?";
 
         try (
-                 PreparedStatement ps
+                PreparedStatement ps
                 = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
@@ -1631,74 +1269,632 @@ public class CustomerOrderDAO {
         return null;
     }
 
-    public boolean deleteAddress(
-            int userId,
-            int addressId) {
+    private UserAddress mapUserAddress(ResultSet rs)
+            throws SQLException {
 
-        try (
-                 Connection con
+        UserAddress address = new UserAddress();
+
+        address.setId(rs.getInt("id"));
+        address.setUserId(rs.getInt("user_id"));
+        address.setRecipientName(
+                rs.getString("recipient_name")
+        );
+        address.setRecipientPhone(
+                rs.getString("recipient_phone")
+        );
+        address.setAddressDetail(
+                rs.getString("address_detail")
+        );
+
+        address.setDefault(
+                rs.getBoolean("is_default")
+        );
+
+        address.setActive(
+                rs.getBoolean("is_active")
+        );
+
+        address.setWardId(
+                rs.getString("ward_id")
+        );
+
+        address.setProvinceCode(
+                rs.getString("province_code")
+        );
+
+        address.setProvinceName(
+                rs.getString("province_name")
+        );
+
+        address.setDistrictCode(
+                rs.getString("district_code")
+        );
+
+        address.setDistrictName(
+                rs.getString("district_name")
+        );
+
+        address.setWardCode(
+                rs.getString("ward_code")
+        );
+
+        address.setWardName(
+                rs.getString("ward_name")
+        );
+
+        address.setCreatedAt(
+                rs.getTimestamp("created_at")
+        );
+
+        address.setUpdatedAt(
+                rs.getTimestamp("updated_at")
+        );
+
+        return address;
+    }
+
+    public List<UserAddress> getAddressesByUserId(
+            int userId) {
+
+        List<UserAddress> addresses
+                = new ArrayList<>();
+
+        String sql
+                = "SELECT * "
+                + "FROM User_Address "
+                + "WHERE user_id = ? "
+                + "AND is_active = 1 "
+                + "ORDER BY is_default DESC, id DESC";
+
+        try (Connection con
+                = DBConnection.getConnection(); PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    addresses.add(
+                            mapUserAddress(rs)
+                    );
+                }
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return addresses;
+    }
+
+    public UserAddress getAddressById(int addressId) {
+
+        String sql
+                = "SELECT * "
+                + "FROM User_Address "
+                + "WHERE id = ? "
+                + "AND is_active = 1";
+
+        try (Connection con
+                = DBConnection.getConnection(); PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, addressId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUserAddress(rs);
+                }
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public UserAddress getDefaultAddress(int userId) {
+
+        String sql
+                = "SELECT TOP 1 * "
+                + "FROM User_Address "
+                + "WHERE user_id = ? "
+                + "AND is_default = 1 "
+                + "AND is_active = 1 "
+                + "ORDER BY id DESC";
+
+        try (Connection con
+                = DBConnection.getConnection(); PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUserAddress(rs);
+                }
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private int countActiveAddresses(
+            Connection con,
+            int userId) throws SQLException {
+
+        String sql
+                = "SELECT COUNT(*) "
+                + "FROM User_Address "
+                + "WHERE user_id = ? "
+                + "AND is_active = 1";
+
+        try (PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next()
+                        ? rs.getInt(1)
+                        : 0;
+            }
+        }
+    }
+
+    private void clearDefaultAddress(
+            Connection con,
+            int userId) throws SQLException {
+
+        String sql
+                = "UPDATE User_Address "
+                + "SET is_default = 0, "
+                + "updated_at = GETDATE() "
+                + "WHERE user_id = ? "
+                + "AND is_active = 1";
+
+        try (PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean addAddress(UserAddress address) {
+
+        String sql
+                = "INSERT INTO User_Address ("
+                + "user_id, "
+                + "recipient_name, "
+                + "recipient_phone, "
+                + "province_code, "
+                + "province_name, "
+                + "district_code, "
+                + "district_name, "
+                + "ward_code, "
+                + "ward_name, "
+                + "ward_id, "
+                + "address_detail, "
+                + "is_default, "
+                + "is_active, "
+                + "created_at, "
+                + "updated_at"
+                + ") VALUES ("
+                + "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                + "1, GETDATE(), GETDATE()"
+                + ")";
+
+        try (Connection con
                 = DBConnection.getConnection()) {
 
             con.setAutoCommit(false);
 
-            UserAddress address
-                    = getAddressById(addressId);
-
-            if (address == null) {
-
-                return false;
-            }
-
-            String deleteSql
-                    = "DELETE FROM User_Address "
-                    + "WHERE id=?";
-
-            try (
-                     PreparedStatement ps
-                    = con.prepareStatement(deleteSql)) {
-
-                ps.setInt(1, addressId);
-
-                ps.executeUpdate();
-            }
-
-            if (address.isDefault()) {
-
-                Integer newDefaultId
-                        = getAnotherAddressId(
+            try {
+                int addressCount
+                        = countActiveAddresses(
                                 con,
-                                userId,
-                                addressId);
+                                address.getUserId()
+                        );
 
-                if (newDefaultId != null) {
+                // Địa chỉ đầu tiên phải là mặc định
+                if (addressCount == 0) {
+                    address.setDefault(true);
+                }
 
-                    String setSql
-                            = "UPDATE User_Address "
-                            + "SET is_default=1 "
-                            + "WHERE id=?";
+                if (address.isDefault()
+                        && addressCount > 0) {
+                    clearDefaultAddress(
+                            con,
+                            address.getUserId()
+                    );
+                }
 
-                    try (
-                             PreparedStatement ps
-                            = con.prepareStatement(setSql)) {
+                try (PreparedStatement ps
+                        = con.prepareStatement(sql)) {
 
-                        ps.setInt(
-                                1,
-                                newDefaultId);
+                    ps.setInt(
+                            1,
+                            address.getUserId()
+                    );
 
-                        ps.executeUpdate();
+                    ps.setString(
+                            2,
+                            address.getRecipientName()
+                    );
+
+                    ps.setString(
+                            3,
+                            address.getRecipientPhone()
+                    );
+
+                    ps.setString(
+                            4,
+                            address.getProvinceCode()
+                    );
+
+                    ps.setString(
+                            5,
+                            address.getProvinceName()
+                    );
+
+                    ps.setString(
+                            6,
+                            address.getDistrictCode()
+                    );
+
+                    ps.setString(
+                            7,
+                            address.getDistrictName()
+                    );
+
+                    ps.setString(
+                            8,
+                            address.getWardCode()
+                    );
+
+                    ps.setString(
+                            9,
+                            address.getWardName()
+                    );
+
+                    ps.setNull(
+                            10,
+                            Types.VARCHAR
+                    );
+
+                    ps.setString(
+                            11,
+                            address.getAddressDetail()
+                    );
+
+                    ps.setBoolean(
+                            12,
+                            address.isDefault()
+                    );
+
+                    int rows = ps.executeUpdate();
+
+                    if (rows != 1) {
+                        con.rollback();
+                        return false;
                     }
                 }
+
+                con.commit();
+                return true;
+
+            } catch (Exception ex) {
+                con.rollback();
+                throw ex;
             }
 
-            con.commit();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
 
-            return true;
+    public boolean updateAddress(UserAddress address) {
 
-        } catch (Exception e) {
+        String sql
+                = "UPDATE User_Address SET "
+                + "recipient_name = ?, "
+                + "recipient_phone = ?, "
+                + "province_code = ?, "
+                + "province_name = ?, "
+                + "district_code = NULL, "
+                + "district_name = NULL, "
+                + "ward_code = ?, "
+                + "ward_name = ?, "
+                + "ward_id = NULL, "
+                + "address_detail = ?, "
+                + "is_default = ?, "
+                + "updated_at = GETDATE() "
+                + "WHERE id = ? "
+                + "AND user_id = ? "
+                + "AND is_active = 1";
 
-            e.printStackTrace();
+        try (Connection con
+                = DBConnection.getConnection()) {
+
+            con.setAutoCommit(false);
+
+            try {
+                if (address.isDefault()) {
+                    clearDefaultAddress(
+                            con,
+                            address.getUserId()
+                    );
+                }
+
+                int rows;
+
+                try (PreparedStatement ps
+                        = con.prepareStatement(sql)) {
+
+                    ps.setString(
+                            1,
+                            address.getRecipientName()
+                    );
+
+                    ps.setString(
+                            2,
+                            address.getRecipientPhone()
+                    );
+
+                    ps.setString(
+                            3,
+                            address.getProvinceCode()
+                    );
+
+                    ps.setString(
+                            4,
+                            address.getProvinceName()
+                    );
+
+                    ps.setString(
+                            5,
+                            address.getWardCode()
+                    );
+
+                    ps.setString(
+                            6,
+                            address.getWardName()
+                    );
+
+                    ps.setString(
+                            7,
+                            address.getAddressDetail()
+                    );
+
+                    ps.setBoolean(
+                            8,
+                            address.isDefault()
+                    );
+
+                    ps.setInt(
+                            9,
+                            address.getId()
+                    );
+
+                    ps.setInt(
+                            10,
+                            address.getUserId()
+                    );
+
+                    rows = ps.executeUpdate();
+                }
+
+                if (rows != 1) {
+                    con.rollback();
+                    return false;
+                }
+
+                con.commit();
+                return true;
+
+            } catch (Exception ex) {
+                con.rollback();
+                throw ex;
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean setDefaultAddress(
+            int userId,
+            int addressId) {
+
+        String sql
+                = "UPDATE User_Address "
+                + "SET is_default = 1, "
+                + "updated_at = GETDATE() "
+                + "WHERE id = ? "
+                + "AND user_id = ? "
+                + "AND is_active = 1";
+
+        try (Connection con
+                = DBConnection.getConnection()) {
+
+            con.setAutoCommit(false);
+
+            try {
+                clearDefaultAddress(con, userId);
+
+                int rows;
+
+                try (PreparedStatement ps
+                        = con.prepareStatement(sql)) {
+
+                    ps.setInt(1, addressId);
+                    ps.setInt(2, userId);
+
+                    rows = ps.executeUpdate();
+                }
+
+                if (rows != 1) {
+                    con.rollback();
+                    return false;
+                }
+
+                con.commit();
+                return true;
+
+            } catch (Exception ex) {
+                con.rollback();
+                throw ex;
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteAddress(
+            int userId,
+            int addressId) {
+
+        String selectSql
+                = "SELECT is_default "
+                + "FROM User_Address "
+                + "WHERE id = ? "
+                + "AND user_id = ? "
+                + "AND is_active = 1";
+
+        String deleteSql
+                = "UPDATE User_Address "
+                + "SET is_active = 0, "
+                + "is_default = 0, "
+                + "updated_at = GETDATE() "
+                + "WHERE id = ? "
+                + "AND user_id = ? "
+                + "AND is_active = 1";
+
+        try (Connection con
+                = DBConnection.getConnection()) {
+
+            con.setAutoCommit(false);
+
+            try {
+                boolean wasDefault;
+
+                try (PreparedStatement ps
+                        = con.prepareStatement(selectSql)) {
+
+                    ps.setInt(1, addressId);
+                    ps.setInt(2, userId);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            con.rollback();
+                            return false;
+                        }
+
+                        wasDefault = rs.getBoolean(
+                                "is_default"
+                        );
+                    }
+                }
+
+                try (PreparedStatement ps
+                        = con.prepareStatement(deleteSql)) {
+
+                    ps.setInt(1, addressId);
+                    ps.setInt(2, userId);
+
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+
+                if (wasDefault) {
+                    Integer replacementId
+                            = findAnotherAddressId(
+                                    con,
+                                    userId,
+                                    addressId
+                            );
+
+                    if (replacementId != null) {
+                        String updateSql
+                                = "UPDATE User_Address "
+                                + "SET is_default = 1, "
+                                + "updated_at = GETDATE() "
+                                + "WHERE id = ? "
+                                + "AND user_id = ? "
+                                + "AND is_active = 1";
+
+                        try (PreparedStatement ps
+                                = con.prepareStatement(
+                                        updateSql
+                                )) {
+
+                                    ps.setInt(
+                                            1,
+                                            replacementId
+                                    );
+
+                                    ps.setInt(
+                                            2,
+                                            userId
+                                    );
+
+                                    ps.executeUpdate();
+                                }
+                    }
+                }
+
+                con.commit();
+                return true;
+
+            } catch (Exception ex) {
+                con.rollback();
+                throw ex;
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    private Integer findAnotherAddressId(
+            Connection con,
+            int userId,
+            int excludedAddressId)
+            throws SQLException {
+
+        String sql
+                = "SELECT TOP 1 id "
+                + "FROM User_Address "
+                + "WHERE user_id = ? "
+                + "AND id <> ? "
+                + "AND is_active = 1 "
+                + "ORDER BY id DESC";
+
+        try (PreparedStatement ps
+                = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ps.setInt(2, excludedAddressId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
         }
 
-        return false;
+        return null;
     }
 }

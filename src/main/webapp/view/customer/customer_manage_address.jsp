@@ -1,1002 +1,1098 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="jakarta.tags.core"%>
-<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>My Addresses | Clothing Sale</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+        <title>Manage Addresses</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+              rel="stylesheet">
+
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+              rel="stylesheet">
+
         <style>
-            :root {
-                --address-ink:#1f2937;
-                --address-muted:#61708a;
-                --address-line:#d7e1f5;
-                --address-primary:#8AAAE5;
-                --address-primary-dark:#5f84d6;
-                --address-accent:#b8cff7;
-                --address-bg:#eef4ff;
-                --address-surface:#fff;
-                --address-danger:#9f3a38;
-            }
-
-            * {
-                box-sizing:border-box;
-            }
-
             body {
-                min-height:100vh;
-                margin:0;
-                color:var(--address-ink);
-                background:
-                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
-                    radial-gradient(circle at 88% 14%, rgba(95,132,214,.12), transparent 24%),
-                    linear-gradient(180deg, #ffffff 0%, var(--address-bg) 100%);
-                font-family:"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+                background: #f5f6f8;
             }
 
-            .address-shell {
-                width:100%;
-                max-width:1180px;
-                margin:0 auto;
-                padding:34px 18px 68px;
+            .address-page {
+                min-height: 650px;
             }
 
-            .address-hero {
-                display:flex;
-                align-items:flex-end;
-                justify-content:space-between;
-                gap:24px;
-                margin-bottom:28px;
-            }
-
-            .address-kicker {
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                margin-bottom:12px;
-                padding:7px 11px;
-                border:1px solid rgba(138,170,229,.38);
-                border-radius:999px;
-                color:var(--address-primary-dark);
-                background:#eef4ff;
-                font-size:.78rem;
-                font-weight:900;
-                letter-spacing:.03em;
-                text-transform:uppercase;
-            }
-
-            .address-hero h1 {
-                margin:0;
-                font-size:clamp(2.1rem, 4vw, 3.35rem);
-                font-weight:950;
-                letter-spacing:0;
-            }
-
-            .address-hero p {
-                max-width:650px;
-                margin:10px 0 0;
-                color:var(--address-muted);
-                line-height:1.6;
-            }
-
-            .hero-actions {
-                display:flex;
-                align-items:center;
-                justify-content:flex-end;
-                gap:10px;
-                flex-wrap:wrap;
-            }
-
-            .btn {
-                min-height:44px;
-                border-radius:9px;
-                font-weight:800;
-            }
-
-            .btn-add-address {
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                border:0;
-                padding:0 18px;
-                color:#fff;
-                background:linear-gradient(135deg, var(--address-primary), var(--address-accent));
-                box-shadow:0 14px 24px rgba(95,132,214,.22);
-            }
-
-            .btn-add-address:hover,
-            .btn-add-address:focus-visible {
-                color:#fff;
-                background:linear-gradient(135deg, var(--address-primary-dark), var(--address-primary));
-            }
-
-            .address-overview {
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:18px;
-                margin-bottom:14px;
-                padding:18px 20px;
-                border:1px solid rgba(138,170,229,.38);
-                border-radius:8px;
-                background:rgba(255,255,255,.96);
-                box-shadow:0 18px 42px rgba(95,132,214,.12);
-            }
-
-            .overview-title {
-                display:flex;
-                align-items:center;
-                gap:12px;
-                font-weight:900;
-            }
-
-            .overview-icon {
-                width:38px;
-                height:38px;
-                display:grid;
-                place-items:center;
-                border-radius:10px;
-                color:var(--address-primary);
-                background:#eef4ff;
-            }
-
-            .overview-note {
-                margin:3px 0 0;
-                color:var(--address-muted);
-                font-size:.88rem;
-            }
-
-            .address-count {
-                flex:0 0 auto;
-                color:var(--address-muted);
-                font-size:.88rem;
-                font-weight:700;
-            }
-
-            .address-grid {
-                display:grid;
-                grid-template-columns:repeat(2, minmax(0, 1fr));
-                gap:16px;
+            .page-title {
+                font-size: 28px;
+                font-weight: 700;
+                color: #212529;
             }
 
             .address-card {
-                position:relative;
-                display:flex;
-                flex-direction:column;
-                min-height:260px;
-                overflow:hidden;
-                padding:22px;
-                border:1px solid rgba(138,170,229,.30);
-                border-radius:8px;
-                background:rgba(255,255,255,.96);
-                box-shadow:0 8px 26px rgba(31,41,55,.08);
-                transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-            }
-
-            .address-card::before {
-                position:absolute;
-                inset:0 auto 0 0;
-                width:4px;
-                content:"";
-                background:transparent;
-            }
-
-            .address-card.is-default {
-                border-color:rgba(138,170,229,.82);
-                box-shadow:0 20px 42px rgba(95,132,214,.18);
-            }
-
-            .address-card.is-default::before {
-                background:linear-gradient(180deg, var(--address-primary), var(--address-accent));
+                background: #ffffff;
+                border: 1px solid #e4e7eb;
+                border-radius: 12px;
+                padding: 20px;
+                height: 100%;
+                transition: 0.2s ease;
             }
 
             .address-card:hover {
-                transform:translateY(-4px);
-                border-color:rgba(138,170,229,.78);
-                box-shadow:0 20px 38px rgba(95,132,214,.20);
+                border-color: #b8bdc5;
+                box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
             }
 
-            .address-card-header {
-                display:flex;
-                align-items:flex-start;
-                justify-content:space-between;
-                gap:12px;
-            }
-
-            .recipient {
-                display:flex;
-                align-items:center;
-                gap:10px;
-                min-width:0;
-                font-size:1.08rem;
-                font-weight:900;
-            }
-
-            .recipient-avatar {
-                width:36px;
-                height:36px;
-                display:grid;
-                place-items:center;
-                flex:0 0 auto;
-                border-radius:10px;
-                color:#fff;
-                background:linear-gradient(135deg, var(--address-primary-dark), var(--address-primary));
-                font-size:.9rem;
+            .address-card.default-address {
+                border: 2px solid #198754;
             }
 
             .recipient-name {
-                overflow:hidden;
-                text-overflow:ellipsis;
-                white-space:nowrap;
+                font-size: 18px;
+                font-weight: 700;
+                color: #212529;
+            }
+
+            .recipient-phone {
+                color: #6c757d;
+            }
+
+            .address-content {
+                color: #495057;
+                line-height: 1.6;
             }
 
             .default-badge {
-                display:inline-flex;
-                align-items:center;
-                gap:6px;
-                flex:0 0 auto;
-                padding:6px 9px;
-                border-radius:999px;
-                color:var(--address-primary-dark);
-                background:#eef4ff;
-                font-size:.72rem;
-                font-weight:900;
-                white-space:nowrap;
+                font-size: 12px;
             }
 
-            .address-details {
-                display:grid;
-                gap:11px;
-                margin:20px 0 22px;
+            .empty-address {
+                background: #ffffff;
+                border: 1px dashed #ced4da;
+                border-radius: 12px;
+                padding: 60px 20px;
+                text-align: center;
             }
 
-            .address-line {
-                display:flex;
-                align-items:flex-start;
-                gap:11px;
-                color:#344054;
-                font-size:.92rem;
-                line-height:1.45;
+            .empty-address i {
+                font-size: 48px;
+                color: #adb5bd;
+                margin-bottom: 16px;
             }
 
-            .address-line i {
-                width:17px;
-                margin-top:3px;
-                color:var(--address-primary);
-                text-align:center;
-                flex:0 0 auto;
+            .modal-content {
+                border: none;
+                border-radius: 14px;
             }
 
-            .address-line.muted {
-                color:var(--address-muted);
+            .modal-header {
+                border-bottom: 1px solid #edf0f2;
             }
 
-            .address-place {
-                margin-top:2px;
-                padding:11px 13px;
-                border-radius:8px;
-                color:var(--address-muted);
-                background:#f8fbff;
-                font-size:.82rem;
+            .modal-footer {
+                border-top: 1px solid #edf0f2;
             }
 
-            .address-place strong {
-                color:var(--address-ink);
+            .form-label {
+                font-weight: 600;
             }
 
-            .address-actions {
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:12px;
-                margin-top:auto;
-                padding-top:16px;
-                border-top:1px solid #e8eefb;
+            .required-mark {
+                color: #dc3545;
             }
 
-            .address-action-group {
-                display:flex;
-                align-items:center;
-                gap:8px;
-                flex-wrap:wrap;
-            }
-
-            .address-actions .btn {
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                min-height:36px;
-                padding:0 11px;
-                font-size:.82rem;
-            }
-
-            .btn-edit {
-                min-width:78px;
-                border:1px solid var(--address-line);
-                color:var(--address-primary-dark);
-                background:#fff;
-            }
-
-            .btn-edit:hover,
-            .btn-edit:focus-visible {
-                color:#fff;
-                background:var(--address-primary);
-            }
-
-            .btn-delete {
-                min-width:78px;
-                border:1px solid #f0d5ce;
-                color:var(--address-danger);
-                background:#fff;
-            }
-
-            .btn-delete:hover,
-            .btn-delete:focus-visible {
-                color:#8d3527;
-                background:#fff1ed;
-            }
-
-            .btn-default {
-                min-width:126px;
-                border:1px solid rgba(138,170,229,.48);
-                color:var(--address-primary-dark);
-                background:#eef4ff;
-            }
-
-            .btn-default:hover,
-            .btn-default:focus-visible {
-                border-color:var(--address-primary);
-                color:#365b9f;
-                background:#e4edff;
-            }
-
-            .empty-state {
-                padding:54px 24px;
-                border:1px dashed rgba(138,170,229,.72);
-                border-radius:8px;
-                background:rgba(255,255,255,.86);
-                text-align:center;
-                box-shadow:0 18px 42px rgba(95,132,214,.12);
-            }
-
-            .empty-icon {
-                width:58px;
-                height:58px;
-                display:grid;
-                place-items:center;
-                margin:0 auto 15px;
-                border-radius:16px;
-                color:var(--address-primary);
-                background:#eef4ff;
-                font-size:1.35rem;
-            }
-
-            .empty-state h2 {
-                margin:0 0 7px;
-                font-size:1.18rem;
-                font-weight:900;
-            }
-
-            .empty-state p {
-                max-width:440px;
-                margin:0 auto 20px;
-                color:var(--address-muted);
-            }
-
-            .address-modal .modal-content {
-                overflow:hidden;
-                border:1px solid var(--address-line);
-                border-radius:8px;
-                box-shadow:0 26px 80px rgba(31,41,55,.22);
-            }
-
-            .address-modal .modal-header {
-                padding:22px 24px 16px;
-                border-bottom:1px solid #e8eefb;
-            }
-
-            .modal-heading {
-                display:flex;
-                align-items:center;
-                gap:11px;
-            }
-
-            .modal-heading-icon {
-                width:38px;
-                height:38px;
-                display:grid;
-                place-items:center;
-                border-radius:10px;
-                color:var(--address-primary);
-                background:#eef4ff;
-            }
-
-            .address-modal .modal-title {
-                margin:0;
-                font-size:1.2rem;
-                font-weight:900;
-            }
-
-            .address-modal .modal-body {
-                padding:22px 24px 8px;
-            }
-
-            .address-modal .modal-footer {
-                padding:16px 24px 22px;
-                border-top:0;
-            }
-
-            .address-modal .form-label {
-                margin-bottom:7px;
-                color:#344054;
-                font-size:.86rem;
-                font-weight:800;
-            }
-
-            .address-field {
-                position:relative;
-            }
-
-            .address-field > i {
-                position:absolute;
-                top:50%;
-                left:15px;
-                z-index:1;
-                transform:translateY(-50%);
-                color:#98a2b3;
-                pointer-events:none;
-            }
-
-            .address-field .form-control {
-                min-height:48px;
-                padding-left:42px;
-                border:1px solid var(--address-line);
-                border-radius:8px;
-                color:var(--address-ink);
-            }
-
-            .address-modal .form-select {
-                min-height:48px;
-                border:1px solid var(--address-line);
-                border-radius:8px;
-                color:var(--address-ink);
-                box-shadow:0 1px 2px rgba(16,24,40,.04);
-            }
-
-            .address-modal .form-select:focus {
-                border-color:var(--address-primary);
-                box-shadow:0 0 0 .22rem rgba(138,170,229,.22);
-            }
-
-            .address-field textarea.form-control {
-                min-height:92px;
-                padding-top:13px;
-                resize:vertical;
-            }
-
-            .address-field textarea + i {
-                top:19px;
-                transform:none;
-            }
-
-            .address-field .form-control:focus {
-                border-color:var(--address-primary);
-                box-shadow:0 0 0 .22rem rgba(138,170,229,.22);
-            }
-
-            .default-check {
-                display:flex;
-                align-items:flex-start;
-                gap:9px;
-                margin-top:3px;
-                padding:12px 13px;
-                border-radius:8px;
-                background:#f8fbff;
-            }
-
-            .default-check .form-check-input {
-                margin-top:3px;
-                border-color:#b8c6e2;
-            }
-
-            .default-check .form-check-input:checked {
-                border-color:var(--address-primary);
-                background-color:var(--address-primary);
-            }
-
-            .default-check label {
-                color:#344054;
-                font-size:.88rem;
-                font-weight:700;
-            }
-
-            .modal-cancel {
-                border:1px solid var(--address-line);
-                color:var(--address-muted);
-                background:#fff;
-            }
-
-            .modal-save {
-                border:0;
-                padding:0 18px;
-                color:#fff;
-                background:linear-gradient(135deg, var(--address-primary), var(--address-accent));
-                box-shadow:0 12px 26px rgba(95,132,214,.22);
-            }
-
-            .modal-save:hover,
-            .modal-save:focus-visible {
-                color:#fff;
-                background:var(--address-primary-dark);
-            }
-
-            @media (max-width: 760px) {
-                .address-shell {
-                    padding-top:30px;
-                }
-                .address-hero {
-                    align-items:flex-start;
-                    flex-direction:column;
-                }
-                .hero-actions {
-                    justify-content:flex-start;
-                }
-                .address-grid {
-                    grid-template-columns:1fr;
-                }
-            }
-
-            @media (max-width: 480px) {
-                .address-shell {
-                    padding-right:14px;
-                    padding-left:14px;
-                }
-                .address-overview {
-                    align-items:flex-start;
-                    flex-direction:column;
-                }
-                .address-card {
-                    padding:19px;
-                }
-                .address-card-header {
-                    flex-direction:column;
-                }
-                .address-actions {
-                    align-items:flex-start;
-                    flex-direction:column;
-                }
-                .address-action-group {
-                    width:100%;
-                }
-                .address-modal .modal-header,
-                .address-modal .modal-body,
-                .address-modal .modal-footer {
-                    padding-right:18px;
-                    padding-left:18px;
-                }
+            .address-api-error {
+                margin-top: 8px;
+                font-size: 14px;
+                color: #dc3545;
             }
         </style>
     </head>
+
     <body>
+
         <jsp:include page="/view/customer/common/header.jsp"/>
 
-        <main class="address-shell">
-            <section class="address-hero">
+        <c:set var="contextPath" value="${pageContext.request.contextPath}"/>
+
+        <div class="container address-page py-5">
+
+            <div class="d-flex flex-column flex-md-row
+                 justify-content-between align-items-md-center gap-3 mb-4">
+
                 <div>
-                    <div class="address-kicker">
-                        <i class="fa-solid fa-location-dot"></i>
-                        Account settings
-                    </div>
-                    <h1>My addresses</h1>
-                    <p>Save your delivery details once and choose the right address faster whenever you shop.</p>
+                    <h1 class="page-title mb-1">My Addresses</h1>
+
+                    <p class="text-muted mb-0">
+                        Manage your delivery addresses.
+                    </p>
                 </div>
 
-                <div class="hero-actions">
-                    <button class="btn btn-add-address" type="button" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                        <i class="fa-solid fa-plus"></i>
-                        Add address
+                <button type="button"
+                        class="btn btn-dark px-4"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addAddressModal">
+
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Add New Address
+                </button>
+            </div>
+
+            <c:if test="${not empty addressSuccess}">
+                <div class="alert alert-success alert-dismissible fade show"
+                     role="alert">
+
+                    <i class="fa-solid fa-circle-check me-2"></i>
+                    <c:out value="${addressSuccess}"/>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
                     </button>
                 </div>
-            </section>
+            </c:if>
 
-            <section class="address-overview" aria-label="Address overview">
-                <div class="overview-title">
-                    <span class="overview-icon"><i class="fa-solid fa-bookmark"></i></span>
-                    <div>
-                        <div>Saved addresses</div>
-                        <p class="overview-note">Your default address will be preselected at checkout.</p>
-                    </div>
+            <c:if test="${not empty addressError}">
+                <div class="alert alert-danger alert-dismissible fade show"
+                     role="alert">
+
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    <c:out value="${addressError}"/>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                    </button>
                 </div>
-                <span class="address-count">
-                    <c:choose>
-                        <c:when test="${not empty addresses}">${fn:length(addresses)} address<c:if test="${fn:length(addresses) != 1}">es</c:if></c:when>
-                        <c:otherwise>No addresses yet</c:otherwise>
-                    </c:choose>
-                </span>
-            </section>
+            </c:if>
 
             <c:choose>
-                <c:when test="${not empty addresses}">
-                    <section class="address-grid" aria-label="Saved delivery addresses">
-                        <c:forEach items="${addresses}" var="a">
-                            <article class="address-card ${a.isDefault() ? 'is-default' : ''}">
-                                <div class="address-card-header">
-                                    <div class="recipient">
-                                        <span class="recipient-avatar"><i class="fa-solid fa-user"></i></span>
-                                        <span class="recipient-name"><c:out value="${a.recipientName}"/></span>
-                                    </div>
-                                    <c:if test="${a.isDefault()}">
-                                        <span class="default-badge"><i class="fa-solid fa-check"></i> Default</span>
-                                    </c:if>
-                                </div>
+                <c:when test="${empty addresses}">
+                    <div class="empty-address">
+                        <i class="fa-solid fa-location-dot"></i>
 
-                                <div class="address-details">
-                                    <div class="address-line">
-                                        <i class="fa-solid fa-phone"></i>
-                                        <span><c:out value="${a.recipientPhone}"/></span>
-                                    </div>
-                                    <div class="address-line">
-                                        <i class="fa-solid fa-house"></i>
-                                        <span><c:out value="${a.addressDetail}" default="Address detail not added"/></span>
-                                    </div>
-                                    <div class="address-place">
-                                        <i class="fa-solid fa-map-pin me-1"></i>
-                                        <strong>
-                                            <c:out value="${a.addressDetail}"/>,
-                                            <c:out value="${a.wardName}"/>,
-                                            <c:out value="${a.districtName}"/>,
-                                            <c:out value="${a.provinceName}"/>
-                                        </strong>
-                                    </div>
-                                </div>
+                        <h4>No address found</h4>
 
-                                <div class="address-actions">
-                                    <div class="address-action-group">
-                                        <button class="btn btn-edit" type="button" data-bs-toggle="modal" data-bs-target="#editModal${a.id}">
-                                            <i class="fa-solid fa-pen me-1"></i> Edit
-                                        </button>
-                                        <a class="btn btn-delete"
-                                           href="${pageContext.request.contextPath}/customer/address?action=delete&amp;id=${a.id}&amp;from=${from}"
-                                           onclick="return confirm('Delete this address?')">
-                                            <i class="fa-regular fa-trash-can me-1"></i> Delete
-                                        </a>
-                                    </div>
-                                    <c:if test="${not a.isDefault()}">
-                                        <a class="btn btn-default"
-                                           href="${pageContext.request.contextPath}/customer/address?action=setDefault&amp;id=${a.id}&amp;from=${from}">
-                                            <i class="fa-regular fa-star me-1"></i> Make default
-                                        </a>
-                                    </c:if>
-                                </div>
-                            </article>
-                        </c:forEach>
-                    </section>
-                </c:when>
-                <c:otherwise>
-                    <section class="empty-state">
-                        <div class="empty-icon"><i class="fa-solid fa-location-dot"></i></div>
-                        <h2>No delivery address yet</h2>
-                        <p>Add an address to make checkout quicker and keep your delivery information in one place.</p>
-                        <button class="btn btn-add-address" type="button" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                            <i class="fa-solid fa-plus"></i>
-                            Add your first address
+                        <p class="text-muted mb-4">
+                            Add a delivery address to make checkout faster.
+                        </p>
+
+                        <button type="button"
+                                class="btn btn-dark"
+                                data-bs-toggle="modal"
+                                data-bs-target="#addAddressModal">
+
+                            Add Address
                         </button>
-                    </section>
+                    </div>
+                </c:when>
+
+                <c:otherwise>
+                    <div class="row g-4">
+
+                        <c:forEach items="${addresses}" var="address">
+
+                            <div class="col-lg-6">
+
+                                <div class="address-card
+                                     ${address.isDefault()
+                                       ? 'default-address'
+                                       : ''}">
+
+                                    <div class="d-flex justify-content-between
+                                         align-items-start gap-3">
+
+                                        <div>
+                                            <div class="recipient-name">
+                                                <c:out value="${address.recipientName}"/>
+                                            </div>
+
+                                            <div class="recipient-phone mt-1">
+                                                <i class="fa-solid fa-phone me-1"></i>
+                                                <c:out value="${address.recipientPhone}"/>
+                                            </div>
+                                        </div>
+
+                                        <c:if test="${address.isDefault()}">
+                                            <span class="badge bg-success default-badge">
+                                                Default
+                                            </span>
+                                        </c:if>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="address-content">
+                                        <i class="fa-solid fa-location-dot me-2"></i>
+
+                                        <c:out value="${address.addressDetail}"/>
+
+                                        <c:if test="${not empty address.wardName}">
+                                            ,
+                                            <c:out value="${address.wardName}"/>
+                                        </c:if>
+
+                                        <%-- District chỉ hiển thị cho địa chỉ cũ --%>
+                                        <c:if test="${not empty address.districtName}">
+                                            ,
+                                            <c:out value="${address.districtName}"/>
+                                        </c:if>
+
+                                        <c:if test="${not empty address.provinceName}">
+                                            ,
+                                            <c:out value="${address.provinceName}"/>
+                                        </c:if>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-2 mt-4">
+
+                                        <button type="button"
+                                                class="btn btn-outline-dark btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editAddressModal${address.id}">
+
+                                            <i class="fa-solid fa-pen me-1"></i>
+                                            Edit
+                                        </button>
+
+                                        <c:if test="${not address.isDefault()}">
+
+                                            <c:url var="setDefaultUrl"
+                                                   value="/customer/address">
+
+                                                <c:param name="action"
+                                                         value="setDefault"/>
+
+                                                <c:param name="id"
+                                                         value="${address.id}"/>
+
+                                                <c:if test="${not empty from}">
+                                                    <c:param name="from"
+                                                             value="${from}"/>
+                                                </c:if>
+                                            </c:url>
+
+                                            <a href="${setDefaultUrl}"
+                                               class="btn btn-outline-success btn-sm">
+
+                                                <i class="fa-solid fa-check me-1"></i>
+                                                Set Default
+                                            </a>
+                                        </c:if>
+
+                                        <c:url var="deleteAddressUrl"
+                                               value="/customer/address">
+
+                                            <c:param name="action"
+                                                     value="delete"/>
+
+                                            <c:param name="id"
+                                                     value="${address.id}"/>
+
+                                            <c:if test="${not empty from}">
+                                                <c:param name="from"
+                                                         value="${from}"/>
+                                            </c:if>
+                                        </c:url>
+
+                                        <a href="${deleteAddressUrl}"
+                                           class="btn btn-outline-danger btn-sm"
+                                           onclick="return confirm(
+                                                   'Are you sure you want to remove this address?'
+                                                   );">
+
+                                            <i class="fa-solid fa-trash me-1"></i>
+                                            Delete
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <%-- Modal cập nhật địa chỉ --%>
+                            <div class="modal fade address-modal"
+                                 id="editAddressModal${address.id}"
+                                 tabindex="-1"
+                                 aria-hidden="true">
+
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+
+                                    <div class="modal-content">
+
+                                        <form method="post"
+                                              action="${contextPath}/customer/address"
+                                              class="needs-validation"
+                                              novalidate>
+
+                                            <input type="hidden"
+                                                   name="action"
+                                                   value="update">
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="${address.id}">
+
+                                            <input type="hidden"
+                                                   name="from"
+                                                   value="${fn:escapeXml(from)}">
+
+                                            <div class="modal-header">
+
+                                                <h5 class="modal-title">
+                                                    Edit Address
+                                                </h5>
+
+                                                <button type="button"
+                                                        class="btn-close"
+                                                        data-bs-dismiss="modal">
+                                                </button>
+                                            </div>
+
+                                            <div class="modal-body">
+
+                                                <div class="row g-3">
+
+                                                    <div class="col-md-6">
+
+                                                        <label class="form-label">
+                                                            Recipient Name
+                                                            <span class="required-mark">*</span>
+                                                        </label>
+
+                                                        <input type="text"
+                                                               name="recipientName"
+                                                               class="form-control"
+                                                               value="${fn:escapeXml(address.recipientName)}"
+                                                               minlength="2"
+                                                               maxlength="100"
+                                                               required>
+
+                                                        <div class="invalid-feedback">
+                                                            Recipient name must contain
+                                                            2 to 100 characters.
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+
+                                                        <label class="form-label">
+                                                            Phone Number
+                                                            <span class="required-mark">*</span>
+                                                        </label>
+
+                                                        <input type="tel"
+                                                               name="recipientPhone"
+                                                               class="form-control"
+                                                               value="${fn:escapeXml(address.recipientPhone)}"
+                                                               maxlength="15"
+                                                               pattern="(0|\+84|84)(3|5|7|8|9)[0-9]{8}"
+                                                               required>
+
+                                                        <div class="invalid-feedback">
+                                                            Enter a valid Vietnamese
+                                                            phone number.
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12 address-location">
+
+                                                        <div class="row g-3">
+
+                                                            <div class="col-md-6">
+
+                                                                <label class="form-label">
+                                                                    Province
+                                                                    <span class="required-mark">*</span>
+                                                                </label>
+
+                                                                <select name="provinceCode"
+                                                                        class="form-select province-select"
+                                                                        data-selected="${fn:escapeXml(address.provinceCode)}"
+                                                                        required>
+
+                                                                    <option value="">
+                                                                        Loading provinces...
+                                                                    </option>
+                                                                </select>
+
+                                                                <div class="invalid-feedback">
+                                                                    Select a province.
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-md-6">
+
+                                                                <label class="form-label">
+                                                                    Ward / Commune
+                                                                    <span class="required-mark">*</span>
+                                                                </label>
+
+                                                                <select name="wardCode"
+                                                                        class="form-select ward-select"
+                                                                        data-selected="${fn:escapeXml(address.wardCode)}"
+                                                                        required
+                                                                        disabled>
+
+                                                                    <option value="">
+                                                                        Select Province first
+                                                                    </option>
+                                                                </select>
+
+                                                                <div class="invalid-feedback">
+                                                                    Select a ward or commune.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="address-api-error d-none"></div>
+                                                    </div>
+
+                                                    <c:if test="${not empty address.districtName}">
+                                                        <div class="col-12">
+
+                                                            <div class="alert alert-warning mb-0">
+
+                                                                <i class="fa-solid
+                                                                   fa-triangle-exclamation
+                                                                   me-2">
+                                                                </i>
+
+                                                                This address was saved
+                                                                using the previous
+                                                                administrative system.
+
+                                                                Please select the current
+                                                                Province and Ward before
+                                                                saving.
+                                                            </div>
+                                                        </div>
+                                                    </c:if>
+
+                                                    <div class="col-12">
+
+                                                        <label class="form-label">
+                                                            Detailed Address
+                                                            <span class="required-mark">*</span>
+                                                        </label>
+
+                                                        <textarea name="addressDetail"
+                                                                  class="form-control"
+                                                                  rows="3"
+                                                                  minlength="5"
+                                                                  maxlength="255"
+                                                                  placeholder="House number, street, building..."
+                                                                  required><c:out value="${address.addressDetail}"/></textarea>
+
+                                                        <div class="invalid-feedback">
+                                                            Address detail must contain
+                                                            5 to 255 characters.
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+
+                                                        <div class="form-check">
+
+                                                            <input type="checkbox"
+                                                                   name="isDefault"
+                                                                   value="true"
+                                                                   class="form-check-input"
+                                                                   id="editDefault${address.id}"
+                                                                   <c:if test="${address.isDefault()}">
+                                                                       checked
+                                                                   </c:if>>
+
+                                                            <label class="form-check-label"
+                                                                   for="editDefault${address.id}">
+
+                                                                Set as default address
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+
+                                                <button type="button"
+                                                        class="btn btn-light"
+                                                        data-bs-dismiss="modal">
+
+                                                    Cancel
+                                                </button>
+
+                                                <button type="submit"
+                                                        class="btn btn-dark">
+
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </c:forEach>
+                    </div>
                 </c:otherwise>
             </c:choose>
-        </main>
 
-        <c:forEach items="${addresses}" var="a">
-            <div class="modal fade address-modal" id="editModal${a.id}" tabindex="-1" aria-labelledby="editModalTitle${a.id}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <form method="post" action="${pageContext.request.contextPath}/customer/address?action=update">
-                            <input type="hidden" name="from" value="${from}">
-                            <div class="modal-header">
-                                <div class="modal-heading">
-                                    <span class="modal-heading-icon"><i class="fa-solid fa-pen"></i></span>
-                                    <h2 class="modal-title" id="editModalTitle${a.id}">Edit address</h2>
-                                </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <input type="hidden" name="id" value="${a.id}">
-                                <div class="row g-3">
-                                    <div class="col-sm-6">
-                                        <label class="form-label" for="editName${a.id}">Recipient name</label>
-                                        <div class="address-field">
-                                            <i class="fa-regular fa-user"></i>
-                                            <input id="editName${a.id}" class="form-control" type="text" name="recipientName" value="${fn:escapeXml(a.recipientName)}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="form-label" for="editPhone${a.id}">Phone number</label>
-                                        <div class="address-field">
-                                            <i class="fa-solid fa-phone"></i>
-                                            <input id="editPhone${a.id}" class="form-control" type="tel" name="recipientPhone" value="${fn:escapeXml(a.recipientPhone)}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label" for="editDetail${a.id}">Address detail</label>
-                                        <div class="address-field">
-                                            <i class="fa-solid fa-house"></i>
-                                            <textarea id="editDetail${a.id}" class="form-control" name="addressDetail" rows="3" placeholder="House number, street, building..."><c:out value="${a.addressDetail}"/></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">
-                                            Province
-                                        </label>
-                                        <select id="editProvince${a.id}" class="form-select"> </select>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">
-                                            District
-                                        </label>
-                                        <select id="editDistrict${a.id}" class="form-select"> </select>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">
-                                            Ward
-                                        </label>
-                                        <select id="editWard${a.id}" name="wardId" class="form-select" required> </select>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="default-check">
-                                            <input class="form-check-input" id="editDefault${a.id}" type="checkbox" name="isDefault" ${a.isDefault() ? 'checked' : ''}>
-                                            <label for="editDefault${a.id}">Use this as my default delivery address</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn modal-cancel" type="button" data-bs-dismiss="modal">Cancel</button>
-                                <button class="btn modal-save" type="submit"><i class="fa-solid fa-check me-1"></i> Save changes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </c:forEach>
+            
+        </div>
 
-        <div class="modal fade address-modal" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+        <%-- Modal thêm địa chỉ --%>
+        <div class="modal fade address-modal"
+             id="addAddressModal"
+             tabindex="-1"
+             aria-hidden="true">
+
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+
                 <div class="modal-content">
-                    <form method="post" action="${pageContext.request.contextPath}/customer/address?action=insert">
-                        <input type="hidden" name="from" value="${from}">
+
+                    <form method="post"
+                          action="${contextPath}/customer/address"
+                          class="needs-validation"
+                          id="addAddressForm"
+                          novalidate>
+
+                        <input type="hidden"
+                               name="action"
+                               value="insert">
+
+                        <input type="hidden"
+                               name="from"
+                               value="${fn:escapeXml(from)}">
+
                         <div class="modal-header">
-                            <div class="modal-heading">
-                                <span class="modal-heading-icon"><i class="fa-solid fa-house"></i></span>
-                                <h2 class="modal-title" id="addAddressModalTitle">Add new address</h2>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                            <h5 class="modal-title">
+                                Add New Address
+                            </h5>
+
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="modal">
+                            </button>
                         </div>
+
                         <div class="modal-body">
+
                             <div class="row g-3">
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="addName">Recipient name</label>
-                                    <div class="address-field">
-                                        <i class="fa-regular fa-user"></i>
-                                        <input id="addName" class="form-control" type="text" name="recipientName" autocomplete="name" required>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label">
+                                        Recipient Name
+                                        <span class="required-mark">*</span>
+                                    </label>
+
+                                    <input type="text"
+                                           name="recipientName"
+                                           class="form-control"
+                                           minlength="2"
+                                           maxlength="100"
+                                           required>
+
+                                    <div class="invalid-feedback">
+                                        Recipient name must contain
+                                        2 to 100 characters.
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="addPhone">Phone number</label>
-                                    <div class="address-field">
-                                        <i class="fa-solid fa-phone"></i>
-                                        <input id="addPhone" class="form-control" type="tel" name="recipientPhone" autocomplete="tel" required>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label">
+                                        Phone Number
+                                        <span class="required-mark">*</span>
+                                    </label>
+
+                                    <input type="tel"
+                                           name="recipientPhone"
+                                           class="form-control"
+                                           maxlength="15"
+                                           pattern="(0|\+84|84)(3|5|7|8|9)[0-9]{8}"
+                                           placeholder="Example: 0912345678"
+                                           required>
+
+                                    <div class="invalid-feedback">
+                                        Enter a valid Vietnamese phone number.
                                     </div>
                                 </div>
+
+                                <div class="col-12 address-location">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+
+                                            <label class="form-label">
+                                                Province
+                                                <span class="required-mark">*</span>
+                                            </label>
+
+                                            <select name="provinceCode"
+                                                    class="form-select province-select"
+                                                    required>
+
+                                                <option value="">
+                                                    Loading provinces...
+                                                </option>
+                                            </select>
+
+                                            <div class="invalid-feedback">
+                                                Select a province.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label class="form-label">
+                                                Ward / Commune
+                                                <span class="required-mark">*</span>
+                                            </label>
+
+                                            <select name="wardCode"
+                                                    class="form-select ward-select"
+                                                    required
+                                                    disabled>
+
+                                                <option value="">
+                                                    Select Province first
+                                                </option>
+                                            </select>
+
+                                            <div class="invalid-feedback">
+                                                Select a ward or commune.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="address-api-error d-none"></div>
+                                </div>
+
                                 <div class="col-12">
-                                    <label class="form-label" for="addDetail">Address detail</label>
-                                    <div class="address-field">
-                                        <i class="fa-solid fa-house"></i>
-                                        <textarea id="addDetail" class="form-control" name="addressDetail" rows="3" placeholder="House number, street, building..."></textarea>
+
+                                    <label class="form-label">
+                                        Detailed Address
+                                        <span class="required-mark">*</span>
+                                    </label>
+
+                                    <textarea name="addressDetail"
+                                              class="form-control"
+                                              rows="3"
+                                              minlength="5"
+                                              maxlength="255"
+                                              placeholder="House number, street, building..."
+                                              required></textarea>
+
+                                    <div class="invalid-feedback">
+                                        Address detail must contain
+                                        5 to 255 characters.
                                     </div>
                                 </div>
+
                                 <div class="col-12">
-                                    <label class="form-label">
-                                        Province
-                                    </label>
-                                    <select id="addProvince" class="form-select">
-                                        <option value=""> Select Province </option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">
-                                        District
-                                    </label>
-                                    <select id="addDistrict" class="form-select"> 
-                                        <option value="">  Select District  </option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">
-                                        Ward
-                                    </label>
-                                    <select id="addWard" name="wardId" class="form-select" required>
-                                        <option value=""> Select Ward </option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <div class="default-check">
-                                        <input class="form-check-input" id="addDefault" type="checkbox" name="isDefault">
-                                        <label for="addDefault">Use this as my default delivery address</label>
+
+                                    <div class="form-check">
+
+                                        <input type="checkbox"
+                                               name="isDefault"
+                                               value="true"
+                                               class="form-check-input"
+                                               id="addDefaultAddress">
+
+                                        <label class="form-check-label"
+                                               for="addDefaultAddress">
+
+                                            Set as default address
+                                        </label>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <div class="modal-footer">
-                            <button class="btn modal-cancel" type="button" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn modal-save" type="submit"><i class="fa-solid fa-check me-1"></i> Save address</button>
+
+                            <button type="button"
+                                    class="btn btn-light"
+                                    data-bs-dismiss="modal">
+
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-dark">
+
+                                Add Address
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
+        <jsp:include page="/view/customer/common/footer.jsp"/>
 
-                                               const baseUrl = "${pageContext.request.contextPath}/customer/address";
-                                               async function loadProvinces(selectId) {
-
-                                                   const select = document.getElementById(selectId);
-                                                   if (!select)
-                                                       return;
-                                                   const res = await fetch(baseUrl + "?action=provinces");
-                                                   const data = await
-                                                           res.json();
-                                                   select.innerHTML = "";
-                                                   const first = document.createElement("option");
-                                                   first.value = "";
-                                                   first.textContent = "Select Province";
-                                                   select.appendChild(first);
-                                                   data.forEach(p => {
-
-                                                       const option = document.createElement("option");
-                                                       option.value = p.id;
-                                                       option.textContent = p.name;
-                                                       select.appendChild(option);
-                                                   });
-                                               }
-
-                                               async function loadDistricts(provinceId, districtSelectId) {
-
-                                                   const district = document.getElementById(districtSelectId);
-
-                                                   if (!district)
-                                                       return;
-
-                                                   district.innerHTML = "";
-
-                                                   const first = document.createElement("option");
-                                                   first.value = "";
-                                                   first.textContent = "Select District";
-                                                   district.appendChild(first);
-
-                                                   if (!provinceId)
-                                                       return;
-
-                                                   const res = await fetch(
-                                                           baseUrl + "?action=districts&provinceId=" + encodeURIComponent(provinceId)
-                                                           );
-
-                                                   const data = await res.json();
-
-                                                   console.log(data);
-
-                                                   data.forEach(d => {
-
-                                                       const option = document.createElement("option");
-                                                       option.value = d.id;
-                                                       option.textContent = d.name;
-
-                                                       district.appendChild(option);
-
-                                                   });
-                                               }
-
-                                               async function loadWards(districtId, wardSelectId) {
-
-                                                   const ward = document.getElementById(wardSelectId);
-
-                                                   if (!ward)
-                                                       return;
-
-                                                   ward.innerHTML = "";
-
-                                                   const first = document.createElement("option");
-                                                   first.value = "";
-                                                   first.textContent = "Select Ward";
-                                                   ward.appendChild(first);
-
-                                                   if (!districtId)
-                                                       return;
-
-                                                   const res = await fetch(
-                                                           baseUrl + "?action=wards&districtId=" + encodeURIComponent(districtId)
-                                                           );
-
-                                                   const data = await res.json();
-
-                                                   console.log(data);
-
-                                                   data.forEach(w => {
-
-                                                       const option = document.createElement("option");
-                                                       option.value = w.id;
-                                                       option.textContent = w.name;
-
-                                                       ward.appendChild(option);
-
-                                                   });
-                                               }
-
-                                               document.addEventListener("DOMContentLoaded", function () {
-
-                                                   //================ ADD ==================
-
-                                                   loadProvinces("addProvince");
-                                                   document.getElementById("addProvince")
-                                                           .addEventListener("change", function () {
-
-                                                               loadDistricts(
-                                                                       this.value,
-                                                                       "addDistrict");
-                                                               document.getElementById("addWard").innerHTML =
-                                                                       "<option value=''>Select Ward</option>";
-                                                           });
-                                                   document.getElementById("addDistrict")
-                                                           .addEventListener("change", function () {
-
-                                                               loadWards(
-                                                                       this.value,
-                                                                       "addWard");
-                                                           });
-                                               });
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
         </script>
-        <c:forEach items="${addresses}" var="a">
-            <script>
 
-                (async function () {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
 
-                    await loadProvinces("editProvince${a.id}");
-                    document.getElementById("editProvince${a.id}").value =
-                            "${a.provinceId}";
-                    await loadDistricts(
-                            "${a.provinceId}",
-                            "editDistrict${a.id}");
-                    document.getElementById("editDistrict${a.id}").value =
-                            "${a.districtId}";
-                    await loadWards(
-                            "${a.districtId}",
-                            "editWard${a.id}");
-                    document.getElementById("editWard${a.id}").value =
-                            "${a.wardId}";
-                })();
-                document.getElementById("editProvince${a.id}")
-                        .addEventListener("change", function () {
+                const addressApiUrl =
+                        "${pageContext.request.contextPath}/customer/address";
 
-                            loadDistricts(
-                                    this.value,
-                                    "editDistrict${a.id}");
-                            document.getElementById("editWard${a.id}").innerHTML =
-                                    "<option value=''>Select Ward</option>";
+                let provinceRequestPromise = null;
+
+                function requestProvinces() {
+                    if (!provinceRequestPromise) {
+                        provinceRequestPromise = fetchJson(
+                                addressApiUrl + "?action=provinces"
+                                ).catch(function (error) {
+                            provinceRequestPromise = null;
+                            throw error;
                         });
-                document.getElementById("editDistrict${a.id}")
-                        .addEventListener("change", function () {
+                    }
 
-                            loadWards(
-                                    this.value,
-                                    "editWard${a.id}");
+                    return provinceRequestPromise;
+                }
+
+                async function initializeAddressLocation(container) {
+                    if (!container) {
+                        return;
+                    }
+
+                    const provinceSelect =
+                            container.querySelector(".province-select");
+
+                    const wardSelect =
+                            container.querySelector(".ward-select");
+
+                    if (!provinceSelect || !wardSelect) {
+                        return;
+                    }
+
+                    if (container.dataset.initialized === "true") {
+                        return;
+                    }
+
+                    clearApiError(container);
+
+                    provinceSelect.disabled = true;
+                    wardSelect.disabled = true;
+
+                    provinceSelect.innerHTML =
+                            '<option value="">Loading provinces...</option>';
+
+                    wardSelect.innerHTML =
+                            '<option value="">Select Province first</option>';
+
+                    const selectedProvince =
+                            provinceSelect.dataset.selected || "";
+
+                    const selectedWard =
+                            wardSelect.dataset.selected || "";
+
+                    try {
+                        const provinces = await requestProvinces();
+
+                        renderOptions(
+                                provinceSelect,
+                                provinces,
+                                "Select Province",
+                                selectedProvince
+                                );
+
+                        provinceSelect.disabled = false;
+
+                        if (selectedProvince
+                                && optionExists(
+                                        provinceSelect,
+                                        selectedProvince
+                                        )) {
+
+                            provinceSelect.value =
+                                    String(selectedProvince);
+
+                            await loadWards(
+                                    container,
+                                    provinceSelect,
+                                    wardSelect,
+                                    selectedWard
+                                    );
+                        }
+
+                        provinceSelect.addEventListener(
+                                "change",
+                                async function () {
+
+                                    clearApiError(container);
+
+                                    await loadWards(
+                                            container,
+                                            provinceSelect,
+                                            wardSelect,
+                                            ""
+                                            );
+                                }
+                        );
+
+                        container.dataset.initialized = "true";
+
+                    } catch (error) {
+                        provinceSelect.innerHTML =
+                                '<option value="">Cannot load provinces</option>';
+
+                        provinceSelect.disabled = true;
+                        wardSelect.disabled = true;
+
+                        showApiError(container, error.message);
+                    }
+                }
+
+                async function loadWards(
+                        container,
+                        provinceSelect,
+                        wardSelect,
+                        selectedWard) {
+
+                    const provinceCode =
+                            provinceSelect.value;
+
+                    wardSelect.disabled = true;
+
+                    if (!provinceCode) {
+                        wardSelect.innerHTML =
+                                '<option value="">Select Province first</option>';
+
+                        return;
+                    }
+
+                    wardSelect.innerHTML =
+                            '<option value="">Loading wards...</option>';
+
+                    try {
+                        const wards = await fetchJson(
+                                addressApiUrl
+                                + "?action=wards&provinceCode="
+                                + encodeURIComponent(provinceCode)
+                                );
+
+                        renderOptions(
+                                wardSelect,
+                                wards,
+                                "Select Ward / Commune",
+                                selectedWard
+                                );
+
+                        wardSelect.disabled = false;
+
+                        if (selectedWard
+                                && optionExists(
+                                        wardSelect,
+                                        selectedWard
+                                        )) {
+
+                            wardSelect.value =
+                                    String(selectedWard);
+                        } else {
+                            wardSelect.value = "";
+                        }
+
+                    } catch (error) {
+                        wardSelect.innerHTML =
+                                '<option value="">Cannot load wards</option>';
+
+                        wardSelect.disabled = true;
+
+                        showApiError(container, error.message);
+                    }
+                }
+
+                function renderOptions(
+                        select,
+                        items,
+                        placeholder,
+                        selectedValue) {
+
+                    select.innerHTML = "";
+
+                    select.appendChild(
+                            new Option(placeholder, "")
+                            );
+
+                    if (!Array.isArray(items)) {
+                        return;
+                    }
+
+                    items.forEach(function (item) {
+                        const option = new Option(
+                                item.name,
+                                item.code
+                                );
+
+                        if (String(item.code)
+                                === String(selectedValue)) {
+                            option.selected = true;
+                        }
+
+                        select.appendChild(option);
+                    });
+                }
+
+                function optionExists(select, value) {
+                    return Array.from(select.options)
+                            .some(function (option) {
+                                return String(option.value)
+                                        === String(value);
+                            });
+                }
+
+                async function fetchJson(url) {
+                    const response = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    });
+
+                    let responseBody = null;
+
+                    try {
+                        responseBody = await response.json();
+                    } catch (error) {
+                        responseBody = null;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(
+                                responseBody && responseBody.message
+                                ? responseBody.message
+                                : "Address service is unavailable."
+                                );
+                    }
+
+                    return responseBody;
+                }
+
+                function showApiError(container, message) {
+                    const errorElement =
+                            container.querySelector(
+                                    ".address-api-error"
+                                    );
+
+                    if (!errorElement) {
+                        return;
+                    }
+
+                    errorElement.textContent = message;
+                    errorElement.classList.remove("d-none");
+                }
+
+                function clearApiError(container) {
+                    const errorElement =
+                            container.querySelector(
+                                    ".address-api-error"
+                                    );
+
+                    if (!errorElement) {
+                        return;
+                    }
+
+                    errorElement.textContent = "";
+                    errorElement.classList.add("d-none");
+                }
+
+                document.querySelectorAll(".address-modal")
+                        .forEach(function (modalElement) {
+
+                            modalElement.addEventListener(
+                                    "show.bs.modal",
+                                    function () {
+
+                                        const locationContainer =
+                                                modalElement.querySelector(
+                                                        ".address-location"
+                                                        );
+
+                                        initializeAddressLocation(
+                                                locationContainer
+                                                );
+                                    }
+                            );
                         });
 
-            </script>
-        </c:forEach>
+                const addAddressModal =
+                        document.getElementById("addAddressModal");
+
+                if (addAddressModal) {
+                    addAddressModal.addEventListener(
+                            "hidden.bs.modal",
+                            function () {
+
+                                const form =
+                                        document.getElementById(
+                                                "addAddressForm"
+                                                );
+
+                                if (!form) {
+                                    return;
+                                }
+
+                                form.reset();
+                                form.classList.remove(
+                                        "was-validated"
+                                        );
+
+                                const provinceSelect =
+                                        form.querySelector(
+                                                ".province-select"
+                                                );
+
+                                const wardSelect =
+                                        form.querySelector(
+                                                ".ward-select"
+                                                );
+
+                                if (provinceSelect) {
+                                    provinceSelect.value = "";
+                                }
+
+                                if (wardSelect) {
+                                    wardSelect.innerHTML =
+                                            '<option value="">'
+                                            + 'Select Province first'
+                                            + '</option>';
+
+                                    wardSelect.disabled = true;
+                                }
+                            }
+                    );
+                }
+
+                document.querySelectorAll(
+                        ".needs-validation"
+                        ).forEach(function (form) {
+
+                    form.addEventListener(
+                            "submit",
+                            function (event) {
+
+                                if (!form.checkValidity()) {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                }
+
+                                form.classList.add(
+                                        "was-validated"
+                                        );
+                            }
+                    );
+                });
+            });
+        </script>
+
     </body>
 </html>
