@@ -1,437 +1,659 @@
 package com.clothingsale.controller;
 
 import com.clothingsale.model.UserAddress;
-import com.clothingsale.model.Province;
-import com.clothingsale.model.District;
-import com.clothingsale.model.Ward;
-
-import java.io.PrintWriter;
+import com.clothingsale.service.AddressApiService;
+import com.clothingsale.service.AddressApiService.ResolvedAddress;
 import com.clothingsale.service.CustomerOrderService;
-
+import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/customer/address")
 public class CustomerAddressController extends HttpServlet {
 
-    private final CustomerOrderService service
+    private final CustomerOrderService orderService
             = new CustomerOrderService();
 
+    private final AddressApiService addressApiService
+            = new AddressApiService();
+
+    private final Gson gson = new Gson();
+
     @Override
-    protected void doGet(HttpServletRequest request,
+    protected void doGet(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
- 
-        String action = request.getParameter("action");
 
-        if (action == null) {
-            action = "list";
+        String action = trim(request.getParameter("action"));
+
+        if ("provinces".equals(action)) {
+            getProvinces(response);
+            return;
         }
 
-        switch (action) {
-
-            case "provinces":
-                getProvinces(response);
-                return;
-
-            case "districts":
-                getDistricts(request, response);
-                return;
-
-            case "wards":
-                getWards(request, response);
-                return;
+        if ("wards".equals(action)) {
+            getWards(request, response);
+            return;
         }
 
-        Integer userId = getCustomerUserId(request, response);
+        Integer userId = getCustomerUserId(
+                request,
+                response
+        );
 
         if (userId == null) {
             return;
         }
 
         switch (action) {
-
             case "delete":
                 deleteAddress(request, response, userId);
                 break;
 
             case "setDefault":
-                setDefaultAddress(request, response, userId);
+                setDefaultAddress(
+                        request,
+                        response,
+                        userId
+                );
                 break;
 
             default:
-                listAddresses(request, response, userId);
+                listAddresses(
+                        request,
+                        response,
+                        userId
+                );
+                break;
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request,
+    protected void doPost(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
 
-        Integer userId = getCustomerUserId(request, response);
+        Integer userId = getCustomerUserId(
+                request,
+                response
+        );
+
         if (userId == null) {
             return;
         }
 
-        String action = request.getParameter("action");
+        String action = trim(
+                request.getParameter("action")
+        );
 
         if ("insert".equals(action)) {
-
             insertAddress(request, response, userId);
-
         } else if ("update".equals(action)) {
-
             updateAddress(request, response, userId);
-
         } else {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/address");
+            redirectToAddressPage(request, response);
         }
     }
 
-    private void listAddresses(HttpServletRequest request,
+    private void listAddresses(
+            HttpServletRequest request,
             HttpServletResponse response,
             int userId)
             throws ServletException, IOException {
 
         List<UserAddress> addresses
-                = service.getAddressesByUserId(userId);
+                = orderService.getAddressesByUserId(userId);
 
         request.setAttribute("addresses", addresses);
+        request.setAttribute(
+                "from",
+                request.getParameter("from")
+        );
 
-        request.setAttribute("provinces", service.getAllProvinces());
+        moveFlashToRequest(
+                request,
+                "addressSuccess"
+        );
 
-        String from = request.getParameter("from");
-
-        request.setAttribute("from", from);
+        moveFlashToRequest(
+                request,
+                "addressError"
+        );
 
         request.getRequestDispatcher(
-                "/view/customer/customer_manage_address.jsp")
-                .forward(request, response);
+                "/view/customer/customer_manage_address.jsp"
+        ).forward(request, response);
     }
 
-    private Integer getCustomerUserId(HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
+    private void insertAddress(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int userId) throws IOException {
 
-        HttpSession session = request.getSession(false);
-        Object userIdObj = session == null
+        try {
+            UserAddress address
+                    = buildAndValidateAddress(
+                            request,
+                            userId,
+                            0
+                    );
+
+            boolean success
+                    = orderService.addAddress(address);
+
+            if (success) {
+                setFlash(
+                        request,
+                        "addressSuccess",
+                        "Address added successfully."
+                );
+            } else {
+                setFlash(
+                        request,
+                        "addressError",
+                        "Could not add address."
+                );
+            }
+
+        } catch (IllegalArgumentException ex) {
+            setFlash(
+                    request,
+                    "addressError",
+                    ex.getMessage()
+            );
+
+        } catch (IOException ex) {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Address API is temporarily unavailable."
+            );
+        }
+
+        redirectToAddressPage(request, response);
+    }
+
+    private void updateAddress(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int userId) throws IOException {
+
+        Integer addressId = parsePositiveInteger(
+                request.getParameter("id")
+        );
+
+        if (addressId == null) {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Invalid address ID."
+            );
+
+            redirectToAddressPage(request, response);
+            return;
+        }
+
+        UserAddress currentAddress
+                = orderService.getAddressById(addressId);
+
+        if (currentAddress == null
+                || currentAddress.getUserId() != userId) {
+
+            setFlash(
+                    request,
+                    "addressError",
+                    "Address not found."
+            );
+
+            redirectToAddressPage(request, response);
+            return;
+        }
+
+        try {
+            UserAddress address
+                    = buildAndValidateAddress(
+                            request,
+                            userId,
+                            addressId
+                    );
+
+            boolean success
+                    = orderService.updateAddress(address);
+
+            if (success) {
+                setFlash(
+                        request,
+                        "addressSuccess",
+                        "Address updated successfully."
+                );
+            } else {
+                setFlash(
+                        request,
+                        "addressError",
+                        "Could not update address."
+                );
+            }
+
+        } catch (IllegalArgumentException ex) {
+            setFlash(
+                    request,
+                    "addressError",
+                    ex.getMessage()
+            );
+
+        } catch (IOException ex) {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Address API is temporarily unavailable."
+            );
+        }
+
+        redirectToAddressPage(request, response);
+    }
+
+    private UserAddress buildAndValidateAddress(
+            HttpServletRequest request,
+            int userId,
+            int addressId) throws IOException {
+
+        String recipientName = trim(
+                request.getParameter("recipientName")
+        );
+
+        String recipientPhone = normalizePhone(
+                request.getParameter("recipientPhone")
+        );
+
+        String addressDetail = trim(
+                request.getParameter("addressDetail")
+        );
+
+        String provinceCode = trim(
+                request.getParameter("provinceCode")
+        );
+
+        String wardCode = trim(
+                request.getParameter("wardCode")
+        );
+
+        if (recipientName.length() < 2
+                || recipientName.length() > 100) {
+            throw new IllegalArgumentException(
+                    "Recipient name must contain 2 to 100 characters."
+            );
+        }
+
+        if (!recipientPhone.matches(
+                "^0[35789]\\d{8}$")) {
+            throw new IllegalArgumentException(
+                    "Invalid Vietnamese phone number."
+            );
+        }
+
+        if (addressDetail.length() < 5
+                || addressDetail.length() > 255) {
+            throw new IllegalArgumentException(
+                    "Address detail must contain 5 to 255 characters."
+            );
+        }
+
+        ResolvedAddress resolvedAddress;
+
+        try {
+            resolvedAddress
+                    = addressApiService.resolveAddress(
+                            provinceCode,
+                            wardCode
+                    );
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                    "Please select a valid province and ward."
+            );
+        }
+
+        UserAddress address = new UserAddress();
+
+        address.setId(addressId);
+        address.setUserId(userId);
+        address.setRecipientName(recipientName);
+        address.setRecipientPhone(recipientPhone);
+        address.setAddressDetail(addressDetail);
+
+        address.setDefault(
+                request.getParameter("isDefault") != null
+        );
+
+        address.setActive(true);
+
+        address.setProvinceCode(
+                resolvedAddress.getProvinceCode()
+        );
+
+        address.setProvinceName(
+                resolvedAddress.getProvinceName()
+        );
+
+        address.setWardCode(
+                resolvedAddress.getWardCode()
+        );
+
+        address.setWardName(
+                resolvedAddress.getWardName()
+        );
+
+        // Địa chỉ mới không còn cấp huyện
+        address.setDistrictCode(null);
+        address.setDistrictName(null);
+
+        // Không dùng FK ward_id cũ
+        address.setWardId(null);
+
+        return address;
+    }
+
+    private void deleteAddress(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int userId) throws IOException {
+
+        Integer addressId = parsePositiveInteger(
+                request.getParameter("id")
+        );
+
+        if (addressId == null) {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Invalid address ID."
+            );
+
+            redirectToAddressPage(request, response);
+            return;
+        }
+
+        UserAddress address
+                = orderService.getAddressById(addressId);
+
+        boolean success = address != null
+                && address.getUserId() == userId
+                && orderService.deleteAddress(
+                        userId,
+                        addressId
+                );
+
+        if (success) {
+            setFlash(
+                    request,
+                    "addressSuccess",
+                    "Address removed successfully."
+            );
+        } else {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Could not remove address."
+            );
+        }
+
+        redirectToAddressPage(request, response);
+    }
+
+    private void setDefaultAddress(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int userId) throws IOException {
+
+        Integer addressId = parsePositiveInteger(
+                request.getParameter("id")
+        );
+
+        if (addressId == null) {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Invalid address ID."
+            );
+
+            redirectToAddressPage(request, response);
+            return;
+        }
+
+        UserAddress address
+                = orderService.getAddressById(addressId);
+
+        boolean success = address != null
+                && address.getUserId() == userId
+                && orderService.setDefaultAddress(
+                        userId,
+                        addressId
+                );
+
+        if (success) {
+            setFlash(
+                    request,
+                    "addressSuccess",
+                    "Default address updated."
+            );
+        } else {
+            setFlash(
+                    request,
+                    "addressError",
+                    "Could not set default address."
+            );
+        }
+
+        redirectToAddressPage(request, response);
+    }
+
+    private void getProvinces(
+            HttpServletResponse response)
+            throws IOException {
+
+        try {
+            writeJson(
+                    response,
+                    HttpServletResponse.SC_OK,
+                    addressApiService.getProvinces()
+            );
+
+        } catch (IOException ex) {
+            writeErrorJson(
+                    response,
+                    HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Address API is unavailable."
+            );
+        }
+    }
+
+    private void getWards(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        try {
+            String provinceCode
+                    = request.getParameter(
+                            "provinceCode"
+                    );
+
+            writeJson(
+                    response,
+                    HttpServletResponse.SC_OK,
+                    addressApiService.getWards(
+                            provinceCode
+                    )
+            );
+
+        } catch (IllegalArgumentException ex) {
+            writeErrorJson(
+                    response,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    ex.getMessage()
+            );
+
+        } catch (IOException ex) {
+            writeErrorJson(
+                    response,
+                    HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Address API is unavailable."
+            );
+        }
+    }
+
+    private Integer getCustomerUserId(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        HttpSession session
+                = request.getSession(false);
+
+        Object userIdObject = session == null
                 ? null
                 : session.getAttribute("authUserId");
+
         String roleName = session == null
                 ? null
-                : (String) session.getAttribute("authRoleName");
+                : (String) session.getAttribute(
+                        "authRoleName"
+                );
 
-        if (!(userIdObj instanceof Integer)
-                || !"CUSTOMER".equalsIgnoreCase(roleName)) {
+        if (!(userIdObject instanceof Integer)
+                || !"CUSTOMER".equalsIgnoreCase(
+                        roleName
+                )) {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/customer/login?error=unauthorized");
+                    + "/customer/login?error=unauthorized"
+            );
 
             return null;
         }
 
-        return (Integer) userIdObj;
+        return (Integer) userIdObject;
     }
 
-    private void editAddress(HttpServletRequest request,
-            HttpServletResponse response,
-            int userId)
-            throws ServletException, IOException {
-
-        int id = Integer.parseInt(
-                request.getParameter("id"));
-
-        UserAddress address
-                = service.getAddressById(id);
-
-        if (address == null
-                || address.getUserId() != userId) {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/address");
-
-            return;
-        }
-
-        request.setAttribute("address", address);
-
-        request.getRequestDispatcher(
-                "/view/customer/customer_manage_address.jsp")
-                .forward(request, response);
-    }
-
-    private void insertAddress(HttpServletRequest request,
-            HttpServletResponse response,
-            int userId)
-            throws IOException {
-        System.out.println("INSERT ADDRESS CALLED");
-        UserAddress address = new UserAddress();
-
-        address.setUserId(userId);
-        address.setRecipientName(
-                request.getParameter("recipientName"));
-
-        address.setRecipientPhone(
-                request.getParameter("recipientPhone"));
-
-        address.setWardId(
-                request.getParameter("wardId"));
-
-        address.setAddressDetail(
-                request.getParameter("addressDetail"));
-
-        address.setDefault(
-                request.getParameter("isDefault")
-                != null);
-
-        service.addAddress(address);
-
-        String from = request.getParameter("from");
-
-        String redirect = request.getContextPath() + "/customer/address";
-
-        if ("checkout".equals(from)) {
-            redirect += "?from=checkout";
-        }
-
-        response.sendRedirect(redirect);
-    }
-
-    private void updateAddress(HttpServletRequest request,
-            HttpServletResponse response,
-            int userId)
-            throws IOException {
-
-        int id = Integer.parseInt(
-                request.getParameter("id"));
-
-        UserAddress oldAddress
-                = service.getAddressById(id);
-
-        if (oldAddress == null
-                || oldAddress.getUserId() != userId) {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/customer/address");
-
-            return;
-        }
-
-        UserAddress address = new UserAddress();
-
-        address.setId(id);
-        address.setUserId(userId);
-
-        address.setRecipientName(
-                request.getParameter("recipientName"));
-
-        address.setRecipientPhone(
-                request.getParameter("recipientPhone"));
-
-        address.setWardId(
-                request.getParameter("wardId"));
-
-        address.setAddressDetail(
-                request.getParameter("addressDetail"));
-
-        address.setDefault(
-                request.getParameter("isDefault")
-                != null);
-
-        service.updateAddress(address);
-
-        String from = request.getParameter("from");
-
-        String redirect = request.getContextPath() + "/customer/address";
-
-        if ("checkout".equals(from)) {
-            redirect += "?from=checkout";
-        }
-
-        response.sendRedirect(redirect);
-    }
-
-    private void deleteAddress(HttpServletRequest request,
-            HttpServletResponse response,
-            int userId)
-            throws IOException {
-
-        int id = Integer.parseInt(
-                request.getParameter("id"));
-
-        UserAddress address
-                = service.getAddressById(id);
-
-        if (address != null
-                && address.getUserId() == userId) {
-
-            service.deleteAddress(userId, id);
-        }
-
-        String from = request.getParameter("from");
-
-        String redirect = request.getContextPath() + "/customer/address";
-
-        if ("checkout".equals(from)) {
-            redirect += "?from=checkout";
-        }
-
-        response.sendRedirect(redirect);
-    }
-
-    private void setDefaultAddress(HttpServletRequest request,
-            HttpServletResponse response,
-            int userId)
-            throws IOException {
-
-        int id = Integer.parseInt(
-                request.getParameter("id"));
-
-        UserAddress address
-                = service.getAddressById(id);
-
-        if (address != null
-                && address.getUserId() == userId) {
-
-            service.setDefaultAddress(
-                    userId,
-                    id);
-        }
-
-        String from = request.getParameter("from");
-
-        String redirect = request.getContextPath() + "/customer/address";
-
-        if ("checkout".equals(from)) {
-            redirect += "?from=checkout";
-        }
-
-        response.sendRedirect(redirect);
-    }
-
-    private void getProvinces(HttpServletResponse response)
-            throws IOException {
-
-        response.setContentType("application/json;charset=UTF-8");
-
-        List<Province> list = service.getAllProvinces();
-
-        PrintWriter out = response.getWriter();
-
-        out.print("[");
-
-        for (int i = 0; i < list.size(); i++) {
-
-            Province p = list.get(i);
-
-            out.print("{");
-
-            out.print("\"id\":\"" + p.getId() + "\",");
-
-            out.print("\"name\":\""
-                    + p.getProvinceName().replace("\"", "\\\"")
-                    + "\"");
-
-            out.print("}");
-
-            if (i < list.size() - 1) {
-                out.print(",");
-            }
-        }
-
-        out.print("]");
-        out.flush();
-        out.close();
-    }
-
-    private void getDistricts(HttpServletRequest request,
+    private void redirectToAddressPage(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        response.setContentType("application/json;charset=UTF-8");
+        String url = request.getContextPath()
+                + "/customer/address";
 
-        String provinceId = request.getParameter("provinceId");
-
-        List<District> list
-                = service.getDistrictsByProvince(provinceId);
-
-        PrintWriter out = response.getWriter();
-
-        out.print("[");
-
-        for (int i = 0; i < list.size(); i++) {
-
-            District d = list.get(i);
-
-            out.print("{");
-
-            out.print("\"id\":\"" + d.getId() + "\",");
-
-            out.print("\"name\":\""
-                    + d.getDistrictName().replace("\"", "\\\"")
-                    + "\"");
-
-            out.print("}");
-
-            if (i < list.size() - 1) {
-                out.print(",");
-            }
+        if ("checkout".equals(
+                request.getParameter("from"))) {
+            url += "?from=checkout";
         }
 
-        out.print("]");
-        out.flush();
-        out.close();
+        response.sendRedirect(url);
     }
 
-    private void getWards(HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
+    private void writeJson(
+            HttpServletResponse response,
+            int status,
+            Object object) throws IOException {
 
-        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(status);
+        response.setContentType(
+                "application/json;charset=UTF-8"
+        );
 
-        String districtId
-                = request.getParameter("districtId");
+        response.getWriter().print(
+                gson.toJson(object)
+        );
+    }
 
-        List<Ward> list
-                = service.getWardsByDistrict(districtId);
+    private void writeErrorJson(
+            HttpServletResponse response,
+            int status,
+            String message) throws IOException {
 
-        PrintWriter out = response.getWriter();
+        Map<String, String> result
+                = new HashMap<>();
 
-        out.print("[");
+        result.put("message", message);
 
-        for (int i = 0; i < list.size(); i++) {
+        writeJson(response, status, result);
+    }
 
-            Ward w = list.get(i);
+    private void setFlash(
+            HttpServletRequest request,
+            String name,
+            String value) {
 
-            out.print("{");
+        request.getSession().setAttribute(
+                name,
+                value
+        );
+    }
 
-            out.print("\"id\":\"" + w.getId() + "\",");
+    private void moveFlashToRequest(
+            HttpServletRequest request,
+            String name) {
 
-            out.print("\"name\":\""
-                    + w.getWardName().replace("\"", "\\\"")
-                    + "\"");
+        HttpSession session
+                = request.getSession(false);
 
-            out.print("}");
-
-            if (i < list.size() - 1) {
-                out.print(",");
-            }
+        if (session == null) {
+            return;
         }
 
-        out.print("]");
-        out.flush();
-        out.close();
+        Object value = session.getAttribute(name);
+
+        if (value != null) {
+            request.setAttribute(name, value);
+            session.removeAttribute(name);
+        }
+    }
+
+    private Integer parsePositiveInteger(
+            String value) {
+
+        try {
+            int number = Integer.parseInt(
+                    trim(value)
+            );
+
+            return number > 0 ? number : null;
+
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private String normalizePhone(String phone) {
+        String result = trim(phone)
+                .replaceAll("[\\s.()\\-]", "");
+
+        if (result.startsWith("+84")
+                && result.length() == 12) {
+            result = "0" + result.substring(3);
+        } else if (result.startsWith("84")
+                && result.length() == 11) {
+            result = "0" + result.substring(2);
+        }
+
+        return result;
+    }
+
+    private String trim(String value) {
+        return value == null
+                ? ""
+                : value.trim();
     }
 }

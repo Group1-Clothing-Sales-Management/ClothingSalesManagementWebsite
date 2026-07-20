@@ -1,8 +1,5 @@
 package com.clothingsale.controller;
 
-import com.clothingsale.dao.AdminManageProductDAO;
-import com.clothingsale.model.Brand;
-import com.clothingsale.model.Category;
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
 import com.clothingsale.service.AdminManageProductService;
@@ -14,39 +11,61 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.ArrayList;
 
-@WebServlet(name = "AdminManageProduct", urlPatterns = {"/AdminManageProduct", "/admin/manage-product", "/admin/products"})
-@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
+@WebServlet(
+        name = "AdminManageProduct",
+        urlPatterns = {
+            "/AdminManageProduct",
+            "/admin/manage-product",
+            "/admin/products"
+        }
+)
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024 * 2,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 50
+)
 public class AdminProductController extends HttpServlet {
 
-    private final AdminManageProductService productService = new AdminManageProductService();
-    private final AdminManageProductDAO productDAO = new AdminManageProductDAO();
+    private static final int MAX_VARIANT_ROWS = 200;
+
+    private final AdminManageProductService productService
+            = new AdminManageProductService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
         String action = request.getParameter("action");
+
         if (action == null || action.trim().isEmpty()) {
             action = "list";
         }
 
-        switch (action.toLowerCase(Locale.ROOT)) {
+        switch (action.trim().toLowerCase(Locale.ROOT)) {
             case "view":
                 showProductDetails(request, response);
                 break;
+
             case "edit":
                 showEditForm(request, response);
                 break;
+
+            case "list":
             default:
                 listProducts(request, response);
                 break;
@@ -54,60 +73,95 @@ public class AdminProductController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
         String action = getMultipartParameter(request, "action");
+
         if (action == null || action.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
             return;
         }
 
         try {
-            switch (action.toUpperCase(Locale.ROOT)) {
+            switch (action.trim().toUpperCase(Locale.ROOT)) {
                 case "UPDATE_PRODUCT":
                     handleUpdateProduct(request, response);
                     break;
+
                 case "UPDATE_VARIANT_STATUS":
                     handleUpdateVariantStatus(request, response);
                     break;
+
                 case "ADD_VARIANT":
                 case "ADD_VARIANTS":
                     handleAddVariants(request, response);
                     break;
+
                 case "ADD":
                     handleAddProduct(request, response);
                     break;
+
                 case "DELETE":
                     handleDeleteProduct(request, response);
                     break;
+
                 default:
-                    response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-action");
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin/manage-product?status=invalid-action"
+                    );
                     break;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=error");
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=error"
+            );
         }
     }
 
-    private void handleUpdateProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handleUpdateProduct(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
         int productId;
+
         try {
-            productId = Integer.parseInt(getMultipartParameter(request, "productId"));
+            productId = Integer.parseInt(
+                    getMultipartParameter(request, "productId")
+            );
         } catch (Exception e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
             return;
         }
 
         Product oldProduct = productService.getProductById(productId);
+
         if (oldProduct == null) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=product-not-found");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=product-not-found"
+            );
             return;
         }
 
         Product product;
+
         try {
             product = extractProductFromRequest(request);
         } catch (NumberFormatException e) {
@@ -116,72 +170,141 @@ public class AdminProductController extends HttpServlet {
         }
 
         product.setId(productId);
-        String validationError = productService.validateProduct(product);
+
+        String validationError
+                = productService.validateProductForUpdate(
+                        oldProduct,
+                        product
+                );
+
         if (validationError != null) {
-            redirectToEdit(response, productId, validationError);
+            redirectToEdit(
+                    response,
+                    productId,
+                    validationError
+            );
             return;
         }
 
-        product.setSlug(productService.generateSlug(product.getProductName(), productId));
+        product.setSlug(
+                productService.generateSlug(
+                        product.getProductName(),
+                        productId
+                )
+        );
+
         String newImageName = null;
 
         try {
             Part imagePart = request.getPart("productImage");
+
             if (hasUploadedFile(imagePart)) {
                 newImageName = saveProductImage(imagePart);
             }
         } catch (IllegalArgumentException e) {
-            redirectToEdit(response, productId, "invalid-image");
+            redirectToEdit(
+                    response,
+                    productId,
+                    "invalid-image"
+            );
             return;
         } catch (IOException e) {
-            redirectToEdit(response, productId, "image-upload-failed");
+            redirectToEdit(
+                    response,
+                    productId,
+                    "image-upload-failed"
+            );
             return;
         }
 
-        boolean updated = productService.updateProduct(product, newImageName);
+        boolean updated = productService.updateProduct(
+                product,
+                newImageName
+        );
+
         if (!updated) {
             deleteProductImage(newImageName);
-            redirectToEdit(response, productId, "update-failed");
+            redirectToEdit(
+                    response,
+                    productId,
+                    "update-failed"
+            );
             return;
         }
 
-        if (newImageName != null && oldProduct.getMainImageUrl() != null
-                && !newImageName.equals(oldProduct.getMainImageUrl())) {
-            deleteProductImage(oldProduct.getMainImageUrl());
+        if (newImageName != null
+                && oldProduct.getMainImageUrl() != null
+                && !newImageName.equals(
+                        oldProduct.getMainImageUrl())) {
+
+            deleteProductImage(
+                    oldProduct.getMainImageUrl()
+            );
         }
 
-        redirectToEdit(response, productId, "product-updated");
+        redirectToEdit(
+                response,
+                productId,
+                "product-updated"
+        );
     }
 
-    private void handleUpdateVariantStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void handleUpdateVariantStatus(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
         int productId;
         int variantId;
+
         try {
-            productId = Integer.parseInt(request.getParameter("productId"));
-            variantId = Integer.parseInt(request.getParameter("variantId"));
+            productId = Integer.parseInt(
+                    request.getParameter("productId")
+            );
+
+            variantId = Integer.parseInt(
+                    request.getParameter("variantId")
+            );
         } catch (Exception e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
             return;
         }
 
         String status = request.getParameter("status");
-        boolean updated = productService.updateVariantStatus(productId, variantId, status);
-        String result = updated ? "variant-updated" : "variant-update-failed";
 
-        response.sendRedirect(request.getContextPath()
-                + "/admin/manage-product?action=view&id=" + productId + "&status=" + result);
+        boolean updated = productService.updateVariantStatus(
+                productId,
+                variantId,
+                status
+        );
+
+        response.sendRedirect(
+                request.getContextPath()
+                + "/admin/manage-product?action=view&id="
+                + productId
+                + "&status="
+                + (updated
+                        ? "variant-updated"
+                        : "variant-update-failed")
+        );
     }
 
     private void handleAddVariants(
             HttpServletRequest request,
-            HttpServletResponse response
-    ) throws IOException {
+            HttpServletResponse response)
+            throws IOException {
 
         int productId;
 
         try {
             productId = Integer.parseInt(
-                    getMultipartParameter(request, "productId")
+                    getMultipartParameter(
+                            request,
+                            "productId"
+                    )
             );
         } catch (Exception e) {
             response.sendRedirect(
@@ -229,49 +352,80 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        boolean added = productService.addVariants(productId, variants);
+        boolean added = productService.addVariants(
+                productId,
+                variants
+        );
 
         response.sendRedirect(
                 request.getContextPath()
                 + "/admin/manage-product?action=view&id="
                 + productId
                 + "&status="
-                + (added ? "variants-added" : "variant-duplicate")
+                + (added
+                        ? "variants-added"
+                        : "variant-duplicate")
         );
     }
 
-    private void handleAddProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handleAddProduct(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
         Product product;
+
         try {
             product = extractProductFromRequest(request);
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
             return;
         }
 
-        String validationError = productService.validateProduct(product);
+        // Product mới luôn chưa sẵn sàng bán.
+        product.setStatus("INACTIVE");
+
+        String validationError
+                = productService.validateProductForCreate(product);
+
         if (validationError != null) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + validationError);
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status="
+                    + validationError
+            );
             return;
         }
 
-        String cleanSlug = product.getProductName().toLowerCase(Locale.ROOT)
-                .replace('đ', 'd').replace('Đ', 'D')
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .trim().replaceAll("\\s+", "-");
-        product.setSlug((cleanSlug.isEmpty() ? "product" : cleanSlug) + "-" + System.currentTimeMillis());
+        String cleanSlug = productService.generateSlug(
+                product.getProductName(),
+                (int) (System.currentTimeMillis() % Integer.MAX_VALUE)
+        );
+
+        product.setSlug(cleanSlug);
 
         String savedImageName = null;
+
         try {
             Part imagePart = request.getPart("productImage");
+
             if (hasUploadedFile(imagePart)) {
                 savedImageName = saveProductImage(imagePart);
             }
         } catch (IllegalArgumentException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-image");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-image"
+            );
             return;
         } catch (IOException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=image-upload-failed");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=image-upload-failed"
+            );
             return;
         }
 
@@ -295,57 +449,226 @@ public class AdminProductController extends HttpServlet {
 
         if (variants.isEmpty()) {
             deleteProductImage(savedImageName);
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=variant-required");
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=variant-required"
+            );
             return;
         }
 
-        boolean added = productService.createProductWithVariants(product, savedImageName, variants);
+        boolean added = productService.createProductWithVariants(
+                product,
+                savedImageName,
+                variants
+        );
+
         if (!added) {
             deleteProductImage(savedImageName);
         }
-        response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + (added ? "success" : "error"));
+
+        response.sendRedirect(
+                request.getContextPath()
+                + "/admin/manage-product?status="
+                + (added ? "success" : "error")
+        );
     }
 
-    private void handleDeleteProduct(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void handleDeleteProduct(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
         String idRaw = request.getParameter("productId");
+
         if (idRaw == null || idRaw.trim().isEmpty()) {
             idRaw = request.getParameter("id");
         }
 
         try {
             int productId = Integer.parseInt(idRaw);
-            boolean deleted = productService.deleteProductSmartly(productId);
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + (deleted ? "deleted" : "error"));
+
+            boolean deleted
+                    = productService.deleteProductSmartly(productId);
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status="
+                    + (deleted ? "deleted" : "error")
+            );
         } catch (Exception e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
         }
     }
 
-    private boolean hasUploadedFile(Part part) {
-        return part != null && part.getSubmittedFileName() != null && !part.getSubmittedFileName().trim().isEmpty() && part.getSize() > 0;
+    private Product extractProductFromRequest(
+            HttpServletRequest request) {
+
+        Product product = new Product();
+
+        product.setProductName(
+                getMultipartParameter(
+                        request,
+                        "productName"
+                )
+        );
+
+        String brandId = getMultipartParameter(
+                request,
+                "brandId"
+        );
+
+        product.setBrandId(
+                brandId == null || brandId.trim().isEmpty()
+                ? 0
+                : Integer.parseInt(brandId.trim())
+        );
+
+        String categoryId = getMultipartParameter(
+                request,
+                "categoryId"
+        );
+
+        product.setCategoryId(
+                categoryId == null
+                || categoryId.trim().isEmpty()
+                ? 0
+                : Integer.parseInt(categoryId.trim())
+        );
+
+        product.setShortDescription(
+                getMultipartParameter(
+                        request,
+                        "shortDescription"
+                )
+        );
+
+        product.setLongDescription(
+                getMultipartParameter(
+                        request,
+                        "longDescription"
+                )
+        );
+
+        product.setStatus(
+                getMultipartParameter(
+                        request,
+                        "status"
+                )
+        );
+
+        return product;
     }
 
-    private String saveProductImage(Part filePart) throws IOException {
+    private List<ProductVariant> readVariantsFromRequest(
+            HttpServletRequest request,
+            int productId,
+            String productName) {
+
+        List<ProductVariant> variants
+                = new ArrayList<>();
+
+        for (int index = 0;
+                index < MAX_VARIANT_ROWS;
+                index++) {
+
+            String size = getMultipartParameter(
+                    request,
+                    "variants[" + index + "].size"
+            );
+
+            String color = getMultipartParameter(
+                    request,
+                    "variants[" + index + "].color"
+            );
+
+            // Cho phép danh sách có index bị khuyết do admin xóa một dòng.
+            if ((size == null || size.trim().isEmpty())
+                    && (color == null || color.trim().isEmpty())) {
+                continue;
+            }
+
+            if (size == null || size.trim().isEmpty()
+                    || color == null
+                    || color.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Size and color are required"
+                );
+            }
+
+            size = size.trim();
+            color = color.trim();
+
+            ProductVariant variant
+                    = new ProductVariant();
+
+            variant.setProductId(productId);
+            variant.setSize(size);
+            variant.setColor(color);
+
+            variant.setSku(
+                    productService.generateVariantSku(
+                            productName,
+                            size,
+                            color
+                    )
+            );
+
+            variant.setCostPrice(BigDecimal.ZERO);
+            variant.setListPrice(BigDecimal.ZERO);
+            variant.setSalePrice(BigDecimal.ZERO);
+            variant.setStockQuantity(0);
+            variant.setStatus("INACTIVE");
+            variant.setAttributeDetails(
+                    color + "|" + size
+            );
+
+            variants.add(variant);
+        }
+
+        return variants;
+    }
+
+    private boolean hasUploadedFile(Part part) {
+        return part != null
+                && part.getSubmittedFileName() != null
+                && !part.getSubmittedFileName()
+                        .trim()
+                        .isEmpty()
+                && part.getSize() > 0;
+    }
+
+    /**
+     * Lưu ảnh ngoài thư mục deploy. ProductImageStorage đang trỏ tới
+     * D:\ImageSWP391.
+     */
+    private String saveProductImage(Part filePart)
+            throws IOException {
+
         String originalName = Paths.get(
                 filePart.getSubmittedFileName()
         ).getFileName().toString();
 
-        String extension = getFileExtension(originalName)
-                .toLowerCase(Locale.ROOT);
+        String extension = getFileExtension(
+                originalName
+        ).toLowerCase(Locale.ROOT);
 
         String contentType = filePart.getContentType();
 
         boolean validExtension
-                = extension.equals("jpg")
-                || extension.equals("jpeg")
-                || extension.equals("png")
-                || extension.equals("webp");
+                = "jpg".equals(extension)
+                || "jpeg".equals(extension)
+                || "png".equals(extension)
+                || "webp".equals(extension);
 
         boolean validContentType
                 = contentType != null
-                && (contentType.equals("image/jpeg")
-                || contentType.equals("image/png")
-                || contentType.equals("image/webp"));
+                && ("image/jpeg".equals(contentType)
+                || "image/png".equals(contentType)
+                || "image/webp".equals(contentType));
 
         if (!validExtension || !validContentType) {
             throw new IllegalArgumentException(
@@ -362,9 +685,14 @@ public class AdminProductController extends HttpServlet {
                 + "."
                 + extension;
 
-        Path targetFile = ProductImageStorage.resolveFile(savedName);
+        Path targetFile
+                = ProductImageStorage.resolveFile(
+                        savedName
+                );
 
-        try (InputStream inputStream = filePart.getInputStream()) {
+        try (InputStream inputStream
+                = filePart.getInputStream()) {
+
             Files.copy(
                     inputStream,
                     targetFile,
@@ -377,16 +705,25 @@ public class AdminProductController extends HttpServlet {
 
     private String getFileExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
-        return dotIndex >= 0 && dotIndex < fileName.length() - 1 ? fileName.substring(dotIndex + 1) : "";
+
+        return dotIndex >= 0
+                && dotIndex < fileName.length() - 1
+                ? fileName.substring(dotIndex + 1)
+                : "";
     }
 
     private void deleteProductImage(String imageName) {
-        if (imageName == null || imageName.trim().isEmpty()) {
+        if (imageName == null
+                || imageName.trim().isEmpty()) {
             return;
         }
 
         try {
-            Path imageFile = ProductImageStorage.resolveFile(imageName);
+            Path imageFile
+                    = ProductImageStorage.resolveFile(
+                            imageName
+                    );
+
             Files.deleteIfExists(imageFile);
         } catch (Exception e) {
             System.err.println(
@@ -396,146 +733,160 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private Product extractProductFromRequest(HttpServletRequest request) {
-        Product product = new Product();
-        product.setProductName(getMultipartParameter(request, "productName"));
+    private String getMultipartParameter(
+            HttpServletRequest request,
+            String parameterName) {
 
-        String brandId = getMultipartParameter(request, "brandId");
-        product.setBrandId(brandId == null || brandId.trim().isEmpty() ? 0 : Integer.parseInt(brandId.trim()));
-
-        String categoryId = getMultipartParameter(request, "categoryId");
-        product.setCategoryId(categoryId == null || categoryId.trim().isEmpty() ? 0 : Integer.parseInt(categoryId.trim()));
-
-        product.setShortDescription(getMultipartParameter(request, "shortDescription"));
-        product.setLongDescription(getMultipartParameter(request, "longDescription"));
-        product.setStatus(getMultipartParameter(request, "status"));
-        return product;
-    }
-
-    private String getMultipartParameter(HttpServletRequest request, String parameterName) {
         String value = request.getParameter(parameterName);
+
         if (value != null) {
             return value.trim();
         }
 
         try {
             Part part = request.getPart(parameterName);
+
             if (part == null) {
                 return null;
             }
-            try (java.util.Scanner scanner = new java.util.Scanner(part.getInputStream(), "UTF-8")) {
-                return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
-            }
+
+            byte[] content
+                    = part.getInputStream()
+                            .readAllBytes();
+
+            return new String(
+                    content,
+                    StandardCharsets.UTF_8
+            ).trim();
         } catch (Exception e) {
             return null;
         }
     }
 
-    private void redirectToEdit(HttpServletResponse response, int productId, String status) throws IOException {
-        response.sendRedirect(getServletContext().getContextPath()
-                + "/admin/manage-product?action=edit&id=" + productId + "&status=" + status);
-    }
-
-    private void listProducts(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.setAttribute("products", productService.getAllProducts());
-        request.setAttribute("categories", productService.getAllCategories());
-        request.setAttribute("brands", productService.getAllBrands());
-        request.getRequestDispatcher("/view/admin/admin_product.jsp").forward(request, response);
-    }
-
-    private void showProductDetails(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            int productId = Integer.parseInt(request.getParameter("id"));
-            Product product = productService.getProductById(productId);
-            if (product == null) {
-                response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=product-not-found");
-                return;
-            }
-
-            request.setAttribute("product", product);
-            request.setAttribute("variants", productService.getVariantsByProductId(productId));
-            request.getRequestDispatcher("/view/admin/product_detail.jsp").forward(request, response);
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
-        }
-    }
-
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            int productId = Integer.parseInt(request.getParameter("id"));
-            Product product = productService.getProductById(productId);
-            if (product == null) {
-                response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=product-not-found");
-                return;
-            }
-
-            request.setAttribute("product", product);
-            request.setAttribute("categories", productService.getAllCategories());
-            request.setAttribute("brands", productService.getAllBrands());
-            request.getRequestDispatcher("/view/admin/admin_edit_product.jsp").forward(request, response);
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=invalid-request");
-        }
-    }
-
-    private List<ProductVariant> readVariantsFromRequest(
-            HttpServletRequest request,
+    private void redirectToEdit(
+            HttpServletResponse response,
             int productId,
-            String productName) {
+            String status)
+            throws IOException {
 
-        List<ProductVariant> variants = new ArrayList<>();
+        response.sendRedirect(
+                getServletContext().getContextPath()
+                + "/admin/manage-product?action=edit&id="
+                + productId
+                + "&status="
+                + status
+        );
+    }
 
-        for (int index = 0;; index++) {
-            String size = getMultipartParameter(
-                    request,
-                    "variants[" + index + "].size"
+    private void listProducts(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.setAttribute(
+                "products",
+                productService.getAllProducts()
+        );
+
+        // Form Create chỉ nhận Category active.
+        request.setAttribute(
+                "categories",
+                productService.getActiveCategories()
+        );
+
+        request.setAttribute(
+                "brands",
+                productService.getAllBrands()
+        );
+
+        request.getRequestDispatcher(
+                "/view/admin/admin_product.jsp"
+        ).forward(request, response);
+    }
+
+    private void showProductDetails(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+            int productId = Integer.parseInt(
+                    request.getParameter("id")
             );
 
-            String color = getMultipartParameter(
-                    request,
-                    "variants[" + index + "].color"
-            );
+            Product product
+                    = productService.getProductById(productId);
 
-            if (size == null && color == null) {
-                break;
-            }
-
-            if (size == null
-                    || size.trim().isEmpty()
-                    || color == null
-                    || color.trim().isEmpty()) {
-
-                throw new IllegalArgumentException(
-                        "Size and color are required"
+            if (product == null) {
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin/manage-product?status=product-not-found"
                 );
+                return;
             }
 
-            size = size.trim();
-            color = color.trim();
+            request.setAttribute("product", product);
 
-            ProductVariant variant = new ProductVariant();
-            variant.setProductId(productId);
-            variant.setSize(size);
-            variant.setColor(color);
-
-            variant.setSku(
-                    productService.generateVariantSku(
-                            productName,
-                            size,
-                            color
+            request.setAttribute(
+                    "variants",
+                    productService.getVariantsByProductId(
+                            productId
                     )
             );
 
-            // Variant mới luôn chưa sẵn sàng bán.
-            variant.setStatus("INACTIVE");
-            variant.setCostPrice(java.math.BigDecimal.ZERO);
-            variant.setSalePrice(java.math.BigDecimal.ZERO);
-            variant.setStockQuantity(0);
-            variant.setAttributeDetails(color + "|" + size);
-
-            variants.add(variant);
+            request.getRequestDispatcher(
+                    "/view/admin/product_detail.jsp"
+            ).forward(request, response);
+        } catch (NumberFormatException e) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
         }
+    }
 
-        return variants;
+    private void showEditForm(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+            int productId = Integer.parseInt(
+                    request.getParameter("id")
+            );
+
+            Product product
+                    = productService.getProductById(productId);
+
+            if (product == null) {
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin/manage-product?status=product-not-found"
+                );
+                return;
+            }
+
+            request.setAttribute("product", product);
+
+            // Trang Edit phải nhận cả Category inactive.
+            request.setAttribute(
+                    "categories",
+                    productService.getAllCategories()
+            );
+
+            request.setAttribute(
+                    "brands",
+                    productService.getAllBrands()
+            );
+
+            request.getRequestDispatcher(
+                    "/view/admin/admin_edit_product.jsp"
+            ).forward(request, response);
+        } catch (NumberFormatException e) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=invalid-request"
+            );
+        }
     }
 }

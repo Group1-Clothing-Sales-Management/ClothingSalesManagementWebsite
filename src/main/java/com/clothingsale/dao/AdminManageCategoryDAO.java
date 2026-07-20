@@ -87,14 +87,33 @@ public class AdminManageCategoryDAO {
     }
 
     public boolean updateCategoryStatus(int id, int status) {
-        String sql = "UPDATE Category SET status = ? WHERE id = ?";
+        if (id <= 0 || (status != 0 && status != 1)) {
+            return false;
+        }
 
-        try (
-                Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, status);
-            ps.setInt(2, id);
+        String sql;
 
+        if (status == 0) {
+            sql = "UPDATE Category "
+                    + "SET status = 0 "
+                    + "WHERE id = ? "
+                    + "AND NOT EXISTS ("
+                    + "    SELECT 1 "
+                    + "    FROM Product "
+                    + "    WHERE Product.category_id = Category.id "
+                    + "    AND Product.status = 'ACTIVE'"
+                    + ")";
+        } else {
+            sql = "UPDATE Category "
+                    + "SET status = 1 "
+                    + "WHERE id = ?";
+        }
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
             return ps.executeUpdate() > 0;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

@@ -86,35 +86,50 @@ public class AdminManageCategoryService {
     }
 
     public String deactivateCategory(int id) {
-        if (id <= 0) {
-            return "invalid";
-        }
-
-        Category category = categoryDAO.getCategoryById(id);
-
-        if (category == null) {
-            return "not-found";
-        }
-
-        if (category.getStatus() == 0) {
-            return "deactivated";
-        }
-
-        int activeProductCount
-                = categoryDAO.countActiveProductsByCategory(id);
-
-        if (activeProductCount < 0) {
-            return "error";
-        }
-
-        if (activeProductCount > 0) {
-            return "in-use";
-        }
-
-        return categoryDAO.updateCategoryStatus(id, 0)
-                ? "deactivated"
-                : "error";
+    if (id <= 0) {
+        return "invalid";
     }
+
+    Category category = categoryDAO.getCategoryById(id);
+
+    if (category == null) {
+        return "not-found";
+    }
+
+    if (category.getStatus() == 0) {
+        return "deactivated";
+    }
+
+    int activeProductCount
+            = categoryDAO.countActiveProductsByCategory(id);
+
+    if (activeProductCount < 0) {
+        return "error";
+    }
+
+    if (activeProductCount > 0) {
+        return "in-use";
+    }
+
+    boolean deactivated = categoryDAO.updateCategoryStatus(
+            id,
+            0
+    );
+
+    if (deactivated) {
+        return "deactivated";
+    }
+
+    /*
+     * Kiểm tra lại trong trường hợp có Product vừa được ACTIVE
+     * trong lúc xử lý request.
+     */
+    if (categoryDAO.countActiveProductsByCategory(id) > 0) {
+        return "in-use";
+    }
+
+    return "error";
+}
 
     public String restoreCategory(int id) {
         if (id <= 0) {

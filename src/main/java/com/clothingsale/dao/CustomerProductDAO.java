@@ -24,7 +24,7 @@ public class CustomerProductDAO {
         String sql = "SELECT id, category_name, slug, status "
                 + "FROM Category WHERE status = 1 ORDER BY id ASC";
 
-        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Category category = new Category();
@@ -62,9 +62,12 @@ public class CustomerProductDAO {
             String sort,
             int limit) {
 
-        List<Product> list = new ArrayList<>();
+        List<Product> products = new ArrayList<>();
         List<Object> params = new ArrayList<>();
-        String topClause = limit > 0 ? "TOP " + limit + " " : "";
+
+        String topClause = limit > 0
+                ? "TOP " + limit + " "
+                : "";
 
         StringBuilder sql = new StringBuilder(
                 "SELECT " + topClause
@@ -76,79 +79,128 @@ public class CustomerProductDAO {
                 + "MIN(pv.sale_price) AS min_sale_price, "
                 + "MAX(pv.sale_price) AS max_sale_price "
                 + "FROM Product p "
+                + "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
+                + "AND c.status = 1 "
                 + "OUTER APPLY ("
-                + " SELECT TOP 1 pi.image_url "
-                + " FROM Product_Image pi "
-                + " WHERE pi.product_id = p.id "
-                + " ORDER BY pi.is_main DESC, pi.sort_order, pi.id"
+                + "    SELECT TOP 1 pi.image_url "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = p.id "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, pi.id"
                 + ") img "
-                + "LEFT JOIN Product_Variant pv "
-                + "ON p.id = pv.product_id AND pv.status = 'ACTIVE' "
-                + "WHERE p.status <> 'DELETED' "
+                + "INNER JOIN Product_Variant pv "
+                + "ON pv.product_id = p.id "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND ISNULL(pv.list_price, 0) > 0 "
+                + "AND ISNULL(pv.sale_price, 0) > 0 "
+                + "AND pv.sale_price <= pv.list_price "
+                + "WHERE p.status = 'ACTIVE' "
         );
 
-        appendProductFilters(sql, params, keyword, categoryId, brandId, minPrice, maxPrice);
+        appendProductFilters(
+                sql,
+                params,
+                keyword,
+                categoryId,
+                brandId,
+                minPrice,
+                maxPrice
+        );
 
-        sql.append("GROUP BY p.id, p.product_name, p.slug, p.brand_id, p.category_id, ")
-                .append("p.short_description, p.long_description, p.status, ")
-                .append("p.created_at, p.updated_at, img.image_url ");
+        sql.append(
+                "GROUP BY p.id, p.product_name, p.slug, "
+                + "p.brand_id, p.category_id, "
+                + "p.short_description, p.long_description, "
+                + "p.status, p.created_at, p.updated_at, "
+                + "img.image_url "
+        );
 
         appendProductSort(sql, sort);
 
-        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps
+                = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(mapProduct(rs));
+                    products.add(mapProduct(rs));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Could not load customer products.");
+            System.err.println(
+                    "Could not load customer products."
+            );
             e.printStackTrace();
         }
 
-        return list;
+        return products;
     }
 
     public Product getProductById(int id) {
-        String sql = "SELECT p.id, p.product_name, p.short_description, "
-                + "p.long_description, p.created_at, img.image_url "
+        String sql
+                = "SELECT "
+                + "p.id, "
+                + "p.product_name, "
+                + "p.short_description, "
+                + "p.long_description, "
+                + "p.created_at, "
+                + "img.image_url "
                 + "FROM Product p "
+                + "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
+                + "AND c.status = 1 "
                 + "OUTER APPLY ("
-                + " SELECT TOP 1 pi.image_url "
-                + " FROM Product_Image pi "
-                + " WHERE pi.product_id = p.id "
-                + " ORDER BY pi.is_main DESC, pi.sort_order, pi.id"
+                + "    SELECT TOP 1 pi.image_url "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = p.id "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, "
+                + "             pi.id"
                 + ") img "
                 + "WHERE p.id = ? "
-                + "AND p.status = 'ACTIVE'";
-        Product product = null;
+                + "AND p.status = 'ACTIVE' "
+                + "AND EXISTS ("
+                + "    SELECT 1 "
+                + "    FROM Product_Variant pv "
+                + "    WHERE pv.product_id = p.id "
+                + "    AND pv.status = 'ACTIVE' "
+                + "    AND ISNULL(pv.list_price, 0) > 0 "
+                + "    AND ISNULL(pv.sale_price, 0) > 0 "
+                + "    AND pv.sale_price <= pv.list_price"
+                + ")";
 
-        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
 
-            try ( ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    product = new Product();
-                    product.setId(rs.getInt("id"));
-                    product.setProductName(rs.getString("product_name"));
-                    product.setShortDescription(rs.getString("short_description"));
-                    product.setLongDescription(rs.getString("long_description"));
-                    product.setCreatedAt(rs.getTimestamp("created_at"));
-                    product.setMainImageUrl(rs.getString("image_url"));
-                    product.setVariants(getVariantsByProductId(id));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
                 }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        return product;
+                Product product = new Product();
+                product.setId(rs.getInt("id"));
+                product.setProductName(rs.getString("product_name"));
+                product.setShortDescription(
+                        rs.getString("short_description"));
+                product.setLongDescription(
+                        rs.getString("long_description"));
+                product.setCreatedAt(rs.getTimestamp("created_at"));
+                product.setMainImageUrl(rs.getString("image_url"));
+                product.setStatus("ACTIVE");
+                product.setVariants(getVariantsByProductId(id));
+
+                return product;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public List<ProductVariant> getVariantsByProductId(int productId) {
@@ -156,15 +208,25 @@ public class CustomerProductDAO {
                 .getOrDefault(productId, Collections.emptyList());
     }
 
-    public Map<Integer, List<ProductVariant>> getVariantsByProductIds(List<Integer> productIds) {
-        Map<Integer, List<ProductVariant>> variantsByProductId = new LinkedHashMap<>();
+    public Map<Integer, List<ProductVariant>>
+            getVariantsByProductIds(List<Integer> productIds) {
+
+        Map<Integer, List<ProductVariant>> variantsByProductId
+                = new LinkedHashMap<>();
+
         List<Integer> cleanProductIds = new ArrayList<>();
 
         if (productIds != null) {
             for (Integer productId : productIds) {
-                if (productId != null && productId > 0 && !cleanProductIds.contains(productId)) {
+                if (productId != null
+                        && productId > 0
+                        && !cleanProductIds.contains(productId)) {
+
                     cleanProductIds.add(productId);
-                    variantsByProductId.put(productId, new ArrayList<>());
+                    variantsByProductId.put(
+                            productId,
+                            new ArrayList<>()
+                    );
                 }
             }
         }
@@ -173,43 +235,50 @@ public class CustomerProductDAO {
             return variantsByProductId;
         }
 
-        String sql = "SELECT pv.id, pv.product_id, pv.sku, pv.cost_price, "
-                + "pv.sale_price, pv.stock_quantity, pv.status, "
-                + "color.attribute_value AS color, "
-                + "size.attribute_value AS size "
+        String sql
+                = "SELECT "
+                + "pv.id, pv.product_id, pv.sku, "
+                + "pv.cost_price, pv.list_price, "
+                + "pv.sale_price, pv.stock_quantity, "
+                + "pv.status, pv.color, pv.size "
                 + "FROM Product_Variant pv "
-                + "OUTER APPLY ("
-                + " SELECT TOP 1 vav.attribute_value "
-                + " FROM Variant_Attribute_Value vav "
-                + " JOIN Attribute a ON vav.attribute_id = a.id "
-                + " WHERE vav.variant_id = pv.id AND a.attribute_name = 'Color'"
-                + ") color "
-                + "OUTER APPLY ("
-                + " SELECT TOP 1 vav.attribute_value "
-                + " FROM Variant_Attribute_Value vav "
-                + " JOIN Attribute a ON vav.attribute_id = a.id "
-                + " WHERE vav.variant_id = pv.id AND a.attribute_name = 'Size'"
-                + ") size "
-                + "WHERE pv.product_id IN (" + placeholders(cleanProductIds.size()) + ") "
+                + "INNER JOIN Product p "
+                + "ON p.id = pv.product_id "
+                + "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
+                + "WHERE pv.product_id IN ("
+                + placeholders(cleanProductIds.size())
+                + ") "
+                + "AND p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
                 + "AND pv.status = 'ACTIVE' "
+                + "AND ISNULL(pv.list_price, 0) > 0 "
+                + "AND ISNULL(pv.sale_price, 0) > 0 "
+                + "AND pv.sale_price <= pv.list_price "
                 + "ORDER BY pv.product_id, pv.id";
 
-        try ( Connection conn = DBConnection.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (int i = 0; i < cleanProductIds.size(); i++) {
                 ps.setInt(i + 1, cleanProductIds.get(i));
             }
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ProductVariant variant = mapVariant(rs);
+
                     variantsByProductId
-                            .computeIfAbsent(variant.getProductId(), ignored -> new ArrayList<>())
+                            .computeIfAbsent(
+                                    variant.getProductId(),
+                                    ignored -> new ArrayList<>()
+                            )
                             .add(variant);
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Could not load product variants.");
+            System.err.println(
+                    "Could not load product variants."
+            );
             e.printStackTrace();
         }
 
@@ -246,11 +315,11 @@ public class CustomerProductDAO {
                 + ") size "
                 + "WHERE pv.id=?";
 
-        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, variantId);
 
-            try ( ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     CartItem item = new CartItem();
                     item.setVariantId(rs.getInt("variant_id"));
@@ -272,63 +341,79 @@ public class CustomerProductDAO {
     }
 
     public List<String> getColors(int productId) {
-
-        List<String> list = new ArrayList<>();
+        List<String> colors = new ArrayList<>();
 
         String sql
-                = "SELECT DISTINCT vav.attribute_value "
-                + "FROM Variant_Attribute_Value vav "
-                + "JOIN Attribute a ON a.id = vav.attribute_id "
-                + "JOIN Product_Variant pv ON pv.id = vav.variant_id "
-                + "WHERE pv.product_id=? "
-                + "AND pv.status='ACTIVE' "
-                + "AND a.attribute_name='Color'";
+                = "SELECT DISTINCT pv.color "
+                + "FROM Product_Variant pv "
+                + "INNER JOIN Product p "
+                + "ON p.id = pv.product_id "
+                + "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
+                + "WHERE pv.product_id = ? "
+                + "AND p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND ISNULL(pv.list_price, 0) > 0 "
+                + "AND ISNULL(pv.sale_price, 0) > 0 "
+                + "AND pv.sale_price <= pv.list_price "
+                + "AND pv.color IS NOT NULL "
+                + "AND LTRIM(RTRIM(pv.color)) <> '' "
+                + "ORDER BY pv.color";
 
-        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                list.add(rs.getString(1));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    colors.add(rs.getString("color"));
+                }
             }
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return list;
+        return colors;
     }
 
     public List<String> getSizes(int productId) {
-
-        List<String> list = new ArrayList<>();
+        List<String> sizes = new ArrayList<>();
 
         String sql
-                = "SELECT DISTINCT vav.attribute_value "
-                + "FROM Variant_Attribute_Value vav "
-                + "JOIN Attribute a ON a.id = vav.attribute_id "
-                + "JOIN Product_Variant pv ON pv.id = vav.variant_id "
-                + "WHERE pv.product_id=? "
-                + "AND pv.status='ACTIVE' "
-                + "AND a.attribute_name='Size'";
+                = "SELECT DISTINCT pv.size "
+                + "FROM Product_Variant pv "
+                + "INNER JOIN Product p "
+                + "ON p.id = pv.product_id "
+                + "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
+                + "WHERE pv.product_id = ? "
+                + "AND p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND ISNULL(pv.list_price, 0) > 0 "
+                + "AND ISNULL(pv.sale_price, 0) > 0 "
+                + "AND pv.sale_price <= pv.list_price "
+                + "AND pv.size IS NOT NULL "
+                + "AND LTRIM(RTRIM(pv.size)) <> '' "
+                + "ORDER BY pv.size";
 
-        try ( Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                list.add(rs.getString(1));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    sizes.add(rs.getString("size"));
+                }
             }
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return list;
+        return sizes;
     }
 
     private void appendProductFilters(
@@ -394,20 +479,31 @@ public class CustomerProductDAO {
         return product;
     }
 
-    private ProductVariant mapVariant(ResultSet rs) throws SQLException {
+    private ProductVariant mapVariant(ResultSet rs)
+            throws SQLException {
+
         ProductVariant variant = new ProductVariant();
+
         variant.setId(rs.getInt("id"));
         variant.setProductId(rs.getInt("product_id"));
         variant.setSku(rs.getString("sku"));
         variant.setCostPrice(rs.getBigDecimal("cost_price"));
+        variant.setListPrice(rs.getBigDecimal("list_price"));
         variant.setSalePrice(rs.getBigDecimal("sale_price"));
-        variant.setStockQuantity(rs.getInt("stock_quantity"));
+        variant.setStockQuantity(
+                rs.getInt("stock_quantity")
+        );
         variant.setStatus(rs.getString("status"));
         variant.setColor(rs.getString("color"));
         variant.setSize(rs.getString("size"));
-        variant.setAttributeDetails(buildAttributeDetails(
-                rs.getString("color"),
-                rs.getString("size")));
+
+        variant.setAttributeDetails(
+                buildAttributeDetails(
+                        variant.getColor(),
+                        variant.getSize()
+                )
+        );
+
         return variant;
     }
 

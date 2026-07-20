@@ -1,1585 +1,1547 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="jakarta.tags.core"%>
-<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
-<fmt:setLocale value="vi_VN"/>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
+<c:set var="contextPath"
+       value="${pageContext.request.contextPath}"/>
+
+<c:set var="bestVoucherCode" value=""/>
+
+<c:if test="${not empty suggestedVouchers}">
+    <c:set var="bestVoucherCode"
+           value="${suggestedVouchers[0].code}"/>
+</c:if>
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
     <head>
-
         <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1.0">
+
         <title>Checkout</title>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
               rel="stylesheet">
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-              rel="stylesheet">
-
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
               rel="stylesheet">
-
+        
         <style>
-
-            body{
-                background:#f4f6f9;
-                font-family:'Segoe UI',sans-serif;
-            }
-
-            .page-title{
-                font-size:34px;
-                font-weight:700;
-                color:#212529;
-            }
-
-            .page-subtitle{
-                color:#6c757d;
-                margin-bottom:30px;
-            }
-
-            .card{
-                border:none;
-                border-radius:18px;
-                box-shadow:0 8px 25px rgba(0,0,0,.06);
-                overflow:hidden;
-            }
-
-            .card-header{
-                background:#fff;
-                border-bottom:1px solid #ececec;
-                padding:18px 24px;
-                font-weight:700;
-                font-size:18px;
-            }
-
-            .card-body{
-                padding:24px;
-            }
-
-            .address-item{
-
-                border:1px solid #e8e8e8;
-                border-radius:15px;
-                padding:18px;
-                transition:.25s;
-                margin-bottom:15px;
-                cursor:pointer;
-
-            }
-
-            .address-item:hover{
-
-                border-color:#0d6efd;
-                background:#f8fbff;
-
-            }
-
-            .address-item input{
-
-                margin-top:6px;
-
-            }
-
-            .recipient{
-
-                font-size:18px;
-                font-weight:700;
-
-            }
-
-            .address-info{
-
-                color:#6c757d;
-                margin-top:6px;
-
-            }
-
-            .default-badge{
-
-                background:#198754;
-                color:#fff;
-                padding:7px 12px;
-                border-radius:30px;
-                font-size:12px;
-
-            }
-
-            .btn-manage{
-
-                border-radius:12px;
-                padding:9px 18px;
-
-            }
-
-            .btn-back{
-
-                border-radius:12px;
-
-            }
-
-            .form-control{
-
-                border-radius:12px;
-
-            }
-
-            textarea{
-
-                resize:none;
-
-            }
-
-            .summary-row{
-
-                display:flex;
-                justify-content:space-between;
-                margin-bottom:12px;
-
+            body {
+                background: #f5f6f8;
             }
-
-            .total{
-
-                font-size:22px;
-                font-weight:bold;
-                color:#dc3545;
 
+            .checkout-page {
+                min-height: 700px;
             }
 
-            .btn-place{
-
-                border-radius:14px;
-                padding:12px;
-                font-size:17px;
-                font-weight:600;
-
+            .checkout-title {
+                font-size: 30px;
+                font-weight: 700;
             }
-
-            .voucher-suggestions{margin-top:14px;padding-top:14px;border-top:1px solid #eee}
-            .voucher-suggestions-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;font-weight:700}
-            .voucher-suggestions-title a{color:#c65b3d;text-decoration:none;font-weight:600}
-            .voucher-option{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px;border:1px solid #eadfd9;border-radius:10px;background:#fffaf8}
-            .voucher-option:first-of-type{border-color:#c65b3d;box-shadow:0 0 0 1px rgba(198,91,61,.08)}
-            .voucher-option-icon{width:40px;height:40px;display:grid;place-items:center;flex:0 0 auto;border-radius:8px;background:#c65b3d;color:#fff;font-size:19px}
-            .voucher-option-info{min-width:0;flex:1}.voucher-option-name{font-size:13px;font-weight:750}.voucher-option-save{font-size:12px;color:#198754}
-            .voucher-option button{border:0;background:transparent;color:#c65b3d;font-size:12px;font-weight:750}
-            .voucher-wallet-list{display:grid;gap:8px;margin-top:12px}
-            .voucher-wallet-item{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px;border:1px solid #eadfd9;border-radius:8px;background:#fff}
-            .voucher-wallet-item.inactive{border-color:#e5e7eb;background:#f8f8f8;opacity:.72}
-            .voucher-wallet-value{display:grid;place-items:center;min-height:52px;border-radius:6px;background:#c65b3d;color:#fff;font-size:12px;font-weight:800;text-align:center;line-height:1.2}
-            .voucher-wallet-item.inactive .voucher-wallet-value{background:#9ca3af}
-            .voucher-wallet-main{min-width:0}
-            .voucher-wallet-name{margin:0;color:#25211e;font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-            .voucher-wallet-meta{margin:2px 0 0;color:#6f665e;font-size:12px;line-height:1.35}
-            .voucher-wallet-expiry{margin:2px 0 0;color:#dc2626;font-size:12px;font-weight:700}
-            .voucher-wallet-action{border:0;background:transparent;color:#c65b3d;font-size:12px;font-weight:800;white-space:nowrap}
-            .voucher-wallet-status{color:#6f665e;font-size:12px;font-weight:800;white-space:nowrap}
-
-            .table td{
 
-                vertical-align:middle;
-
+            .checkout-section {
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 14px;
+                padding: 24px;
+                margin-bottom: 22px;
             }
 
-            /* Shopee-style checkout layout */
-            :root{
-                --checkout-ink:#25211e;
-                --checkout-muted:#6f665e;
-                --checkout-primary:#c65b3d;
-                --checkout-border:#e5e5e5;
-                --checkout-page:#f5f5f5;
+            .section-title {
+                font-size: 19px;
+                font-weight: 700;
+                margin-bottom: 18px;
             }
 
-            body{
-                background:var(--checkout-page);
-                color:var(--checkout-ink);
+            .address-option {
+                display: block;
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+                padding: 16px;
+                cursor: pointer;
+                transition: 0.2s ease;
             }
 
-            .checkout-topbar{
-                min-height:34px;
-                background:#c65b3d;
-                color:#fff;
-                font-size:12px;
+            .address-option:hover {
+                border-color: #999fa6;
             }
 
-            .checkout-topbar-inner{
-                max-width:1200px;
-                min-height:34px;
-                margin:0 auto;
-                padding:0 4px;
-                display:flex;
-                align-items:center;
-                justify-content:flex-start;
-                gap:12px;
+            .address-option.selected {
+                border: 2px solid #212529;
+                background: #fafafa;
             }
 
-            .checkout-topbar-group{
-                display:flex;
-                align-items:center;
-                gap:9px;
-                white-space:nowrap;
+            .address-option input[type="radio"] {
+                margin-top: 5px;
             }
 
-            .checkout-topbar-group:nth-child(2){
-                margin-left:auto;
+            .recipient-name {
+                font-weight: 700;
             }
 
-            .account-menu{
-                position:relative;
+            .address-text {
+                color: #555d65;
+                line-height: 1.55;
             }
 
-            .account-menu summary{
-                display:flex;
-                align-items:center;
-                gap:6px;
-                cursor:pointer;
-                list-style:none;
+            .product-item {
+                display: flex;
+                gap: 14px;
+                padding: 15px 0;
+                border-bottom: 1px solid #edf0f2;
             }
 
-            .account-menu summary::-webkit-details-marker{
-                display:none;
+            .product-item:last-child {
+                border-bottom: none;
             }
 
-            .account-avatar{
-                width:20px;
-                height:20px;
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                border-radius:50%;
-                background:#087f68;
-                color:#fff;
-                font-size:11px;
-                font-weight:700;
+            .product-image {
+                width: 75px;
+                height: 90px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 1px solid #e3e5e8;
+                background: #f8f9fa;
             }
 
-            .account-dropdown{
-                position:absolute;
-                z-index:20;
-                top:calc(100% + 10px);
-                right:0;
-                width:170px;
-                padding:8px 0;
-                background:#fff;
-                border:1px solid var(--checkout-border);
-                border-radius:6px;
-                box-shadow:0 8px 22px rgba(37,33,30,.16);
+            .product-name {
+                font-weight: 600;
             }
 
-            .account-dropdown a{
-                display:block;
-                padding:9px 14px;
-                color:var(--checkout-ink);
-                font-size:13px;
-                text-decoration:none;
+            .product-variant {
+                color: #6c757d;
+                font-size: 14px;
             }
 
-            .account-dropdown a:hover{
-                background:#fff3ef;
-                color:var(--checkout-primary);
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 15px;
+                margin-bottom: 12px;
             }
 
-            .account-dropdown hr{
-                margin:5px 0;
-                border:0;
-                border-top:1px solid var(--checkout-border);
+            .summary-total {
+                border-top: 1px solid #dee2e6;
+                padding-top: 16px;
+                margin-top: 16px;
+                font-size: 20px;
+                font-weight: 700;
             }
 
-            .checkout-brand{
-                min-height:100px;
-                background:#fff;
-                border-bottom:1px solid var(--checkout-border);
+            .sticky-summary {
+                position: sticky;
+                top: 20px;
             }
 
-            .checkout-brand-inner{
-                max-width:1200px;
-                min-height:100px;
-                margin:0 auto;
-                display:flex;
-                align-items:center;
-                gap:14px;
+            .payment-option,
+            .shipping-option {
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+                padding: 15px;
+                cursor: pointer;
             }
 
-            .checkout-logo{
-                display:flex;
-                align-items:center;
-                gap:8px;
-                color:var(--checkout-primary);
-                font-size:27px;
-                text-decoration:none;
+            .payment-option:has(input:checked),
+            .shipping-option:has(input:checked) {
+                border: 2px solid #212529;
+                background: #fafafa;
             }
 
-            .checkout-logo i{
-                font-size:32px;
+            .voucher-box {
+                background: #f8f9fa;
+                border-radius: 10px;
+                padding: 16px;
             }
+            /* ================= PRODUCT IMAGE ================= */
 
-            .checkout-brand-title{
-                padding-left:14px;
-                border-left:1px solid var(--checkout-primary);
-                color:var(--checkout-primary);
-                font-size:20px;
+            .checkout-product-image-box {
+                width: 92px;
+                height: 112px;
+                flex: 0 0 92px;
+                border: 1px solid #e4e7eb;
+                border-radius: 10px;
+                overflow: hidden;
+                background: #f7f7f7;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
-            .checkout-search{
-                display:flex;
-                flex:1;
-                max-width:700px;
-                height:40px;
-                margin-left:28px;
+            .checkout-product-image {
+                width: 100%;
+                height: 100%;
+                display: block;
+                object-fit: cover;
             }
 
-            .checkout-search input{
-                flex:1;
-                min-width:0;
-                border:2px solid var(--checkout-primary);
-                border-right:0;
-                padding:0 12px;
-                color:var(--checkout-ink);
+            .checkout-image-fallback {
+                width: 100%;
+                height: 100%;
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px;
+                color: #9ca3af;
+                text-align: center;
+                font-size: 12px;
             }
 
-            .checkout-search button{
-                width:62px;
-                border:0;
-                background:var(--checkout-primary);
-                color:#fff;
+            .checkout-image-fallback i {
+                font-size: 25px;
+                margin-bottom: 7px;
             }
 
-            .checkout-cart-link{
-                position:relative;
-                margin-left:auto;
-                color:var(--checkout-primary);
-                font-size:28px;
-                text-decoration:none;
+            .checkout-image-fallback.show {
+                display: flex;
             }
 
-            .checkout-cart-count{
-                position:absolute;
-                top:-5px;
-                right:-12px;
-                min-width:18px;
-                height:18px;
-                padding:1px 5px;
-                border-radius:10px;
-                background:#fff;
-                color:var(--checkout-primary);
-                font-size:11px;
-                text-align:center;
-            }
 
-            .checkout-category-row{
-                display:none;
-                justify-content:center;
-                gap:20px;
-                overflow:hidden;
-                color:#fff;
-                font-size:12px;
-                white-space:nowrap;
-            }
+            /* ================= VOUCHER SUMMARY ================= */
 
-            .checkout-shell{
-                width:calc(100% - 32px);
-                max-width:1240px;
-                margin:0 auto;
-                padding:32px 0 56px!important;
+            .checkout-voucher-box {
+                border: 1px solid #e5e7eb;
+                border-radius: 14px;
+                background: #fff;
+                overflow: hidden;
             }
 
-            .checkout-intro{
-                display:none!important;
+            .checkout-voucher-header {
+                padding: 20px 22px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 15px;
             }
 
-            .checkout-layout{
-                display:grid;
-                grid-template-columns:minmax(0, 1.15fr) minmax(340px, .85fr);
-                align-items:start;
-                gap:20px;
-                margin:0!important;
+            .checkout-voucher-title {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #25282c;
+                font-size: 19px;
+                font-weight: 700;
             }
 
-            .checkout-main{
-                display:contents;
+            .checkout-voucher-title i {
+                color: #ee4d2d;
             }
 
-            .checkout-layout > .col-lg-8{
-                grid-column:1;
-                width:auto;
-                max-width:none;
-                padding:0!important;
+            .checkout-voucher-selected {
+                margin: 0 22px 20px;
+                padding: 14px 16px;
+                border: 1px solid #f6c6ba;
+                border-radius: 9px;
+                background: #fff8f6;
             }
 
-            .checkout-layout > .checkout-summary{
-                grid-column:2;
-                grid-row:1;
-                width:auto;
-                padding:0!important;
+            .checkout-voucher-selected-title {
+                color: #ee4d2d;
+                font-weight: 700;
             }
 
-            .checkout-page .card{
-                border:1px solid var(--checkout-border);
-                border-radius:14px;
-                box-shadow:0 14px 36px rgba(74,54,39,.08);
+            .checkout-voucher-selected-code {
+                margin-top: 3px;
+                color: #6b7280;
+                font-size: 13px;
             }
 
-            .checkout-page .card-header{
-                padding:17px 22px;
-                border-bottom:1px solid var(--checkout-border);
-                background:#fff;
-                color:var(--checkout-ink);
-                font-size:16px;
-                font-weight:800;
+            .btn-select-voucher {
+                border: 1px solid #ee4d2d;
+                background: #fff;
+                color: #ee4d2d;
+                white-space: nowrap;
             }
 
-            .checkout-page .card-header i{
-                color:var(--checkout-primary)!important;
+            .btn-select-voucher:hover,
+            .btn-select-voucher:focus {
+                border-color: #d93618;
+                background: #fff4f1;
+                color: #d93618;
             }
 
-            .checkout-page .card-body{
-                padding:0;
-            }
 
-            .address-card .card-header{
-                border-top:3px solid var(--checkout-primary);
-                border-radius:13px 13px 0 0;
-            }
+            /* ================= VOUCHER MODAL ================= */
 
-            .address-item{
-                margin:0;
-                padding:17px 22px;
-                border:0;
-                border-bottom:1px solid var(--checkout-border);
-                border-radius:0;
+            .voucher-modal-content {
+                border: 0;
+                border-radius: 14px;
+                overflow: hidden;
             }
 
-            .address-item:last-child{
-                border-bottom:0;
+            .voucher-modal-header {
+                padding: 20px 24px;
+                border-bottom: 1px solid #eceff2;
             }
 
-            .address-item .form-check{
-                display:flex;
-                align-items:flex-start;
-                gap:10px;
+            .voucher-modal-body {
+                padding: 18px;
+                max-height: 70vh;
+                overflow-y: auto;
+                background: #f5f5f5;
             }
 
-            .address-item .form-check-input{
-                float:none;
-                flex:0 0 auto;
-                margin:4px 0 0;
+            .voucher-modal-section-title {
+                margin-bottom: 12px;
+                color: #4b5563;
+                font-size: 14px;
+                font-weight: 700;
+                text-transform: uppercase;
             }
 
-            .address-item .ms-4{
-                min-width:0;
-                flex:1;
-                margin-left:0!important;
+            .voucher-item {
+                position: relative;
+                display: flex;
+                min-height: 126px;
+                margin-bottom: 14px;
+                border: 1px solid #e4e7eb;
+                border-radius: 8px;
+                background: #fff;
+                overflow: hidden;
+                transition: 0.15s ease;
             }
 
-            .address-item:hover{
-                border-color:var(--checkout-border);
-                background:#fffaf8;
+            .voucher-item:hover {
+                border-color: #ee4d2d;
+                box-shadow: 0 4px 14px rgba(238, 77, 45, 0.09);
             }
 
-            .recipient{
-                color:var(--checkout-ink);
-                font-size:16px;
+            .voucher-item.applied {
+                border: 2px solid #ee4d2d;
             }
 
-            .address-info{
-                display:inline-block;
-                margin:5px 18px 0 0;
-                color:var(--checkout-muted);
-                font-size:14px;
+            .voucher-item.disabled {
+                opacity: 0.62;
+                background: #f4f4f4;
             }
 
-            .default-badge{
-                padding:3px 6px;
-                border:1px solid var(--checkout-primary);
-                border-radius:0;
-                background:#fff;
-                color:var(--checkout-primary);
-                font-size:11px;
+            .voucher-left {
+                position: relative;
+                width: 116px;
+                min-width: 116px;
+                padding: 14px 10px;
+                background: linear-gradient(145deg, #ff6d4a, #ee4d2d);
+                color: #fff;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
             }
 
-            .btn-manage{
-                display:inline-flex;
-                align-items:center;
-                gap:6px;
-                min-height:34px;
-                padding:0 11px;
-                border:1px solid #e0b9a6;
-                border-radius:8px;
-                color:var(--checkout-primary);
-                background:#fff;
-                font-weight:700;
+            .voucher-left::before,
+            .voucher-left::after {
+                content: "";
+                position: absolute;
+                right: -7px;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: #f5f5f5;
             }
 
-            .btn-manage:hover,
-            .btn-manage:focus-visible{
-                border-color:var(--checkout-primary);
-                color:#fff;
-                background:var(--checkout-primary);
+            .voucher-left::before {
+                top: -7px;
             }
 
-            .payment-card .card-body{
-                padding:22px;
+            .voucher-left::after {
+                bottom: -7px;
             }
 
-            .checkout-summary .card-header{
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
+            .voucher-left-icon {
+                margin-bottom: 7px;
+                font-size: 26px;
             }
 
-            .checkout-summary .card-body > .d-flex{
-                min-height:104px;
-                margin:0!important;
-                padding:16px 22px!important;
-                border-bottom:1px solid var(--checkout-border)!important;
+            .voucher-left-value {
+                font-size: 18px;
+                font-weight: 800;
+                line-height: 1.2;
             }
 
-            .checkout-summary .card-body > .d-flex img{
-                width:64px!important;
-                height:64px!important;
-                border-radius:0!important;
-                object-fit:cover;
+            .voucher-left-label {
+                margin-top: 4px;
+                font-size: 11px;
+                opacity: 0.95;
             }
 
-            .checkout-summary .card-body > .d-flex .ms-3{
-                min-width:0;
+            .voucher-main {
+                flex: 1;
+                min-width: 0;
+                padding: 13px 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 14px;
             }
 
-            .checkout-summary .card-body > .d-flex .fw-bold{
-                max-width:380px;
-                overflow:hidden;
-                text-overflow:ellipsis;
-                white-space:nowrap;
-                color:var(--checkout-ink);
-                font-weight:400!important;
+            .voucher-information {
+                min-width: 0;
             }
 
-            .checkout-summary .card-body > .d-flex .text-danger{
-                color:var(--checkout-primary)!important;
+            .voucher-name {
+                color: #24272b;
+                font-size: 15px;
+                font-weight: 700;
             }
 
-            .checkout-summary .card-body > hr{
-                display:none;
+            .voucher-code {
+                display: inline-block;
+                margin-top: 4px;
+                padding: 2px 7px;
+                border-radius: 4px;
+                background: #fff1ed;
+                color: #ee4d2d;
+                font-size: 12px;
+                font-weight: 700;
             }
 
-            .checkout-summary .card-body > .mb-4{
-                margin:0!important;
-                padding:16px 22px;
-                border-bottom:1px solid var(--checkout-border);
+            .voucher-condition {
+                margin-top: 7px;
+                color: #606770;
+                font-size: 13px;
+                line-height: 1.5;
             }
 
-            .checkout-summary .summary-row{
-                margin:0;
-                padding:6px 22px;
-                color:var(--checkout-muted);
+            .voucher-expiry {
+                margin-top: 5px;
+                color: #8a919a;
+                font-size: 12px;
             }
 
-            .checkout-summary .summary-row.total{
-                padding:16px 22px 22px;
-                color:var(--checkout-muted);
+            .voucher-action {
+                min-width: 90px;
+                text-align: right;
             }
 
-            .checkout-summary .summary-row.total span:last-child{
-                color:var(--checkout-primary);
-                font-size:25px;
-                font-weight:500;
+            .voucher-best-label {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 2;
+                padding: 3px 9px;
+                border-bottom-right-radius: 7px;
+                background: #ffbf00;
+                color: #3d2e00;
+                font-size: 11px;
+                font-weight: 800;
             }
 
-            .checkout-page .form-control,
-            .checkout-page .form-select{
-                border:1px solid var(--checkout-border);
-                border-radius:8px;
+            .voucher-status-label {
+                margin-bottom: 7px;
+                color: #8a919a;
+                font-size: 12px;
             }
 
-            .checkout-page .form-control:focus,
-            .checkout-page .form-select:focus{
-                border-color:var(--checkout-primary);
-                box-shadow:0 0 0 .2rem rgba(198,91,61,.12);
+            .btn-apply-voucher {
+                min-width: 78px;
+                border-color: #ee4d2d;
+                background: #ee4d2d;
+                color: #fff;
             }
 
-            .checkout-page .btn-primary,
-            .checkout-page .btn-success,
-            .checkout-page .btn-place{
-                border:0;
-                border-radius:8px;
-                background:var(--checkout-primary);
-                color:#fff;
+            .btn-apply-voucher:hover {
+                border-color: #d93618;
+                background: #d93618;
+                color: #fff;
             }
 
-            .checkout-page .btn-primary:hover,
-            .checkout-page .btn-success:hover,
-            .checkout-page .btn-place:hover{
-                background:#a9462d;
-                color:#fff;
+            .btn-apply-voucher:disabled {
+                border-color: #c9cdd2;
+                background: #c9cdd2;
+                color: #fff;
             }
 
-            .btn-place{
-                width:100%;
-                min-height:46px;
-                min-width:0;
-                font-size:15px;
+            .btn-remove-voucher {
+                border: 0;
+                background: transparent;
+                color: #ee4d2d;
+                font-size: 13px;
+                text-decoration: underline;
             }
 
-            @media(max-width:991px){
-                .checkout-layout{
-                    grid-template-columns:1fr;
+            @media (max-width: 575.98px) {
+                .voucher-left {
+                    width: 92px;
+                    min-width: 92px;
                 }
 
-                .checkout-layout > .col-lg-8,
-                .checkout-layout > .checkout-summary{
-                    grid-column:1;
-                    grid-row:auto;
-                }
-            }
-
-            @media(max-width:767px){
-                .checkout-topbar-inner{
-                    padding:0 16px;
+                .voucher-main {
+                    align-items: flex-start;
+                    flex-direction: column;
                 }
 
-                .checkout-topbar-group:nth-child(2){
-                    display:none;
-                }
-
-                .checkout-account-menu{
-                    display:flex;
-                    margin-left:auto;
-                }
-
-                .checkout-brand-inner{
-                    min-height:82px;
-                    padding:0 16px;
-                }
-
-                .checkout-logo{
-                    font-size:22px;
-                }
-
-                .checkout-brand-title{
-                    font-size:17px;
-                }
-
-                .checkout-search{
-                    margin-left:8px;
-                }
-
-                .checkout-category-row{
-                    display:none;
-                }
-
-                .checkout-page .card-header,
-                .address-item,
-                .payment-card .card-body{
-                    padding-left:16px;
-                    padding-right:16px;
-                }
-
-                .checkout-summary .card-body > .d-flex{
-                    padding-left:16px!important;
-                    padding-right:16px!important;
-                }
-
-                .checkout-summary .summary-row{
-                    padding-left:16px;
-                    padding-right:16px;
-                }
-
-                .checkout-shell{
-                    width:calc(100% - 20px);
-                    padding-top:22px!important;
-                }
-
-                .address-info{
-                    display:block;
+                .voucher-action {
+                    width: 100%;
+                    text-align: left;
                 }
             }
-
-            @media(max-width:575px){
-                .checkout-brand-inner{
-                    min-height:124px;
-                    padding:12px 16px;
-                    flex-wrap:wrap;
-                }
-
-                .checkout-search{
-                    flex:0 0 100%;
-                    max-width:none;
-                    margin:0;
-                    order:3;
-                }
-            }
-
-            /* Home-aligned checkout refresh */
-            :root{
-                --checkout-ink:#1f2937;
-                --checkout-muted:#61708a;
-                --checkout-primary:#8AAAE5;
-                --checkout-primary-dark:#5f84d6;
-                --checkout-border:#d7e1f5;
-                --checkout-page:#eef4ff;
-            }
-
-            body.checkout-page{
-                background:
-                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
-                    linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
-                color:var(--checkout-ink);
-            }
-
-            .checkout-shell{
-                max-width:1220px;
-                padding-top:30px!important;
-            }
-
-            .checkout-page-title{
-                min-height:96px;
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:18px;
-                margin-bottom:18px;
-                padding:22px 24px;
-                border:1px solid rgba(138,170,229,.38);
-                border-radius:8px;
-                background:rgba(255,255,255,.96);
-                box-shadow:0 18px 42px rgba(95,132,214,.14);
-            }
-
-            .checkout-page-kicker{
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                margin-bottom:7px;
-                color:#5f84d6;
-                font-size:.8rem;
-                font-weight:900;
-                letter-spacing:.08em;
-                text-transform:uppercase;
-            }
-
-            .checkout-page-title h1{
-                margin:0;
-                color:var(--checkout-ink);
-                font-size:1.65rem;
-                font-weight:850;
-            }
-
-            .checkout-title-link{
-                flex:0 0 auto;
-                color:#365b9f;
-                font-weight:800;
-                text-decoration:none;
-            }
-
-            .checkout-title-link:hover{
-                color:#5f84d6;
-                text-decoration:underline;
-                text-underline-offset:4px;
-            }
-
-            .checkout-page .card{
-                border:1px solid rgba(138,170,229,.34);
-                border-radius:8px;
-                background:#fff;
-                box-shadow:0 12px 32px rgba(95,132,214,.12);
-            }
-
-            .checkout-page .card-header{
-                min-height:62px;
-                display:flex;
-                align-items:center;
-                gap:10px;
-                border-bottom:1px solid var(--checkout-border);
-                color:var(--checkout-ink);
-                font-weight:850;
-            }
-
-            .checkout-page .card-header i{
-                color:#5f84d6!important;
-            }
-
-            .address-card .card-header{
-                border-top:0;
-                border-radius:8px 8px 0 0;
-            }
-
-            .address-item:hover{
-                background:#eef4ff;
-            }
-
-            .address-item .form-check-input,
-            .checkout-page .form-check-input{
-                accent-color:#5f84d6;
-            }
-
-            .checkout-page .form-check-input:checked{
-                background-color:#5f84d6;
-                border-color:#5f84d6;
-            }
-
-            .recipient{
-                color:var(--checkout-ink);
-            }
-
-            .address-info,
-            .checkout-summary .summary-row,
-            .voucher-wallet-meta{
-                color:var(--checkout-muted);
-            }
-
-            .default-badge{
-                border-color:#8AAAE5;
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                gap:6px;
-                min-height:28px;
-                padding:5px 10px;
-                color:#365b9f;
-                background:#eef4ff;
-                border-radius:8px;
-                font-weight:800;
-                line-height:1;
-                white-space:nowrap;
-            }
-
-            .default-badge i{
-                flex:0 0 auto;
-                font-size:13px;
-                line-height:1;
-            }
-
-            .address-item .d-flex.justify-content-between{
-                align-items:flex-start;
-                gap:16px;
-            }
-
-            .address-item .d-flex.justify-content-between > div:first-child{
-                min-width:0;
-                flex:1 1 auto;
-            }
-
-            .address-item .d-flex.justify-content-between > div:last-child{
-                flex:0 0 auto;
-                display:flex;
-                justify-content:flex-end;
-                padding-top:1px;
-            }
-
-            .btn-manage{
-                border-color:#9bb4e8;
-                color:#365b9f;
-                background:#fff;
-                font-weight:800;
-            }
-
-            .btn-manage:hover,
-            .btn-manage:focus-visible{
-                border-color:#5f84d6;
-                background:#5f84d6;
-                color:#fff;
-            }
-
-            .checkout-page .form-control,
-            .checkout-page .form-select{
-                border-color:var(--checkout-border);
-                border-radius:8px;
-                background:#fff;
-                color:var(--checkout-ink);
-            }
-
-            .checkout-page .form-control:focus,
-            .checkout-page .form-select:focus{
-                border-color:rgba(138,170,229,.86);
-                box-shadow:0 0 0 .22rem rgba(138,170,229,.20);
-            }
-
-            .checkout-page .btn-primary,
-            .checkout-page .btn-success,
-            .checkout-page .btn-place{
-                border:0;
-                background:#8AAAE5;
-                color:#fff;
-                box-shadow:0 12px 26px rgba(95,132,214,.22);
-                font-weight:850;
-            }
-
-            .checkout-page .btn-primary:hover,
-            .checkout-page .btn-success:hover,
-            .checkout-page .btn-place:hover{
-                background:#5f84d6;
-                color:#fff;
-            }
-
-            .checkout-summary .card-body > .d-flex{
-                border-bottom:1px solid var(--checkout-border)!important;
-            }
-
-            .checkout-summary .card-body > .d-flex img{
-                border-radius:8px!important;
-                border-color:var(--checkout-border)!important;
-                background:#eef4ff;
-            }
-
-            .checkout-summary .card-body > .d-flex .fw-bold{
-                color:var(--checkout-ink);
-                font-weight:800!important;
-            }
-
-            .checkout-summary .card-body > .d-flex .text-danger,
-            .checkout-summary .summary-row.total span:last-child{
-                color:#365b9f!important;
-            }
-
-            .voucher-suggestions{
-                border-top-color:var(--checkout-border);
-            }
-
-            .voucher-suggestions-title a,
-            .voucher-option button,
-            .voucher-wallet-action{
-                color:#365b9f;
-            }
-
-            .voucher-option,
-            .voucher-wallet-item{
-                border-color:var(--checkout-border);
-                background:#fff;
-            }
-
-            .voucher-option:first-of-type{
-                border-color:#8AAAE5;
-                box-shadow:0 0 0 1px rgba(138,170,229,.18);
-            }
-
-            .voucher-option-icon,
-            .voucher-wallet-value{
-                background:#8AAAE5;
-                color:#fff;
-            }
-
-            .voucher-wallet-name{
-                color:var(--checkout-ink);
-            }
-
-            .voucher-wallet-expiry{
-                color:#5f84d6;
-            }
-
-            @media(max-width:991px){
-                .checkout-page-title{
-                    align-items:flex-start;
-                    flex-direction:column;
-                }
-            }
-
         </style>
-
     </head>
 
-    <body class="checkout-page">
+    <body>
 
         <jsp:include page="/view/customer/common/header.jsp"/>
 
-        <div class="container checkout-shell py-5">
+        <c:set var="contextPath"
+               value="${pageContext.request.contextPath}"/>
 
-            <div class="checkout-page-title">
-                <div>
-                    <span class="checkout-page-kicker"><i class="bi bi-credit-card-fill"></i> Checkout</span>
-                    <h1>Review and place your order</h1>
-                </div>
-                <a href="${pageContext.request.contextPath}/cart" class="checkout-title-link">Back to cart</a>
+        <%-- Tìm ID địa chỉ mặc định --%>
+        <c:set var="defaultAddressId" value=""/>
+
+        <c:forEach items="${addresses}" var="address">
+            <c:if test="${address.isDefault()}">
+                <c:set var="defaultAddressId"
+                       value="${address.id}"/>
+            </c:if>
+        </c:forEach>
+
+        <div class="container checkout-page py-5">
+
+            <div class="mb-4">
+                <h1 class="checkout-title mb-1">Checkout</h1>
+
+                <p class="text-muted mb-0">
+                    Review your order and delivery information.
+                </p>
             </div>
 
-            <div class="checkout-intro d-flex justify-content-between align-items-center mb-4">
-
-                <div>
-
-                    <div class="page-title">
-
-                        Checkout
-
-                    </div>
-
-                    <div class="page-subtitle">
-
-                        Review your shipping information before placing the order.
-
-                    </div>
-
+            <c:if test="${param.error == 'invalid_address'}">
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    Please select a valid delivery address.
                 </div>
+            </c:if>
 
-            </div>
+            <c:if test="${param.error == 'invalid_checkout'}">
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    Checkout information is invalid.
+                    Please check your order and try again.
+                </div>
+            </c:if>
 
-            <form method="post"
-                  action="${pageContext.request.contextPath}/customer/checkout">
+            <c:if test="${not empty voucherError}">
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-ticket me-2"></i>
+                    <c:out value="${voucherError}"/>
+                </div>
+            </c:if>
 
-                <div class="row checkout-layout">
+            <div class="row g-4">
 
-                    <!-- ================= LEFT ================= -->
+                <div class="col-lg-8">
 
-                    <div class="col-lg-8">
+                    <%-- Địa chỉ giao hàng --%>
+                    <div class="checkout-section">
 
-                        <!-- SHIPPING ADDRESS -->
+                        <div class="d-flex justify-content-between
+                             align-items-center gap-3 mb-3">
 
-                        <div class="card address-card mb-4">
+                            <h2 class="section-title mb-0">
+                                <i class="fa-solid fa-location-dot me-2"></i>
+                                Delivery Address
+                            </h2>
 
-                            <div class="card-header">
+                            <a href="${contextPath}/customer/address?from=checkout"
+                               class="btn btn-outline-dark btn-sm">
 
-                                <div class="d-flex justify-content-between align-items-center">
+                                Manage Addresses
+                            </a>
+                        </div>
 
-                                    <span>
+                        <c:choose>
+                            <c:when test="${empty addresses}">
 
-                                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                                <div class="alert alert-warning mb-0">
 
-                                        Shipping Address
+                                    <i class="fa-solid
+                                       fa-triangle-exclamation
+                                       me-2">
+                                    </i>
 
-                                    </span>
+                                    You do not have a delivery address.
 
-                                    <a href="${pageContext.request.contextPath}/customer/address?from=checkout"
-                                       class="btn btn-outline-primary btn-manage">
+                                    <a href="${contextPath}/customer/address?from=checkout"
+                                       class="alert-link">
 
-                                        <i class="bi bi-pencil-square"></i>
-
-                                        Change
-
+                                        Add an address
                                     </a>
-
+                                    before placing the order.
                                 </div>
+                            </c:when>
 
-                            </div>
+                            <c:otherwise>
 
-                            <div class="card-body">
+                                <div class="row g-3">
 
-                                <c:forEach items="${addresses}" var="a" varStatus="status">
+                                    <c:forEach items="${addresses}"
+                                               var="address"
+                                               varStatus="status">
 
-                                    <label class="address-item d-block">
+                                        <c:set var="isSelectedAddress"
+                                               value="${(not empty defaultAddressId
+                                                        and address.id == defaultAddressId)
+                                                        or
+                                                        (empty defaultAddressId
+                                                        and status.first)}"/>
 
-                                        <div class="form-check">
+                                        <div class="col-12">
 
-                                            <input class="form-check-input"
-                                                   type="radio"
-                                                   name="addressId"
-                                                   value="${a.id}"
+                                            <label class="address-option
+                                                   ${isSelectedAddress
+                                                     ? 'selected'
+                                                     : ''}">
 
-                                                   <c:if test="${a.isDefault() || status.first}">
-                                                       checked
-                                                   </c:if>
-                                                   >
+                                                <div class="d-flex gap-3">
 
-                                            <div class="ms-4">
+                                                    <input type="radio"
+                                                           name="addressId"
+                                                           value="${address.id}"
+                                                           form="checkoutForm"
+                                                           class="form-check-input address-radio"
+                                                           <c:if test="${isSelectedAddress}">
+                                                               checked
+                                                           </c:if>
+                                                           required>
 
-                                                <div class="d-flex justify-content-between">
+                                                    <div class="flex-grow-1">
 
-                                                    <div>
+                                                        <div class="d-flex
+                                                             flex-wrap
+                                                             justify-content-between
+                                                             align-items-center
+                                                             gap-2">
 
-                                                        <div class="recipient">
+                                                            <div>
+                                                                <span class="recipient-name">
+                                                                    <c:out value="${address.recipientName}"/>
+                                                                </span>
 
-                                                            <i class="bi bi-person-circle"></i>
+                                                                <span class="text-muted ms-2">
+                                                                    <c:out value="${address.recipientPhone}"/>
+                                                                </span>
+                                                            </div>
 
-                                                            ${a.recipientName}
+                                                            <c:if test="${address.isDefault()}">
 
+                                                                <span class="badge bg-success">
+                                                                    Default
+                                                                </span>
+                                                            </c:if>
                                                         </div>
 
-                                                        <div class="address-info">
+                                                        <div class="address-text mt-2">
 
-                                                            <i class="bi bi-telephone-fill"></i>
+                                                            <c:out value="${address.addressDetail}"/>
 
-                                                            ${a.recipientPhone}
-
-                                                        </div>
-
-                                                        <div class="address-info">
-
-                                                            <i class="bi bi-house-door-fill"></i>
-
-                                                            ${a.addressDetail}
-
-                                                        </div>
-
-                                                        <div class="address-info">
-
-                                                            <i class="bi bi-geo-alt-fill"></i>
-
-                                                            <c:if test="${not empty a.wardName}">
-                                                                ${a.wardName},
-                                                                ${a.districtName},
-                                                                ${a.provinceName}
+                                                            <c:if test="${not empty address.wardName}">
+                                                                ,
+                                                                <c:out value="${address.wardName}"/>
                                                             </c:if>
 
+                                                            <%-- Huyện chỉ có ở địa chỉ cũ --%>
+                                                            <c:if test="${not empty address.districtName}">
+                                                                ,
+                                                                <c:out value="${address.districtName}"/>
+                                                            </c:if>
+
+                                                            <c:if test="${not empty address.provinceName}">
+                                                                ,
+                                                                <c:out value="${address.provinceName}"/>
+                                                            </c:if>
                                                         </div>
-
                                                     </div>
-
-                                                    <div>
-
-                                                        <c:if test="${a.isDefault()}">
-
-                                                            <span class="default-badge">
-
-                                                                <i class="bi bi-check-circle-fill"></i>
-
-                                                                Default
-
-                                                            </span>
-
-                                                        </c:if>
-
-                                                    </div>
-
                                                 </div>
-
-                                            </div>
-
+                                            </label>
                                         </div>
+                                    </c:forEach>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
 
-                                    </label>
+                    <%-- Phương thức vận chuyển --%>
+                    <div class="checkout-section">
 
-                                </c:forEach>
+                        <h2 class="section-title">
+                            <i class="fa-solid fa-truck me-2"></i>
+                            Shipping Method
+                        </h2>
 
-                            </div>
+                        <div class="row g-3">
 
-                        </div>
+                            <div class="col-md-6">
 
-                        <!-- PAYMENT & SHIPPING -->
+                                <label class="shipping-option d-block">
 
-                        <div class="card payment-card mb-4">
+                                    <div class="d-flex gap-3">
 
-                            <div class="card-header">
-
-                                <i class="bi bi-credit-card-fill text-primary"></i>
-
-                                Payment & Shipping
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <!-- PAYMENT -->
-
-                                <div class="mb-4">
-
-                                    <label class="form-label fw-semibold">
-
-                                        Payment Method
-
-                                    </label>
-
-                                    <div class="form-check">
-
-                                        <input class="form-check-input"
-                                               type="radio"
-                                               name="paymentMethod"
-                                               value="COD"
+                                        <input type="radio"
+                                               name="carrierName"
+                                               value="GHN"
+                                               form="checkoutForm"
+                                               class="form-check-input"
                                                checked>
 
-                                        <label class="form-check-label">
+                                        <div>
+                                            <div class="fw-semibold">
+                                                Economical Delivery
+                                            </div>
 
-                                            Cash On Delivery
-
-                                        </label>
-
+                                            <small class="text-muted">
+                                                Standard delivery service
+                                            </small>
+                                        </div>
                                     </div>
-
-                                    <div class="form-check">
-
-                                        <input class="form-check-input"
-                                               type="radio"
-                                               name="paymentMethod"
-                                               value="VNPAY">
-
-                                        <label class="form-check-label">
-
-                                            VNPay Online
-
-                                        </label>
-
-                                    </div>
-
-                                </div>
-
-                                <!-- SHIPPING -->
-
-                                <div class="mb-4">
-
-                                    <label class="form-label fw-semibold">
-
-                                        Shipping Method
-
-                                    </label>
-
-                                    <select class="form-select"
-                                            name="carrierName">
-                                        <option value="GHTK">
-
-                                            Economical Delivery (GHTK)
-
-                                        </option>
-
-                                        <option value="STORE">
-
-                                            Self Delivery
-
-                                        </option>
-
-                                    </select>
-
-                                </div>
-
-                                <!-- ORDER NOTE -->
-
-                                <div class="mb-4">
-
-                                    <label class="form-label fw-semibold">
-
-                                        Order Note
-
-                                    </label>
-
-                                    <textarea class="form-control"
-                                              rows="4"
-                                              name="note"
-                                              placeholder="Write something for the shop..."></textarea>
-
-                                </div>
-
-                                <!-- PLACE ORDER -->
-
-                                <div class="d-grid">
-
-                                    <button type="submit"
-                                            class="btn btn-success btn-place"
-                                            name="action"
-                                            value="placeOrder">
-
-                                        <i class="bi bi-credit-card-fill"></i>
-
-                                        Place Order
-
-                                    </button>
-
-                                </div>
-
+                                </label>
                             </div>
 
-                        </div>
+                            <div class="col-md-6">
 
+                                <label class="shipping-option d-block">
+
+                                    <div class="d-flex gap-3">
+
+                                        <input type="radio"
+                                               name="carrierName"
+                                               value="SELF"
+                                               form="checkoutForm"
+                                               class="form-check-input">
+
+                                        <div>
+                                            <div class="fw-semibold">
+                                                Store Delivery
+                                            </div>
+
+                                            <small class="text-muted">
+                                                Delivered by the store
+                                            </small>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- ================= END LEFT ================= -->
+                    <%-- Phương thức thanh toán --%>
+                    <div class="checkout-section">
 
-                    <!-- ================= RIGHT ================= -->
+                        <h2 class="section-title">
+                            <i class="fa-solid fa-credit-card me-2"></i>
+                            Payment Method
+                        </h2>
 
-                    <div class="col-lg-4 checkout-summary">
+                        <div class="row g-3">
 
-                        <div class="card">
+                            <div class="col-md-6">
 
-                            <div class="card-header">
+                                <label class="payment-option d-block">
 
-                                <i class="bi bi-bag-check-fill text-success"></i>
+                                    <div class="d-flex gap-3">
 
-                                Products Ordered
+                                        <input type="radio"
+                                               name="paymentMethod"
+                                               value="COD"
+                                               form="checkoutForm"
+                                               class="form-check-input"
+                                               checked>
 
+                                        <div>
+                                            <div class="fw-semibold">
+                                                Cash on Delivery
+                                            </div>
+
+                                            <small class="text-muted">
+                                                Pay when you receive the order
+                                            </small>
+                                        </div>
+                                    </div>
+                                </label>
                             </div>
 
-                            <div class="card-body">
-                                <c:forEach items="${cartItems}" var="item">
+                            <div class="col-md-6">
 
-                                    <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                                <label class="payment-option d-block">
 
-                                        <!-- IMAGE -->
+                                    <div class="d-flex gap-3">
 
-                                        <img src="${pageContext.request.contextPath}/uploads/product/${item.imageUrl}"
-                                             class="rounded border"
-                                             style="width:90px;
-                                             height:90px;
-                                             object-fit:cover;">
+                                        <input type="radio"
+                                               name="paymentMethod"
+                                               value="VNPAY"
+                                               form="checkoutForm"
+                                               class="form-check-input">
 
-                                        <!-- INFO -->
-
-                                        <div class="ms-3 flex-grow-1">
-
-                                            <div class="fw-bold mb-2">
-
-                                                ${item.productName}
-
+                                        <div>
+                                            <div class="fw-semibold">
+                                                VNPay
                                             </div>
 
-                                            <div class="small text-muted mb-1">
+                                            <small class="text-muted">
+                                                Pay securely through VNPay
+                                            </small>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                                                <strong>Color :</strong>
+                    <%-- Ghi chú --%>
+                    <div class="checkout-section">
 
-                                                ${item.color}
+                        <h2 class="section-title">
+                            <i class="fa-solid fa-note-sticky me-2"></i>
+                            Order Note
+                        </h2>
 
+                        <textarea name="note"
+                                  form="checkoutForm"
+                                  class="form-control"
+                                  rows="4"
+                                  maxlength="500"
+                                  placeholder="Notes for the store or delivery staff..."></textarea>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+
+                    <div class="sticky-summary">
+
+                        <%-- Voucher là form riêng, không lồng trong form checkout --%>
+                        <div class="checkout-voucher-box">
+
+                            <div class="checkout-voucher-header">
+
+                                <div class="checkout-voucher-title">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    <span>Shop Voucher</span>
+                                </div>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-select-voucher"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#voucherSelectionModal">
+
+                                    <c:choose>
+                                        <c:when test="${not empty voucher}">
+                                            Change
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            Select Voucher
+                                        </c:otherwise>
+                                    </c:choose>
+                                </button>
+                            </div>
+
+                            <c:choose>
+                                <c:when test="${not empty voucher}">
+
+                                    <div class="checkout-voucher-selected">
+
+                                        <div class="d-flex justify-content-between
+                                             align-items-start gap-3">
+
+                                            <div>
+                                                <div class="checkout-voucher-selected-title">
+                                                    <i class="fa-solid
+                                                       fa-circle-check me-1">
+                                                    </i>
+
+                                                    <c:out value="${voucher.title}"/>
+                                                </div>
+
+                                                <div class="checkout-voucher-selected-code">
+                                                    Code:
+                                                    <strong>
+                                                        <c:out value="${voucher.code}"/>
+                                                    </strong>
+                                                </div>
+
+                                                <div class="small text-success mt-1">
+                                                    You saved
+
+                                                    <strong>
+                                                        <fmt:formatNumber
+                                                            value="${discountAmount}"
+                                                            type="number"
+                                                            maxFractionDigits="0"/>
+                                                        ₫
+                                                    </strong>
+                                                </div>
                                             </div>
 
-                                            <div class="small text-muted mb-1">
+                                            <form method="post"
+                                                  action="${contextPath}/customer/checkout">
 
-                                                <strong>Size :</strong>
+                                                <input type="hidden"
+                                                       name="action"
+                                                       value="applyVoucher">
 
-                                                ${item.size}
+                                                <input type="hidden"
+                                                       name="voucherCode"
+                                                       value="">
 
+                                                <button type="submit"
+                                                        class="btn-remove-voucher">
+
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </c:when>
+
+                                <c:otherwise>
+
+                                    <div class="px-4 pb-4 text-muted small">
+                                        Select an available voucher to receive
+                                        the best discount for this order.
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <c:if test="${not empty voucherError}">
+                                <div class="alert alert-danger mx-4 mb-4 py-2">
+                                    <c:out value="${voucherError}"/>
+                                </div>
+                            </c:if>
+                        </div>
+
+                        <%-- Danh sách sản phẩm --%>
+                        <div class="checkout-section">
+
+                            <h2 class="section-title">
+                                Order Summary
+                            </h2>
+
+                            <c:choose>
+                                <c:when test="${empty cartItems}">
+
+                                    <div class="alert alert-warning mb-0">
+                                        Your shopping cart is empty.
+                                    </div>
+                                </c:when>
+
+                                <c:otherwise>
+
+                                    <c:forEach items="${cartItems}" var="item">
+
+                                        <%--
+                                            Ưu tiên đọc từ ProductImageServlet:
+                                            /media/product/{filename}
+
+        Nếu không tìm thấy, JavaScript sẽ thử:
+        /uploads/product/{filename}
+                                        --%>
+
+                                        <c:url var="mediaImageUrl"
+                                               value="/media/product/${item.imageUrl}"/>
+
+                                        <c:url var="legacyImageUrl"
+                                               value="/uploads/product/${item.imageUrl}"/>
+
+                                        <div class="product-item">
+
+                                            <div class="checkout-product-image-box">
+
+                                                <c:choose>
+                                                    <c:when test="${not empty item.imageUrl}">
+
+                                                        <img src="${mediaImageUrl}"
+                                                             data-fallback-src="${legacyImageUrl}"
+                                                             alt="${fn:escapeXml(item.productName)}"
+                                                             class="checkout-product-image"
+                                                             onerror="handleCheckoutImageError(this);">
+
+                                                        <div class="checkout-image-fallback">
+                                                            <i class="fa-regular fa-image"></i>
+                                                            <span>No image</span>
+                                                        </div>
+
+                                                    </c:when>
+
+                                                    <c:otherwise>
+
+                                                        <div class="checkout-image-fallback show">
+                                                            <i class="fa-regular fa-image"></i>
+                                                            <span>No image</span>
+                                                        </div>
+
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
 
-                                            <div class="small">
+                                            <div class="flex-grow-1">
 
-                                                <strong>Quantity :</strong>
+                                                <div class="product-name">
+                                                    <c:out value="${item.productName}"/>
+                                                </div>
 
-                                                x${item.quantity}
+                                                <div class="product-variant mt-2">
 
+                                                    <c:if test="${not empty item.color}">
+                                                        <span>
+                                                            Color:
+                                                            <c:out value="${item.color}"/>
+                                                        </span>
+                                                    </c:if>
+
+                                                    <c:if test="${not empty item.color
+                                                                  and not empty item.size}">
+                                                          <span class="mx-2">|</span>
+                                                    </c:if>
+
+                                                    <c:if test="${not empty item.size}">
+                                                        <span>
+                                                            Size:
+                                                            <c:out value="${item.size}"/>
+                                                        </span>
+                                                    </c:if>
+                                                </div>
+
+                                                <div class="d-flex justify-content-between
+                                                     align-items-end gap-3 mt-3">
+
+                                                    <span class="text-muted">
+                                                        Quantity:
+                                                        <c:out value="${item.quantity}"/>
+                                                    </span>
+
+                                                    <strong>
+                                                        <fmt:formatNumber
+                                                            value="${item.price * item.quantity}"
+                                                            type="number"
+                                                            maxFractionDigits="0"/>
+                                                        ₫
+                                                    </strong>
+                                                </div>
                                             </div>
-
                                         </div>
 
-                                        <!-- PRICE -->
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
 
-                                        <div class="text-end">
+                            <div class="mt-4">
 
-                                            <div class="fw-bold text-danger">
+                                <div class="summary-row">
+                                    <span>Subtotal</span>
 
-                                                <fmt:formatNumber value="${item.price}" pattern="#,##0"/> &#8363;
+                                    <span>
+                                        <fmt:formatNumber
+                                            value="${cartTotal}"
+                                            type="number"
+                                            maxFractionDigits="0"/>
+                                        ₫
+                                    </span>
+                                </div>
 
+                                <div class="summary-row">
+                                    <span>Discount</span>
+
+                                    <span class="text-success">
+                                        -
+                                        <fmt:formatNumber
+                                            value="${discountAmount}"
+                                            type="number"
+                                            maxFractionDigits="0"/>
+                                        ₫
+                                    </span>
+                                </div>
+
+                                <div class="summary-row">
+                                    <span>Shipping Fee</span>
+
+                                    <span>
+                                        <fmt:formatNumber
+                                            value="${shippingFee}"
+                                            type="number"
+                                            maxFractionDigits="0"/>
+                                        ₫
+                                    </span>
+                                </div>
+
+                                <div class="summary-row summary-total">
+                                    <span>Total</span>
+
+                                    <span>
+                                        <fmt:formatNumber
+                                            value="${totalPayment}"
+                                            type="number"
+                                            maxFractionDigits="0"/>
+                                        ₫
+                                    </span>
+                                </div>
+                            </div>
+
+                            <%-- Form đặt hàng chính --%>
+                            <form method="post"
+                                  action="${contextPath}/customer/checkout"
+                                  id="checkoutForm"
+                                  class="needs-validation"
+                                  novalidate>
+
+                                <input type="hidden"
+                                       name="action"
+                                       value="placeOrder">
+
+                                <input type="hidden"
+                                       name="voucherCode"
+                                       value="${fn:escapeXml(voucherCode)}">
+
+                                <button type="submit"
+                                        id="placeOrderButton"
+                                        class="btn btn-dark w-100 py-3 mt-4"
+                                        <c:if test="${empty addresses
+                                                      or empty cartItems}">
+                                              disabled
+                                        </c:if>>
+
+                                    <i class="fa-solid fa-lock me-2"></i>
+                                    Place Order
+                                </button>
+                            </form>
+
+                            <c:if test="${empty addresses}">
+                                <div class="text-danger small mt-2 text-center">
+                                    Add a delivery address before placing the order.
+                                </div>
+                            </c:if>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <jsp:include page="/view/customer/common/footer.jsp"/>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                const addressOptions =
+                        document.querySelectorAll(
+                                ".address-option"
+                                );
+
+                const addressRadios =
+                        document.querySelectorAll(
+                                ".address-radio"
+                                );
+
+                function refreshSelectedAddress() {
+                    addressOptions.forEach(function (option) {
+                        option.classList.remove("selected");
+                    });
+
+                    addressRadios.forEach(function (radio) {
+                        if (radio.checked) {
+                            const option =
+                                    radio.closest(".address-option");
+
+                            if (option) {
+                                option.classList.add("selected");
+                            }
+                        }
+                    });
+                }
+
+                addressRadios.forEach(function (radio) {
+                    radio.addEventListener(
+                            "change",
+                            refreshSelectedAddress
+                            );
+                });
+
+                refreshSelectedAddress();
+
+                const checkoutForm =
+                        document.getElementById("checkoutForm");
+
+                const placeOrderButton =
+                        document.getElementById(
+                                "placeOrderButton"
+                                );
+
+                if (checkoutForm) {
+                    checkoutForm.addEventListener(
+                            "submit",
+                            function (event) {
+
+                                const selectedAddress =
+                                        document.querySelector(
+                                                ".address-radio:checked"
+                                                );
+
+                                if (!selectedAddress) {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+
+                                    alert(
+                                            "Please select a delivery address."
+                                            );
+
+                                    return;
+                                }
+
+                                if (!checkoutForm.checkValidity()) {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+
+                                    checkoutForm.classList.add(
+                                            "was-validated"
+                                            );
+
+                                    return;
+                                }
+
+                                if (placeOrderButton) {
+                                    placeOrderButton.disabled = true;
+
+                                    placeOrderButton.innerHTML =
+                                            '<span class="spinner-border '
+                                            + 'spinner-border-sm me-2"></span>'
+                                            + 'Processing...';
+                                }
+                            }
+                    );
+                }
+            });
+
+            function handleCheckoutImageError(imageElement) {
+                const fallbackSource =
+                        imageElement.getAttribute("data-fallback-src");
+
+                const alreadyTriedFallback =
+                        imageElement.getAttribute("data-fallback-tried")
+                        === "true";
+
+                if (!alreadyTriedFallback && fallbackSource) {
+                    imageElement.setAttribute(
+                            "data-fallback-tried",
+                            "true"
+                            );
+
+                    imageElement.src = fallbackSource;
+                    return;
+                }
+
+                imageElement.style.display = "none";
+
+                const fallbackElement =
+                        imageElement.nextElementSibling;
+
+                if (fallbackElement) {
+                    fallbackElement.classList.add("show");
+                }
+            }
+
+        </script>
+        <div class="modal fade"
+             id="voucherSelectionModal"
+             tabindex="-1"
+             aria-labelledby="voucherSelectionModalLabel"
+             aria-hidden="true">
+
+            <div class="modal-dialog
+                 modal-dialog-centered
+                 modal-dialog-scrollable
+                 modal-lg">
+
+                <div class="modal-content voucher-modal-content">
+
+                    <div class="modal-header voucher-modal-header">
+
+                        <div>
+                            <h5 class="modal-title"
+                                id="voucherSelectionModalLabel">
+
+                                Select Shop Voucher
+                            </h5>
+
+                            <div class="text-muted small mt-1">
+                                Only one shop voucher can be applied.
+                            </div>
+                        </div>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+                    </div>
+
+                    <div class="modal-body voucher-modal-body">
+
+                        <c:choose>
+                            <c:when test="${empty customerVouchers}">
+
+                                <div class="text-center py-5">
+
+                                    <i class="fa-solid fa-ticket
+                                       fs-1 text-secondary">
+                                    </i>
+
+                                    <h6 class="mt-3">
+                                        No vouchers available
+                                    </h6>
+
+                                    <p class="text-muted mb-0">
+                                        New vouchers will appear here.
+                                    </p>
+                                </div>
+                            </c:when>
+
+                            <c:otherwise>
+
+                                <div class="voucher-modal-section-title">
+                                    Available Shop Vouchers
+                                </div>
+
+                                <c:forEach items="${customerVouchers}"
+                                           var="cv">
+
+                                    <c:set var="voucherAvailable"
+                                           value="${cv.customerStatus == 'AVAILABLE'}"/>
+
+                                    <c:set var="orderEnough"
+                                           value="${cartTotal >= cv.minOrderValue}"/>
+
+                                    <c:set var="voucherCanUse"
+                                           value="${voucherAvailable
+                                                    and orderEnough}"/>
+
+                                    <c:set var="voucherApplied"
+                                           value="${not empty voucherCode
+                                                    and voucherCode == cv.code}"/>
+
+                                    <c:set var="bestVoucher"
+                                           value="${not empty bestVoucherCode
+                                                    and bestVoucherCode == cv.code}"/>
+
+                                    <div class="voucher-item
+                                         ${voucherApplied ? 'applied' : ''}
+                                         ${voucherCanUse ? '' : 'disabled'}">
+
+                                        <c:if test="${bestVoucher
+                                                      and voucherCanUse}">
+
+                                              <div class="voucher-best-label">
+                                                  BEST CHOICE
+                                              </div>
+                                        </c:if>
+
+                                        <div class="voucher-left">
+
+                                            <div class="voucher-left-icon">
+                                                <i class="fa-solid fa-tags"></i>
                                             </div>
 
+                                            <div class="voucher-left-value">
+
+                                                <c:choose>
+                                                    <c:when test="${cv.discountType
+                                                                    == 'PERCENTAGE'}">
+
+                                                            <fmt:formatNumber
+                                                                value="${cv.discountValue}"
+                                                                maxFractionDigits="0"/>
+                                                            %
+                                                    </c:when>
+
+                                                    <c:otherwise>
+
+                                                        <fmt:formatNumber
+                                                            value="${cv.discountValue}"
+                                                            type="number"
+                                                            maxFractionDigits="0"/>
+                                                        ₫
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+
+                                            <div class="voucher-left-label">
+                                                SHOP VOUCHER
+                                            </div>
                                         </div>
 
+                                        <div class="voucher-main">
+
+                                            <div class="voucher-information">
+
+                                                <div class="voucher-name">
+                                                    <c:out value="${cv.title}"/>
+                                                </div>
+
+                                                <span class="voucher-code">
+                                                    <c:out value="${cv.code}"/>
+                                                </span>
+
+                                                <div class="voucher-condition">
+
+                                                    Min. spend:
+
+                                                    <strong>
+                                                        <fmt:formatNumber
+                                                            value="${cv.minOrderValue}"
+                                                            type="number"
+                                                            maxFractionDigits="0"/>
+                                                        ₫
+                                                    </strong>
+
+                                                    <c:if test="${cv.discountType
+                                                                  == 'PERCENTAGE'
+                                                                  and
+                                                                  not empty
+                                                                  cv.maxDiscountAmount}">
+
+                                                          <br>
+
+                                                          Maximum discount:
+
+                                                          <strong>
+                                                              <fmt:formatNumber
+                                                                  value="${cv.maxDiscountAmount}"
+                                                                  type="number"
+                                                                  maxFractionDigits="0"/>
+                                                              ₫
+                                                          </strong>
+                                                    </c:if>
+                                                </div>
+
+                                                <div class="voucher-expiry">
+                                                    Valid until:
+
+                                                    <fmt:formatDate
+                                                        value="${cv.endDate}"
+                                                        pattern="dd/MM/yyyy"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="voucher-action">
+
+                                                <c:choose>
+                                                    <c:when test="${voucherApplied}">
+
+                                                        <div class="voucher-status-label
+                                                             text-success">
+
+                                                            Applied
+                                                        </div>
+
+                                                        <button type="button"
+                                                                class="btn
+                                                                btn-sm
+                                                                btn-outline-success"
+                                                                disabled>
+
+                                                            Selected
+                                                        </button>
+                                                    </c:when>
+
+                                                    <c:when test="${cv.customerStatus
+                                                                    == 'USED'}">
+
+                                                            <div class="voucher-status-label">
+                                                                Already used
+                                                            </div>
+
+                                                            <button type="button"
+                                                                    class="btn
+                                                                    btn-sm
+                                                                    btn-secondary"
+                                                                    disabled>
+
+                                                                Used
+                                                            </button>
+                                                    </c:when>
+
+                                                    <c:when test="${cv.customerStatus
+                                                                    == 'EXPIRED'}">
+
+                                                            <div class="voucher-status-label">
+                                                                Expired
+                                                            </div>
+
+                                                            <button type="button"
+                                                                    class="btn
+                                                                    btn-sm
+                                                                    btn-secondary"
+                                                                    disabled>
+
+                                                                Expired
+                                                            </button>
+                                                    </c:when>
+
+                                                    <c:when test="${not orderEnough}">
+
+                                                        <div class="voucher-status-label
+                                                             text-danger">
+
+                                                            Minimum order not reached
+                                                        </div>
+
+                                                        <button type="button"
+                                                                class="btn
+                                                                btn-sm
+                                                                btn-secondary"
+                                                                disabled>
+
+                                                            Unavailable
+                                                        </button>
+                                                    </c:when>
+
+                                                    <c:otherwise>
+
+                                                        <form method="post"
+                                                              action="${contextPath}/customer/checkout"
+                                                              id="checkoutForm">
+
+                                                            <input type="hidden"
+                                                                   name="action"
+                                                                   value="placeOrder">
+
+                                                            <input type="hidden"
+                                                                   name="voucherCode"
+                                                                   value="${fn:escapeXml(voucherCode)}">
+
+                                                            <!-- Các field khác -->
+
+                                                            <button type="submit"
+                                                                    class="btn btn-dark w-100">
+
+                                                                <i class="fa-solid fa-lock me-2"></i>
+                                                                Place Order
+                                                            </button>
+                                                        </form>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </div>
                                     </div>
 
                                 </c:forEach>
-
-
-                                <hr>
-
-                                <!-- Voucher -->
-
-                                <div class="mb-4">
-
-                                    <label class="form-label fw-semibold">
-                                        Voucher Code
-                                    </label>
-
-                                    <div class="input-group">
-
-                                        <input
-                                            type="text"
-                                            class="form-control"
-                                            name="voucherCode"
-                                            value="${voucherCode}"
-                                            placeholder="Enter voucher...">
-
-                                        <button
-                                            class="btn btn-primary"
-                                            type="submit"
-                                            name="action"
-                                            value="applyVoucher">
-
-                                            Apply
-
-                                        </button>
-
-                                    </div>
-
-                                    <c:if test="${not empty voucherError}">
-                                        <div class="text-danger mt-2">
-                                            ${voucherError}
-                                        </div>
-                                    </c:if>
-
-                                    <c:if test="${not empty suggestedVouchers}">
-                                        <div class="voucher-suggestions">
-                                            <div class="voucher-suggestions-title">
-                                                <span><i class="bi bi-stars"></i> Voucher phù hợp</span>
-                                                <a href="${pageContext.request.contextPath}/customer/vouchers">Xem kho voucher</a>
-                                            </div>
-                                            <c:forEach items="${suggestedVouchers}" var="sv" varStatus="loop" end="2">
-                                                <div class="voucher-option">
-                                                    <span class="voucher-option-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
-                                                    <div class="voucher-option-info">
-                                                        <div class="voucher-option-name"><c:out value="${sv.title}"/> <c:if test="${loop.first}"><span class="badge text-bg-danger">Tốt nhất</span></c:if></div>
-                                                        <div class="voucher-option-save">Tiết kiệm <fmt:formatNumber value="${sv.applicableDiscount}" pattern="#,##0"/> &#8363; · <c:out value="${sv.code}"/></div>
-                                                    </div>
-                                                    <button type="button" class="choose-voucher" data-code="${sv.code}">Chọn</button>
-                                                </div>
-                                            </c:forEach>
-                                        </div>
-                                    </c:if>
-
-                                    <c:if test="${not empty customerVouchers}">
-                                        <div class="voucher-suggestions">
-                                            <div class="voucher-suggestions-title">
-                                                <span><i class="bi bi-ticket-perforated"></i> Kho voucher của bạn</span>
-                                                <a href="${pageContext.request.contextPath}/customer/vouchers">Xem tất cả</a>
-                                            </div>
-                                            <div class="voucher-wallet-list">
-                                                <c:forEach items="${customerVouchers}" var="cv" end="3">
-                                                    <article class="voucher-wallet-item ${cv.customerStatus ne 'AVAILABLE' ? 'inactive' : ''}">
-                                                        <div class="voucher-wallet-value">
-                                                            <c:choose>
-                                                                <c:when test="${cv.discountType eq 'PERCENTAGE'}">
-                                                                    -<fmt:formatNumber value="${cv.discountValue}" pattern="#0"/>%
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    -<fmt:formatNumber value="${cv.discountValue}" pattern="#,##0"/>đ
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </div>
-                                                        <div class="voucher-wallet-main">
-                                                            <p class="voucher-wallet-name"><c:out value="${cv.title}"/></p>
-                                                            <p class="voucher-wallet-meta">
-                                                                Đơn tối thiểu <fmt:formatNumber value="${cv.minOrderValue}" pattern="#,##0"/>đ
-                                                                <c:if test="${cv.discountType eq 'PERCENTAGE' and cv.maxDiscountAmount != null}">
-                                                                    · Giảm tối đa <fmt:formatNumber value="${cv.maxDiscountAmount}" pattern="#,##0"/>đ
-                                                                </c:if>
-                                                            </p>
-                                                            <p class="voucher-wallet-expiry">
-                                                                <c:choose>
-                                                                    <c:when test="${cv.customerStatus eq 'EXPIRED'}">Đã hết hạn</c:when>
-                                                                    <c:when test="${cv.customerStatus eq 'USED'}">Đã sử dụng</c:when>
-                                                                    <c:when test="${cv.daysRemaining <= 2}">Hết hạn sau ${cv.daysRemaining} ngày nữa</c:when>
-                                                                    <c:otherwise>Hạn dùng: <fmt:formatDate value="${cv.endDate}" pattern="dd/MM/yyyy"/></c:otherwise>
-                                                                </c:choose>
-                                                            </p>
-                                                        </div>
-                                                        <c:choose>
-                                                            <c:when test="${cv.customerStatus eq 'AVAILABLE'}">
-                                                                <button type="button" class="voucher-wallet-action choose-voucher" data-code="${cv.code}">Chọn</button>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="voucher-wallet-status">
-                                                                    <c:choose>
-                                                                        <c:when test="${cv.customerStatus eq 'USED'}">Đã dùng</c:when>
-                                                                        <c:otherwise>Hết hạn</c:otherwise>
-                                                                    </c:choose>
-                                                                </span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </article>
-                                                </c:forEach>
-                                            </div>
-                                        </div>
-                                    </c:if>
-
-                                </div>
-
-                                <hr>
-
-                                <div class="summary-row">
-
-                                    <span>
-
-                                        Subtotal
-
-                                    </span>
-
-                                    <strong>
-
-                                        <fmt:formatNumber value="${cartTotal}" pattern="#,##0"/> &#8363;
-
-                                    </strong>
-
-                                </div>
-
-                                <div class="summary-row">
-
-                                    <span>
-
-                                        Shipping Fee
-
-                                    </span>
-
-                                    <strong>
-
-                                        <fmt:formatNumber value="30000" pattern="#,##0"/> &#8363;
-
-                                    </strong>
-
-                                </div>
-                                <c:if test="${discountAmount != null}">
-                                    <div class="summary-row">
-                                        <span>Discount</span>
-                                        <strong class="text-success">
-                                            - <fmt:formatNumber value="${discountAmount}" pattern="#,##0"/> &#8363;
-                                        </strong>
-                                    </div>
-                                </c:if>
-
-                                <hr>
-
-                                <div class="summary-row total">
-
-                                    <span>
-
-                                        Total
-
-                                    </span>
-
-                                    <span>
-
-                                        <fmt:formatNumber value="${totalPayment}" pattern="#,##0"/> &#8363;
-
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
+                            </c:otherwise>
+                        </c:choose>
                     </div>
 
-                    <!-- ================= END RIGHT ================= -->
+                    <div class="modal-footer">
 
+                        <button type="button"
+                                class="btn btn-light"
+                                data-bs-dismiss="modal">
+
+                            Close
+                        </button>
+                    </div>
                 </div>
-
-            </form>
-
+            </div>
         </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            (function () {
-                document.querySelectorAll('.account-menu').forEach(function (account) {
-                    var summary = account.querySelector('summary');
-
-                    if (!summary) {
-                        return;
-                    }
-
-                    account.addEventListener('toggle', function () {
-                        summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
-                    });
-                    summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
-
-                    document.addEventListener('click', function (event) {
-                        if (!account.contains(event.target)) {
-                            account.removeAttribute('open');
-                            summary.setAttribute('aria-expanded', 'false');
-                        }
-                    });
-
-                    document.addEventListener('keydown', function (event) {
-                        if (event.key === 'Escape' && account.open) {
-                            account.removeAttribute('open');
-                            summary.setAttribute('aria-expanded', 'false');
-                            summary.focus();
-                        }
-                    });
-                });
-            }());
-        </script>
-
-    <script>
-        document.querySelectorAll('.choose-voucher').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var input = document.querySelector('input[name="voucherCode"]');
-                if (input) {
-                    input.value = button.dataset.code;
-                    button.closest('form').querySelector('button[value="applyVoucher"]').click();
-                }
-            });
-        });
-    </script>
-
     </body>
-
 </html>

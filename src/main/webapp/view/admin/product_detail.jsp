@@ -75,6 +75,41 @@
                 font-size: 0.92rem;
             }
 
+            .product-main-image-box {
+                width: 100%;
+                min-height: 220px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                background-color: #f8f9fa;
+            }
+
+            .product-main-image {
+                width: 100%;
+                max-height: 320px;
+                display: block;
+                object-fit: contain;
+            }
+
+            .product-main-image-placeholder {
+                width: 100%;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #6c757d;
+                background-color: #f8f9fa;
+            }
+
+            .product-main-image-placeholder i {
+                margin-bottom: 8px;
+                font-size: 2.2rem;
+            }
+
             @media (max-width: 768px) {
                 .variant-status-control {
                     flex-direction: column;
@@ -124,20 +159,29 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 text-center border-right">
-                            <c:choose>
-                                <c:when test="${not empty product.mainImageUrl}">
-                                    <img src="${pageContext.request.contextPath}/media/product/${prod.mainImageUrl}"
-                                         alt="Main Image"
-                                         class="img-fluid rounded img-thumbnail">
-                                </c:when>
-
-                                <c:otherwise>
-                                    <div class="bg-light d-flex align-items-center justify-content-center rounded"
-                                         style="height: 180px;">
-                                        <span class="text-muted">No Image Available</span>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
+                            <div class="product-main-image-box">
+                                <c:choose>
+                                    <c:when test="${not empty product.mainImageUrl}">
+                                        <c:url var="mainProductImageUrl"
+                                               value="/media/product/${product.mainImageUrl}" />
+                                        <img src="${mainProductImageUrl}"
+                                             alt="${product.productName}"
+                                             class="product-main-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="product-main-image-placeholder"
+                                             style="display: none;">
+                                            <i class="fa-regular fa-image"></i>
+                                            <span>Image file not found</span>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="product-main-image-placeholder">
+                                            <i class="fa-regular fa-image"></i>
+                                            <span>No Image Available</span>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                         </div>
 
                         <div class="col-md-9">
@@ -252,11 +296,11 @@
                                                                         class="btn btn-sm btn-outline-danger variant-status-action"
                                                                         onclick="changeVariantStatus(
                                                                         ${variant.id},
-                                                                                'INACTIVE',
+                                                                                        'INACTIVE',
                                                                         ${product.id},
                                                                         ${variant.priced},
-                                                                                '${product.status}'
-                                                                                )">
+                                                                                        '${product.status}'
+                                                                                        )">
                                                                     Deactivate
                                                                 </button>
                                                             </c:when>
@@ -266,11 +310,11 @@
                                                                         class="btn btn-sm btn-outline-success variant-status-action"
                                                                         onclick="changeVariantStatus(
                                                                         ${variant.id},
-                                                                                'ACTIVE',
+                                                                                        'ACTIVE',
                                                                         ${product.id},
                                                                         ${variant.priced},
-                                                                                '${product.status}'
-                                                                                )">
+                                                                                        '${product.status}'
+                                                                                        )">
                                                                     Activate
                                                                 </button>
                                                             </c:otherwise>
