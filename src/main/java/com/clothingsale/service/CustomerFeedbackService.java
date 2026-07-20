@@ -9,8 +9,7 @@ import java.util.List;
 
 public class CustomerFeedbackService {
 
-    private final CustomerFeedbackDAO feedbackDAO =
-            new CustomerFeedbackDAO();
+    private final CustomerFeedbackDAO feedbackDAO = new CustomerFeedbackDAO();
 
     /**
      * Lấy toàn bộ feedback của sản phẩm
@@ -62,12 +61,11 @@ public class CustomerFeedbackService {
      * Kiểm tra đã mua và đã giao
      */
     public boolean hasPurchasedDeliveredProduct(int userId,
-                                                int productId) {
+            int productId) {
 
         return feedbackDAO.hasPurchasedDeliveredProduct(
                 userId,
-                productId
-        );
+                productId);
 
     }
 
@@ -75,12 +73,11 @@ public class CustomerFeedbackService {
      * Kiểm tra đã feedback chưa
      */
     public boolean hasFeedback(int userId,
-                               int productId) {
+            int productId) {
 
         return feedbackDAO.hasFeedback(
                 userId,
-                productId
-        );
+                productId);
 
     }
 
@@ -114,11 +111,9 @@ public class CustomerFeedbackService {
      */
     public boolean updateFeedback(Feedback feedback) {
 
-        Feedback old =
-                feedbackDAO.getUserFeedback(
-                        feedback.getUserId(),
-                        feedback.getProductId()
-                );
+        Feedback old = feedbackDAO.getUserFeedback(
+                feedback.getUserId(),
+                feedback.getProductId());
 
         if (old == null) {
 

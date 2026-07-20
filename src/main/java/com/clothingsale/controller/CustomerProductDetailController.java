@@ -17,16 +17,12 @@ import com.clothingsale.service.WishlistService;
 import java.util.List;
 import java.util.Set;
 
-@WebServlet(name = "CustomerProductDetailController",
-        urlPatterns = {"/product/detail"})
+@WebServlet(name = "CustomerProductDetailController", urlPatterns = { "/product/detail" })
 public class CustomerProductDetailController extends HttpServlet {
 
-    private CustomerProductService productService
-            = new CustomerProductService();
-    private CustomerFeedbackService feedbackService
-            = new CustomerFeedbackService();
-    private WishlistService wishlistService
-            = new WishlistService();
+    private CustomerProductService productService = new CustomerProductService();
+    private CustomerFeedbackService feedbackService = new CustomerFeedbackService();
+    private WishlistService wishlistService = new WishlistService();
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -39,8 +35,7 @@ public class CustomerProductDetailController extends HttpServlet {
         if (idParam == null || idParam.isEmpty()) {
 
             response.sendRedirect(
-                    request.getContextPath() + "/home"
-            );
+                    request.getContextPath() + "/home");
 
             return;
         }
@@ -56,8 +51,7 @@ public class CustomerProductDetailController extends HttpServlet {
             if (product == null) {
 
                 response.sendRedirect(
-                        request.getContextPath() + "/home"
-                );
+                        request.getContextPath() + "/home");
 
                 return;
             }
@@ -99,14 +93,12 @@ public class CustomerProductDetailController extends HttpServlet {
             populateWishlistState(request, id);
 
             request.getRequestDispatcher(
-                    "/view/customer/customer_view_product_detail.jsp"
-            ).forward(request, response);
+                    "/view/customer/customer_view_product_detail.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
 
             response.sendRedirect(
-                    request.getContextPath() + "/home"
-            );
+                    request.getContextPath() + "/home");
         }
     }
 

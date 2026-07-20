@@ -21,8 +21,7 @@ public class CustomerFeedbackDAO {
 
         List<Feedback> list = new ArrayList<>();
 
-        String sql
-                = "SELECT f.*, "
+        String sql = "SELECT f.*, "
                 + "u.username, "
                 + "u.full_name, "
                 + "u.email, "
@@ -43,7 +42,8 @@ public class CustomerFeedbackDAO {
                 + "ORDER BY f.created_at DESC";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -108,14 +108,14 @@ public class CustomerFeedbackDAO {
      */
     public Feedback getUserFeedback(int userId, int productId) {
 
-        String sql
-                = "SELECT * "
+        String sql = "SELECT * "
                 + "FROM Feedback "
                 + "WHERE user_id = ? "
                 + "AND product_id = ?";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, productId);
@@ -140,8 +140,7 @@ public class CustomerFeedbackDAO {
                 fb.setVisible(rs.getBoolean("status"));
 
                 fb.setAdminResponse(
-                        rs.getString("admin_response")
-                );
+                        rs.getString("admin_response"));
 
                 int responseBy = rs.getInt("response_by");
                 if (!rs.wasNull()) {
@@ -149,12 +148,10 @@ public class CustomerFeedbackDAO {
                 }
 
                 fb.setRespondedAt(
-                        rs.getTimestamp("responded_at")
-                );
+                        rs.getTimestamp("responded_at"));
 
                 fb.setCreatedAt(
-                        rs.getTimestamp("created_at")
-                );
+                        rs.getTimestamp("created_at"));
 
                 return fb;
             }
@@ -173,14 +170,14 @@ public class CustomerFeedbackDAO {
      */
     public BigDecimal getAverageRating(int productId) {
 
-        String sql
-                = "SELECT AVG(CAST(rating AS DECIMAL(10,2))) avgRating "
+        String sql = "SELECT AVG(CAST(rating AS DECIMAL(10,2))) avgRating "
                 + "FROM Feedback "
                 + "WHERE product_id = ? "
                 + "AND status = 1";
 
         try (
-                 Connection con = DBConnection.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -188,8 +185,7 @@ public class CustomerFeedbackDAO {
 
             if (rs.next()) {
 
-                BigDecimal avg
-                        = rs.getBigDecimal("avgRating");
+                BigDecimal avg = rs.getBigDecimal("avgRating");
 
                 return avg == null
                         ? BigDecimal.ZERO
@@ -205,11 +201,14 @@ public class CustomerFeedbackDAO {
         return BigDecimal.ZERO;
     }
 
-/**
-     * Kiểm tra user có được phép tạo feedback hay không cho một dòng đơn hàng cụ thể.
+    /**
+     * Kiểm tra user có được phép tạo feedback hay không cho một dòng đơn hàng cụ
+     * thể.
      *
-     * Điều kiện: - Đã mua sản phẩm trong Order_Detail - Đơn hàng đã giao (DELIVERED)
-     * - Chưa feedback cho order_detail đó - Không có return/refund hoàn tất cho dòng đó
+     * Điều kiện: - Đã mua sản phẩm trong Order_Detail - Đơn hàng đã giao
+     * (DELIVERED)
+     * - Chưa feedback cho order_detail đó - Không có return/refund hoàn tất cho
+     * dòng đó
      */
     public boolean canCreateFeedback(int userId, int productId, int orderDetailId) {
 
@@ -330,8 +329,7 @@ public class CustomerFeedbackDAO {
      */
     public boolean hasPurchasedDeliveredProduct(int userId, int productId) {
 
-        String sql =
-                "SELECT TOP 1 o.id "
+        String sql = "SELECT TOP 1 o.id "
                 + "FROM [Order] o "
                 + "INNER JOIN Shipment s "
                 + "ON o.shipment_id = s.id "
@@ -345,8 +343,7 @@ public class CustomerFeedbackDAO {
 
         try (
                 Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, productId);
@@ -369,16 +366,14 @@ public class CustomerFeedbackDAO {
      */
     public boolean hasFeedback(int userId, int productId) {
 
-        String sql =
-                "SELECT COUNT(*) total "
+        String sql = "SELECT COUNT(*) total "
                 + "FROM Feedback "
                 + "WHERE user_id = ? "
                 + "AND product_id = ?";
 
         try (
                 Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, productId);
@@ -423,8 +418,7 @@ public class CustomerFeedbackDAO {
 
     public Integer getDeliveredOrderId(int userId, int productId) {
 
-        String sql =
-                "SELECT TOP 1 od.id "
+        String sql = "SELECT TOP 1 od.id "
                 + "FROM [Order] o "
                 + "INNER JOIN Shipment s "
                 + "ON o.shipment_id = s.id "
@@ -441,8 +435,7 @@ public class CustomerFeedbackDAO {
 
         try (
                 Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, productId);
@@ -463,6 +456,7 @@ public class CustomerFeedbackDAO {
 
         return null;
     }
+
     public static String extractVariantAttributeValue(String snapshot, String attributeName) {
         if (snapshot == null || snapshot.trim().isEmpty()) {
             return null;
@@ -492,8 +486,7 @@ public class CustomerFeedbackDAO {
      */
     public boolean createFeedback(Feedback feedback) {
 
-        String sql =
-                "INSERT INTO Feedback ("
+        String sql = "INSERT INTO Feedback ("
                 + "user_id, "
                 + "product_id, "
                 + "order_id, "
@@ -509,8 +502,7 @@ public class CustomerFeedbackDAO {
 
         try (
                 Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, feedback.getUserId());
             ps.setInt(2, feedback.getProductId());
@@ -558,8 +550,7 @@ public class CustomerFeedbackDAO {
      */
     public boolean updateFeedback(Feedback feedback) {
 
-        String sql =
-                "UPDATE Feedback "
+        String sql = "UPDATE Feedback "
                 + "SET rating = ?, "
                 + "comment = ? "
                 + "WHERE id = ? "
@@ -567,8 +558,7 @@ public class CustomerFeedbackDAO {
 
         try (
                 Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, feedback.getRating());
             ps.setString(2, feedback.getComment());

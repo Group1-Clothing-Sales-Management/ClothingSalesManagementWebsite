@@ -4,7 +4,8 @@ import java.sql.Timestamp;
 
 /**
  * Model trung gian cho bảng Feedback.
- * Lớp này gom cả dữ liệu gốc trong bảng và dữ liệu join để JSP hiển thị chi tiết
+ * Lớp này gom cả dữ liệu gốc trong bảng và dữ liệu join để JSP hiển thị chi
+ * tiết
  * mà không cần viết SQL phức tạp trong giao diện.
  */
 public class Feedback {
