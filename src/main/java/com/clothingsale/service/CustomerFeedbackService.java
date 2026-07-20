@@ -2,6 +2,7 @@ package com.clothingsale.service;
 
 import com.clothingsale.dao.CustomerFeedbackDAO;
 import com.clothingsale.model.Feedback;
+import com.clothingsale.model.OrderDetail;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,10 +42,20 @@ public class CustomerFeedbackService {
     /**
      * Kiểm tra user có được tạo feedback hay không
      */
-    public boolean canCreateFeedback(int userId, int productId) {
+    public boolean canCreateFeedback(int userId, int productId, int orderDetailId) {
 
-        return feedbackDAO.canCreateFeedback(userId, productId);
+        return feedbackDAO.canCreateFeedback(userId, productId, orderDetailId);
 
+    }
+
+    public List<OrderDetail> getEligibleOrderDetailsForFeedback(int userId, int productId) {
+
+        return feedbackDAO.getEligibleOrderDetailsForFeedback(userId, productId);
+
+    }
+
+    public Integer getLatestEligibleOrderDetailId(int userId, int productId) {
+        return feedbackDAO.getDeliveredOrderId(userId, productId);
     }
 
     /**
@@ -78,16 +89,15 @@ public class CustomerFeedbackService {
      */
     public boolean createFeedback(Feedback feedback) {
 
-        Integer orderId =
-                feedbackDAO.getDeliveredOrderId(
-                        feedback.getUserId(),
-                        feedback.getProductId()
-                );
+        if (feedback.getOrderDetailId() == null
+                || feedback.getOrderDetailId() <= 0) {
+            return false;
+        }
+
+        Integer orderId = feedbackDAO.getOrderIdForDetail(feedback.getOrderDetailId());
 
         if (orderId == null) {
-
             return false;
-
         }
 
         feedback.setOrderId(orderId);

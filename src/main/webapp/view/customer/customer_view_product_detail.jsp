@@ -701,21 +701,228 @@
                 margin-top:18px;
                 padding:24px 44px 34px;
                 background:#fff;
+                border-radius:24px;
+                box-shadow:0 20px 40px rgba(15, 23, 42, 0.06);
             }
 
             .feedback-section > h4{
-                margin-bottom:14px!important;
-                font-size:20px;
-                font-weight:500!important;
+                margin-bottom:18px!important;
+                font-size:22px;
+                font-weight:700!important;
             }
 
-            .feedback-summary{
+            .feedback-grid{
+                display:grid;
+                grid-template-columns:minmax(260px, 370px) 1fr;
+                gap:24px;
+            }
+
+            /* Keep left panel fixed height; allow right (comments) to scroll */
+            .feedback-grid{
+                align-items:start;
+            }
+
+            .feedback-left{
+                align-self:flex-start;
+                /* prevent left from stretching with long comments */
+            }
+
+            .feedback-right{
+                display:flex;
+                flex-direction:column;
+                gap:18px;
+                /* limit total height of the right column */
+                max-height:520px;
+            }
+
+            .feedback-right > .feedback-toolbar,
+            .feedback-right > .review-composer{
+                flex: 0 0 auto; /* keep toolbar and composer fixed */
+            }
+
+            .feedback-right > .feedback-list{
+                flex: 1 1 auto;
+                overflow:auto;
+                padding-right:8px; /* room for scrollbar */
+                display:flex;
+                flex-direction:column;
+                gap:12px;
+            }
+
+            .feedback-list{
+                display:flex;
+                flex-direction:column;
+                gap:12px;
+            }
+
+            .feedback-left{
+                display:flex;
+                flex-direction:column;
+                gap:20px;
+                background:#f5f8ff;
+                border-radius:24px;
+                padding:24px;
+            }
+
+            .feedback-score-card{
+                text-align:center;
+                padding:22px 16px;
+                background:#ffffff;
+                border-radius:20px;
+                box-shadow:0 16px 30px rgba(15, 23, 42, 0.05);
+            }
+
+            .feedback-score-card .feedback-score-value{
+                font-size:54px;
+                font-weight:800;
+                color:#0f9b8e;
+                line-height:1;
+            }
+
+            .feedback-score-card .feedback-score-stars{
+                margin-top:12px;
+                color:#f9b01d;
+                font-size:20px;
+                letter-spacing:2px;
+            }
+
+            .feedback-score-card .feedback-score-total{
+                margin-top:10px;
+                color:#65748b;
+                font-size:14px;
+            }
+
+            .feedback-distribution{
+                display:flex;
+                flex-direction:column;
+                gap:12px;
+            }
+
+            .distribution-row{
+                display:grid;
+                grid-template-columns:28px minmax(0, 1fr) 36px;
+                gap:10px;
+                align-items:center;
+            }
+
+            .distribution-label{
+                font-weight:700;
+                color:#1f2937;
+            }
+
+            .distribution-bar{
+                height:10px;
+                border-radius:999px;
+                background:rgba(15, 23, 42, 0.08);
+                overflow:hidden;
+            }
+
+            .distribution-fill{
+                display:block;
+                height:100%;
+                width:0;
+                background:linear-gradient(90deg, #0f9b8e, #2db1f0);
+                border-radius:999px;
+                transition:width .4s ease;
+            }
+
+            .distribution-count{
+                color:#475569;
+                font-size:13px;
+                text-align:right;
+            }
+
+            .feedback-right{
+                display:flex;
+                flex-direction:column;
+                gap:18px;
+            }
+
+            .feedback-toolbar{
+                display:flex;
+                justify-content:flex-end;
+            }
+
+            .feedback-filters{
+                display:flex;
+                flex-wrap:wrap;
+                gap:10px;
+            }
+
+            .feedback-filter{
+                min-width:110px;
+                padding:10px 14px;
+                border-radius:14px;
+                border:1px solid rgba(15, 23, 42, 0.12);
+                background:#ffffff;
+                color:#0f172a;
+                font-size:13px;
+                font-weight:600;
+                transition:all .2s ease;
+            }
+
+            .feedback-filter:hover,
+            .feedback-filter.active{
+                border-color:#0f9b8e;
+                background:rgba(15, 155, 142, 0.08);
+                color:#0f9b8e;
+            }
+
+            .feedback-list{
+                margin-top:0;
+            }
+
+            .feedback-item{
+                padding:26px 24px;
+                border-radius:20px;
+                background:#ffffff;
+                box-shadow:0 20px 40px rgba(15, 23, 42, 0.04);
+                margin-bottom:18px;
+            }
+
+            .feedback-user{
                 display:flex;
                 align-items:center;
-                gap:34px;
-                padding:28px 30px;
-                border:1px solid #f2e1d9;
-                background:#fffaf8;
+                gap:14px;
+            }
+
+            .feedback-avatar{
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                width:48px;
+                height:48px;
+                border-radius:50%;
+                background:#eaf4ff;
+                color:#0f9b8e;
+                font-weight:700;
+                font-size:16px;
+            }
+
+            .feedback-user-name{
+                font-weight:700;
+                color:#0f172a;
+                font-size:14px;
+            }
+
+            .feedback-stars{
+                margin-top:2px;
+                color:#f9b01d;
+                font-size:16px;
+                letter-spacing:1px;
+            }
+
+            .feedback-meta{
+                margin-top:4px;
+                color:#64748b;
+                font-size:12px;
+            }
+
+            .feedback-comment{
+                margin-top:18px;
+                color:#334155;
+                font-size:14px;
+                line-height:1.8;
             }
 
             .feedback-score{
@@ -766,19 +973,168 @@
 
             .feedback-form{
                 margin:24px 0 0;
-                padding:18px;
-                border:1px solid #eee;
-                background:#fff;
+                padding:26px;
+                border:1px solid rgba(15, 23, 42, 0.08);
+                background:#f8fbff;
+                border-radius:20px;
+                box-shadow:0 18px 40px rgba(15, 23, 42, 0.04);
             }
 
             .feedback-form .form-label{
                 color:var(--detail-ink);
-                font-size:14px;
+                font-size:13px;
+                font-weight:600;
+                letter-spacing:.02em;
+                margin-bottom:.5rem;
+                display:block;
             }
 
             .feedback-form .form-control,
             .feedback-form .form-select{
-                border-radius:2px;
+                border-radius:12px;
+                border:1px solid rgba(15, 23, 42, 0.12);
+                box-shadow:none;
+                padding:.95rem 1rem;
+            }
+
+            .feedback-form .form-control:focus,
+            .feedback-form .form-select:focus{
+                border-color:#0f9b8e;
+                box-shadow:0 0 0 .15rem rgba(15, 155, 142, 0.12);
+            }
+
+            .star-rating{
+                display:flex;
+                flex-direction:row-reverse;
+                justify-content:flex-end;
+                gap:4px;
+                font-size:2.1rem;
+                line-height:1;
+            }
+
+            .star-rating input{
+                display:none;
+            }
+
+            .star-rating label{
+                cursor:pointer;
+                color:#dde1e7;
+                transition: color .15s ease-in-out, transform .12s ease;
+            }
+
+            .star-rating label:hover,
+            .star-rating label:hover ~ label,
+            .star-rating input:checked ~ label{
+                color:#f9b01d;
+                transform:translateY(-1px) scale(1.05);
+            }
+
+            /* Review composer — single unified card */
+            .review-composer{
+                background:#ffffff;
+                border:1px solid rgba(15, 23, 42, 0.08);
+                border-radius:24px;
+                box-shadow:0 16px 30px rgba(15, 23, 42, 0.04);
+                padding:26px 28px;
+            }
+
+            .review-composer-head{
+                display:flex;
+                align-items:baseline;
+                justify-content:space-between;
+                gap:12px;
+                margin-bottom:18px;
+            }
+
+            .review-composer-title{
+                margin:0;
+                font-size:17px;
+                font-weight:700;
+                color:#0f172a;
+            }
+
+            .review-composer-sub{
+                margin:2px 0 0;
+                font-size:13px;
+                color:#64748b;
+            }
+
+            .review-composer-rating{
+                display:flex;
+                align-items:center;
+                gap:14px;
+                padding-bottom:20px;
+                margin-bottom:20px;
+                border-bottom:1px dashed rgba(15, 23, 42, 0.1);
+            }
+
+            .rating-mood{
+                font-size:13px;
+                font-weight:700;
+                color:#f9b01d;
+                letter-spacing:.2px;
+            }
+
+            .review-composer-body{
+                position:relative;
+            }
+
+            .review-composer-body .form-label{
+                display:none;
+            }
+
+            .feedback-form .feedback-textarea{
+                min-height:110px;
+                resize:vertical;
+                border-radius:14px;
+                padding:14px 16px;
+                border:1px solid rgba(15, 23, 42, 0.12);
+            }
+
+            .review-composer-counter{
+                position:absolute;
+                right:14px;
+                bottom:12px;
+                font-size:11px;
+                color:#9aa4b2;
+                background:#fff;
+                padding:0 4px;
+                pointer-events:none;
+            }
+
+            .review-composer-foot{
+                display:flex;
+                justify-content:flex-end;
+                margin-top:18px;
+            }
+
+            .feedback-form .btn-submit-custom{
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                padding:12px 26px;
+                border-radius:14px;
+                font-size:0.95rem;
+                font-weight:700;
+            }
+
+            .feedback-form .btn-submit-custom i{
+                font-size:.9em;
+            }
+
+            @media(max-width:767px){
+                .review-composer{
+                    padding:20px;
+                }
+
+                .review-composer-rating{
+                    flex-wrap:wrap;
+                }
+
+                .review-composer-foot .btn-submit-custom{
+                    width:100%;
+                    justify-content:center;
+                }
             }
 
             .feedback-list{
@@ -1535,58 +1891,139 @@
             <div class="product-description feedback-section" id="ratings">
                 <h4>Product Ratings</h4>
 
-                <div class="feedback-summary">
-                    <div class="feedback-score">
-                        <div class="feedback-score-value">
-                            <fmt:formatNumber value="${averageRating}" minFractionDigits="1" maxFractionDigits="1"/>
-                            <small> out of 5</small>
-                        </div>
-                        <div class="feedback-score-stars">★★★★★</div>
-                    </div>
-                    <div class="feedback-filters" role="group" aria-label="Filter reviews">
-                        <button type="button" class="feedback-filter active" data-filter="all">All</button>
-                        <button type="button" class="feedback-filter" data-filter="5">5 Star (${ratingCounts[5]})</button>
-                        <button type="button" class="feedback-filter" data-filter="4">4 Star (${ratingCounts[4]})</button>
-                        <button type="button" class="feedback-filter" data-filter="3">3 Star (${ratingCounts[3]})</button>
-                        <button type="button" class="feedback-filter" data-filter="2">2 Star (${ratingCounts[2]})</button>
-                        <button type="button" class="feedback-filter" data-filter="1">1 Star (${ratingCounts[1]})</button>
-                        <button type="button" class="feedback-filter" data-filter="comments">With Comments (${commentsCount})</button>
-                    </div>
-                </div>
-
-                <c:if test="${canFeedback}">
-                    <form action="${pageContext.request.contextPath}/feedback/add" method="post" class="feedback-form">
-                        <input type="hidden" name="productId" value="${product.id}">
-                        <input type="hidden" name="orderId" value="${orderId}">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label">Your rating</label>
-                                <select name="rating" class="form-select" required>
-                                    <option value="5">★★★★★ (5)</option>
-                                    <option value="4">★★★★☆ (4)</option>
-                                    <option value="3">★★★☆☆ (3)</option>
-                                    <option value="2">★★☆☆☆ (2)</option>
-                                    <option value="1">★☆☆☆☆ (1)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-7">
-                                <label class="form-label">Your comment</label>
-                                <textarea name="comment" rows="1" class="form-control" required></textarea>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-cart w-100">
-                                    <i class="fa-solid fa-paper-plane me-1"></i> Submit
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                <c:if test="${not empty param.feedbackSuccess}">
+                    <div class="alert alert-success">Cảm ơn bạn đã đánh giá sản phẩm!</div>
                 </c:if>
+                <c:if test="${param.feedbackError == 'permission'}">
+                    <div class="alert alert-danger">Bạn không được phép đánh giá sản phẩm này.</div>
+                </c:if>
+                <c:if test="${param.feedbackError == 'rating'}">
+                    <div class="alert alert-danger">Vui lòng chọn số sao hợp lệ.</div>
+                </c:if>
+                <c:if test="${param.feedbackError == 'create'}">
+                    <div class="alert alert-danger">Có lỗi khi gửi đánh giá, vui lòng thử lại.</div>
+                </c:if>
+                <div class="feedback-grid">
+                    <div class="feedback-left">
+                        <div class="feedback-score-card">
+                            <div class="feedback-score-value">
+                                <fmt:formatNumber value="${averageRating}" minFractionDigits="1" maxFractionDigits="1"/>
+                            </div>
+                            <div class="feedback-score-stars">★★★★★</div>
+                            <div class="feedback-score-total">
+                                Dựa trên ${feedbacks.size()} lượt đánh giá
+                            </div>
+                        </div>
+                        <div class="feedback-distribution">
+                            <div class="distribution-row" data-count="${ratingCounts[5]}">
+                                <span class="distribution-label">5</span>
+                                <div class="distribution-bar"><span class="distribution-fill"></span></div>
+                                <span class="distribution-count">${ratingCounts[5]}</span>
+                            </div>
+                            <div class="distribution-row" data-count="${ratingCounts[4]}">
+                                <span class="distribution-label">4</span>
+                                <div class="distribution-bar"><span class="distribution-fill"></span></div>
+                                <span class="distribution-count">${ratingCounts[4]}</span>
+                            </div>
+                            <div class="distribution-row" data-count="${ratingCounts[3]}">
+                                <span class="distribution-label">3</span>
+                                <div class="distribution-bar"><span class="distribution-fill"></span></div>
+                                <span class="distribution-count">${ratingCounts[3]}</span>
+                            </div>
+                            <div class="distribution-row" data-count="${ratingCounts[2]}">
+                                <span class="distribution-label">2</span>
+                                <div class="distribution-bar"><span class="distribution-fill"></span></div>
+                                <span class="distribution-count">${ratingCounts[2]}</span>
+                            </div>
+                            <div class="distribution-row" data-count="${ratingCounts[1]}">
+                                <span class="distribution-label">1</span>
+                                <div class="distribution-bar"><span class="distribution-fill"></span></div>
+                                <span class="distribution-count">${ratingCounts[1]}</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="feedback-list">
-                    <c:if test="${empty feedbacks}">
-                        <div class="feedback-empty">No feedback yet.</div>
-                    </c:if>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            try {
+                                const rows = document.querySelectorAll('.distribution-row');
+                                let total = 0;
+                                rows.forEach(r => {
+                                    total += parseInt(r.getAttribute('data-count')) || 0;
+                                });
+                                rows.forEach(r => {
+                                    const c = parseInt(r.getAttribute('data-count')) || 0;
+                                    const fill = r.querySelector('.distribution-fill');
+                                    if (!fill) return;
+                                    const pct = total > 0 ? (c / total) * 100 : 0;
+                                    fill.style.width = pct + '%';
+                                });
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        });
+                    </script>
 
+                    <div class="feedback-right">
+                        <div class="feedback-toolbar">
+                            <div class="feedback-filters" role="group" aria-label="Filter reviews">
+                                <button type="button" class="feedback-filter active" data-filter="all">All</button>
+                                <button type="button" class="feedback-filter" data-filter="5">5 Star (${ratingCounts[5]})</button>
+                                <button type="button" class="feedback-filter" data-filter="4">4 Star (${ratingCounts[4]})</button>
+                                <button type="button" class="feedback-filter" data-filter="3">3 Star (${ratingCounts[3]})</button>
+                                <button type="button" class="feedback-filter" data-filter="2">2 Star (${ratingCounts[2]})</button>
+                                <button type="button" class="feedback-filter" data-filter="1">1 Star (${ratingCounts[1]})</button>
+                                <button type="button" class="feedback-filter" data-filter="comments">With Comments (${commentsCount})</button>
+                            </div>
+                        </div>
+
+                            <c:if test="${canFeedback}">
+                            <form action="${pageContext.request.contextPath}/feedback/add" method="post" class="feedback-form">
+                                <input type="hidden" name="action" value="create">
+                                <input type="hidden" name="productId" value="${product.id}">
+                                <c:forEach items="${eligibleOrderDetails}" var="detail" begin="0" end="0">
+                                    <input type="hidden" name="orderDetailId" value="${detail.id}">
+                                </c:forEach>
+                                <div class="review-composer">
+                                    <div class="review-composer-head">
+                                        <div>
+                                            <h5 class="review-composer-title">Write a review</h5>
+                                            <p class="review-composer-sub">Your feedback helps other shoppers decide.</p>
+                                        </div>
+                                    </div>
+                                    <div class="review-composer-rating">
+                                        <div class="star-rating" id="reviewStarRating">
+                                            <input type="radio" id="rating-5" name="rating" value="5" checked>
+                                            <label for="rating-5" title="5 stars">★</label>
+                                            <input type="radio" id="rating-4" name="rating" value="4">
+                                            <label for="rating-4" title="4 stars">★</label>
+                                            <input type="radio" id="rating-3" name="rating" value="3">
+                                            <label for="rating-3" title="3 stars">★</label>
+                                            <input type="radio" id="rating-2" name="rating" value="2">
+                                            <label for="rating-2" title="2 stars">★</label>
+                                            <input type="radio" id="rating-1" name="rating" value="1">
+                                            <label for="rating-1" title="1 star">★</label>
+                                        </div>
+                                        <span class="rating-mood" id="ratingMood">Excellent</span>
+                                    </div>
+                                    <div class="review-composer-body">
+                                        <label class="form-label" for="reviewComment">Your comment</label>
+                                        <textarea id="reviewComment" name="comment" rows="4" maxlength="500"
+                                                  class="form-control feedback-textarea"
+                                                  placeholder="What did you like or dislike? Share details that help other buyers."
+                                                  required></textarea>
+                                        <span class="review-composer-counter"><span id="commentCount">0</span>/500</span>
+                                    </div>
+                                    <div class="review-composer-foot">
+                                        <button type="submit" class="btn btn-cart btn-submit-custom">
+                                            <i class="fa-solid fa-paper-plane"></i> Submit review
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </c:if>
+
+                    <div class="feedback-list">
                     <c:forEach items="${feedbacks}" var="fb">
                         <article class="feedback-item"
                                  data-rating="${fb.rating}"
@@ -1623,6 +2060,7 @@
                             <div class="feedback-actions"><i class="fa-regular fa-thumbs-up me-1"></i> Helpful</div>
                         </article>
                     </c:forEach>
+                    </div>
                 </div>
             </div>
 
@@ -1841,6 +2279,56 @@
                     });
                 });
             });
+            // ================= REVIEW COMPOSER =================
+
+            var ratingMoods = {
+                5: 'Excellent',
+                4: 'Very good',
+                3: 'Good',
+                2: 'Fair',
+                1: 'Poor'
+            };
+            var starRatingEl = document.getElementById('reviewStarRating');
+            var ratingMoodEl = document.getElementById('ratingMood');
+            if (starRatingEl && ratingMoodEl) {
+
+                var updateMood = function (value) {
+                    ratingMoodEl.textContent = ratingMoods[value] || '';
+                };
+                starRatingEl.querySelectorAll('input[name="rating"]').forEach(function (input) {
+
+                    input.addEventListener('change', function () {
+                        updateMood(input.value);
+                    });
+                    var label = starRatingEl.querySelector('label[for="' + input.id + '"]');
+                    if (label) {
+
+                        label.addEventListener('mouseenter', function () {
+                            updateMood(input.value);
+                        });
+                    }
+                });
+                starRatingEl.addEventListener('mouseleave', function () {
+                    var checked = starRatingEl.querySelector('input[name="rating"]:checked');
+                    if (checked)
+                        updateMood(checked.value);
+                });
+                var checkedInitial = starRatingEl.querySelector('input[name="rating"]:checked');
+                if (checkedInitial)
+                    updateMood(checkedInitial.value);
+            }
+
+            var reviewComment = document.getElementById('reviewComment');
+            var commentCount = document.getElementById('commentCount');
+            if (reviewComment && commentCount) {
+
+                var updateCount = function () {
+                    commentCount.textContent = reviewComment.value.length;
+                };
+                reviewComment.addEventListener('input', updateCount);
+                updateCount();
+            }
+
             // ================= URL CLEAN =================
 
             var params = new URLSearchParams(window.location.search);

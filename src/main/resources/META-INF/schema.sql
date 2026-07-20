@@ -698,6 +698,10 @@ CREATE TABLE dbo.Feedback (
     user_id INT NOT NULL,
     product_id INT NOT NULL,
     order_id INT NULL,
+    order_detail_id INT NULL,
+    variant_id INT NULL,
+    size NVARCHAR(100) NULL,
+    color NVARCHAR(100) NULL,
     rating INT NOT NULL,
     comment NVARCHAR(MAX) NULL,
     status BIT NOT NULL
@@ -715,6 +719,10 @@ CREATE TABLE dbo.Feedback (
         REFERENCES dbo.Product(id) ON DELETE CASCADE,
     CONSTRAINT FK_Feedback_Order FOREIGN KEY (order_id)
         REFERENCES dbo.[Order](id),
+    CONSTRAINT FK_Feedback_OrderDetail FOREIGN KEY (order_detail_id)
+        REFERENCES dbo.Order_Detail(id),
+    CONSTRAINT FK_Feedback_Variant FOREIGN KEY (variant_id)
+        REFERENCES dbo.Product_Variant(id),
     CONSTRAINT FK_Feedback_ResponseUser FOREIGN KEY (response_by)
         REFERENCES dbo.[User](id) ON DELETE SET NULL
 );

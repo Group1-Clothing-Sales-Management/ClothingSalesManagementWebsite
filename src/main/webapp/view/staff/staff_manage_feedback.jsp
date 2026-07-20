@@ -336,9 +336,6 @@
                                                         <a href="${feedbackBasePath}?action=view&id=${fb.id}" class="btn btn-sm btn-outline-primary">
                                                             <i class="bi bi-eye me-1"></i>View
                                                         </a>
-                                                        <a href="${feedbackBasePath}?action=view&id=${fb.id}#response-section" class="btn btn-sm btn-outline-success">
-                                                            <i class="bi bi-reply me-1"></i>Respond
-                                                        </a>
                                                         <c:if test="${sessionScope.authRoleName eq 'ADMIN'}">
                                                             <form action="${feedbackBasePath}" method="post" class="d-inline" onsubmit="return confirm('Delete this feedback permanently?');">
                                                                 <input type="hidden" name="action" value="delete"/>

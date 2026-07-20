@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.clothingsale.model.Feedback;
+import com.clothingsale.model.OrderDetail;
 import com.clothingsale.service.CustomerFeedbackService;
 import com.clothingsale.service.WishlistService;
 import java.util.List;
@@ -78,6 +79,19 @@ public class CustomerProductDetailController extends HttpServlet {
             request.setAttribute("averageRating", feedbackService.getAverageRating(id));
             request.setAttribute("ratingCounts", ratingCounts);
             request.setAttribute("commentsCount", commentsCount);
+
+            HttpSession session = request.getSession(false);
+            Object userIdObj = session != null ? session.getAttribute("authUserId") : null;
+            if (userIdObj instanceof Integer) {
+                int userId = (Integer) userIdObj;
+                List<OrderDetail> eligibleOrderDetails = feedbackService.getEligibleOrderDetailsForFeedback(userId, id);
+                request.setAttribute("eligibleOrderDetails", eligibleOrderDetails);
+                request.setAttribute("canFeedback", !eligibleOrderDetails.isEmpty());
+            } else {
+                request.setAttribute("eligibleOrderDetails", java.util.Collections.emptyList());
+                request.setAttribute("canFeedback", false);
+            }
+
             // Gửi dữ liệu sang JSP
             request.setAttribute("product", product);
             request.setAttribute("colors", colors);

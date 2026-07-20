@@ -14,6 +14,10 @@ public class Feedback {
     private int userId;
     private int productId;
     private Integer orderId;
+    private Integer orderDetailId;
+    private Integer variantId;
+    private String size;
+    private String color;
     private int rating;
     private String comment;
     private boolean visible;
@@ -67,6 +71,38 @@ public class Feedback {
 
     public void setOrderId(Integer orderId) {
         this.orderId = orderId;
+    }
+
+    public Integer getOrderDetailId() {
+        return orderDetailId;
+    }
+
+    public void setOrderDetailId(Integer orderDetailId) {
+        this.orderDetailId = orderDetailId;
+    }
+
+    public Integer getVariantId() {
+        return variantId;
+    }
+
+    public void setVariantId(Integer variantId) {
+        this.variantId = variantId;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public int getRating() {
