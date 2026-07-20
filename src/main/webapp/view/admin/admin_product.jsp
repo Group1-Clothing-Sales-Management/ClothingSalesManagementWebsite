@@ -34,12 +34,29 @@
                 background-color: #1f2937 !important;
                 color: #fff !important;
             }
-            .product-img {
-                width: 50px;
-                height: 50px;
-                object-fit: cover;
+            .product-image-box {
+                width: 54px;
+                height: 54px;
+                margin: 0 auto;
                 border-radius: 6px;
+                overflow: hidden;
                 border: 1px solid #e5e7eb;
+                background-color: #f8f9fa;
+            }
+            .product-img {
+                width: 100%;
+                height: 100%;
+                display: block;
+                object-fit: cover;
+            }
+            .product-image-placeholder {
+                width: 100%;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+                color: #9ca3af;
+                background-color: #f8f9fa;
+                font-size: 1.2rem;
             }
         </style>
     </head>
@@ -86,17 +103,31 @@
                                     <tr>
                                         <td class="fw-bold text-secondary">#PROD-${prod.id}</td>
                                         <td>
-                                            <c:choose>
-                                                <c:when test="${not empty prod.mainImageUrl}">
-                                                    <img src="${pageContext.request.contextPath}/media/product/${prod.mainImageUrl}"
-                                                         class="product-img shadow-sm"
-                                                         alt="Product Image"
-                                                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/images/default-product.png';">  
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <img src="${pageContext.request.contextPath}/assets/images/default-product.png"   
+                                            <div class="product-image-box shadow-sm">
+                                                <c:choose>
+                                                    <c:when test="${not empty prod.mainImageUrl}">
+                                                        <c:url var="productImageUrl"
+                                                               value="/media/product/${prod.mainImageUrl}" />
+                                                        <img src="${productImageUrl}"
+                                                             class="product-img"
+                                                             alt="${prod.productName}"
+                                                             loading="lazy"
+                                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <div class="product-image-placeholder"
+                                                             style="display: none;"
+                                                             title="Image file not found">
+                                                            <i class="fa-regular fa-image"></i>
+                                                        </div>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="product-image-placeholder"
+                                                             style="display: flex;"
+                                                             title="No product image">
+                                                            <i class="fa-regular fa-image"></i>
+                                                        </div>
                                                     </c:otherwise>
                                                 </c:choose>
+                                            </div>
                                         </td>
                                         <td class="text-start"><span class="fw-semibold text-dark">${prod.productName}</span></td>
                                         <td><span class="badge bg-light text-dark border px-2.5 py-1.5">${prod.categoryId}</span></td>
