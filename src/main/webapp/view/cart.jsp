@@ -1745,5 +1745,6 @@
             });
         }());
     </script>
+    <jsp:include page="/view/customer/common/footer.jsp"/>
 </body>
 </html>

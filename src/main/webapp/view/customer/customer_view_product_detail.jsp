@@ -2066,6 +2066,8 @@
 
         </div>
 
+        </div>
+
         <div class="modal fade cart-message-modal" id="cartMessageModal" tabindex="-1" aria-hidden="true">
 
             <div class="modal-dialog modal-dialog-centered">

@@ -13,7 +13,14 @@
     }
 
     body > .site-footer {
+        width: 100%;
+        align-self: stretch;
+        flex: 0 0 auto;
         margin-top: auto !important;
+    }
+
+    .site-footer {
+        box-sizing: border-box;
     }
 </style>
 

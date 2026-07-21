@@ -1031,9 +1031,6 @@
                             <p class="hero-text mt-3">
                                 Curated clothing, sneakers and accessories that make getting dressed simple.
                             </p>
-                            <a href="#products" class="btn btn-danger mt-3 px-4 py-2">
-                                Explore collection <i class="fa-solid fa-arrow-right ms-2"></i>
-                            </a>
                             <ul class="hero-benefits">
                                 <li><i class="fa-solid fa-circle-check"></i>Easy shopping</li>
                                 <li><i class="fa-solid fa-tag"></i>Good value</li>
