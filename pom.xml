@@ -123,6 +123,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.3.2</version>
+                <configuration>
+                    <!-- Package bundled seed images; runtime uploads remain external. -->
+                    <webResources>
+                        <resource>
+                            <directory>${project.basedir}/upload</directory>
+                            <targetPath>upload</targetPath>
+                            <filtering>false</filtering>
+                        </resource>
+                    </webResources>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -2,8 +2,10 @@ package com.clothingsale.controller;
 
 import com.clothingsale.dao.UserDAO;
 import com.clothingsale.model.User;
-import java.io.File;
+import com.clothingsale.util.UserUploadStorage;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.UUID;
@@ -228,24 +230,11 @@ public class CustomerProfileController extends HttpServlet {
         String extension = getFileExtension(originalFileName);
         String savedFileName = "customer-" + userId + "-" + UUID.randomUUID().toString() + extension;
 
-        String baseRealPath = getServletContext().getRealPath("");
-        String uploadPath;
-        if (baseRealPath == null) {
-            uploadPath = System.getProperty("user.dir")
-                    + File.separator + "uploads"
-                    + File.separator + "avatar";
-        } else {
-            uploadPath = baseRealPath
-                    + File.separator + "uploads"
-                    + File.separator + "avatar";
-        }
-
-        File uploadDir = new File(uploadPath);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
-        }
-
-        avatarPart.write(uploadPath + File.separator + savedFileName);
+        Path targetFile = UserUploadStorage.resolveFile(
+                "avatar/" + savedFileName
+        );
+        Files.createDirectories(targetFile.getParent());
+        avatarPart.write(targetFile.toString());
         return "uploads/avatar/" + savedFileName;
     }
 

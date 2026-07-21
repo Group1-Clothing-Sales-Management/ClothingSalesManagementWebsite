@@ -5,15 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class ProductImageStorage {
+/** Stores non-product user uploads outside the deployed application. */
+public final class UserUploadStorage {
 
     private static final String DIRECTORY_PROPERTY
-            = "clothingsale.upload.dir";
+            = "clothingsale.user.upload.dir";
     private static final String DIRECTORY_ENVIRONMENT_VARIABLE
-            = "CLOTHINGSALE_UPLOAD_DIR";
+            = "CLOTHINGSALE_USER_UPLOAD_DIR";
 
-    /** Product images are stored in a configurable directory outside the WAR. */
-    private ProductImageStorage() {
+    private UserUploadStorage() {
     }
 
     public static Path getUploadDirectory() throws IOException {
@@ -28,30 +28,30 @@ public final class ProductImageStorage {
         Path uploadDirectory = configuredDirectory != null
                 && !configuredDirectory.trim().isEmpty()
                 ? Paths.get(configuredDirectory.trim())
-                : Paths.get(System.getProperty("user.dir"), "upload");
+                : Paths.get(System.getProperty("user.dir"), "uploads");
 
         uploadDirectory = uploadDirectory.toAbsolutePath().normalize();
         Files.createDirectories(uploadDirectory);
         return uploadDirectory;
     }
 
-    public static Path resolveFile(String fileName) throws IOException {
-        if (fileName == null || fileName.trim().isEmpty()) {
-            throw new IOException("Image file name is empty");
+    public static Path resolveFile(String relativePath) throws IOException {
+        if (relativePath == null || relativePath.trim().isEmpty()) {
+            throw new IOException("Upload file path is empty");
         }
 
-        String safeFileName = Paths.get(fileName)
-                .getFileName()
-                .toString();
+        String safeRelativePath = relativePath.replace('\\', '/');
+        while (safeRelativePath.startsWith("/")) {
+            safeRelativePath = safeRelativePath.substring(1);
+        }
 
         Path uploadDirectory = getUploadDirectory();
-
         Path targetFile = uploadDirectory
-                .resolve(safeFileName)
+                .resolve(safeRelativePath)
                 .normalize();
 
         if (!targetFile.startsWith(uploadDirectory)) {
-            throw new IOException("Invalid image file path");
+            throw new IOException("Invalid upload file path");
         }
 
         return targetFile;

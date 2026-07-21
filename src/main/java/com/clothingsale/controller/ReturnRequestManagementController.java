@@ -1,5 +1,6 @@
 package com.clothingsale.controller;
 
+import com.clothingsale.util.UserUploadStorage;
 import com.clothingsale.service.ReturnRequestService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -9,8 +10,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.File;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.UUID;
@@ -160,11 +162,11 @@ public class ReturnRequestManagementController extends HttpServlet {
             if (".png".equals(candidate) || ".webp".equals(candidate) || ".jpeg".equals(candidate) || ".jpg".equals(candidate)) extension = candidate;
         }
         String fileName = "refund-" + requestId + "-" + UUID.randomUUID() + extension;
-        String basePath = getServletContext().getRealPath("");
-        if (basePath == null) basePath = System.getProperty("user.dir");
-        File directory = new File(basePath, "uploads" + File.separator + "refund");
-        if (!directory.exists() && !directory.mkdirs()) throw new IOException("Could not create the refund upload directory.");
-        part.write(new File(directory, fileName).getAbsolutePath());
+        Path targetFile = UserUploadStorage.resolveFile(
+                "refund/" + fileName
+        );
+        Files.createDirectories(targetFile.getParent());
+        part.write(targetFile.toString());
         return "uploads/refund/" + fileName;
     }
 }

@@ -1185,7 +1185,7 @@
                        String rawImageUrl = it.getImageUrl();
                        String imageUrl = rawImageUrl;
                        if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                           imageUrl = ctx + "/media/product/placeholder.png";
+                           imageUrl = ctx + "/media/product/placeholder.svg";
                        } else {
                            imageUrl = imageUrl.trim();
                            String imageFileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);

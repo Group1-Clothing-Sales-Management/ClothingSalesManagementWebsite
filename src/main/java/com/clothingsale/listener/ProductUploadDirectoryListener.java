@@ -7,7 +7,7 @@ import jakarta.servlet.annotation.WebListener;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** Ensures the project-root upload directory exists when the application starts. */
+/** Ensures the configured product upload directory exists at startup. */
 @WebListener
 public class ProductUploadDirectoryListener
         implements ServletContextListener {
