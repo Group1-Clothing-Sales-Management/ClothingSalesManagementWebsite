@@ -17,8 +17,14 @@ GO
 USE [ClothesShopDB];
 GO
 
+SET NOCOUNT ON;
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET ARITHABORT ON;
+SET NUMERIC_ROUNDABORT OFF;
 SET XACT_ABORT ON;
 GO
 
@@ -114,8 +120,19 @@ CREATE TABLE dbo.User_Address (
     recipient_phone VARCHAR(15) NOT NULL,
     ward_id VARCHAR(20) NULL,
     address_detail NVARCHAR(255) NOT NULL,
+    province_code VARCHAR(20) NULL,
+    province_name NVARCHAR(150) NULL,
+    district_code VARCHAR(20) NULL,
+    district_name NVARCHAR(150) NULL,
+    ward_code VARCHAR(20) NULL,
+    ward_name NVARCHAR(150) NULL,
     is_default BIT NOT NULL
         CONSTRAINT DF_UserAddress_Default DEFAULT (0),
+    is_active BIT NOT NULL
+        CONSTRAINT DF_UserAddress_Active DEFAULT (1),
+    created_at DATETIME2(0) NOT NULL
+        CONSTRAINT DF_UserAddress_CreatedAt DEFAULT (GETDATE()),
+    updated_at DATETIME2(0) NULL,
     CONSTRAINT PK_User_Address PRIMARY KEY (id),
     CONSTRAINT FK_UserAddress_User FOREIGN KEY (user_id)
         REFERENCES dbo.[User](id) ON DELETE CASCADE,
@@ -540,6 +557,13 @@ CREATE TABLE dbo.[Order] (
     recipient_phone VARCHAR(15) NOT NULL,
     ward_id VARCHAR(20) NULL,
     address_detail NVARCHAR(255) NOT NULL,
+    shipping_province_code VARCHAR(20) NULL,
+    shipping_province_name NVARCHAR(150) NULL,
+    shipping_district_code VARCHAR(20) NULL,
+    shipping_district_name NVARCHAR(150) NULL,
+    shipping_ward_code VARCHAR(20) NULL,
+    shipping_ward_name NVARCHAR(150) NULL,
+    shipping_address_detail NVARCHAR(255) NULL,
     total_items_price DECIMAL(18,2) NOT NULL,
     discount_amount DECIMAL(18,2) NOT NULL
         CONSTRAINT DF_Order_Discount DEFAULT (0),
@@ -747,6 +771,12 @@ GO
 CREATE INDEX IX_District_Province ON dbo.District(province_id);
 CREATE INDEX IX_Ward_District ON dbo.Ward(district_id);
 CREATE INDEX IX_User_RoleStatus ON dbo.[User](role_id, status);
+CREATE UNIQUE INDEX UX_User_Address_One_Default
+    ON dbo.User_Address(user_id)
+    WHERE is_default = 1
+      AND is_active = 1;
+CREATE INDEX IX_User_Address_User_Active
+    ON dbo.User_Address(user_id, is_active, is_default);
 CREATE INDEX IX_Category_ParentStatus ON dbo.Category(parent_id, status);
 CREATE INDEX IX_Product_CategoryStatus ON dbo.Product(category_id, status);
 CREATE INDEX IX_Product_BrandStatus ON dbo.Product(brand_id, status);
