@@ -22,3 +22,10 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Runtime product uploads; keep the directory itself in the project
+/upload/*
+!/upload/.gitkeep
+# Keep bundled seed images available after a clean checkout.
+!/upload/prod*-main.jpg
+!/upload/quan_jean_xanh_front.png

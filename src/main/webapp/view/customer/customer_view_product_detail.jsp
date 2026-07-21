@@ -1663,7 +1663,7 @@
                             </c:choose>
                         </div>
                         <div class="media-thumbs" aria-label="Product images">
-                            <img src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}"
+                            <img src="${pageContext.request.contextPath}/media/product/${product.mainImageUrl}"
                                  class="media-thumb active"
                                  alt="${product.productName} preview">
                         </div>
@@ -1881,7 +1881,7 @@
 
                                     <input type="hidden"
                                            name="imageUrl"
-                                           value="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}">
+                                           value="${product.mainImageUrl}">
 
                                     <button type="submit"
                                             class="btn btn-cart">

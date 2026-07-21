@@ -123,7 +123,7 @@
 
                     <c:when test="${param.status == 'image-upload-failed'}">
                         <div class="alert alert-danger">
-                            The image could not be saved. Check D:\ImageSWP391
+                            The image could not be saved. Check the project upload folder.
                             and try again.
                         </div>
                     </c:when>

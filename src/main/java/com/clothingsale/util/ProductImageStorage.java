@@ -7,8 +7,12 @@ import java.nio.file.Paths;
 
 public final class ProductImageStorage {
 
+    /**
+     * Product images are stored in the project-root upload directory,
+     * alongside the src directory.
+     */
     private static final Path UPLOAD_DIRECTORY
-            = Paths.get("D:\\ImageSWP391")
+            = Paths.get(System.getProperty("user.dir"), "upload")
                     .toAbsolutePath()
                     .normalize();
 

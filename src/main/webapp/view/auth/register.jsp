@@ -726,10 +726,10 @@
             <h1 class="hero-wordmark">Build your closet faster.</h1>
             <p class="hero-copy">Create an account to save favorites, unlock vouchers, and keep every order in one clean place.</p>
             <div class="lookbook-grid" aria-hidden="true">
-                <img class="lookbook-main" src="<%= ctx %>/uploads/product/prod12-main.jpg" alt="">
+                <img class="lookbook-main" src="<%= ctx %>/media/product/prod12-main.jpg" alt="">
                 <div class="lookbook-stack">
-                    <img src="<%= ctx %>/uploads/product/prod18-main.jpg" alt="">
-                    <img src="<%= ctx %>/uploads/product/prod22-main.jpg" alt="">
+                    <img src="<%= ctx %>/media/product/prod18-main.jpg" alt="">
+                    <img src="<%= ctx %>/media/product/prod22-main.jpg" alt="">
                 </div>
             </div>
             <div class="brand-notes" aria-label="Account benefits">

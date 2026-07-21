@@ -353,7 +353,7 @@
                                     <a href="${pageContext.request.contextPath}/product/detail?id=${item.productId}">
                                         <c:choose>
                                             <c:when test="${not empty item.mainImageUrl}">
-                                                <img src="${pageContext.request.contextPath}/uploads/product/${item.mainImageUrl}"
+                                                <img src="${pageContext.request.contextPath}/media/product/${item.mainImageUrl}"
                                                      class="wishlist-image"
                                                      alt="${item.productName}">
                                             </c:when>

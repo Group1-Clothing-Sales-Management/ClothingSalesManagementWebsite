@@ -439,10 +439,10 @@
                 </div>
 
                 <div class="lookbook">
-                    <img class="lookbook-main" src="<%= ctx %>/uploads/product/prod21-main.jpg" alt="Clothing Sale product">
+                    <img class="lookbook-main" src="<%= ctx %>/media/product/prod21-main.jpg" alt="Clothing Sale product">
                     <div class="lookbook-stack">
-                        <img src="<%= ctx %>/uploads/product/prod18-main.jpg" alt="Clothing Sale product">
-                        <img src="<%= ctx %>/uploads/product/prod20-main.jpg" alt="Clothing Sale product">
+                        <img src="<%= ctx %>/media/product/prod18-main.jpg" alt="Clothing Sale product">
+                        <img src="<%= ctx %>/media/product/prod20-main.jpg" alt="Clothing Sale product">
                     </div>
                 </div>
 

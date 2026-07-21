@@ -801,10 +801,10 @@
             <h1 class="hero-wordmark">Style that feels easy.</h1>
             <p class="hero-copy">Log in to continue shopping fresh outfits, saved picks, and everyday pieces made for your routine.</p>
             <div class="lookbook-grid" aria-hidden="true">
-                <img class="lookbook-main" src="<%= ctx %>/uploads/product/prod10-main.jpg" alt="">
+                <img class="lookbook-main" src="<%= ctx %>/media/product/prod10-main.jpg" alt="">
                 <div class="lookbook-stack">
-                    <img src="<%= ctx %>/uploads/product/prod16-main.jpg" alt="">
-                    <img src="<%= ctx %>/uploads/product/prod21-main.jpg" alt="">
+                    <img src="<%= ctx %>/media/product/prod16-main.jpg" alt="">
+                    <img src="<%= ctx %>/media/product/prod21-main.jpg" alt="">
                 </div>
             </div>
             <div class="brand-notes" aria-label="Store highlights">

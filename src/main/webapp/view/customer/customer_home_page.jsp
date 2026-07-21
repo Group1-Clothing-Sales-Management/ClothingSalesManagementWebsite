@@ -1249,7 +1249,7 @@
                                             <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
                                             <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
                                             <input type="hidden" name="quantity" value="1" />
-                                            <input type="hidden"name="imageUrl"value="${productImageUrl}" />
+                                            <input type="hidden" name="imageUrl" value="${p.mainImageUrl}" />
                                             <div class="product-actions">
                                                 <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="btn btn-outline-dark">
                                                     Details

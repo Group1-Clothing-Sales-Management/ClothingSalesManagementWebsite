@@ -935,14 +935,14 @@
                                             /media/product/{filename}
 
         Nếu không tìm thấy, JavaScript sẽ thử:
-        /uploads/product/{filename}
+                                            /media/product/{filename}
                                         --%>
 
-                                        <c:url var="mediaImageUrl"
-                                               value="/media/product/${item.imageUrl}"/>
+                                        <c:set var="checkoutImageName"
+                                               value="${fn:substringAfterLast(item.imageUrl, '/')}"/>
 
-                                        <c:url var="legacyImageUrl"
-                                               value="/uploads/product/${item.imageUrl}"/>
+                                        <c:url var="mediaImageUrl"
+                                               value="/media/product/${checkoutImageName}"/>
 
                                         <div class="product-item">
 
@@ -952,7 +952,6 @@
                                                     <c:when test="${not empty item.imageUrl}">
 
                                                         <img src="${mediaImageUrl}"
-                                                             data-fallback-src="${legacyImageUrl}"
                                                              alt="${fn:escapeXml(item.productName)}"
                                                              class="checkout-product-image"
                                                              onerror="handleCheckoutImageError(this);">

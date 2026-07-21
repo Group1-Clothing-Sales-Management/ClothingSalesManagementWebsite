@@ -1185,21 +1185,28 @@
                        String rawImageUrl = it.getImageUrl();
                        String imageUrl = rawImageUrl;
                        if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                           imageUrl = ctx + "/uploads/product/placeholder.png";
+                           imageUrl = ctx + "/media/product/placeholder.png";
                        } else {
                            imageUrl = imageUrl.trim();
-                           if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://") || imageUrl.startsWith(ctx + "/")) {
+                           String imageFileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+                           if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+                               imageUrl = imageUrl;
+                           } else if (imageUrl.startsWith(ctx + "/media/product/")
+                                   || imageUrl.startsWith(ctx + "/uploads/product/")) {
+                               imageUrl = ctx + "/media/product/" + imageFileName;
+                           } else if (imageUrl.startsWith(ctx + "/")) {
                                imageUrl = imageUrl;
                            } else {
                                while (imageUrl.startsWith("/")) {
                                    imageUrl = imageUrl.substring(1);
                                }
-                               if (imageUrl.startsWith("uploads/")) {
-                                   imageUrl = ctx + "/" + imageUrl;
+                               if (imageUrl.startsWith("media/product/")
+                                       || imageUrl.startsWith("uploads/product/")) {
+                                   imageUrl = ctx + "/media/product/" + imageFileName;
                                } else if (imageUrl.contains("/")) {
                                    imageUrl = ctx + "/uploads/" + imageUrl;
                                } else {
-                                   imageUrl = ctx + "/uploads/product/" + imageUrl;
+                                   imageUrl = ctx + "/media/product/" + imageFileName;
                                }
                            }
                        }
@@ -1238,7 +1245,7 @@
                             <img src="<%= imageUrl %>"
                                  alt="<%= it.getProductName() %>"
                                  class="cart-img"
-                                 onerror="this.onerror=null;this.src='<%= ctx %>/uploads/product/placeholder.png';">
+                                 onerror="this.onerror=null;this.style.display='none';">
                             <div>
                                 <a class="product-name" href="<%= ctx %>/product/detail?id=<%= it.getProductId() %>">
                                     <%= it.getProductName() %>

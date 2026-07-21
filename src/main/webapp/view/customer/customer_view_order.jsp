@@ -867,7 +867,8 @@
                         <div class="order-items">
                             <c:forEach items="${o.details}" var="d">
                                 <div class="order-item">
-                                    <c:set var="orderImageUrl" value="${fn:trim(d.currentImageUrl)}"/>
+                                    <c:set var="orderImageUrl" value="${fn:replace(fn:trim(d.currentImageUrl), '/uploads/product/', '/media/product/')}"/>
+                                    <c:set var="orderImageUrl" value="${fn:replace(orderImageUrl, 'uploads/product/', 'media/product/')}"/>
                                     <c:set var="contextPathPrefix" value="${pageContext.request.contextPath}/"/>
                                     <c:choose>
                                         <c:when test="${not empty orderImageUrl}">
@@ -881,6 +882,9 @@
                                                 <c:when test="${fn:startsWith(orderImageUrl, '/')}">
                                                     <img class="order-item-img" src="${pageContext.request.contextPath}${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:when>
+                                                <c:when test="${fn:startsWith(orderImageUrl, 'media/product/')}">
+                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
+                                                </c:when>
                                                 <c:when test="${fn:startsWith(orderImageUrl, 'uploads/')}">
                                                     <img class="order-item-img" src="${pageContext.request.contextPath}/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:when>
@@ -888,7 +892,7 @@
                                                     <img class="order-item-img" src="${pageContext.request.contextPath}/uploads/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/uploads/product/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
+                                                    <img class="order-item-img" src="${pageContext.request.contextPath}/media/product/${orderImageUrl}" alt="${d.productNameSnapshot}" onerror="this.onerror=null;this.style.visibility='hidden';">
                                                 </c:otherwise>
                                             </c:choose>
                                         </c:when>

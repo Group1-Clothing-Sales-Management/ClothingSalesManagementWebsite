@@ -899,7 +899,7 @@
                                         <input type="hidden" name="quantity" value="1">
                                         <input type="hidden"
                                                name="imageUrl"
-                                               value="${productImageUrl}">
+                                               value="${p.mainImageUrl}">
 
                                         <button type="submit"
                                                 class="btn btn-danger w-100">

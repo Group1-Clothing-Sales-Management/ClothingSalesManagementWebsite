@@ -57,7 +57,7 @@
                             <div class="col-md-3 text-center border-end">
                                 <c:choose>
                                     <c:when test="${not empty product.mainImageUrl}">
-                                        <img src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}"
+                                        <img src="${pageContext.request.contextPath}/media/product/${product.mainImageUrl}"
                                              alt="Main Image" class="img-fluid rounded img-thumbnail product-main-image">
                                     </c:when>
                                     <c:otherwise>

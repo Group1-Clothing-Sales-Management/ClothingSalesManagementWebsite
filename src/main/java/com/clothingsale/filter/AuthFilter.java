@@ -128,6 +128,7 @@ public class AuthFilter extends HttpFilter {
                 || lowerPath.startsWith("/feedback/list")
                 || lowerPath.startsWith("/feedback/delete")
                 || lowerPath.startsWith("/uploads/")
+                || lowerPath.startsWith("/media/product/")
                 || lowerPath.startsWith("/css/")
                 || lowerPath.startsWith("/js/")
                 || lowerPath.startsWith("/images/")

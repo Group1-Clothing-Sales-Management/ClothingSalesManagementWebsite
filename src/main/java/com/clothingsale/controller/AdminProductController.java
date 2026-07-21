@@ -643,7 +643,7 @@ public class AdminProductController extends HttpServlet {
 
     /**
      * Lưu ảnh ngoài thư mục deploy. ProductImageStorage đang trỏ tới
-     * D:\ImageSWP391.
+     * the project-root upload directory.
      */
     private String saveProductImage(Part filePart)
             throws IOException {

@@ -80,12 +80,14 @@
                                         <td>
                                             <c:choose>
                                                 <c:when test="${not empty prod.mainImageUrl}">
-                                                    <img src="${pageContext.request.contextPath}/uploads/product/${prod.mainImageUrl}"
+                                                    <img src="${pageContext.request.contextPath}/media/product/${prod.mainImageUrl}"
                                                          class="product-img shadow-sm" alt="Product Image">
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <img src="${pageContext.request.contextPath}/uploads/product/default.jpg"
-                                                         class="product-img shadow-sm" alt="No Image">
+                                                    <div class="product-img shadow-sm d-flex align-items-center justify-content-center text-muted"
+                                                         title="No image">
+                                                        <i class="fa-regular fa-image"></i>
+                                                    </div>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>

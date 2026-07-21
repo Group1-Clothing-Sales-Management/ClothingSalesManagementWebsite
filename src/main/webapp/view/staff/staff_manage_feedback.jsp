@@ -272,7 +272,7 @@
                                                     <div class="d-flex align-items-center gap-3">
                                                         <c:choose>
                                                             <c:when test="${not empty fb.productImageUrl}">
-                                                                <img src="${pageContext.request.contextPath}/uploads/product/${fb.productImageUrl}"
+                                                                <img src="${pageContext.request.contextPath}/media/product/${fb.productImageUrl}"
                                                                      class="thumb shadow-sm"
                                                                      alt="${fb.productName}"
                                                                      onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
@@ -376,7 +376,7 @@
                                     <div>
                                         <c:choose>
                                             <c:when test="${not empty feedback.productImageUrl}">
-                                                <img src="${pageContext.request.contextPath}/uploads/product/${feedback.productImageUrl}"
+                                                <img src="${pageContext.request.contextPath}/media/product/${feedback.productImageUrl}"
                                                      class="rounded-4 border shadow-sm"
                                                      style="width:160px;height:160px;object-fit:cover;"
                                                      alt="${feedback.productName}"
