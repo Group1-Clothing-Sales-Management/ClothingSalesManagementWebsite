@@ -1,6 +1,23 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
-<footer class="bg-dark text-white mt-5">
+<style>
+    html,
+    body {
+        min-height: 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body > .site-footer {
+        margin-top: auto !important;
+    }
+</style>
+
+<footer class="site-footer bg-dark text-white mt-5">
 
     <div class="container py-5">
 

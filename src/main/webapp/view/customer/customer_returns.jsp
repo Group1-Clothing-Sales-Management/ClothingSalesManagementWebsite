@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { background:#f7f7f8; color:#292524; }
-        .returns-page { max-width:1100px; margin:30px auto 60px; padding:0 16px; }
+        .returns-page { width:100%; max-width:1100px; margin:30px auto 60px; padding:0 16px; }
         .returns-card { border:0; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.06); }
         .status { border-radius:20px; padding:6px 11px; font-size:12px; font-weight:700; }
         .status-PENDING,.status-INFO_REQUIRED { background:#fff3cd; color:#856404; }
