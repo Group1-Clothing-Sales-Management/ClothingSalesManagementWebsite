@@ -74,13 +74,15 @@ public class ReturnRequestDAO {
 
     /** Tạo header, các dòng sản phẩm và lịch sử PENDING trong cùng một transaction. */
     public int createRequest(String code, int userId, int orderId, String type, String reason,
-            String customerNote, Map<Integer, Integer> quantities) throws SQLException {
+            String customerNote, String bankId, String bankName, String accountName,
+            String accountNumber, Map<Integer, Integer> quantities) throws SQLException {
         String orderSql = "SELECT o.order_status, o.total_payment, od.id, od.variant_id, "
                 + "od.product_name_snapshot, od.variant_attributes_snapshot, od.quantity, od.price "
                 + "FROM [Order] o JOIN Order_Detail od ON od.order_id = o.id "
                 + "WHERE o.id = ? AND o.user_id = ?";
-        String insertHeader = "INSERT INTO Return_Request(request_code, order_id, customer_id, request_type, reason, customer_note, refund_amount) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertHeader = "INSERT INTO Return_Request(request_code, order_id, customer_id, request_type, reason, customer_note, "
+                + "refund_amount, refund_bank_id, refund_bank_name, refund_account_name, refund_account_number, refund_transfer_description) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String insertItem = "INSERT INTO Return_Request_Item(return_request_id, order_detail_id, variant_id, product_name_snapshot, variant_attributes_snapshot, quantity, unit_price) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         String insertHistory = "INSERT INTO Return_Request_History(return_request_id, old_status, new_status, note, changed_by) VALUES (?, NULL, 'PENDING', ?, ?)";
@@ -120,6 +122,12 @@ public class ReturnRequestDAO {
                     ps.setString(5, reason);
                     ps.setString(6, customerNote);
                     ps.setBigDecimal(7, refund);
+                    ps.setString(8, bankId);
+                    ps.setString(9, bankName);
+                    ps.setString(10, accountName);
+                    ps.setString(11, accountNumber);
+                    // Nội dung chuyển khoản cố định theo yêu cầu: mã đơn hàng kèm chữ trả hàng.
+                    ps.setString(12, "REFUND " + getOrderCode(con, orderId));
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
                         if (!keys.next()) {
@@ -168,8 +176,56 @@ public class ReturnRequestDAO {
         }
     }
 
+    /** Lấy mã đơn hàng trong cùng transaction để nội dung chuyển khoản không bị giả mạo từ form. */
+    private String getOrderCode(Connection con, int orderId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("SELECT order_code FROM [Order] WHERE id=?")) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new SQLException("Order not found.");
+                return rs.getString(1);
+            }
+        }
+    }
+
     public List<ReturnRequest> getCustomerRequests(int userId) {
         return getRequests("rr.customer_id = ?", userId, null);
+    }
+
+    /**
+     * Tự động hủy các yêu cầu đã Approved nhưng sau 3 ngày vẫn chưa nhận được hàng.
+     * Hàm được gọi khi đọc dữ liệu và bởi listener định kỳ của ứng dụng.
+     */
+    public int cancelExpiredApprovedRequests() throws SQLException {
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                List<Integer> expiredIds = new ArrayList<>();
+                String findSql = "SELECT id FROM Return_Request WITH (UPDLOCK, ROWLOCK) "
+                        + "WHERE status='APPROVED' AND COALESCE(reviewed_at, requested_at) <= DATEADD(DAY, -3, GETDATE())";
+                try (PreparedStatement ps = con.prepareStatement(findSql); ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) expiredIds.add(rs.getInt(1));
+                }
+                for (Integer id : expiredIds) {
+                    try (PreparedStatement ps = con.prepareStatement(
+                            "UPDATE Return_Request SET status='CANCELLED', staff_note=? WHERE id=? AND status='APPROVED'")) {
+                        ps.setString(1, "Automatically cancelled because the store did not receive the returned package within 3 days.");
+                        ps.setInt(2, id);
+                        if (ps.executeUpdate() == 1) {
+                            // Không có người thao tác trực tiếp nên changed_by được lưu là NULL.
+                            addHistory(con, id, "APPROVED", "CANCELLED",
+                                    "The return package was not received within 3 days.", null);
+                        }
+                    }
+                }
+                con.commit();
+                return expiredIds.size();
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
     }
 
     public List<ReturnRequest> getStaffRequests(String keyword, String status) {
@@ -252,7 +308,13 @@ public class ReturnRequestDAO {
 
     /** Staff đổi trạng thái kiểm tra, yêu cầu bổ sung hoặc từ chối. */
     public boolean review(int requestId, int staffId, String status, String note) throws SQLException {
-        return changeStatus(requestId, staffId, status, note, false);
+        return changeStatus(requestId, staffId, status, note, null, null);
+    }
+
+    /** Duyệt yêu cầu và lưu QR/nội dung chuyển khoản được tạo ở service. */
+    public boolean review(int requestId, int staffId, String status, String note,
+            String qrUrl, String transferDescription) throws SQLException {
+        return changeStatus(requestId, staffId, status, note, qrUrl, transferDescription);
     }
 
     /** Ghi nhận hàng đã nhận và cộng tồn kho đúng một lần. */
@@ -286,7 +348,7 @@ public class ReturnRequestDAO {
     }
 
     public boolean requestRefund(int requestId, int staffId, String note) throws SQLException {
-        return changeStatus(requestId, staffId, "REFUND_PENDING", note, false);
+        return changeStatus(requestId, staffId, "REFUND_PENDING", note, null, null);
     }
 
     /** Admin duyệt hoàn tiền và cập nhật Payment/Order trong cùng transaction. */
@@ -308,11 +370,77 @@ public class ReturnRequestDAO {
         }
     }
 
-    public boolean rejectRefund(int requestId, int adminId, String note) throws SQLException {
-        return changeStatus(requestId, adminId, "REJECTED", note, false);
+    /**
+     * Xác nhận đã chuyển khoản và lưu ảnh chứng từ.
+     * Chỉ cho phép xác nhận sau khi Staff đã bấm Confirm products received.
+     */
+    public boolean confirmRefund(int requestId, int operatorId, String note, String proofPath) throws SQLException {
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                String code = null;
+                int orderId = 0;
+                String current = null;
+                try (PreparedStatement ps = con.prepareStatement(
+                        // Khóa dòng trong transaction để không thể cộng tồn kho hai lần khi hai người cùng xác nhận.
+                        "SELECT order_id, request_code, status FROM Return_Request WITH (UPDLOCK, ROWLOCK) WHERE id=?")) {
+                    ps.setInt(1, requestId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new SQLException("Return request not found.");
+                        orderId = rs.getInt("order_id");
+                        code = rs.getString("request_code");
+                        current = rs.getString("status");
+                    }
+                }
+                if (!"RECEIVED".equals(current)) {
+                    con.rollback();
+                    return false;
+                }
+                if (proofPath == null || proofPath.trim().isEmpty()) {
+                    throw new SQLException("Please upload the bank transfer proof image.");
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Return_Request SET status='COMPLETED', refunded_by=?, refunded_at=GETDATE(), "
+                        + "refund_confirmed_by=?, refund_confirmed_at=GETDATE(), refund_proof_path=?, staff_note=? "
+                        + "WHERE id=? AND status='RECEIVED'")) {
+                    ps.setInt(1, operatorId);
+                    ps.setInt(2, operatorId);
+                    ps.setString(3, proofPath);
+                    ps.setString(4, note);
+                    ps.setInt(5, requestId);
+                    if (ps.executeUpdate() != 1) { con.rollback(); return false; }
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Payment SET payment_status='REFUNDED', transaction_reference=?, payment_date=GETDATE() WHERE order_id=?")) {
+                    ps.setString(1, "REFUND-" + code);
+                    ps.setInt(2, orderId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE [Order] SET order_status='RETURNED', updated_at=GETDATE() WHERE id=?")) {
+                    ps.setInt(1, orderId);
+                    ps.executeUpdate();
+                }
+                addHistory(con, requestId, current, "COMPLETED", note, operatorId);
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
     }
 
-    private boolean changeStatus(int requestId, int userId, String target, String note, boolean unused) throws SQLException {
+    public boolean rejectRefund(int requestId, int adminId, String note) throws SQLException {
+        return changeStatus(requestId, adminId, "REJECTED", note, null, null);
+    }
+
+    private boolean changeStatus(int requestId, int userId, String target, String note,
+            String qrUrl, String transferDescription) throws SQLException {
         String current = getStatus(requestId);
         if (current == null || !canChange(current, target)) return false;
         try (Connection con = DBConnection.getConnection()) {
@@ -321,9 +449,18 @@ public class ReturnRequestDAO {
                 addHistory(con, requestId, current, target, note, userId);
                 String sql = "UPDATE Return_Request SET status=?, staff_note=?, reviewed_by=?, reviewed_at=GETDATE(), "
                         + "refund_requested_by=CASE WHEN ?='REFUND_PENDING' THEN ? ELSE refund_requested_by END, "
-                        + "refund_requested_at=CASE WHEN ?='REFUND_PENDING' THEN GETDATE() ELSE refund_requested_at END WHERE id=? AND status=?";
+                        + "refund_requested_at=CASE WHEN ?='REFUND_PENDING' THEN GETDATE() ELSE refund_requested_at END"
+                        + ("APPROVED".equals(target) ? ", refund_qr_url=?, refund_transfer_description=?" : "")
+                        + " WHERE id=? AND status=?";
                 try (PreparedStatement ps = con.prepareStatement(sql)) {
-                    ps.setString(1, target); ps.setString(2, note); ps.setInt(3, userId); ps.setString(4, target); ps.setInt(5, userId); ps.setString(6, target); ps.setInt(7, requestId); ps.setString(8, current);
+                    int i = 1;
+                    ps.setString(i++, target); ps.setString(i++, note); ps.setInt(i++, userId);
+                    ps.setString(i++, target); ps.setInt(i++, userId); ps.setString(i++, target);
+                    if ("APPROVED".equals(target)) {
+                        ps.setString(i++, qrUrl);
+                        ps.setString(i++, transferDescription);
+                    }
+                    ps.setInt(i++, requestId); ps.setString(i, current);
                     if (ps.executeUpdate() != 1) throw new SQLException("The request was already updated.");
                 }
                 con.commit(); return true;
@@ -347,14 +484,14 @@ public class ReturnRequestDAO {
         }
     }
 
-    private void addHistory(Connection con, int id, String oldStatus, String newStatus, String note, int userId) throws SQLException {
+    private void addHistory(Connection con, int id, String oldStatus, String newStatus, String note, Integer userId) throws SQLException {
         String sql = "INSERT INTO Return_Request_History(return_request_id, old_status, new_status, note, changed_by) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.setString(2, oldStatus);
             ps.setString(3, newStatus);
             ps.setString(4, note);
-            ps.setInt(5, userId);
+            if (userId == null) ps.setNull(5, java.sql.Types.INTEGER); else ps.setInt(5, userId);
             ps.executeUpdate();
         }
     }
@@ -428,6 +565,16 @@ public class ReturnRequestDAO {
         request.setReceivedAt(rs.getTimestamp("received_at"));
         request.setRefundRequestedAt(rs.getTimestamp("refund_requested_at"));
         request.setRefundedAt(rs.getTimestamp("refunded_at"));
+        request.setRefundBankId(rs.getString("refund_bank_id"));
+        request.setRefundBankName(rs.getString("refund_bank_name"));
+        request.setRefundAccountName(rs.getString("refund_account_name"));
+        request.setRefundAccountNumber(rs.getString("refund_account_number"));
+        request.setRefundQrUrl(rs.getString("refund_qr_url"));
+        request.setRefundTransferDescription(rs.getString("refund_transfer_description"));
+        request.setRefundProofPath(rs.getString("refund_proof_path"));
+        int confirmedBy = rs.getInt("refund_confirmed_by");
+        request.setRefundConfirmedBy(rs.wasNull() ? null : confirmedBy);
+        request.setRefundConfirmedAt(rs.getTimestamp("refund_confirmed_at"));
         return request;
     }
 

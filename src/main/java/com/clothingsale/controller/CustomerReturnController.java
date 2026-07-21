@@ -27,12 +27,19 @@ public class CustomerReturnController extends HttpServlet {
         int userId = (Integer) session.getAttribute("authUserId");
         putFlash(request, session);
         String action = request.getParameter("action");
+        if ("view".equalsIgnoreCase(action)) {
+            // Luôn kiểm tra customerId trong service để khách không thể xem hồ sơ của người khác.
+            request.setAttribute("returnRequest", service.getCustomerRequest(userId, parseId(request.getParameter("id"))));
+            request.getRequestDispatcher("/view/customer/customer_return_detail.jsp").forward(request, response);
+            return;
+        }
         if ("create".equalsIgnoreCase(action)) {
             int orderId = parseId(request.getParameter("orderId"));
             Order order = service.getEligibleOrder(userId, orderId);
             if (order == null) { request.setAttribute("errorMsg", "This order is outside the return window or already has an active request."); }
             request.setAttribute("selectedOrder", order);
             request.setAttribute("returnItems", order == null ? java.util.Collections.emptyList() : service.getOrderItems(userId, orderId));
+            request.setAttribute("refundBanks", service.getRefundBanks());
         }
         request.setAttribute("returnRequests", service.getCustomerRequests(userId));
         request.getRequestDispatcher("/view/customer/customer_returns.jsp").forward(request, response);
@@ -51,9 +58,18 @@ public class CustomerReturnController extends HttpServlet {
             return;
         }
         Map<Integer, Integer> quantities = new LinkedHashMap<>();
-        String[] detailIds = request.getParameterValues("detailId");
-        if (detailIds != null) for (String detailId : detailIds) { int id=parseId(detailId); int quantity=parseId(request.getParameter("quantity_" + id)); if(id>0 && quantity>0) quantities.put(id, quantity); }
-        String result = service.createRequest(userId, parseId(request.getParameter("orderId")), request.getParameter("type"), request.getParameter("reason"), request.getParameter("customerNote"), quantities);
+        // Đọc trực tiếp các input quantity_<orderDetailId> để không phụ thuộc vào thứ tự
+        // của các hidden input detailId trong bảng sản phẩm.
+        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+            String parameterName = entry.getKey();
+            if (!parameterName.startsWith("quantity_")) continue;
+            int id = parseId(parameterName.substring("quantity_".length()));
+            String[] values = entry.getValue();
+            int quantity = values == null || values.length == 0 ? 0 : parseId(values[0]);
+            if (id > 0 && quantity > 0) quantities.put(id, quantity);
+        }
+        String result = service.createRequest(userId, parseId(request.getParameter("orderId")), request.getParameter("type"), request.getParameter("reason"), request.getParameter("customerNote"),
+                request.getParameter("bankId"), request.getParameter("accountName"), request.getParameter("accountNumber"), quantities);
         session.setAttribute(result.startsWith("SUCCESS") ? "returnMessage" : "returnError", result.startsWith("SUCCESS") ? "Return request submitted successfully." : result);
         response.sendRedirect(request.getContextPath() + "/customer/returns");
     }

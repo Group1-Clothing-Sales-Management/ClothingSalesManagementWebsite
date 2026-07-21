@@ -29,6 +29,17 @@ public class ReturnRequest {
     private Timestamp receivedAt;
     private Timestamp refundRequestedAt;
     private Timestamp refundedAt;
+    // Thông tin tài khoản nhận tiền do khách hàng cung cấp để tạo mã VietQR.
+    private String refundBankId;
+    private String refundBankName;
+    private String refundAccountName;
+    private String refundAccountNumber;
+    private String refundQrUrl;
+    private String refundTransferDescription;
+    // Đường dẫn ảnh chứng từ được Staff/Admin tải lên sau khi chuyển khoản.
+    private String refundProofPath;
+    private Integer refundConfirmedBy;
+    private Timestamp refundConfirmedAt;
     private List<ReturnRequestItem> items = new ArrayList<>();
 
     public int getId() { return id; }
@@ -67,6 +78,39 @@ public class ReturnRequest {
     public void setRefundRequestedAt(Timestamp refundRequestedAt) { this.refundRequestedAt = refundRequestedAt; }
     public Timestamp getRefundedAt() { return refundedAt; }
     public void setRefundedAt(Timestamp refundedAt) { this.refundedAt = refundedAt; }
+    public String getRefundBankId() { return refundBankId; }
+    public void setRefundBankId(String refundBankId) { this.refundBankId = refundBankId; }
+    public String getRefundBankName() { return refundBankName; }
+    public void setRefundBankName(String refundBankName) { this.refundBankName = refundBankName; }
+    public String getRefundAccountName() { return refundAccountName; }
+    public void setRefundAccountName(String refundAccountName) { this.refundAccountName = refundAccountName; }
+    public String getRefundAccountNumber() { return refundAccountNumber; }
+    public void setRefundAccountNumber(String refundAccountNumber) { this.refundAccountNumber = refundAccountNumber; }
+    public String getRefundQrUrl() { return refundQrUrl; }
+    public void setRefundQrUrl(String refundQrUrl) { this.refundQrUrl = refundQrUrl; }
+    public String getRefundTransferDescription() { return refundTransferDescription; }
+    public void setRefundTransferDescription(String refundTransferDescription) { this.refundTransferDescription = refundTransferDescription; }
+    public String getRefundProofPath() { return refundProofPath; }
+    public void setRefundProofPath(String refundProofPath) { this.refundProofPath = refundProofPath; }
+    public Integer getRefundConfirmedBy() { return refundConfirmedBy; }
+    public void setRefundConfirmedBy(Integer refundConfirmedBy) { this.refundConfirmedBy = refundConfirmedBy; }
+    public Timestamp getRefundConfirmedAt() { return refundConfirmedAt; }
+    public void setRefundConfirmedAt(Timestamp refundConfirmedAt) { this.refundConfirmedAt = refundConfirmedAt; }
+    /** Nhãn trạng thái thân thiện hơn cho giao diện tiếng Anh. */
+    public String getStatusLabel() {
+        if (status == null) return "Unknown";
+        switch (status) {
+            case "PENDING": return "Pending review";
+            case "INFO_REQUIRED": return "Information required";
+            case "APPROVED": return "Approved - awaiting transfer";
+            case "RECEIVED": return "Products received";
+            case "REFUND_PENDING": return "Refund pending approval";
+            case "COMPLETED": return "Refund completed";
+            case "REJECTED": return "Rejected";
+            case "CANCELLED": return "Cancelled - package not received";
+            default: return status;
+        }
+    }
     public List<ReturnRequestItem> getItems() { return items; }
     public void setItems(List<ReturnRequestItem> items) { this.items = items == null ? new ArrayList<>() : items; }
 }

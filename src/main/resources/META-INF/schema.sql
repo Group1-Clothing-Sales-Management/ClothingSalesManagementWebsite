@@ -629,17 +629,29 @@ CREATE TABLE dbo.Return_Request (
     refund_requested_at DATETIME NULL,
     refunded_by INT NULL,
     refunded_at DATETIME NULL,
+    -- Thông tin tài khoản khách nhận tiền và dữ liệu QR hoàn tiền.
+    refund_bank_id VARCHAR(30) NULL,
+    refund_bank_name NVARCHAR(120) NULL,
+    refund_account_name NVARCHAR(120) NULL,
+    refund_account_number VARCHAR(50) NULL,
+    refund_qr_url NVARCHAR(1200) NULL,
+    refund_transfer_description NVARCHAR(255) NULL,
+    -- Ảnh chứng từ chuyển khoản và thời điểm xác nhận hoàn tiền.
+    refund_proof_path NVARCHAR(1000) NULL,
+    refund_confirmed_by INT NULL,
+    refund_confirmed_at DATETIME NULL,
     CONSTRAINT PK_Return_Request PRIMARY KEY (id),
     CONSTRAINT UQ_ReturnRequest_Code UNIQUE (request_code),
     CONSTRAINT CK_ReturnRequest_Amount CHECK (refund_amount >= 0),
     CONSTRAINT CK_ReturnRequest_Type CHECK (request_type IN ('RETURN', 'EXCHANGE')),
-    CONSTRAINT CK_ReturnRequest_Status CHECK (status IN ('PENDING', 'INFO_REQUIRED', 'APPROVED', 'REJECTED', 'RECEIVED', 'REFUND_PENDING', 'COMPLETED')),
+    CONSTRAINT CK_ReturnRequest_Status CHECK (status IN ('PENDING', 'INFO_REQUIRED', 'APPROVED', 'REJECTED', 'RECEIVED', 'REFUND_PENDING', 'COMPLETED', 'CANCELLED')),
     CONSTRAINT FK_ReturnRequest_Order FOREIGN KEY (order_id) REFERENCES dbo.[Order](id),
     CONSTRAINT FK_ReturnRequest_Customer FOREIGN KEY (customer_id) REFERENCES dbo.[User](id) ON DELETE SET NULL,
     CONSTRAINT FK_ReturnRequest_ReviewedBy FOREIGN KEY (reviewed_by) REFERENCES dbo.[User](id),
     CONSTRAINT FK_ReturnRequest_ReceivedBy FOREIGN KEY (received_by) REFERENCES dbo.[User](id),
     CONSTRAINT FK_ReturnRequest_RefundRequestedBy FOREIGN KEY (refund_requested_by) REFERENCES dbo.[User](id),
-    CONSTRAINT FK_ReturnRequest_RefundedBy FOREIGN KEY (refunded_by) REFERENCES dbo.[User](id)
+    CONSTRAINT FK_ReturnRequest_RefundedBy FOREIGN KEY (refunded_by) REFERENCES dbo.[User](id),
+    CONSTRAINT FK_ReturnRequest_RefundConfirmedBy FOREIGN KEY (refund_confirmed_by) REFERENCES dbo.[User](id)
 );
 
 CREATE TABLE dbo.Return_Request_Item (

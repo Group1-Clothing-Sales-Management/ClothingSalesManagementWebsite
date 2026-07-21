@@ -130,13 +130,6 @@
         </jsp:include>
 
         <div class="container admin-page">
-            <div class="mb-3">
-                <a href="${pageContext.request.contextPath}/admin/manage-product"
-                   class="btn btn-sm btn-secondary">
-                    &larr; Back to Product List
-                </a>
-            </div>
-
             <div class="page-header">
                 <div>
                     <h1 class="page-title">Product Details</h1>
