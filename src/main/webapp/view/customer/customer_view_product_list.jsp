@@ -439,20 +439,33 @@
             }
 
             @media(max-width:1199px){
-                .product-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+                .product-grid{
+                    grid-template-columns:repeat(5,minmax(0,1fr));
+                }
             }
 
             @media(max-width:991px){
-                .product-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+                .product-grid{
+                    grid-template-columns:repeat(4,minmax(0,1fr));
+                }
             }
 
             @media(max-width:767px){
-                .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
-                .page-header{align-items:flex-start;flex-direction:column;}
+                .product-grid{
+                    grid-template-columns:repeat(3,minmax(0,1fr));
+                    gap:9px;
+                }
+                .page-header{
+                    align-items:flex-start;
+                    flex-direction:column;
+                }
             }
 
             @media(max-width:575px){
-                .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+                .product-grid{
+                    grid-template-columns:repeat(2,minmax(0,1fr));
+                    gap:8px;
+                }
             }
 
             /* Home-aligned product list refresh */
@@ -632,6 +645,35 @@
             .wishlist-toast.is-error{
                 background:#9f3a38;
             }
+            .product-image-placeholder {
+                width: 100%;
+                height: 100%;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                background: #eef4ff;
+                color: #71809b;
+                text-align: center;
+            }
+
+            .product-image-placeholder i {
+                font-size: 42px;
+            }
+
+            .product-image-placeholder span {
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .product-image {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                background: #ffffff;
+            }
         </style>
 
     </head>
@@ -658,77 +700,77 @@
             <!-- SEARCH -->
 
             <c:if test="${not empty param.keyword or not empty param.categoryId}">
-            <form action="${pageContext.request.contextPath}/products"
-                  method="get"
-                  class="card search-card p-4 mb-5">
-                <c:if test="${not empty param.categoryId}">
-                    <input type="hidden" name="categoryId" value="${param.categoryId}">
-                </c:if>
+                <form action="${pageContext.request.contextPath}/products"
+                      method="get"
+                      class="card search-card p-4 mb-5">
+                    <c:if test="${not empty param.categoryId}">
+                        <input type="hidden" name="categoryId" value="${param.categoryId}">
+                    </c:if>
 
-                <div class="row">
+                    <div class="row">
 
-                    <div class="col-md-4">
+                        <div class="col-md-4">
 
-                        <input type="text"
-                               name="keyword"
-                               value="${param.keyword}"
-                               class="form-control"
-                               placeholder="Search product">
+                            <input type="text"
+                                   name="keyword"
+                                   value="${param.keyword}"
+                                   class="form-control"
+                                   placeholder="Search product">
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <input type="number"
+                                   name="minPrice"
+                                   value="${param.minPrice}"
+                                   class="form-control"
+                                   placeholder="Min Price">
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <input type="number"
+                                   name="maxPrice"
+                                   value="${param.maxPrice}"
+                                   class="form-control"
+                                   placeholder="Max Price">
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <select name="sort"
+                                    class="form-select">
+
+                                <option value="">
+                                    Sort
+                                </option>
+
+                                <option value="priceAsc">
+                                    Price ↑
+                                </option>
+
+                                <option value="priceDesc">
+                                    Price ↓
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <button class="btn btn-danger w-100">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Search
+                            </button>
+                        </div>
 
                     </div>
 
-                    <div class="col-md-2">
-
-                        <input type="number"
-                               name="minPrice"
-                               value="${param.minPrice}"
-                               class="form-control"
-                               placeholder="Min Price">
-
-                    </div>
-
-                    <div class="col-md-2">
-
-                        <input type="number"
-                               name="maxPrice"
-                               value="${param.maxPrice}"
-                               class="form-control"
-                               placeholder="Max Price">
-
-                    </div>
-
-                    <div class="col-md-2">
-
-                        <select name="sort"
-                                class="form-select">
-
-                            <option value="">
-                                Sort
-                            </option>
-
-                            <option value="priceAsc">
-                                Price ↑
-                            </option>
-
-                            <option value="priceDesc">
-                                Price ↓
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    <div class="col-md-2">
-
-                        <button class="btn btn-danger w-100">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            Search
-                        </button>
-                    </div>
-
-                </div>
-
-            </form>
+                </form>
             </c:if>
 
             <div class="product-grid">
@@ -748,12 +790,31 @@
                                     <span class="product-stock-badge">In stock</span>
                                 </c:if>
 
-                                <img
-                                    src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
-                                    class="card-img-top product-image"
-                                    alt="${p.productName}"
-                                    loading="lazy"
-                                    decoding="async">
+                                <c:choose>
+                                    <c:when test="${not empty p.mainImageUrl}">
+                                        <c:url var="productImageUrl"
+                                               value="/media/product/${p.mainImageUrl}" />
+
+                                        <img src="${productImageUrl}"
+                                             class="card-img-top product-image"
+                                             alt="<c:out value='${p.productName}'/>"
+                                             loading="lazy"
+                                             decoding="async"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                                        <div class="product-image-placeholder" style="display:none;">
+                                            <i class="fa-regular fa-image"></i>
+                                            <span>Image not available</span>
+                                        </div>
+                                    </c:when>
+
+                                    <c:otherwise>
+                                        <div class="product-image-placeholder">
+                                            <i class="fa-regular fa-image"></i>
+                                            <span>No product image</span>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
 
                             </a>
 
@@ -838,7 +899,7 @@
                                         <input type="hidden" name="quantity" value="1">
                                         <input type="hidden"
                                                name="imageUrl"
-                                               value="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}">
+                                               value="${productImageUrl}">
 
                                         <button type="submit"
                                                 class="btn btn-danger w-100">

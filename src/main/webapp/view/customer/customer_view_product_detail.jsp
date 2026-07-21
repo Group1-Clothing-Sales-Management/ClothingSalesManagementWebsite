@@ -1576,7 +1576,35 @@
                     height:340px;
                 }
             }
+            .product-image-placeholder {
+                width: 100%;
+                height: 100%;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                background: #eef4ff;
+                color: #71809b;
+                text-align: center;
+            }
 
+            .product-image-placeholder i {
+                font-size: 42px;
+            }
+
+            .product-image-placeholder span {
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .product-image {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                background: #ffffff;
+            }
         </style>
 
     </head>
@@ -1594,19 +1622,45 @@
                             <form action="${pageContext.request.contextPath}/wishlist/toggle"
                                   method="post"
                                   class="detail-wishlist-form">
+
                                 <input type="hidden" name="productId" value="${product.id}">
-                                <input type="hidden" name="variantId"
+
+                                <input type="hidden"
+                                       name="variantId"
                                        value="${not empty product.variants ? product.variants[0].id : ''}">
-                                <input type="hidden" name="wishlisted" value="${isWishlisted}">
+
+                                <input type="hidden"
+                                       name="wishlisted"
+                                       value="${isWishlisted}">
+
                                 <button type="submit"
                                         class="detail-wishlist-button ${isWishlisted ? 'is-active' : ''}"
                                         title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+
                                     <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                                 </button>
                             </form>
-                            <img src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}"
-                                 class="product-image"
-                                 alt="${product.productName}">
+
+                            <c:choose>
+                                <c:when test="${not empty product.mainImageUrl}">
+                                    <img src="${pageContext.request.contextPath}/media/product/${product.mainImageUrl}"
+                                         class="product-image"
+                                         alt="<c:out value='${product.productName}'/>"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                                    <div class="product-image-placeholder" style="display:none;">
+                                        <i class="fa-regular fa-image"></i>
+                                        <span>Image not available</span>
+                                    </div>
+                                </c:when>
+
+                                <c:otherwise>
+                                    <div class="product-image-placeholder">
+                                        <i class="fa-regular fa-image"></i>
+                                        <span>No product image</span>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                         <div class="media-thumbs" aria-label="Product images">
                             <img src="${pageContext.request.contextPath}/uploads/product/${product.mainImageUrl}"
@@ -1954,7 +2008,8 @@
                                 rows.forEach(r => {
                                     const c = parseInt(r.getAttribute('data-count')) || 0;
                                     const fill = r.querySelector('.distribution-fill');
-                                    if (!fill) return;
+                                    if (!fill)
+                                        return;
                                     const pct = total > 0 ? (c / total) * 100 : 0;
                                     fill.style.width = pct + '%';
                                 });
@@ -1977,7 +2032,7 @@
                             </div>
                         </div>
 
-                            <c:if test="${canFeedback}">
+                        <c:if test="${canFeedback}">
                             <form action="${pageContext.request.contextPath}/feedback/add" method="post" class="feedback-form">
                                 <input type="hidden" name="action" value="create">
                                 <input type="hidden" name="productId" value="${product.id}">
@@ -2023,48 +2078,48 @@
                             </form>
                         </c:if>
 
-                    <div class="feedback-list">
-                    <c:forEach items="${feedbacks}" var="fb">
-                        <article class="feedback-item"
-                                 data-rating="${fb.rating}"
-                                 data-has-comment="${not empty fb.comment}">
-                            <div class="feedback-user">
-                                <div class="feedback-avatar"><i class="fa-solid fa-user"></i></div>
-                                <div>
-                                    <div class="feedback-user-name">
-                                        <c:out value="${not empty fb.customerFullName ? fb.customerFullName : fb.customerUsername}"/>
-                                    </div>
-                                    <div class="feedback-stars">
-                                        <c:forEach begin="1" end="5" var="i">
-                                            <i class="fa-solid fa-star ${i <= fb.rating ? '' : 'text-muted'}"></i>
-                                        </c:forEach>
-                                    </div>
-                                    <div class="feedback-meta">
-                                        <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
-                                        <c:if test="${not empty fb.orderCode}"> · Verified purchase</c:if>
+                        <div class="feedback-list">
+                            <c:forEach items="${feedbacks}" var="fb">
+                                <article class="feedback-item"
+                                         data-rating="${fb.rating}"
+                                         data-has-comment="${not empty fb.comment}">
+                                    <div class="feedback-user">
+                                        <div class="feedback-avatar"><i class="fa-solid fa-user"></i></div>
+                                        <div>
+                                            <div class="feedback-user-name">
+                                                <c:out value="${not empty fb.customerFullName ? fb.customerFullName : fb.customerUsername}"/>
+                                            </div>
+                                            <div class="feedback-stars">
+                                                <c:forEach begin="1" end="5" var="i">
+                                                    <i class="fa-solid fa-star ${i <= fb.rating ? '' : 'text-muted'}"></i>
+                                                </c:forEach>
+                                            </div>
+                                            <div class="feedback-meta">
+                                                <fmt:formatDate value="${fb.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                <c:if test="${not empty fb.orderCode}"> · Verified purchase</c:if>
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        <div class="feedback-comment">
+                                        <c:out value="${fb.comment}"/>
                                     </div>
-                                </div>
 
-                                <div class="feedback-comment">
-                                <c:out value="${fb.comment}"/>
-                            </div>
+                                    <c:if test="${not empty fb.adminResponse}">
+                                        <div class="seller-response">
+                                            <strong>Seller's Response:</strong><br>
+                                            <c:out value="${fb.adminResponse}"/>
+                                        </div>
+                                    </c:if>
 
-                            <c:if test="${not empty fb.adminResponse}">
-                                <div class="seller-response">
-                                    <strong>Seller's Response:</strong><br>
-                                    <c:out value="${fb.adminResponse}"/>
-                                </div>
-                            </c:if>
-
-                            <div class="feedback-actions"><i class="fa-regular fa-thumbs-up me-1"></i> Helpful</div>
-                        </article>
-                    </c:forEach>
+                                    <div class="feedback-actions"><i class="fa-regular fa-thumbs-up me-1"></i> Helpful</div>
+                                </article>
+                            </c:forEach>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        </div>
+            </div>
 
         </div>
 
@@ -2131,264 +2186,264 @@
 
         <script>
 
-            const variants = [
+                        const variants = [
             <c:forEach items="${product.variants}" var="v">
-                {
-                    id:${v.id},
-                            color: "${v.color}",
-                    size:"${v.size}",
-                            price:${v.salePrice},
-                    stock:${v.stockQuantity}
-                },
+                            {
+                                id:${v.id},
+                                color: "${v.color}",
+                                size: "${v.size}",
+                                price:${v.salePrice},
+                                stock:${v.stockQuantity}
+                            },
             </c:forEach>
-            ];
-            let selectedColor = variants[0]?.color;
-            let selectedSize = variants[0]?.size;
-            const colorButtons = document.querySelectorAll(".color-option");
-            const sizeButtons = document.querySelectorAll(".size-option");
-            const variantIdInput = document.querySelector(".variant-id-input");
-            const buyNowVariant = document.querySelector(".buy-now-variant-id");
-            const priceInput = document.querySelector(".price-input");
-            const stockText = document.getElementById("stockText");
-            const priceValue = document.getElementById("priceValue");
-            const quantityInput = document.querySelector(".quantity-input");
-            const increaseBtn = document.querySelector(".quantity-increase");
-            const decreaseBtn = document.querySelector(".quantity-decrease");
+                        ];
+                        let selectedColor = variants[0]?.color;
+                        let selectedSize = variants[0]?.size;
+                        const colorButtons = document.querySelectorAll(".color-option");
+                        const sizeButtons = document.querySelectorAll(".size-option");
+                        const variantIdInput = document.querySelector(".variant-id-input");
+                        const buyNowVariant = document.querySelector(".buy-now-variant-id");
+                        const priceInput = document.querySelector(".price-input");
+                        const stockText = document.getElementById("stockText");
+                        const priceValue = document.getElementById("priceValue");
+                        const quantityInput = document.querySelector(".quantity-input");
+                        const increaseBtn = document.querySelector(".quantity-increase");
+                        const decreaseBtn = document.querySelector(".quantity-decrease");
 
-            const hiddenQuantity = document.querySelector(".quantity-input-hidden");
-            const buyNowQuantity = document.querySelector(".buy-now-quantity");
+                        const hiddenQuantity = document.querySelector(".quantity-input-hidden");
+                        const buyNowQuantity = document.querySelector(".buy-now-quantity");
 
-            function updateQuantity() {
+                        function updateQuantity() {
 
-                let qty = parseInt(quantityInput.value) || 1;
-                let max = parseInt(quantityInput.max) || 1;
+                            let qty = parseInt(quantityInput.value) || 1;
+                            let max = parseInt(quantityInput.max) || 1;
 
-                if (qty < 1)
-                    qty = 1;
-                if (qty > max)
-                    qty = max;
+                            if (qty < 1)
+                                qty = 1;
+                            if (qty > max)
+                                qty = max;
 
-                quantityInput.value = qty;
+                            quantityInput.value = qty;
 
-                if (hiddenQuantity)
-                    hiddenQuantity.value = qty;
+                            if (hiddenQuantity)
+                                hiddenQuantity.value = qty;
 
-                if (buyNowQuantity)
-                    buyNowQuantity.value = qty;
-            }
+                            if (buyNowQuantity)
+                                buyNowQuantity.value = qty;
+                        }
 
-            increaseBtn.addEventListener("click", function () {
+                        increaseBtn.addEventListener("click", function () {
 
-                quantityInput.value = parseInt(quantityInput.value) + 1;
-                updateQuantity();
+                            quantityInput.value = parseInt(quantityInput.value) + 1;
+                            updateQuantity();
 
-            });
-
-            decreaseBtn.addEventListener("click", function () {
-
-                quantityInput.value = parseInt(quantityInput.value) - 1;
-                updateQuantity();
-
-            });
-
-            quantityInput.addEventListener("input", updateQuantity);
-
-            updateQuantity();
-            function renderVariant() {
-
-                const variant = variants.find(v =>
-                    v.color === selectedColor &&
-                            v.size === selectedSize
-                );
-                if (!variant)
-                    return;
-                variantIdInput.value = variant.id;
-                buyNowVariant.value = variant.id;
-                priceInput.value = variant.price;
-                stockText.textContent = variant.stock;
-                priceValue.innerHTML =
-                        Number(variant.price).toLocaleString("vi-VN") + " ₫";
-                quantityInput.max = variant.stock;
-
-                updateQuantity();
-                sizeButtons.forEach(btn => {
-
-                    const exist = variants.some(v =>
-                        v.color === selectedColor &&
-                                v.size === btn.dataset.size
-                    );
-                    btn.disabled = !exist;
-                    btn.classList.toggle(
-                            "active",
-                            btn.dataset.size === selectedSize
-                            );
-                });
-            }
-
-            colorButtons.forEach(btn => {
-
-                btn.onclick = () => {
-
-                    colorButtons.forEach(b => b.classList.remove("active"));
-                    btn.classList.add("active");
-                    selectedColor = btn.dataset.color;
-                    const first = variants.find(v => v.color === selectedColor);
-                    selectedSize = first.size;
-                    renderVariant();
-                };
-            });
-            sizeButtons.forEach(btn => {
-
-                btn.onclick = () => {
-
-                    if (btn.disabled)
-                        return;
-                    selectedSize = btn.dataset.size;
-                    renderVariant();
-                };
-            });
-            if (variants.length) {
-
-                colorButtons.forEach(btn => {
-
-                    btn.classList.toggle(
-                            "active",
-                            btn.dataset.color === selectedColor
-                            );
-                });
-                renderVariant();
-            }
-
-            // ================= FEEDBACK FILTER =================
-
-            document.querySelectorAll('.feedback-filter').forEach(function (filterButton) {
-
-                filterButton.addEventListener('click', function () {
-
-                    var filter = filterButton.dataset.filter;
-                    document.querySelectorAll('.feedback-filter').forEach(function (button) {
-
-                        button.classList.toggle('active', button === filterButton);
-                    });
-                    document.querySelectorAll('.feedback-item').forEach(function (item) {
-
-                        var matches =
-                                filter === 'all'
-                                || item.dataset.rating === filter
-                                || (filter === 'comments'
-                                        && item.dataset.hasComment === 'true');
-                        item.hidden = !matches;
-                    });
-                });
-            });
-            // ================= REVIEW COMPOSER =================
-
-            var ratingMoods = {
-                5: 'Excellent',
-                4: 'Very good',
-                3: 'Good',
-                2: 'Fair',
-                1: 'Poor'
-            };
-            var starRatingEl = document.getElementById('reviewStarRating');
-            var ratingMoodEl = document.getElementById('ratingMood');
-            if (starRatingEl && ratingMoodEl) {
-
-                var updateMood = function (value) {
-                    ratingMoodEl.textContent = ratingMoods[value] || '';
-                };
-                starRatingEl.querySelectorAll('input[name="rating"]').forEach(function (input) {
-
-                    input.addEventListener('change', function () {
-                        updateMood(input.value);
-                    });
-                    var label = starRatingEl.querySelector('label[for="' + input.id + '"]');
-                    if (label) {
-
-                        label.addEventListener('mouseenter', function () {
-                            updateMood(input.value);
                         });
-                    }
-                });
-                starRatingEl.addEventListener('mouseleave', function () {
-                    var checked = starRatingEl.querySelector('input[name="rating"]:checked');
-                    if (checked)
-                        updateMood(checked.value);
-                });
-                var checkedInitial = starRatingEl.querySelector('input[name="rating"]:checked');
-                if (checkedInitial)
-                    updateMood(checkedInitial.value);
-            }
 
-            var reviewComment = document.getElementById('reviewComment');
-            var commentCount = document.getElementById('commentCount');
-            if (reviewComment && commentCount) {
+                        decreaseBtn.addEventListener("click", function () {
 
-                var updateCount = function () {
-                    commentCount.textContent = reviewComment.value.length;
-                };
-                reviewComment.addEventListener('input', updateCount);
-                updateCount();
-            }
+                            quantityInput.value = parseInt(quantityInput.value) - 1;
+                            updateQuantity();
 
-            // ================= URL CLEAN =================
+                        });
 
-            var params = new URLSearchParams(window.location.search);
-            var wishlistStatusParams = [
-                'wishlistAdded',
-                'wishlistRemoved',
-                'wishlistError'
-            ];
-            var hasWishlistStatus = wishlistStatusParams.some(function (key) {
-                return params.has(key);
-            });
-            if (hasWishlistStatus) {
+                        quantityInput.addEventListener("input", updateQuantity);
 
-                wishlistStatusParams.forEach(function (key) {
-                    params.delete(key);
-                });
-                var cleanUrl =
-                        window.location.pathname
-                        + (params.toString() ? '?' + params.toString() : '')
-                        + window.location.hash;
-                window.history.replaceState({}, '', cleanUrl);
-            }
+                        updateQuantity();
+                        function renderVariant() {
 
-            // ================= CART MODAL =================
+                            const variant = variants.find(v =>
+                                v.color === selectedColor &&
+                                        v.size === selectedSize
+                            );
+                            if (!variant)
+                                return;
+                            variantIdInput.value = variant.id;
+                            buyNowVariant.value = variant.id;
+                            priceInput.value = variant.price;
+                            stockText.textContent = variant.stock;
+                            priceValue.innerHTML =
+                                    Number(variant.price).toLocaleString("vi-VN") + " ₫";
+                            quantityInput.max = variant.stock;
 
-            if (params.has('cartAdded') || params.has('cartError')) {
+                            updateQuantity();
+                            sizeButtons.forEach(btn => {
 
-                var modalElement =
-                        document.getElementById('cartMessageModal');
-                var isError =
-                        params.has('cartError');
-                modalElement.classList.toggle('is-error', isError);
-                var icon =
-                        modalElement.querySelector('.cart-modal-mark i');
-                if (icon) {
+                                const exist = variants.some(v =>
+                                    v.color === selectedColor &&
+                                            v.size === btn.dataset.size
+                                );
+                                btn.disabled = !exist;
+                                btn.classList.toggle(
+                                        "active",
+                                        btn.dataset.size === selectedSize
+                                        );
+                            });
+                        }
 
-                    icon.className =
-                            isError
-                            ? 'fa-solid fa-triangle-exclamation'
-                            : 'fa-solid fa-check';
-                }
+                        colorButtons.forEach(btn => {
 
-                document.getElementById('cartMessageTitle').textContent =
-                        isError
-                        ? 'Could Not Add Item'
-                        : 'Cart Updated';
-                document.getElementById('cartMessageText').textContent =
-                        params.has('wishlistAdded')
-                        ? 'Added to your wishlist.'
-                        : params.has('wishlistRemoved')
-                        ? 'Removed from wishlist.'
-                        : params.has('wishlistError')
-                        ? 'Unable to update your wishlist.'
-                        : params.has('cartAdded')
-                        ? 'Item added to your cart.'
-                        : 'Could not add this item to your cart. Please check available stock.';
-                new bootstrap.Modal(modalElement).show();
-            }
+                            btn.onclick = () => {
+
+                                colorButtons.forEach(b => b.classList.remove("active"));
+                                btn.classList.add("active");
+                                selectedColor = btn.dataset.color;
+                                const first = variants.find(v => v.color === selectedColor);
+                                selectedSize = first.size;
+                                renderVariant();
+                            };
+                        });
+                        sizeButtons.forEach(btn => {
+
+                            btn.onclick = () => {
+
+                                if (btn.disabled)
+                                    return;
+                                selectedSize = btn.dataset.size;
+                                renderVariant();
+                            };
+                        });
+                        if (variants.length) {
+
+                            colorButtons.forEach(btn => {
+
+                                btn.classList.toggle(
+                                        "active",
+                                        btn.dataset.color === selectedColor
+                                        );
+                            });
+                            renderVariant();
+                        }
+
+                        // ================= FEEDBACK FILTER =================
+
+                        document.querySelectorAll('.feedback-filter').forEach(function (filterButton) {
+
+                            filterButton.addEventListener('click', function () {
+
+                                var filter = filterButton.dataset.filter;
+                                document.querySelectorAll('.feedback-filter').forEach(function (button) {
+
+                                    button.classList.toggle('active', button === filterButton);
+                                });
+                                document.querySelectorAll('.feedback-item').forEach(function (item) {
+
+                                    var matches =
+                                            filter === 'all'
+                                            || item.dataset.rating === filter
+                                            || (filter === 'comments'
+                                                    && item.dataset.hasComment === 'true');
+                                    item.hidden = !matches;
+                                });
+                            });
+                        });
+                        // ================= REVIEW COMPOSER =================
+
+                        var ratingMoods = {
+                            5: 'Excellent',
+                            4: 'Very good',
+                            3: 'Good',
+                            2: 'Fair',
+                            1: 'Poor'
+                        };
+                        var starRatingEl = document.getElementById('reviewStarRating');
+                        var ratingMoodEl = document.getElementById('ratingMood');
+                        if (starRatingEl && ratingMoodEl) {
+
+                            var updateMood = function (value) {
+                                ratingMoodEl.textContent = ratingMoods[value] || '';
+                            };
+                            starRatingEl.querySelectorAll('input[name="rating"]').forEach(function (input) {
+
+                                input.addEventListener('change', function () {
+                                    updateMood(input.value);
+                                });
+                                var label = starRatingEl.querySelector('label[for="' + input.id + '"]');
+                                if (label) {
+
+                                    label.addEventListener('mouseenter', function () {
+                                        updateMood(input.value);
+                                    });
+                                }
+                            });
+                            starRatingEl.addEventListener('mouseleave', function () {
+                                var checked = starRatingEl.querySelector('input[name="rating"]:checked');
+                                if (checked)
+                                    updateMood(checked.value);
+                            });
+                            var checkedInitial = starRatingEl.querySelector('input[name="rating"]:checked');
+                            if (checkedInitial)
+                                updateMood(checkedInitial.value);
+                        }
+
+                        var reviewComment = document.getElementById('reviewComment');
+                        var commentCount = document.getElementById('commentCount');
+                        if (reviewComment && commentCount) {
+
+                            var updateCount = function () {
+                                commentCount.textContent = reviewComment.value.length;
+                            };
+                            reviewComment.addEventListener('input', updateCount);
+                            updateCount();
+                        }
+
+                        // ================= URL CLEAN =================
+
+                        var params = new URLSearchParams(window.location.search);
+                        var wishlistStatusParams = [
+                            'wishlistAdded',
+                            'wishlistRemoved',
+                            'wishlistError'
+                        ];
+                        var hasWishlistStatus = wishlistStatusParams.some(function (key) {
+                            return params.has(key);
+                        });
+                        if (hasWishlistStatus) {
+
+                            wishlistStatusParams.forEach(function (key) {
+                                params.delete(key);
+                            });
+                            var cleanUrl =
+                                    window.location.pathname
+                                    + (params.toString() ? '?' + params.toString() : '')
+                                    + window.location.hash;
+                            window.history.replaceState({}, '', cleanUrl);
+                        }
+
+                        // ================= CART MODAL =================
+
+                        if (params.has('cartAdded') || params.has('cartError')) {
+
+                            var modalElement =
+                                    document.getElementById('cartMessageModal');
+                            var isError =
+                                    params.has('cartError');
+                            modalElement.classList.toggle('is-error', isError);
+                            var icon =
+                                    modalElement.querySelector('.cart-modal-mark i');
+                            if (icon) {
+
+                                icon.className =
+                                        isError
+                                        ? 'fa-solid fa-triangle-exclamation'
+                                        : 'fa-solid fa-check';
+                            }
+
+                            document.getElementById('cartMessageTitle').textContent =
+                                    isError
+                                    ? 'Could Not Add Item'
+                                    : 'Cart Updated';
+                            document.getElementById('cartMessageText').textContent =
+                                    params.has('wishlistAdded')
+                                    ? 'Added to your wishlist.'
+                                    : params.has('wishlistRemoved')
+                                    ? 'Removed from wishlist.'
+                                    : params.has('wishlistError')
+                                    ? 'Unable to update your wishlist.'
+                                    : params.has('cartAdded')
+                                    ? 'Item added to your cart.'
+                                    : 'Could not add this item to your cart. Please check available stock.';
+                            new bootstrap.Modal(modalElement).show();
+                        }
 
         </script>
         <jsp:include page="/view/customer/common/footer.jsp"/>

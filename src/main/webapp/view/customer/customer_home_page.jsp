@@ -1012,7 +1012,35 @@
                 background:var(--primary-dark)!important;
                 border-color:var(--primary-dark)!important;
             }
+            .product-image-placeholder {
+                width: 100%;
+                height: 100%;
+                min-height: 220px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                background: #eef4ff;
+                color: #71809b;
+                text-align: center;
+            }
 
+            .product-image-placeholder i {
+                font-size: 42px;
+            }
+
+            .product-image-placeholder span {
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .product-image {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                background: #ffffff;
+            }
         </style>
 
     </head>
@@ -1056,44 +1084,44 @@
             <!-- SEARCH + FILTER -->
 
             <c:if test="${not empty param.keyword}">
-            <form action="${pageContext.request.contextPath}/home" method="GET" class="card search-card p-3 p-md-4 mb-5">
-                <div class="mb-3">
-                    <h2 class="search-heading"><i class="fa-solid fa-sliders"></i> Find the right piece</h2>
-                    <p class="search-hint">Search by name, narrow by budget, or sort the collection.</p>
-                </div>
-                <div class="row g-3 align-items-end">
-                    <div class="col-6 col-md-2">
-                        <label class="filter-label" for="minPrice">Min price</label>
-                        <input id="minPrice" type="number" name="minPrice" value="${param.minPrice}" class="form-control" placeholder="0" min="0">
+                <form action="${pageContext.request.contextPath}/home" method="GET" class="card search-card p-3 p-md-4 mb-5">
+                    <div class="mb-3">
+                        <h2 class="search-heading"><i class="fa-solid fa-sliders"></i> Find the right piece</h2>
+                        <p class="search-hint">Search by name, narrow by budget, or sort the collection.</p>
                     </div>
-                    <div class="col-6 col-md-2">
-                        <label class="filter-label" for="maxPrice">Max price</label>
-                        <input id="maxPrice" type="number" name="maxPrice" value="${param.maxPrice}" class="form-control" placeholder="Any" min="0">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="filter-label" for="sort">Sort by</label>
-                        <select id="sort" name="sort" class="form-select">
-                            <option value="" ${empty param.sort ? 'selected' : ''}>Recommended</option>
-                            <option value="priceAsc" ${param.sort == 'priceAsc' ? 'selected' : ''}>Price: low to high</option>
-                            <option value="priceDesc" ${param.sort == 'priceDesc' ? 'selected' : ''}>Price: high to low</option>
-                            <option value="newest" ${param.sort == 'newest' ? 'selected' : ''}>Newest first</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="filter-label" for="keyword">Search</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0" style="border-color:var(--border); color:var(--primary);"><i class="fa-solid fa-magnifying-glass"></i></span>
-                            <input id="keyword" type="text" name="keyword" value="${param.keyword}" class="form-control border-start-0" placeholder="Try &quot;hoodie&quot; or &quot;sneakers&quot;">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6 col-md-2">
+                            <label class="filter-label" for="minPrice">Min price</label>
+                            <input id="minPrice" type="number" name="minPrice" value="${param.minPrice}" class="form-control" placeholder="0" min="0">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="filter-label" for="maxPrice">Max price</label>
+                            <input id="maxPrice" type="number" name="maxPrice" value="${param.maxPrice}" class="form-control" placeholder="Any" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="filter-label" for="sort">Sort by</label>
+                            <select id="sort" name="sort" class="form-select">
+                                <option value="" ${empty param.sort ? 'selected' : ''}>Recommended</option>
+                                <option value="priceAsc" ${param.sort == 'priceAsc' ? 'selected' : ''}>Price: low to high</option>
+                                <option value="priceDesc" ${param.sort == 'priceDesc' ? 'selected' : ''}>Price: high to low</option>
+                                <option value="newest" ${param.sort == 'newest' ? 'selected' : ''}>Newest first</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="filter-label" for="keyword">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0" style="border-color:var(--border); color:var(--primary);"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input id="keyword" type="text" name="keyword" value="${param.keyword}" class="form-control border-start-0" placeholder="Try &quot;hoodie&quot; or &quot;sneakers&quot;">
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button class="btn btn-danger flex-grow-1"><i class="fa-solid fa-magnifying-glass me-1"></i> Search</button>
+                            <c:if test="${not empty param.keyword or not empty param.minPrice or not empty param.maxPrice or not empty param.sort}">
+                                <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-dark" title="Clear filters" aria-label="Clear filters"><i class="fa-solid fa-rotate-left"></i></a>
+                                </c:if>
                         </div>
                     </div>
-                    <div class="col-md-2 d-flex gap-2">
-                        <button class="btn btn-danger flex-grow-1"><i class="fa-solid fa-magnifying-glass me-1"></i> Search</button>
-                        <c:if test="${not empty param.keyword or not empty param.minPrice or not empty param.maxPrice or not empty param.sort}">
-                            <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-dark" title="Clear filters" aria-label="Clear filters"><i class="fa-solid fa-rotate-left"></i></a>
-                        </c:if>
-                    </div>
-                </div>
-            </form>
+                </form>
             </c:if>
 
             <!-- PRODUCT SECTION TITLE -->
@@ -1125,19 +1153,41 @@
 
                                 <!-- IMAGE -->
 
-                                <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="product-image-link">
+                                <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
+                                   class="product-image-link">
+
                                     <span class="product-ribbon">Featured</span>
+
                                     <c:if test="${not empty p.variants}">
                                         <span class="product-stock-badge">In stock</span>
                                     </c:if>
 
-                                    <img
-                                        src="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}"
-                                        class="card-img-top product-image"
-                                        alt="${p.productName}"
-                                        loading="lazy">
+                                    <c:choose>
+                                        <c:when test="${not empty p.mainImageUrl}">
+                                            <c:url var="productImageUrl"
+                                                   value="/media/product/${p.mainImageUrl}" />
 
-                                </a>    
+                                            <img src="${productImageUrl}"
+                                                 class="product-image"
+                                                 alt="<c:out value='${p.productName}'/>"
+                                                 loading="lazy"
+                                                 decoding="async"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                                            <div class="product-image-placeholder" style="display:none;">
+                                                <i class="fa-regular fa-image"></i>
+                                                <span>Image not available</span>
+                                            </div>
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <div class="product-image-placeholder">
+                                                <i class="fa-regular fa-image"></i>
+                                                <span>No product image</span>
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </a>   
                                 <!-- BODY -->
 
                                 <div class="card-body">
@@ -1199,7 +1249,7 @@
                                             <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
                                             <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
                                             <input type="hidden" name="quantity" value="1" />
-                                            <input type="hidden"name="imageUrl"value="${pageContext.request.contextPath}/uploads/product/${p.mainImageUrl}" />
+                                            <input type="hidden"name="imageUrl"value="${productImageUrl}" />
                                             <div class="product-actions">
                                                 <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="btn btn-outline-dark">
                                                     Details
