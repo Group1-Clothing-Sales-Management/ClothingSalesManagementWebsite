@@ -96,7 +96,9 @@ public class AdminProductController extends HttpServlet {
                 case "UPDATE_PRODUCT":
                     handleUpdateProduct(request, response);
                     break;
-
+                case "UPDATE_VARIANT":
+                    handleUpdateVariant(request, response);
+                    break;
                 case "UPDATE_VARIANT_STATUS":
                     handleUpdateVariantStatus(request, response);
                     break;
@@ -247,6 +249,199 @@ public class AdminProductController extends HttpServlet {
                 productId,
                 "product-updated"
         );
+    }
+
+    private void handleUpdateVariant(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        int productId;
+        int variantId;
+
+        try {
+            productId = Integer.parseInt(
+                    getMultipartParameter(request, "productId")
+            );
+
+            variantId = Integer.parseInt(
+                    getMultipartParameter(request, "variantId")
+            );
+        } catch (Exception e) {
+            redirectToProductDetail(
+                    response,
+                    0,
+                    "invalid-request"
+            );
+            return;
+        }
+
+        ProductVariant oldVariant = productService.getVariantById(
+                productId,
+                variantId
+        );
+
+        if (oldVariant == null) {
+            redirectToProductDetail(
+                    response,
+                    productId,
+                    "variant-not-found"
+            );
+            return;
+        }
+
+        String size = getMultipartParameter(request, "size");
+        String color = getMultipartParameter(request, "color");
+        String status = getMultipartParameter(request, "status");
+
+        String updateError = productService.updateVariantInfo(
+                productId,
+                variantId,
+                size,
+                color,
+                status
+        );
+
+        if (updateError != null) {
+            redirectToProductDetail(
+                    response,
+                    productId,
+                    updateError
+            );
+            return;
+        }
+
+        Part imagePart = request.getPart("variantImage");
+
+        if (hasUploadedFile(imagePart)) {
+            String newImageName;
+
+            try {
+                newImageName = saveVariantImage(
+                        imagePart,
+                        productId,
+                        variantId,
+                        size,
+                        color
+                );
+            } catch (IllegalArgumentException e) {
+                rollbackVariantInfo(
+                        productId,
+                        variantId,
+                        oldVariant
+                );
+
+                redirectToProductDetail(
+                        response,
+                        productId,
+                        "invalid-image"
+                );
+                return;
+            } catch (IOException e) {
+                rollbackVariantInfo(
+                        productId,
+                        variantId,
+                        oldVariant
+                );
+
+                redirectToProductDetail(
+                        response,
+                        productId,
+                        "image-upload-failed"
+                );
+                return;
+            }
+
+            String imageError = productService.saveVariantMainImage(
+                    productId,
+                    variantId,
+                    newImageName
+            );
+
+            if (imageError != null) {
+                rollbackVariantInfo(
+                        productId,
+                        variantId,
+                        oldVariant
+                );
+
+                /*
+             * Không xóa nếu tên mới giống ảnh cũ,
+             * vì database cũ vẫn đang sử dụng file đó.
+                 */
+                if (oldVariant.getImageUrl() == null
+                        || !newImageName.equals(
+                                oldVariant.getImageUrl()
+                        )) {
+
+                    deleteProductImage(newImageName);
+                }
+
+                redirectToProductDetail(
+                        response,
+                        productId,
+                        imageError
+                );
+                return;
+            }
+
+            /*
+         * Chỉ xóa ảnh cũ sau khi:
+         * 1. File mới đã lưu thành công.
+         * 2. Database đã cập nhật thành công.
+             */
+            if (oldVariant.getImageUrl() != null
+                    && !oldVariant.getImageUrl().isBlank()
+                    && !oldVariant.getImageUrl().equals(
+                            newImageName
+                    )) {
+
+                deleteProductImage(oldVariant.getImageUrl());
+            }
+        }
+
+        redirectToProductDetail(
+                response,
+                productId,
+                "variant-updated"
+        );
+    }
+
+    private void rollbackVariantInfo(
+            int productId,
+            int variantId,
+            ProductVariant oldVariant) {
+
+        if (oldVariant == null) {
+            return;
+        }
+
+        productService.updateVariantInfo(
+                productId,
+                variantId,
+                oldVariant.getSize(),
+                oldVariant.getColor(),
+                oldVariant.getStatus()
+        );
+    }
+
+    private void redirectToProductDetail(
+            HttpServletResponse response,
+            int productId,
+            String status) throws IOException {
+
+        String redirectUrl = getServletContext().getContextPath()
+                + "/admin/manage-product?action=view";
+
+        if (productId > 0) {
+            redirectUrl += "&id=" + productId;
+        }
+
+        if (status != null && !status.isBlank()) {
+            redirectUrl += "&status=" + status;
+        }
+
+        response.sendRedirect(redirectUrl);
     }
 
     private void handleUpdateVariantStatus(
@@ -642,8 +837,8 @@ public class AdminProductController extends HttpServlet {
     }
 
     /**
-     * Lưu ảnh ngoài thư mục deploy. ProductImageStorage đang trỏ tới
-     * the project-root upload directory.
+     * Lưu ảnh ngoài thư mục deploy. ProductImageStorage đang trỏ tới the
+     * project-root upload directory.
      */
     private String saveProductImage(Part filePart)
             throws IOException {
@@ -887,6 +1082,89 @@ public class AdminProductController extends HttpServlet {
                     request.getContextPath()
                     + "/admin/manage-product?status=invalid-request"
             );
+        }
+    }
+
+    private String saveVariantImage(
+            Part filePart,
+            int productId,
+            int variantId,
+            String size,
+            String color) throws IOException {
+
+        if (!hasUploadedFile(filePart)) {
+            return null;
+        }
+
+        String originalName = Paths.get(
+                filePart.getSubmittedFileName()
+        ).getFileName().toString();
+
+        String extension = ProductImageStorage.normalizeExtension(
+                getFileExtension(originalName)
+        );
+
+        String contentType = filePart.getContentType();
+
+        boolean validContentType = contentType != null
+                && ("image/jpeg".equals(contentType)
+                || "image/png".equals(contentType)
+                || "image/webp".equals(contentType));
+
+        if (!validContentType) {
+            throw new IllegalArgumentException(
+                    "Unsupported image format"
+            );
+        }
+
+        String savedName
+                = ProductImageStorage.buildVariantImageName(
+                        productId,
+                        variantId,
+                        size,
+                        color,
+                        extension
+                );
+
+        Path targetFile
+                = ProductImageStorage.resolveFile(savedName);
+
+        Path temporaryFile = Files.createTempFile(
+                ProductImageStorage.getUploadDirectory(),
+                "variant-upload-",
+                ".tmp"
+        );
+
+        try {
+            try (InputStream inputStream
+                    = filePart.getInputStream()) {
+
+                Files.copy(
+                        inputStream,
+                        temporaryFile,
+                        StandardCopyOption.REPLACE_EXISTING
+                );
+            }
+
+            try {
+                Files.move(
+                        temporaryFile,
+                        targetFile,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE
+                );
+            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                Files.move(
+                        temporaryFile,
+                        targetFile,
+                        StandardCopyOption.REPLACE_EXISTING
+                );
+            }
+
+            return savedName;
+
+        } finally {
+            Files.deleteIfExists(temporaryFile);
         }
     }
 }

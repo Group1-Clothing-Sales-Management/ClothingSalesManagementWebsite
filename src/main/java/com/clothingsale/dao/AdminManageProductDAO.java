@@ -25,13 +25,13 @@ public class AdminManageProductDAO {
                 + "p.created_at, p.updated_at, img.image_url AS main_image_url "
                 + "FROM Product p "
                 + "LEFT JOIN Product_Image img "
-                + "ON img.product_id = p.id AND img.is_main = 1 "
+                + "ON img.product_id = p.id "
+                + "AND img.variant_id IS NULL "
+                + "AND img.is_main = 1 "
                 + "WHERE p.status <> 'DELETED' "
                 + "ORDER BY p.id DESC";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 products.add(mapProduct(rs));
@@ -49,11 +49,12 @@ public class AdminManageProductDAO {
                 + "p.created_at, p.updated_at, img.image_url AS main_image_url "
                 + "FROM Product p "
                 + "LEFT JOIN Product_Image img "
-                + "ON img.product_id = p.id AND img.is_main = 1 "
+                + "ON img.product_id = p.id "
+                + "AND img.variant_id IS NULL "
+                + "AND img.is_main = 1 "
                 + "WHERE p.id = ? AND p.status <> 'DELETED'";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -145,11 +146,15 @@ public class AdminManageProductDAO {
                 + "WHERE product_id = ? AND status <> 'INACTIVE'";
 
         String findImageSql = "SELECT TOP 1 id FROM Product_Image "
-                + "WHERE product_id = ? AND is_main = 1 ORDER BY id";
-
-        String updateImageSql = "UPDATE Product_Image SET image_url = ? "
-                + "WHERE product_id = ? AND is_main = 1";
-
+                + "WHERE product_id = ? "
+                + "AND variant_id IS NULL "
+                + "AND is_main = 1 "
+                + "ORDER BY id";
+        String updateImageSql = "UPDATE Product_Image "
+                + "SET image_url = ?, updated_at = GETDATE() "
+                + "WHERE product_id = ? "
+                + "AND variant_id IS NULL "
+                + "AND is_main = 1";
         String insertImageSql = "INSERT INTO Product_Image "
                 + "(product_id, image_url, is_main) VALUES (?, ?, 1)";
 
@@ -227,8 +232,7 @@ public class AdminManageProductDAO {
         String sql = "SELECT COUNT(*) FROM Category "
                 + "WHERE id = ? AND status = 1";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, categoryId);
 
@@ -246,8 +250,7 @@ public class AdminManageProductDAO {
                 + "WHERE variant_id IN "
                 + "(SELECT id FROM Product_Variant WHERE product_id = ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -353,9 +356,7 @@ public class AdminManageProductDAO {
         String sql = "SELECT id, brand_name, slug FROM Brand "
                 + "ORDER BY brand_name";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Brand brand = new Brand();
@@ -380,9 +381,7 @@ public class AdminManageProductDAO {
                 + "FROM Category "
                 + "ORDER BY status DESC, category_name";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 categories.add(mapCategory(rs));
@@ -403,9 +402,7 @@ public class AdminManageProductDAO {
                 + "FROM Category WHERE status = 1 "
                 + "ORDER BY category_name";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 categories.add(mapCategory(rs));
@@ -420,15 +417,21 @@ public class AdminManageProductDAO {
     public List<ProductVariant> getVariantsByProductId(int productId) {
         List<ProductVariant> variants = new ArrayList<>();
 
-        String sql = "SELECT id, product_id, sku, color, size, "
-                + "cost_price, list_price, sale_price, "
-                + "stock_quantity, status "
-                + "FROM Product_Variant "
-                + "WHERE product_id = ? "
-                + "ORDER BY id DESC";
+        String sql = "SELECT pv.id, pv.product_id, pv.sku, "
+                + "pv.color, pv.size, "
+                + "pv.cost_price, pv.list_price, pv.sale_price, "
+                + "pv.stock_quantity, pv.status, "
+                + "img.image_url AS variant_image_url, "
+                + "img.updated_at AS image_updated_at "
+                + "FROM Product_Variant pv "
+                + "LEFT JOIN Product_Image img "
+                + "ON img.variant_id = pv.id "
+                + "AND img.product_id = pv.product_id "
+                + "AND img.is_main = 1 "
+                + "WHERE pv.product_id = ? "
+                + "ORDER BY pv.id DESC";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -442,6 +445,35 @@ public class AdminManageProductDAO {
         }
 
         return variants;
+    }
+
+    public ProductVariant getVariantById(int productId, int variantId) {
+        String sql = "SELECT pv.id, pv.product_id, pv.sku, "
+                + "pv.color, pv.size, "
+                + "pv.cost_price, pv.list_price, pv.sale_price, "
+                + "pv.stock_quantity, pv.status, "
+                + "img.image_url AS variant_image_url, "
+                + "img.updated_at AS image_updated_at "
+                + "FROM Product_Variant pv "
+                + "LEFT JOIN Product_Image img "
+                + "ON img.variant_id = pv.id "
+                + "AND img.product_id = pv.product_id "
+                + "AND img.is_main = 1 "
+                + "WHERE pv.product_id = ? "
+                + "AND pv.id = ?";
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+            ps.setInt(2, variantId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapVariant(rs) : null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public boolean insertProductWithMatrixVariants(
@@ -558,8 +590,7 @@ public class AdminManageProductDAO {
             return false;
         }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, variantId);
             ps.setInt(2, productId);
@@ -583,8 +614,7 @@ public class AdminManageProductDAO {
                 + "stock_quantity, status, color, size) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, variant.getProductId());
             ps.setString(2, variant.getSku());
@@ -617,8 +647,7 @@ public class AdminManageProductDAO {
                 + "AND UPPER(LTRIM(RTRIM(size))) = UPPER(LTRIM(RTRIM(?))) "
                 + "AND UPPER(LTRIM(RTRIM(color))) = UPPER(LTRIM(RTRIM(?)))";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
             ps.setString(2, size.trim());
@@ -712,6 +741,8 @@ public class AdminManageProductDAO {
         variant.setSalePrice(rs.getBigDecimal("sale_price"));
         variant.setStockQuantity(rs.getInt("stock_quantity"));
         variant.setStatus(rs.getString("status"));
+        variant.setImageUrl(rs.getString("variant_image_url"));
+        variant.setImageUpdatedAt(rs.getTimestamp("image_updated_at"));
 
         StringBuilder details = new StringBuilder();
 
@@ -751,6 +782,158 @@ public class AdminManageProductDAO {
             statement.setInt(parameterIndex, value);
         } else {
             statement.setNull(parameterIndex, Types.INTEGER);
+        }
+    }
+
+    public boolean updateVariantInfo(int productId, int variantId,
+            String size, String color, String status) {
+
+        String sql = "UPDATE Product_Variant "
+                + "SET size = ?, color = ?, status = ? "
+                + "WHERE id = ? AND product_id = ?";
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, size);
+            ps.setString(2, color);
+            ps.setString(3, status);
+            ps.setInt(4, variantId);
+            ps.setInt(5, productId);
+
+            return ps.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean variantCombinationExistsForUpdate(
+            int productId,
+            int variantId,
+            String size,
+            String color) {
+
+        if (productId <= 0
+                || variantId <= 0
+                || size == null
+                || color == null) {
+            return true;
+        }
+
+        String sql = "SELECT COUNT(*) "
+                + "FROM Product_Variant "
+                + "WHERE product_id = ? "
+                + "AND id <> ? "
+                + "AND UPPER(LTRIM(RTRIM(size))) "
+                + "= UPPER(LTRIM(RTRIM(?))) "
+                + "AND UPPER(LTRIM(RTRIM(color))) "
+                + "= UPPER(LTRIM(RTRIM(?)))";
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+            ps.setInt(2, variantId);
+            ps.setString(3, size.trim());
+            ps.setString(4, color.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            // Không cho cập nhật nếu không kiểm tra được dữ liệu trùng.
+            return true;
+        }
+    }
+
+    public boolean saveVariantMainImage(
+            int productId,
+            int variantId,
+            String imageUrl) {
+
+        if (productId <= 0
+                || variantId <= 0
+                || imageUrl == null
+                || imageUrl.isBlank()) {
+            return false;
+        }
+
+        String updateSql = "UPDATE Product_Image "
+                + "SET image_url = ?, "
+                + "is_main = 1, "
+                + "sort_order = 0, "
+                + "updated_at = SYSDATETIME() "
+                + "WHERE product_id = ? "
+                + "AND variant_id = ? "
+                + "AND is_main = 1";
+
+        String insertSql = "INSERT INTO Product_Image "
+                + "(product_id, variant_id, image_url, "
+                + "is_main, sort_order, updated_at) "
+                + "SELECT ?, ?, ?, 1, 0, SYSDATETIME() "
+                + "WHERE EXISTS ("
+                + "SELECT 1 FROM Product_Variant "
+                + "WHERE id = ? AND product_id = ?"
+                + ")";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                int affectedRows;
+
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setString(1, imageUrl.trim());
+                    ps.setInt(2, productId);
+                    ps.setInt(3, variantId);
+
+                    affectedRows = ps.executeUpdate();
+                }
+
+                if (affectedRows == 0) {
+                    try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                        ps.setInt(1, productId);
+                        ps.setInt(2, variantId);
+                        ps.setString(3, imageUrl.trim());
+                        ps.setInt(4, variantId);
+                        ps.setInt(5, productId);
+
+                        affectedRows = ps.executeUpdate();
+                    }
+                }
+
+                if (affectedRows != 1) {
+                    conn.rollback();
+                    return false;
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackException) {
+                    rollbackException.printStackTrace();
+                }
+
+                e.printStackTrace();
+                return false;
+
+            } finally {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

@@ -25,6 +25,8 @@ public class ProductVariant {
 
     private Timestamp priceUpdatedAt;
     private Integer priceUpdatedBy;
+    private String imageUrl;
+    private Timestamp imageUpdatedAt;
 
     public ProductVariant() {
     }
@@ -216,5 +218,21 @@ public class ProductVariant {
 
     public void setPriceUpdatedBy(Integer priceUpdatedBy) {
         this.priceUpdatedBy = priceUpdatedBy;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Timestamp getImageUpdatedAt() {
+        return imageUpdatedAt;
+    }
+
+    public void setImageUpdatedAt(Timestamp imageUpdatedAt) {
+        this.imageUpdatedAt = imageUpdatedAt;
     }
 }

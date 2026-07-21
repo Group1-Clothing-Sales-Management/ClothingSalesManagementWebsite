@@ -54,8 +54,8 @@ public class AdminManageProductService {
     }
 
     /**
-     * Danh sách đầy đủ, bao gồm Category inactive.
-     * Dùng cho trang Edit để Category hiện tại không bị mất khỏi select.
+     * Danh sách đầy đủ, bao gồm Category inactive. Dùng cho trang Edit để
+     * Category hiện tại không bị mất khỏi select.
      */
     public List<Category> getAllCategories() {
         return productDAO.getAllCategories();
@@ -145,9 +145,8 @@ public class AdminManageProductService {
     /**
      * Cho phép sửa ảnh/thông tin khi Category hiện tại inactive.
      *
-     * Chỉ chặn khi:
-     * 1. Chuyển Product sang một Category inactive khác.
-     * 2. Chuyển Product từ INACTIVE sang ACTIVE trong Category inactive.
+     * Chỉ chặn khi: 1. Chuyển Product sang một Category inactive khác. 2.
+     * Chuyển Product từ INACTIVE sang ACTIVE trong Category inactive.
      */
     public String validateProductForUpdate(
             Product oldProduct,
@@ -426,5 +425,145 @@ public class AdminManageProductService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    public ProductVariant getVariantById(int productId, int variantId) {
+        if (productId <= 0 || variantId <= 0) {
+            return null;
+        }
+
+        ProductVariant variant = productDAO.getVariantById(
+                productId,
+                variantId
+        );
+
+        if (variant == null || variant.getProductId() != productId) {
+            return null;
+        }
+
+        return variant;
+    }
+
+    public String updateVariantInfo(
+            int productId,
+            int variantId,
+            String size,
+            String color,
+            String status) {
+
+        if (productId <= 0 || variantId <= 0) {
+            return "invalid-id";
+        }
+
+        if (isBlank(size)) {
+            return "size-required";
+        }
+
+        if (isBlank(color)) {
+            return "color-required";
+        }
+
+        size = size.trim();
+        color = color.trim();
+        status = normalizeStatus(status);
+
+        if (!"ACTIVE".equals(status)
+                && !"INACTIVE".equals(status)) {
+            return "invalid-status";
+        }
+
+        Product product = productDAO.getProductById(productId);
+
+        if (product == null
+                || "DELETED".equals(product.getStatus())) {
+            return "product-not-found";
+        }
+
+        ProductVariant currentVariant
+                = productDAO.getVariantById(productId, variantId);
+
+        if (currentVariant == null) {
+            return "variant-not-found";
+        }
+
+        /*
+     * Không cho Variant ACTIVE nếu Product đang INACTIVE.
+         */
+        if ("ACTIVE".equals(status)
+                && !"ACTIVE".equals(product.getStatus())) {
+            return "product-inactive";
+        }
+
+        /*
+     * Không cho trùng Size + Color với Variant khác
+     * thuộc cùng Product.
+         */
+        boolean combinationExists
+                = productDAO.variantCombinationExistsForUpdate(
+                        productId,
+                        variantId,
+                        size,
+                        color
+                );
+
+        if (combinationExists) {
+            return "variant-combination-exists";
+        }
+
+        boolean updated = productDAO.updateVariantInfo(
+                productId,
+                variantId,
+                size,
+                color,
+                status
+        );
+
+        return updated ? null : "update-failed";
+    }
+
+    public String saveVariantMainImage(
+            int productId,
+            int variantId,
+            String imageUrl) {
+
+        if (productId <= 0 || variantId <= 0) {
+            return "invalid-id";
+        }
+
+        if (isBlank(imageUrl)) {
+            return "image-required";
+        }
+
+        ProductVariant variant = productDAO.getVariantById(
+                productId,
+                variantId
+        );
+
+        if (variant == null) {
+            return "variant-not-found";
+        }
+
+        String normalizedImageUrl = imageUrl
+                .trim()
+                .replace("\\", "/");
+
+        /*
+     * Database chỉ được lưu đường dẫn tương đối.
+     * Không chấp nhận đường dẫn ổ đĩa hoặc path traversal.
+         */
+        if (normalizedImageUrl.startsWith("/")
+                || normalizedImageUrl.contains("..")
+                || normalizedImageUrl.contains(":")
+                || normalizedImageUrl.length() > 500) {
+            return "invalid-image-path";
+        }
+
+        boolean saved = productDAO.saveVariantMainImage(
+                productId,
+                variantId,
+                normalizedImageUrl
+        );
+
+        return saved ? null : "image-save-failed";
     }
 }
