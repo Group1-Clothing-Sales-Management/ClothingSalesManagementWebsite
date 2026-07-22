@@ -116,6 +116,15 @@
                 background:var(--wishlist-primary-soft);
             }
 
+            .wishlist-image-fallback {
+                align-items:center;
+                justify-content:center;
+            }
+
+            .wishlist-image-fallback:not(.d-none) {
+                display:flex;
+            }
+
             .wishlist-toast {
                 position:fixed;
                 z-index:1080;
@@ -354,11 +363,16 @@
                                         <c:choose>
                                             <c:when test="${not empty item.mainImageUrl}">
                                                 <img src="${pageContext.request.contextPath}/media/product/${item.mainImageUrl}"
-                                                     class="wishlist-image"
-                                                     alt="${item.productName}">
+                                                     class="wishlist-image wishlist-image-element"
+                                                     data-context-path="${pageContext.request.contextPath}"
+                                                     alt="${fn:escapeXml(item.productName)}"
+                                                     onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                                <div class="wishlist-image wishlist-image-fallback d-none align-items-center justify-content-center">
+                                                    <i class="fa-solid fa-shirt fs-1 text-secondary"></i>
+                                                </div>
                                             </c:when>
                                             <c:otherwise>
-                                                <div class="wishlist-image d-flex align-items-center justify-content-center">
+                                                <div class="wishlist-image wishlist-image-fallback d-flex align-items-center justify-content-center">
                                                     <i class="fa-solid fa-shirt fs-1 text-secondary"></i>
                                                 </div>
                                             </c:otherwise>
@@ -423,7 +437,9 @@
                                                     <input type="hidden" name="price" class="price-input"
                                                            value="${item.salePrice}">
                                                     <input type="hidden" name="quantity" value="1">
-                                                    <input type="hidden" name="imageUrl"
+                                                    <input type="hidden"
+                                                           name="imageUrl"
+                                                           class="image-url-input"
                                                            value="${item.mainImageUrl}">
 
                                                     <label class="form-label fw-bold">Variant</label>
@@ -434,6 +450,7 @@
                                                                     data-price="${variant.salePrice}"
                                                                     data-stock="${variant.stockQuantity}"
                                                                     data-attributes="${variant.attributeDetails}"
+                                                                    data-image-url="${not empty variant.imageUrl ? variant.imageUrl : item.mainImageUrl}"
                                                                     ${variant.id == item.variantId ? 'selected' : ''}>
                                                                 ${variant.attributeDetails}
                                                                 -
@@ -497,8 +514,36 @@
                     var stock = parseInt(option.dataset.stock || '0', 10);
                     var productActive = (form.dataset.productActive || '').toUpperCase() === 'ACTIVE';
 
-                    form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
-                    form.querySelector('.price-input').value = option.dataset.price || '0';
+                    form.querySelector('.attributes-input').value
+                            = option.dataset.attributes || 'Standard';
+                    form.querySelector('.price-input').value
+                            = option.dataset.price || '0';
+
+                    var imageUrl = option.dataset.imageUrl || '';
+                    var imageInput = form.querySelector('.image-url-input');
+                    var card = form.closest('.wishlist-card');
+                    var imageElement = card
+                            ? card.querySelector('.wishlist-image-element')
+                            : null;
+                    var imageFallback = card
+                            ? card.querySelector('.wishlist-image-fallback')
+                            : null;
+
+                    if (imageInput) {
+                        imageInput.value = imageUrl;
+                    }
+
+                    if (imageElement && imageUrl) {
+                        var contextPath = imageElement.dataset.contextPath || '';
+                        imageElement.src = contextPath
+                                + '/media/product/'
+                                + encodeURIComponent(imageUrl);
+                        imageElement.classList.remove('d-none');
+
+                        if (imageFallback) {
+                            imageFallback.classList.add('d-none');
+                        }
+                    }
 
                     if (cartButton) {
                         cartButton.disabled = !productActive || stock <= 0;

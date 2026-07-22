@@ -938,8 +938,11 @@
                                             /media/product/{filename}
                                         --%>
 
+                                        <c:set var="checkoutImageParts"
+                                               value="${fn:split(item.imageUrl, '/')}"/>
+
                                         <c:set var="checkoutImageName"
-                                               value="${fn:substringAfterLast(item.imageUrl, '/')}"/>
+                                               value="${checkoutImageParts[fn:length(checkoutImageParts) - 1]}"/>
 
                                         <c:url var="mediaImageUrl"
                                                value="/media/product/${checkoutImageName}"/>

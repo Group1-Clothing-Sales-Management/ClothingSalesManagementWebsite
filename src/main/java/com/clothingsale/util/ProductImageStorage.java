@@ -15,6 +15,12 @@ public final class ProductImageStorage {
     private static final String DIRECTORY_ENVIRONMENT_VARIABLE
             = "CLOTHINGSALE_UPLOAD_DIR";
 
+    private static final String UPLOAD_DIRECTORY_NAME
+            = "upload";
+
+    private static final String PRODUCT_DIRECTORY_NAME
+            = "product";
+
     private ProductImageStorage() {
     }
 
@@ -30,28 +36,117 @@ public final class ProductImageStorage {
             );
         }
 
-        Path uploadDirectory;
+        Path productUploadDirectory;
 
         if (configuredDirectory != null
                 && !configuredDirectory.trim().isEmpty()) {
 
-            uploadDirectory = Paths.get(
+            Path configuredPath = Paths.get(
                     configuredDirectory.trim()
-            );
+            ).toAbsolutePath().normalize();
+
+            /*
+             * Cho phép cấu hình theo một trong hai cách:
+             * - .../upload
+             * - .../upload/product
+             */
+            if (configuredPath.getFileName() != null
+                    && PRODUCT_DIRECTORY_NAME.equalsIgnoreCase(
+                            configuredPath.getFileName().toString()
+                    )) {
+
+                productUploadDirectory = configuredPath;
+
+            } else {
+
+                productUploadDirectory = configuredPath.resolve(
+                        PRODUCT_DIRECTORY_NAME
+                );
+            }
 
         } else {
-            uploadDirectory = Paths.get(
-                    System.getProperty("user.dir"),
-                    "upload"
-            );
+
+            Path projectRoot = findProjectRoot();
+
+            productUploadDirectory = projectRoot
+                    .resolve(UPLOAD_DIRECTORY_NAME)
+                    .resolve(PRODUCT_DIRECTORY_NAME);
         }
 
-        uploadDirectory
-                = uploadDirectory.toAbsolutePath().normalize();
+        productUploadDirectory
+                = productUploadDirectory
+                        .toAbsolutePath()
+                        .normalize();
 
-        Files.createDirectories(uploadDirectory);
+        Files.createDirectories(productUploadDirectory);
 
-        return uploadDirectory;
+        return productUploadDirectory;
+    }
+
+    private static Path findProjectRoot() {
+        Path rootFromUserDirectory = findProjectRootFrom(
+                Paths.get(System.getProperty("user.dir", "."))
+        );
+
+        if (rootFromUserDirectory != null) {
+            return rootFromUserDirectory;
+        }
+
+        try {
+            Path codeLocation = Paths.get(
+                    ProductImageStorage.class
+                            .getProtectionDomain()
+                            .getCodeSource()
+                            .getLocation()
+                            .toURI()
+            );
+
+            Path rootFromCodeLocation
+                    = findProjectRootFrom(codeLocation);
+
+            if (rootFromCodeLocation != null) {
+                return rootFromCodeLocation;
+            }
+
+        } catch (Exception ignored) {
+            // Sử dụng user.dir làm phương án cuối.
+        }
+
+        return Paths.get(
+                System.getProperty("user.dir", ".")
+        ).toAbsolutePath().normalize();
+    }
+
+    private static Path findProjectRootFrom(Path startPath) {
+        if (startPath == null) {
+            return null;
+        }
+
+        Path current = startPath
+                .toAbsolutePath()
+                .normalize();
+
+        if (Files.isRegularFile(current)) {
+            current = current.getParent();
+        }
+
+        while (current != null) {
+            boolean hasPom = Files.isRegularFile(
+                    current.resolve("pom.xml")
+            );
+
+            boolean hasSourceDirectory = Files.isDirectory(
+                    current.resolve("src")
+            );
+
+            if (hasPom && hasSourceDirectory) {
+                return current;
+            }
+
+            current = current.getParent();
+        }
+
+        return null;
     }
 
     public static Path resolveFile(String fileName)

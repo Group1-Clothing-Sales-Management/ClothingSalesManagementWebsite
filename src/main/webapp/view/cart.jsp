@@ -281,13 +281,30 @@
             min-width:0;
         }
 
-        .cart-img {
+        .cart-image-frame {
+            position:relative;
             width:80px;
             height:80px;
             flex:0 0 auto;
+        }
+
+        .cart-img {
+            width:80px;
+            height:80px;
             object-fit:cover;
             border:1px solid #eee;
             background:#f1f1f1;
+        }
+
+        .cart-image-placeholder {
+            width:80px;
+            height:80px;
+            align-items:center;
+            justify-content:center;
+            border:1px solid #eee;
+            background:#f1f1f1;
+            color:#94a3b8;
+            font-size:24px;
         }
 
         .product-name {
@@ -827,9 +844,15 @@
             border-bottom:1px solid var(--cart-line);
         }
 
-        .cart-img {
+        .cart-image-frame,
+        .cart-img,
+        .cart-image-placeholder {
             width:92px;
             height:92px;
+        }
+
+        .cart-img,
+        .cart-image-placeholder {
             border:1px solid var(--cart-line);
             border-radius:8px;
             background:#eef4ff;
@@ -1183,31 +1206,22 @@
                        totalQuantity += qty;
 
                        String rawImageUrl = it.getImageUrl();
-                       String imageUrl = rawImageUrl;
-                       if (imageUrl == null || imageUrl.trim().isEmpty()) {
-                           imageUrl = ctx + "/media/product/placeholder.svg";
-                       } else {
-                           imageUrl = imageUrl.trim();
-                           String imageFileName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-                           if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-                               imageUrl = imageUrl;
-                           } else if (imageUrl.startsWith(ctx + "/media/product/")
-                                   || imageUrl.startsWith(ctx + "/uploads/product/")) {
-                               imageUrl = ctx + "/media/product/" + imageFileName;
-                           } else if (imageUrl.startsWith(ctx + "/")) {
-                               imageUrl = imageUrl;
+                       String imageUrl = "";
+                       if (rawImageUrl != null && !rawImageUrl.trim().isEmpty()) {
+                           String cleanImageUrl = rawImageUrl.trim().replace('\\', '/');
+                           if (cleanImageUrl.startsWith("http://")
+                                   || cleanImageUrl.startsWith("https://")) {
+                               imageUrl = cleanImageUrl;
                            } else {
-                               while (imageUrl.startsWith("/")) {
-                                   imageUrl = imageUrl.substring(1);
+                               int queryIndex = cleanImageUrl.indexOf('?');
+                               if (queryIndex >= 0) {
+                                   cleanImageUrl = cleanImageUrl.substring(0, queryIndex);
                                }
-                               if (imageUrl.startsWith("media/product/")
-                                       || imageUrl.startsWith("uploads/product/")) {
-                                   imageUrl = ctx + "/media/product/" + imageFileName;
-                               } else if (imageUrl.contains("/")) {
-                                   imageUrl = ctx + "/uploads/" + imageUrl;
-                               } else {
-                                   imageUrl = ctx + "/media/product/" + imageFileName;
-                               }
+                               String imageFileName = cleanImageUrl.substring(
+                                       cleanImageUrl.lastIndexOf('/') + 1
+                               );
+                               imageUrl = ctx + "/media/product/" + imageFileName
+                                       + "?v=" + System.currentTimeMillis();
                            }
                        }
 
@@ -1242,10 +1256,17 @@
                         </div>
 
                         <div class="product-info">
-                            <img src="<%= imageUrl %>"
-                                 alt="<%= it.getProductName() %>"
-                                 class="cart-img"
-                                 onerror="this.onerror=null;this.style.display='none';">
+                            <div class="cart-image-frame">
+                                <img src="<%= imageUrl %>"
+                                     alt="<%= it.getProductName() %>"
+                                     class="cart-img"
+                                     <%= imageUrl.isEmpty() ? "style=\"display:none;\"" : "" %>
+                                     onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <span class="cart-image-placeholder"
+                                      <%= imageUrl.isEmpty() ? "" : "style=\"display:none;\"" %>>
+                                    <i class="fa-regular fa-image"></i>
+                                </span>
+                            </div>
                             <div>
                                 <a class="product-name" href="<%= ctx %>/product/detail?id=<%= it.getProductId() %>">
                                     <%= it.getProductName() %>
@@ -1261,12 +1282,9 @@
                         </div>
 
                         <form action="<%= ctx %>/cart/update" method="post" class="cart-update-form">
-                            <input type="hidden" name="variantId" value="<%= it.getVariantId() %>">
-                            <input type="hidden" name="productId" value="<%= it.getProductId() %>">
-                            <input type="hidden" name="productName" value="<%= it.getProductName() %>">
-                            <input type="hidden" name="attributes" class="attributes-input" value="<%= attributes %>">
-                            <input type="hidden" name="price" class="price-input" value="<%= price %>">
-                            <input type="hidden" name="imageUrl" value="<%= rawImageUrl != null ? rawImageUrl : imageUrl %>">
+                            <input type="hidden"
+                                   name="variantId"
+                                   value="<%= it.getVariantId() %>">
 
                             <div class="variant-block mb-3">
                                 <% if (variants != null && !variants.isEmpty()) { %>
@@ -1276,11 +1294,17 @@
                                                String detail = v.getAttributeDetails() != null ? v.getAttributeDetails() : "Standard";
                                                java.math.BigDecimal variantPrice = v.getSalePrice() != null ? v.getSalePrice() : java.math.BigDecimal.ZERO;
                                                boolean selected = v.getId() == it.getVariantId();
+                                               String variantImage = v.getImageUrl() != null ? v.getImageUrl() : "";
+                                               long variantImageVersion = v.getImageUpdatedAt() != null
+                                                       ? v.getImageUpdatedAt().getTime()
+                                                       : 0L;
                                         %>
                                             <option value="<%= v.getId() %>"
                                                     data-price="<%= variantPrice %>"
                                                     data-attributes="<%= detail %>"
                                                     data-stock="<%= v.getStockQuantity() %>"
+                                                    data-image="<%= variantImage %>"
+                                                    data-image-version="<%= variantImageVersion %>"
                                                     <%= (v.getStockQuantity() <= 0 && !selected) ? "disabled" : "" %>
                                                     <%= selected ? "selected" : "" %>>
                                                 <%= detail %>
@@ -1302,6 +1326,10 @@
                                                         String detail = v.getAttributeDetails() != null ? v.getAttributeDetails() : "Standard";
                                                         java.math.BigDecimal variantPrice = v.getSalePrice() != null ? v.getSalePrice() : java.math.BigDecimal.ZERO;
                                                         boolean selected = v.getId() == it.getVariantId();
+                                                        String variantImage = v.getImageUrl() != null ? v.getImageUrl() : "";
+                                                        long variantImageVersion = v.getImageUpdatedAt() != null
+                                                                ? v.getImageUpdatedAt().getTime()
+                                                                : 0L;
                                                 %>
                                                     <button type="button"
                                                             class="variant-choice <%= selected ? "is-selected" : "" %>"
@@ -1309,6 +1337,8 @@
                                                             data-price="<%= variantPrice %>"
                                                             data-attributes="<%= detail %>"
                                                             data-stock="<%= v.getStockQuantity() %>"
+                                                            data-image="<%= variantImage %>"
+                                                            data-image-version="<%= variantImageVersion %>"
                                                             <%= (v.getStockQuantity() <= 0 && !selected) ? "disabled" : "" %>>
                                                         <%= detail %>
                                                     </button>
@@ -1456,15 +1486,76 @@
             buttons[1].disabled = stock <= 0 || value >= stock;
         }
 
+        function buildCartImageUrl(fileName, version) {
+            if (!fileName) {
+                return "";
+            }
+
+            var normalized = String(fileName).replace(/\\/g, "/");
+            if (/^https?:\/\//i.test(normalized)) {
+                return normalized;
+            }
+
+            var queryIndex = normalized.indexOf("?");
+            if (queryIndex >= 0) {
+                normalized = normalized.substring(0, queryIndex);
+            }
+
+            var imageName = normalized.substring(
+                    normalized.lastIndexOf("/") + 1
+            );
+
+            var cacheVersion = version && version !== "0"
+                    ? "?v=" + encodeURIComponent(version)
+                    : "?v=" + Date.now();
+
+            return "<%= ctx %>/media/product/"
+                    + encodeURIComponent(imageName)
+                    + cacheVersion;
+        }
+
+        function previewSelectedVariantImage(form, option) {
+            var itemRow = form.closest(".cart-item");
+            if (!itemRow) {
+                return;
+            }
+
+            var image = itemRow.querySelector(".cart-img");
+            var placeholder = itemRow.querySelector(
+                    ".cart-image-placeholder"
+            );
+
+            if (!image || !placeholder) {
+                return;
+            }
+
+            var imageUrl = buildCartImageUrl(
+                    option.dataset.image,
+                    option.dataset.imageVersion
+            );
+
+            if (!imageUrl) {
+                image.style.display = "none";
+                placeholder.style.display = "flex";
+                return;
+            }
+
+            image.onerror = function () {
+                image.style.display = "none";
+                placeholder.style.display = "flex";
+            };
+
+            image.src = imageUrl;
+            image.style.display = "block";
+            placeholder.style.display = "none";
+        }
+
         function syncVariantSelect(select) {
             var form = select.closest('.cart-update-form');
             var option = select.options[select.selectedIndex];
             if (!form || !option) {
                 return;
             }
-
-            form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
-            form.querySelector('.price-input').value = option.dataset.price || '0';
 
             var triggerValue = form.querySelector('.variant-trigger-value');
             if (triggerValue) {
@@ -1484,6 +1575,7 @@
                 normalizeQuantity(input, stock);
             }
 
+            previewSelectedVariantImage(form, option);
             updateQuantityButtons(form);
         }
 

@@ -74,7 +74,9 @@ public class AdminManageProductDAO {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         String insertImageSql = "INSERT INTO Product_Image "
-                + "(product_id, image_url, is_main) VALUES (?, ?, 1)";
+                + "(product_id, variant_id, image_url, is_main, "
+                + "sort_order, updated_at) "
+                + "VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -104,6 +106,7 @@ public class AdminManageProductDAO {
                             return false;
                         }
                         productId = keys.getInt(1);
+                        product.setId(productId);
                     }
                 }
 
@@ -156,7 +159,9 @@ public class AdminManageProductDAO {
                 + "AND variant_id IS NULL "
                 + "AND is_main = 1";
         String insertImageSql = "INSERT INTO Product_Image "
-                + "(product_id, image_url, is_main) VALUES (?, ?, 1)";
+                + "(product_id, variant_id, image_url, is_main, "
+                + "sort_order, updated_at) "
+                + "VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -522,6 +527,7 @@ public class AdminManageProductDAO {
                             return false;
                         }
                         productId = keys.getInt(1);
+                        product.setId(productId);
                     }
                 }
 
@@ -535,6 +541,7 @@ public class AdminManageProductDAO {
 
                 try (PreparedStatement ps = conn.prepareStatement(insertVariantSql)) {
                     for (ProductVariant variant : variants) {
+                        variant.setProductId(productId);
                         ps.setInt(1, productId);
                         ps.setString(2, variant.getSku());
                         ps.setBigDecimal(3, zeroIfNull(variant.getCostPrice()));
@@ -846,6 +853,113 @@ public class AdminManageProductDAO {
 
             // Không cho cập nhật nếu không kiểm tra được dữ liệu trùng.
             return true;
+        }
+    }
+
+    public boolean saveProductMainImage(
+            int productId,
+            String imageUrl) {
+
+        if (productId <= 0
+                || imageUrl == null
+                || imageUrl.isBlank()) {
+            return false;
+        }
+
+        String findImageSql
+                = "SELECT TOP 1 id "
+                + "FROM Product_Image "
+                + "WHERE product_id = ? "
+                + "AND variant_id IS NULL "
+                + "ORDER BY is_main DESC, sort_order, id";
+
+        String clearMainSql
+                = "UPDATE Product_Image "
+                + "SET is_main = 0 "
+                + "WHERE product_id = ? "
+                + "AND variant_id IS NULL "
+                + "AND is_main = 1";
+
+        String updateImageSql
+                = "UPDATE Product_Image "
+                + "SET image_url = ?, "
+                + "is_main = 1, "
+                + "sort_order = 0, "
+                + "updated_at = SYSDATETIME() "
+                + "WHERE id = ?";
+
+        String insertImageSql
+                = "INSERT INTO Product_Image "
+                + "(product_id, variant_id, image_url, "
+                + "is_main, sort_order, updated_at) "
+                + "VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                Integer imageId = null;
+
+                try (PreparedStatement ps
+                        = conn.prepareStatement(findImageSql)) {
+
+                    ps.setInt(1, productId);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            imageId = rs.getInt("id");
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps
+                        = conn.prepareStatement(clearMainSql)) {
+
+                    ps.setInt(1, productId);
+                    ps.executeUpdate();
+                }
+
+                int affectedRows;
+
+                if (imageId != null) {
+                    try (PreparedStatement ps
+                            = conn.prepareStatement(updateImageSql)) {
+
+                        ps.setString(1, imageUrl.trim());
+                        ps.setInt(2, imageId);
+                        affectedRows = ps.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement ps
+                            = conn.prepareStatement(insertImageSql)) {
+
+                        ps.setInt(1, productId);
+                        ps.setString(2, imageUrl.trim());
+                        affectedRows = ps.executeUpdate();
+                    }
+                }
+
+                if (affectedRows != 1) {
+                    conn.rollback();
+                    return false;
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ignored) {
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 

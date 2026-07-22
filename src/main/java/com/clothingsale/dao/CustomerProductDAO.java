@@ -86,6 +86,7 @@ public class CustomerProductDAO {
                 + "    SELECT TOP 1 pi.image_url "
                 + "    FROM Product_Image pi "
                 + "    WHERE pi.product_id = p.id "
+                + "    AND pi.variant_id IS NULL "
                 + "    ORDER BY pi.is_main DESC, "
                 + "             pi.sort_order, pi.id"
                 + ") img "
@@ -157,6 +158,7 @@ public class CustomerProductDAO {
                 + "    SELECT TOP 1 pi.image_url "
                 + "    FROM Product_Image pi "
                 + "    WHERE pi.product_id = p.id "
+                + "    AND pi.variant_id IS NULL "
                 + "    ORDER BY pi.is_main DESC, "
                 + "             pi.sort_order, "
                 + "             pi.id"
@@ -240,12 +242,34 @@ public class CustomerProductDAO {
                 + "pv.id, pv.product_id, pv.sku, "
                 + "pv.cost_price, pv.list_price, "
                 + "pv.sale_price, pv.stock_quantity, "
-                + "pv.status, pv.color, pv.size "
+                + "pv.status, pv.color, pv.size, "
+                + "COALESCE(variant_img.image_url, "
+                + "         product_img.image_url) AS image_url, "
+                + "COALESCE(variant_img.updated_at, "
+                + "         product_img.updated_at) AS image_updated_at "
                 + "FROM Product_Variant pv "
                 + "INNER JOIN Product p "
                 + "ON p.id = pv.product_id "
                 + "INNER JOIN Category c "
                 + "ON c.id = p.category_id "
+                + "OUTER APPLY ("
+                + "    SELECT TOP 1 "
+                + "           pi.image_url, pi.updated_at "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = pv.product_id "
+                + "    AND pi.variant_id = pv.id "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, pi.id"
+                + ") variant_img "
+                + "OUTER APPLY ("
+                + "    SELECT TOP 1 "
+                + "           pi.image_url, pi.updated_at "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = pv.product_id "
+                + "    AND pi.variant_id IS NULL "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, pi.id"
+                + ") product_img "
                 + "WHERE pv.product_id IN ("
                 + placeholders(cleanProductIds.size())
                 + ") "
@@ -286,54 +310,139 @@ public class CustomerProductDAO {
     }
 
     public CartItem getBuyNowItem(int variantId, int quantity) {
-        String sql = "SELECT pv.id AS variant_id, "
+
+        String sql
+                = "SELECT "
+                + "pv.id AS variant_id, "
                 + "pv.product_id, "
                 + "pv.sale_price, "
+                + "pv.stock_quantity, "
+                + "pv.color, "
+                + "pv.size, "
                 + "p.product_name, "
-                + "img.image_url AS main_image, "
-                + "color.attribute_value AS color, "
-                + "size.attribute_value AS size "
+                + "COALESCE("
+                + "variant_img.image_url, "
+                + "product_img.image_url"
+                + ") AS main_image "
                 + "FROM Product_Variant pv "
-                + "JOIN Product p ON pv.product_id=p.id "
+                + "INNER JOIN Product p "
+                + "ON p.id = pv.product_id "
+                + "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
                 + "OUTER APPLY ("
-                + " SELECT TOP 1 pi.image_url "
-                + " FROM Product_Image pi "
-                + " WHERE pi.product_id = p.id "
-                + " ORDER BY pi.is_main DESC, pi.sort_order, pi.id"
-                + ") img "
+                + "    SELECT TOP 1 pi.image_url "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = pv.product_id "
+                + "    AND pi.variant_id = pv.id "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, "
+                + "             pi.id"
+                + ") variant_img "
                 + "OUTER APPLY ("
-                + " SELECT TOP 1 vav.attribute_value "
-                + " FROM Variant_Attribute_Value vav "
-                + " JOIN Attribute a ON a.id=vav.attribute_id "
-                + " WHERE vav.variant_id=pv.id AND a.attribute_name='Color'"
-                + ") color "
-                + "OUTER APPLY ("
-                + " SELECT TOP 1 vav.attribute_value "
-                + " FROM Variant_Attribute_Value vav "
-                + " JOIN Attribute a ON a.id=vav.attribute_id "
-                + " WHERE vav.variant_id=pv.id AND a.attribute_name='Size'"
-                + ") size "
-                + "WHERE pv.id=?";
+                + "    SELECT TOP 1 pi.image_url "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = p.id "
+                + "    AND pi.variant_id IS NULL "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, "
+                + "             pi.id"
+                + ") product_img "
+                + "WHERE pv.id = ? "
+                + "AND p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND pv.stock_quantity > 0 "
+                + "AND ISNULL(pv.list_price, 0) > 0 "
+                + "AND ISNULL(pv.sale_price, 0) > 0 "
+                + "AND pv.sale_price <= pv.list_price";
 
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, variantId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    CartItem item = new CartItem();
-                    item.setVariantId(rs.getInt("variant_id"));
-                    item.setProductId(rs.getInt("product_id"));
-                    item.setProductName(rs.getString("product_name"));
-                    item.setPrice(rs.getBigDecimal("sale_price"));
-                    item.setQuantity(quantity);
-                    item.setImageUrl(rs.getString("main_image"));
-                    item.setColor(rs.getString("color"));
-                    item.setSize(rs.getString("size"));
-                    return item;
+
+                if (!rs.next()) {
+                    return null;
                 }
+
+                int availableStock
+                        = rs.getInt("stock_quantity");
+
+                int safeQuantity
+                        = Math.max(
+                                1,
+                                Math.min(
+                                        quantity,
+                                        availableStock
+                                )
+                        );
+
+                String color
+                        = rs.getString("color");
+
+                String size
+                        = rs.getString("size");
+
+                StringBuilder attributes
+                        = new StringBuilder();
+
+                if (color != null
+                        && !color.trim().isEmpty()) {
+
+                    attributes.append("Color: ")
+                            .append(color.trim());
+                }
+
+                if (size != null
+                        && !size.trim().isEmpty()) {
+
+                    if (attributes.length() > 0) {
+                        attributes.append(" / ");
+                    }
+
+                    attributes.append("Size: ")
+                            .append(size.trim());
+                }
+
+                CartItem item = new CartItem();
+
+                item.setVariantId(
+                        rs.getInt("variant_id")
+                );
+
+                item.setProductId(
+                        rs.getInt("product_id")
+                );
+
+                item.setProductName(
+                        rs.getString("product_name")
+                );
+
+                item.setPrice(
+                        rs.getBigDecimal("sale_price")
+                );
+
+                item.setQuantity(safeQuantity);
+
+                item.setImageUrl(
+                        rs.getString("main_image")
+                );
+
+                item.setColor(color);
+                item.setSize(size);
+
+                item.setAttributes(
+                        attributes.length() > 0
+                        ? attributes.toString()
+                        : "Standard"
+                );
+
+                return item;
             }
-        } catch (Exception e) {
+
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -496,6 +605,10 @@ public class CustomerProductDAO {
         variant.setStatus(rs.getString("status"));
         variant.setColor(rs.getString("color"));
         variant.setSize(rs.getString("size"));
+        variant.setImageUrl(rs.getString("image_url"));
+        variant.setImageUpdatedAt(
+                rs.getTimestamp("image_updated_at")
+        );
 
         variant.setAttributeDetails(
                 buildAttributeDetails(

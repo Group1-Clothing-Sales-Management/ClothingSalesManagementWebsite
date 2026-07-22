@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Level;
@@ -86,13 +87,19 @@ public class CartController extends HttpServlet {
                 }
             }
 
+            boolean refreshedFromDatabase = refreshCartItems(cart, cartDAO);
             boolean adjustedToStock = syncCartWithStock(cart, cartDAO);
-            if (adjustedToStock) {
+
+            if (refreshedFromDatabase || adjustedToStock) {
                 persistCart(session, response, cart, authUserIdObj);
-                if (session.getAttribute("cartMessage") == null) {
+
+                if (adjustedToStock
+                        && session.getAttribute("cartMessage") == null) {
+
                     session.setAttribute("cartMessage",
                             "Some cart quantities were adjusted to match available stock.");
                 }
+
                 session.setAttribute("cart", cart);
             }
 
@@ -155,273 +162,357 @@ public class CartController extends HttpServlet {
 
         switch (action) {
             case "add": {
-                String variantIdStr = request.getParameter("variantId");
-                String productIdStr = request.getParameter("productId");
-                String productName = request.getParameter("productName");
-                String attributes = request.getParameter("attributes");
-                String priceStr = request.getParameter("price");
-                String qtyStr = request.getParameter("quantity");
-                String imageUrl = request.getParameter("imageUrl");
+                int variantId = parsePositiveInt(
+                        request.getParameter("variantId")
+                );
 
-                int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
-                int productId = Integer.parseInt(productIdStr != null ? productIdStr : "0");
-                int quantity = 1;
-                try {
-                    quantity = Integer.parseInt(qtyStr);
-                } catch (Exception e) {
-                }
-                if (quantity < 1) {
+                int quantity = parsePositiveInt(
+                        request.getParameter("quantity")
+                );
+
+                if (quantity <= 0) {
                     quantity = 1;
                 }
-                BigDecimal price = BigDecimal.ZERO;
-                try {
-                    price = new BigDecimal(priceStr);
-                } catch (Exception e) {
-                }
 
-                CartDAO dao = new CartDAO();
+                if (variantId <= 0) {
+                    session.setAttribute(
+                            "cartMessage",
+                            "Please select a valid product variant."
+                    );
 
-                int stock = dao.getAvailableStock(variantId);
-
-                if (stock <= 0) {
-                    session.setAttribute("cartMessage",
-                            "This item is out of stock.");
-                    response.sendRedirect(buildAddToCartRedirect(request, false));
+                    response.sendRedirect(
+                            buildAddToCartRedirect(request, false)
+                    );
                     return;
                 }
 
-                CartItem item = cart.get(variantId);
+                CartDAO dao = new CartDAO();
+                CartItem databaseItem
+                        = dao.getActiveVariantCartItem(variantId);
 
-                if (item == null) {
+                int stock = dao.getAvailableStock(variantId);
 
-                    if (quantity > stock) {
-                        session.setAttribute("cartMessage",
-                                "Only " + stock + " item(s) are available in stock.");
-                        response.sendRedirect(buildAddToCartRedirect(request, false));
-                        return;
-                    }
+                if (databaseItem == null || stock <= 0) {
+                    session.setAttribute(
+                            "cartMessage",
+                            "This item is unavailable or out of stock."
+                    );
 
-                    item = new CartItem();
-                    item.setVariantId(variantId);
-                    item.setProductId(productId);
-                    item.setProductName(productName);
-                    item.setAttributes(attributes);
-                    item.setPrice(price);
-                    item.setQuantity(quantity);
-                    item.setImageUrl(imageUrl);
-
-                    cart.put(variantId, item);
-
-                } else {
-
-                    int newQty = Math.max(0, item.getQuantity()) + quantity;
-
-                    if (newQty > stock) {
-                        session.setAttribute("cartMessage",
-                                "Only " + stock + " item(s) are available in stock.");
-                        response.sendRedirect(buildAddToCartRedirect(request, false));
-                        return;
-                    }
-
-                    item.setQuantity(newQty);
-                    item.setProductName(productName);
-                    item.setAttributes(attributes);
-                    item.setPrice(price);
-                    item.setImageUrl(imageUrl);
+                    response.sendRedirect(
+                            buildAddToCartRedirect(request, false)
+                    );
+                    return;
                 }
 
-                session.setAttribute("cartMessage",
-                        "Item added to your cart.");
+                CartItem existingItem = cart.get(variantId);
+                int newQuantity = quantity;
 
-                LOGGER.log(Level.FINE, "[CartController] Cart after add: {0}", cartSummary(cart));
+                if (existingItem != null) {
+                    newQuantity = Math.max(
+                            0,
+                            existingItem.getQuantity()
+                    ) + quantity;
+                }
+
+                if (newQuantity > stock) {
+                    session.setAttribute(
+                            "cartMessage",
+                            "Only " + stock
+                            + " item(s) are available in stock."
+                    );
+
+                    response.sendRedirect(
+                            buildAddToCartRedirect(request, false)
+                    );
+                    return;
+                }
+
+                if (existingItem == null) {
+                    databaseItem.setQuantity(newQuantity);
+                    cart.put(variantId, databaseItem);
+                } else {
+                    copyAuthoritativeData(
+                            existingItem,
+                            databaseItem
+                    );
+                    existingItem.setQuantity(newQuantity);
+                }
+
+                session.setAttribute(
+                        "cartMessage",
+                        "Item added to your cart."
+                );
+
+                LOGGER.log(
+                        Level.FINE,
+                        "[CartController] Cart after add: {0}",
+                        cartSummary(cart)
+                );
 
                 authUserIdObj = session.getAttribute("authUserId");
+
                 if (authUserIdObj instanceof Integer) {
                     int userId = (Integer) authUserIdObj;
+
                     try {
-                        new CartDAO().saveCart(userId, cart);
-                        LOGGER.log(Level.FINE, "[CartController] Persisted cart for user {0} after add: {1}", new Object[]{userId, cartSummary(cart)});
+                        dao.saveCart(userId, cart);
+
+                        LOGGER.log(
+                                Level.FINE,
+                                "[CartController] Persisted cart for user {0} after add: {1}",
+                                new Object[]{userId, cartSummary(cart)}
+                        );
                     } catch (Exception ex) {
-                        LOGGER.log(Level.WARNING, "[CartController] Failed saving cart for user " + userId + " after add", ex);
+                        LOGGER.log(
+                                Level.WARNING,
+                                "[CartController] Failed saving cart for user "
+                                + userId + " after add",
+                                ex
+                        );
                     }
                 } else {
-                    // anonymous user -> persist cart in cookie
                     writeAnonCartCookie(response, cart);
                 }
 
-                response.sendRedirect(buildAddToCartRedirect(request, true));
+                response.sendRedirect(
+                        buildAddToCartRedirect(request, true)
+                );
                 break;
             }
 
             case "buyNow": {
+                int variantId = parsePositiveInt(
+                        request.getParameter("variantId")
+                );
 
-                String variantIdStr = request.getParameter("variantId");
-                String productIdStr = request.getParameter("productId");
-                String productName = request.getParameter("productName");
-                String attributes = request.getParameter("attributes");
-                String priceStr = request.getParameter("price");
-                String qtyStr = request.getParameter("quantity");
-                String imageUrl = request.getParameter("imageUrl");
+                int quantity = parsePositiveInt(
+                        request.getParameter("quantity")
+                );
 
-                int variantId = Integer.parseInt(variantIdStr);
-                int productId = Integer.parseInt(productIdStr);
+                if (quantity <= 0) {
+                    quantity = 1;
+                }
 
-                int quantity = Integer.parseInt(qtyStr);
+                if (variantId <= 0) {
+                    session.setAttribute(
+                            "cartMessage",
+                            "Please select a valid product variant."
+                    );
 
-                BigDecimal price = new BigDecimal(priceStr);
+                    response.sendRedirect(
+                            buildAddToCartRedirect(request, false)
+                    );
+                    return;
+                }
 
                 CartDAO dao = new CartDAO();
+                CartItem databaseItem
+                        = dao.getActiveVariantCartItem(variantId);
 
                 int stock = dao.getAvailableStock(variantId);
 
-                if (quantity > stock) {
+                if (databaseItem == null || stock <= 0) {
+                    session.setAttribute(
+                            "cartMessage",
+                            "This item is unavailable or out of stock."
+                    );
 
-                    quantity = stock;
-
+                    response.sendRedirect(
+                            buildAddToCartRedirect(request, false)
+                    );
+                    return;
                 }
 
-                CartItem item = new CartItem();
+                if (quantity > stock) {
+                    quantity = stock;
+                }
 
-                item.setVariantId(variantId);
-                item.setProductId(productId);
-                item.setProductName(productName);
-                item.setAttributes(attributes);
-                item.setPrice(price);
-                item.setQuantity(quantity);
-                item.setImageUrl(imageUrl);
+                databaseItem.setQuantity(quantity);
 
-                List<CartItem> buyNowItems = new java.util.ArrayList<>();
+                List<CartItem> buyNowItems
+                        = new ArrayList<>();
 
-                buyNowItems.add(item);
-
-                session.setAttribute("buyNowItems", buyNowItems);
+                buyNowItems.add(databaseItem);
+                session.setAttribute(
+                        "buyNowItems",
+                        buyNowItems
+                );
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/customer/checkout?buyNow=1");
-
+                        + "/customer/checkout?buyNow=1"
+                );
                 return;
             }
 
             case "update": {
-                String variantIdStr = request.getParameter("variantId");
-                String newVariantIdStr = request.getParameter("newVariantId");
-                String qtyStr = request.getParameter("quantity");
-                int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
-                int newVariantId = Integer.parseInt(
-                        newVariantIdStr != null && !newVariantIdStr.isEmpty()
-                        ? newVariantIdStr
-                        : (variantIdStr != null ? variantIdStr : "0"));
-                int quantity = 1;
-                try {
-                    quantity = Integer.parseInt(qtyStr);
-                } catch (Exception e) {
+                int variantId = parsePositiveInt(
+                        request.getParameter("variantId")
+                );
+
+                String newVariantIdRaw
+                        = request.getParameter("newVariantId");
+
+                int newVariantId = parsePositiveInt(
+                        newVariantIdRaw == null
+                        || newVariantIdRaw.isBlank()
+                        ? request.getParameter("variantId")
+                        : newVariantIdRaw
+                );
+
+                int quantity = parseInteger(
+                        request.getParameter("quantity"),
+                        1
+                );
+
+                CartItem currentItem = cart.get(variantId);
+
+                if (currentItem == null) {
+                    session.setAttribute(
+                            "cartMessage",
+                            "The cart item no longer exists."
+                    );
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/cart?skipMerge=1"
+                    );
+                    return;
                 }
-                String productIdStr = request.getParameter("productId");
-                String productName = request.getParameter("productName");
-                String attributes = request.getParameter("attributes");
-                String priceStr = request.getParameter("price");
-                String imageUrl = request.getParameter("imageUrl");
-                int productId = 0;
-                try {
-                    productId = Integer.parseInt(productIdStr);
-                } catch (Exception e) {
-                }
-                BigDecimal price = BigDecimal.ZERO;
-                try {
-                    price = new BigDecimal(priceStr);
-                } catch (Exception e) {
-                }
 
-                CartDAO dao = new CartDAO();
+                if (quantity <= 0) {
+                    cart.remove(variantId);
 
-                int stock = dao.getAvailableStock(newVariantId);
+                    session.setAttribute(
+                            "cartMessage",
+                            "Item removed from your cart."
+                    );
+                } else {
+                    CartDAO dao = new CartDAO();
 
-                CartItem item = cart.get(variantId);
+                    CartItem databaseItem
+                            = dao.getActiveVariantCartItem(
+                                    newVariantId
+                            );
 
-                if (item != null) {
+                    int stock = dao.getAvailableStock(
+                            newVariantId
+                    );
 
-                    if (quantity <= 0) {
+                    if (databaseItem == null || stock <= 0) {
+                        session.setAttribute(
+                                "cartMessage",
+                                "The selected variant is unavailable."
+                        );
 
-                        cart.remove(variantId);
+                        response.sendRedirect(
+                                request.getContextPath()
+                                + "/cart"
+                        );
+                        return;
+                    }
 
-                        session.setAttribute("cartMessage",
-                                "Item removed from your cart.");
+                    if (newVariantId != variantId
+                            && cart.containsKey(newVariantId)) {
 
-                    } else {
+                        CartItem target
+                                = cart.get(newVariantId);
 
-                        if (quantity > stock) {
+                        int mergedQuantity
+                                = Math.max(
+                                        0,
+                                        target.getQuantity()
+                                ) + quantity;
 
-                            session.setAttribute("cartMessage",
-                                    "Only " + stock + " item(s) are available in stock.");
+                        if (mergedQuantity > stock) {
+                            session.setAttribute(
+                                    "cartMessage",
+                                    "Only " + stock
+                                    + " item(s) are available in stock."
+                            );
 
                             response.sendRedirect(
-                                    request.getContextPath() + "/cart");
-
+                                    request.getContextPath()
+                                    + "/cart"
+                            );
                             return;
                         }
 
-                        if (newVariantId != variantId) {
-                            CartItem target = cart.get(newVariantId);
-                            if (target != null) {
-                                int mergedQty = target.getQuantity() + quantity;
-                                if (mergedQty > stock) {
-                                    session.setAttribute("cartMessage",
-                                            "Only " + stock + " item(s) are available in stock.");
+                        copyAuthoritativeData(
+                                target,
+                                databaseItem
+                        );
 
-                                    response.sendRedirect(
-                                            request.getContextPath() + "/cart");
+                        target.setQuantity(mergedQuantity);
+                        cart.remove(variantId);
+                    } else {
+                        if (quantity > stock) {
+                            session.setAttribute(
+                                    "cartMessage",
+                                    "Only " + stock
+                                    + " item(s) are available in stock."
+                            );
 
-                                    return;
-                                }
-                                target.setQuantity(mergedQty);
-                                target.setProductId(productId > 0 ? productId : target.getProductId());
-                                target.setProductName(productName != null ? productName : target.getProductName());
-                                target.setAttributes(attributes != null ? attributes : target.getAttributes());
-                                target.setPrice(price);
-                                target.setImageUrl(imageUrl != null ? imageUrl : target.getImageUrl());
-                                cart.remove(variantId);
-                            } else {
-                                cart.remove(variantId);
-                                item.setVariantId(newVariantId);
-                                item.setProductId(productId > 0 ? productId : item.getProductId());
-                                item.setProductName(productName != null ? productName : item.getProductName());
-                                item.setAttributes(attributes != null ? attributes : item.getAttributes());
-                                item.setPrice(price);
-                                item.setImageUrl(imageUrl != null ? imageUrl : item.getImageUrl());
-                                item.setQuantity(quantity);
-                                cart.put(newVariantId, item);
-                            }
-                        } else {
-                            item.setQuantity(quantity);
-                            item.setProductId(productId > 0 ? productId : item.getProductId());
-                            item.setProductName(productName != null ? productName : item.getProductName());
-                            item.setAttributes(attributes != null ? attributes : item.getAttributes());
-                            item.setPrice(price);
-                            item.setImageUrl(imageUrl != null ? imageUrl : item.getImageUrl());
+                            response.sendRedirect(
+                                    request.getContextPath()
+                                    + "/cart"
+                            );
+                            return;
                         }
 
-                        session.setAttribute("cartMessage",
-                                "Cart updated successfully.");
+                        databaseItem.setQuantity(quantity);
+
+                        if (newVariantId != variantId) {
+                            cart.remove(variantId);
+                        }
+
+                        cart.put(
+                                newVariantId,
+                                databaseItem
+                        );
                     }
+
+                    session.setAttribute(
+                            "cartMessage",
+                            "Cart updated successfully."
+                    );
                 }
 
-                LOGGER.log(Level.FINE, "[CartController] Cart after update: {0}", cartSummary(cart));
+                LOGGER.log(
+                        Level.FINE,
+                        "[CartController] Cart after update: {0}",
+                        cartSummary(cart)
+                );
 
                 authUserIdObj = session.getAttribute("authUserId");
+
                 if (authUserIdObj instanceof Integer) {
                     int userId = (Integer) authUserIdObj;
+
                     try {
                         new CartDAO().saveCart(userId, cart);
-                        LOGGER.log(Level.FINE, "[CartController] Persisted cart for user {0} after update: {1}", new Object[]{userId, cartSummary(cart)});
+
+                        LOGGER.log(
+                                Level.FINE,
+                                "[CartController] Persisted cart for user {0} after update: {1}",
+                                new Object[]{userId, cartSummary(cart)}
+                        );
                     } catch (Exception ex) {
-                        LOGGER.log(Level.WARNING, "[CartController] Failed saving cart for user " + userId + " after update", ex);
+                        LOGGER.log(
+                                Level.WARNING,
+                                "[CartController] Failed saving cart for user "
+                                + userId + " after update",
+                                ex
+                        );
                     }
                 } else {
                     writeAnonCartCookie(response, cart);
                 }
 
-                response.sendRedirect(request.getContextPath() + "/cart?skipMerge=1");
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/cart?skipMerge=1"
+                );
                 break;
             }
 
@@ -454,6 +545,122 @@ public class CartController extends HttpServlet {
 
             default:
                 response.sendRedirect(request.getContextPath() + "/cart");
+        }
+    }
+
+    private boolean refreshCartItems(
+            Map<Integer, CartItem> cart,
+            CartDAO dao) {
+
+        if (cart == null || cart.isEmpty()) {
+            return false;
+        }
+
+        boolean changed = false;
+
+        Iterator<Map.Entry<Integer, CartItem>> iterator
+                = cart.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, CartItem> entry
+                    = iterator.next();
+
+            CartItem currentItem = entry.getValue();
+
+            if (currentItem == null
+                    || currentItem.getVariantId() <= 0) {
+
+                iterator.remove();
+                changed = true;
+                continue;
+            }
+
+            CartItem databaseItem
+                    = dao.getActiveVariantCartItem(
+                            currentItem.getVariantId()
+                    );
+
+            if (databaseItem == null) {
+                iterator.remove();
+                changed = true;
+                continue;
+            }
+
+            if (!hasSameAuthoritativeData(
+                    currentItem,
+                    databaseItem
+            )) {
+                copyAuthoritativeData(
+                        currentItem,
+                        databaseItem
+                );
+
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    private boolean hasSameAuthoritativeData(
+            CartItem currentItem,
+            CartItem databaseItem) {
+
+        return currentItem.getProductId()
+                == databaseItem.getProductId()
+                && Objects.equals(
+                        currentItem.getProductName(),
+                        databaseItem.getProductName()
+                )
+                && Objects.equals(
+                        currentItem.getAttributes(),
+                        databaseItem.getAttributes()
+                )
+                && Objects.equals(
+                        currentItem.getPrice(),
+                        databaseItem.getPrice()
+                )
+                && Objects.equals(
+                        currentItem.getImageUrl(),
+                        databaseItem.getImageUrl()
+                )
+                && Objects.equals(
+                        currentItem.getColor(),
+                        databaseItem.getColor()
+                )
+                && Objects.equals(
+                        currentItem.getSize(),
+                        databaseItem.getSize()
+                );
+    }
+
+    private void copyAuthoritativeData(
+            CartItem target,
+            CartItem source) {
+
+        target.setVariantId(source.getVariantId());
+        target.setProductId(source.getProductId());
+        target.setProductName(source.getProductName());
+        target.setAttributes(source.getAttributes());
+        target.setPrice(source.getPrice());
+        target.setImageUrl(source.getImageUrl());
+        target.setColor(source.getColor());
+        target.setSize(source.getSize());
+    }
+
+    private int parsePositiveInt(String value) {
+        int parsedValue = parseInteger(value, 0);
+        return parsedValue > 0 ? parsedValue : 0;
+    }
+
+    private int parseInteger(
+            String value,
+            int defaultValue) {
+
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return defaultValue;
         }
     }
 

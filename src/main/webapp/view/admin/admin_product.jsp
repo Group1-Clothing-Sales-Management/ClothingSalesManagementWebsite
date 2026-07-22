@@ -58,6 +58,37 @@
                 background-color: #f8f9fa;
                 font-size: 1.2rem;
             }
+            .product-filter-panel {
+                padding: 16px;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                background: #f8fafc;
+            }
+            .product-filter-panel .form-control,
+            .product-filter-panel .form-select,
+            .product-filter-panel .input-group-text {
+                min-height: 42px;
+                border-color: #dbe2ea;
+            }
+            .product-filter-panel .input-group-text {
+                background: #fff;
+                color: #64748b;
+            }
+            .product-filter-panel .form-control:focus,
+            .product-filter-panel .form-select:focus {
+                border-color: #86b7fe;
+                box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .12);
+            }
+            .product-result-summary {
+                color: #64748b;
+                font-size: .9rem;
+            }
+            .product-filter-label {
+                margin-bottom: 6px;
+                color: #475569;
+                font-size: .82rem;
+                font-weight: 700;
+            }
         </style>
     </head>
     <body>
@@ -85,6 +116,85 @@
                         </h3>
                     </div>
 
+                    <div class="product-filter-panel mb-3">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-xl-4 col-lg-12">
+                                <label for="productSearchInput" class="product-filter-label">
+                                    Search products
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+                                    <input type="search"
+                                           id="productSearchInput"
+                                           class="form-control"
+                                           placeholder="Search by product ID, name, category or brand..."
+                                           autocomplete="off">
+                                    <button type="button"
+                                            class="btn btn-outline-secondary"
+                                            id="productSearchClear"
+                                            title="Clear search">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-2 col-md-4">
+                                <label for="productCategoryFilter" class="product-filter-label">
+                                    Category
+                                </label>
+                                <select id="productCategoryFilter" class="form-select">
+                                    <option value="">All categories</option>
+                                    <c:forEach var="cat" items="${categories}">
+                                        <option value="${cat.id}">${cat.categoryName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <div class="col-xl-2 col-md-4">
+                                <label for="productBrandFilter" class="product-filter-label">
+                                    Brand
+                                </label>
+                                <select id="productBrandFilter" class="form-select">
+                                    <option value="">All brands</option>
+                                    <c:forEach var="br" items="${brands}">
+                                        <option value="${br.id}">${br.brandName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <div class="col-xl-2 col-md-4">
+                                <label for="productStatusFilter" class="product-filter-label">
+                                    Status
+                                </label>
+                                <select id="productStatusFilter" class="form-select">
+                                    <option value="">All statuses</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                </select>
+                            </div>
+
+                            <div class="col-xl-2 col-md-12">
+                                <button type="button"
+                                        id="resetProductFilters"
+                                        class="btn btn-outline-secondary w-100">
+                                    <i class="fa-solid fa-rotate-left me-1"></i>
+                                    Reset filters
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                            <span id="productResultSummary" class="product-result-summary">
+                                Showing 0 of 0 products
+                            </span>
+                            <small class="text-muted">
+                                Filters are applied instantly.
+                            </small>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0">
                             <thead>
@@ -98,9 +208,13 @@
                                     <th style="width: 300px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="productTableBody">
                                 <c:forEach var="prod" items="${products}">
-                                    <tr>
+                                    <tr class="product-row"
+                                        data-product-id="${prod.id}"
+                                        data-category-id="${prod.categoryId}"
+                                        data-brand-id="${prod.brandId}"
+                                        data-status="${prod.status}">
                                         <td class="fw-bold text-secondary">#PROD-${prod.id}</td>
                                         <td>
                                             <div class="product-image-box shadow-sm">
@@ -129,7 +243,9 @@
                                                 </c:choose>
                                             </div>
                                         </td>
-                                        <td class="text-start"><span class="fw-semibold text-dark">${prod.productName}</span></td>
+                                        <td class="text-start product-name-cell">
+                                            <span class="fw-semibold text-dark">${prod.productName}</span>
+                                        </td>
                                         <td><span class="badge bg-light text-dark border px-2.5 py-1.5">${prod.categoryId}</span></td>
                                         <td><span class="badge bg-light text-dark border px-2.5 py-1.5">${prod.brandId}</span></td>
                                         <td>
@@ -151,6 +267,12 @@
                                         </td>
                                     </tr>
                                 </c:forEach>
+                                <tr id="productNoResultsRow" class="d-none">
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-magnifying-glass mb-2 d-block fs-4"></i>
+                                        No products match the current search and filters.
+                                    </td>
+                                </tr>
                                 <c:if test="${empty products}">
                                     <tr>
                                         <td colspan="7" class="text-center py-4 text-muted">No products found. Click "Add New Product" to start.</td>
@@ -329,6 +451,135 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <script>
+                                                document.addEventListener("DOMContentLoaded", function () {
+                                                    const searchInput = document.getElementById("productSearchInput");
+                                                    const clearSearchButton = document.getElementById("productSearchClear");
+                                                    const categoryFilter = document.getElementById("productCategoryFilter");
+                                                    const brandFilter = document.getElementById("productBrandFilter");
+                                                    const statusFilter = document.getElementById("productStatusFilter");
+                                                    const resetFiltersButton = document.getElementById("resetProductFilters");
+                                                    const resultSummary = document.getElementById("productResultSummary");
+                                                    const noResultsRow = document.getElementById("productNoResultsRow");
+                                                    const productRows = Array.from(
+                                                            document.querySelectorAll("#productTableBody .product-row")
+                                                    );
+
+                                                    function normalizeSearchValue(value) {
+                                                        return String(value == null ? "" : value)
+                                                                .normalize("NFD")
+                                                                .replace(/[\u0300-\u036f]/g, "")
+                                                                .replace(/đ/g, "d")
+                                                                .replace(/Đ/g, "D")
+                                                                .toLowerCase()
+                                                                .replace(/\s+/g, " ")
+                                                                .trim();
+                                                    }
+
+                                                    function getOptionLabel(select, value) {
+                                                        if (!select || !value) {
+                                                            return "";
+                                                        }
+
+                                                        const option = Array.from(select.options).find(function (item) {
+                                                            return item.value === String(value);
+                                                        });
+
+                                                        return option ? option.textContent : "";
+                                                    }
+
+                                                    function applyProductFilters() {
+                                                        const keyword = normalizeSearchValue(searchInput.value);
+                                                        const selectedCategory = categoryFilter.value;
+                                                        const selectedBrand = brandFilter.value;
+                                                        const selectedStatus = statusFilter.value.toUpperCase();
+                                                        let visibleCount = 0;
+
+                                                        productRows.forEach(function (row) {
+                                                            const productId = row.dataset.productId || "";
+                                                            const categoryId = row.dataset.categoryId || "";
+                                                            const brandId = row.dataset.brandId || "";
+                                                            const status = (row.dataset.status || "").toUpperCase();
+                                                            const productNameCell = row.querySelector(".product-name-cell");
+                                                            const productName = productNameCell
+                                                                    ? productNameCell.textContent
+                                                                    : "";
+                                                            const categoryName = getOptionLabel(categoryFilter, categoryId);
+                                                            const brandName = getOptionLabel(brandFilter, brandId);
+
+                                                            const searchableText = normalizeSearchValue([
+                                                                productId,
+                                                                "#PROD-" + productId,
+                                                                productName,
+                                                                categoryId,
+                                                                categoryName,
+                                                                brandId,
+                                                                brandName,
+                                                                status
+                                                            ].join(" "));
+
+                                                            const matchesKeyword = !keyword
+                                                                    || searchableText.includes(keyword);
+                                                            const matchesCategory = !selectedCategory
+                                                                    || categoryId === selectedCategory;
+                                                            const matchesBrand = !selectedBrand
+                                                                    || brandId === selectedBrand;
+                                                            const matchesStatus = !selectedStatus
+                                                                    || status === selectedStatus;
+                                                            const visible = matchesKeyword
+                                                                    && matchesCategory
+                                                                    && matchesBrand
+                                                                    && matchesStatus;
+
+                                                            row.classList.toggle("d-none", !visible);
+
+                                                            if (visible) {
+                                                                visibleCount++;
+                                                            }
+                                                        });
+
+                                                        resultSummary.textContent = "Showing "
+                                                                + visibleCount
+                                                                + " of "
+                                                                + productRows.length
+                                                                + (productRows.length === 1
+                                                                        ? " product"
+                                                                        : " products");
+
+                                                        if (noResultsRow) {
+                                                            noResultsRow.classList.toggle(
+                                                                    "d-none",
+                                                                    visibleCount > 0 || productRows.length === 0
+                                                            );
+                                                        }
+
+                                                        clearSearchButton.disabled = searchInput.value.length === 0;
+                                                    }
+
+                                                    function resetProductFilters() {
+                                                        searchInput.value = "";
+                                                        categoryFilter.value = "";
+                                                        brandFilter.value = "";
+                                                        statusFilter.value = "";
+                                                        applyProductFilters();
+                                                        searchInput.focus();
+                                                    }
+
+                                                    searchInput.addEventListener("input", applyProductFilters);
+                                                    categoryFilter.addEventListener("change", applyProductFilters);
+                                                    brandFilter.addEventListener("change", applyProductFilters);
+                                                    statusFilter.addEventListener("change", applyProductFilters);
+
+                                                    clearSearchButton.addEventListener("click", function () {
+                                                        searchInput.value = "";
+                                                        applyProductFilters();
+                                                        searchInput.focus();
+                                                    });
+
+                                                    resetFiltersButton.addEventListener("click", resetProductFilters);
+
+                                                    applyProductFilters();
+                                                });
+
                                                 document.addEventListener("DOMContentLoaded", function () {
                                                     const form = document.getElementById("createProductForm");
                                                     const productNameInput = document.getElementById("adminProductName");

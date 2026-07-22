@@ -521,6 +521,48 @@ public class AdminManageProductService {
         return updated ? null : "update-failed";
     }
 
+    public String saveProductMainImage(
+            int productId,
+            String imageUrl) {
+
+        if (productId <= 0) {
+            return "invalid-id";
+        }
+
+        if (isBlank(imageUrl)) {
+            return "image-required";
+        }
+
+        Product product = productDAO.getProductById(productId);
+
+        if (product == null
+                || "DELETED".equals(product.getStatus())) {
+            return "product-not-found";
+        }
+
+        String normalizedImageUrl = imageUrl
+                .trim()
+                .replace("\\", "/");
+
+        /*
+         * DB chỉ lưu tên file hoặc đường dẫn tương đối.
+         * Không chấp nhận path tuyệt đối và path traversal.
+         */
+        if (normalizedImageUrl.startsWith("/")
+                || normalizedImageUrl.contains("..")
+                || normalizedImageUrl.contains(":")
+                || normalizedImageUrl.length() > 500) {
+            return "invalid-image-path";
+        }
+
+        boolean saved = productDAO.saveProductMainImage(
+                productId,
+                normalizedImageUrl
+        );
+
+        return saved ? null : "image-save-failed";
+    }
+
     public String saveVariantMainImage(
             int productId,
             int variantId,

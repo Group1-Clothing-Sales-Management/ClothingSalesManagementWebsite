@@ -1627,7 +1627,8 @@
 
                                 <input type="hidden"
                                        name="variantId"
-                                       value="${not empty product.variants ? product.variants[0].id : ''}">
+                                       class="wishlist-variant-id"
+                                       value="">
 
                                 <input type="hidden"
                                        name="wishlisted"
@@ -1641,31 +1642,28 @@
                                 </button>
                             </form>
 
-                            <c:choose>
-                                <c:when test="${not empty product.mainImageUrl}">
-                                    <img src="${pageContext.request.contextPath}/media/product/${product.mainImageUrl}"
-                                         class="product-image"
-                                         alt="<c:out value='${product.productName}'/>"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <c:set var="initialImageUrl" value="${product.mainImageUrl}"/>
 
-                                    <div class="product-image-placeholder" style="display:none;">
-                                        <i class="fa-regular fa-image"></i>
-                                        <span>Image not available</span>
-                                    </div>
-                                </c:when>
+                            <img id="mainProductImage"
+                                 src="${not empty initialImageUrl ? pageContext.request.contextPath.concat('/media/product/').concat(initialImageUrl) : ''}"
+                                 class="product-image"
+                                 alt="<c:out value='${product.productName}'/>"
+                                 data-default-image="${product.mainImageUrl}"
+                                 style="${empty initialImageUrl ? 'display:none;' : ''}">
 
-                                <c:otherwise>
-                                    <div class="product-image-placeholder">
-                                        <i class="fa-regular fa-image"></i>
-                                        <span>No product image</span>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
+                            <div id="productImagePlaceholder"
+                                 class="product-image-placeholder"
+                                 style="${empty initialImageUrl ? 'display:flex;' : 'display:none;'}">
+                                <i class="fa-regular fa-image"></i>
+                                <span>Image not available</span>
+                            </div>
                         </div>
-                        <div class="media-thumbs" aria-label="Product images">
-                            <img src="${pageContext.request.contextPath}/media/product/${product.mainImageUrl}"
+                        <div class="media-thumbs" aria-label="Selected product image">
+                            <img id="mainProductThumb"
+                                 src="${not empty initialImageUrl ? pageContext.request.contextPath.concat('/media/product/').concat(initialImageUrl) : ''}"
                                  class="media-thumb active"
-                                 alt="${product.productName} preview">
+                                 alt="${product.productName} preview"
+                                 style="${empty initialImageUrl ? 'display:none;' : ''}">
                         </div>
                     </div>
 
@@ -1690,10 +1688,7 @@
                         <c:choose>
                             <c:when test="${not empty product.variants}">
                                 <div class="price">
-                                    <span id="priceValue">
-                                        <fmt:formatNumber value="${product.variants[0].salePrice}"
-                                                          pattern="#,##0"/> &#8363;
-                                    </span>
+                                    <span id="priceValue">Select color and size</span>
                                     <span class="price-note">Best price today</span>
                                 </div>
                             </c:when>
@@ -1754,7 +1749,7 @@
                                         <c:if test="${lastColor != v.color}">
 
                                             <button type="button"
-                                                    class="color-option ${empty lastColor ? 'active' : ''}"
+                                                    class="color-option"
                                                     data-color="${v.color}">
 
                                                 ${v.color}
@@ -1818,7 +1813,8 @@
                                                class="quantity-input"
                                                value="1"
                                                min="1"
-                                               max="${product.variants[0].stockQuantity}">
+                                               max="1"
+                                               disabled>
 
                                         <button type="button"
                                                 class="quantity-increase">
@@ -1834,10 +1830,8 @@
                                         <i class="fa-solid fa-box-open me-1"></i>
 
                                         <b id="stockText">
-                                            ${product.variants[0].stockQuantity}
+                                            Select color and size
                                         </b>
-
-                                        in stock
 
                                     </span>
 
@@ -1855,7 +1849,7 @@
                                     <input type="hidden"
                                            name="variantId"
                                            class="variant-id-input"
-                                           value="${product.variants[0].id}">
+                                           value="">
 
                                     <input type="hidden"
                                            name="productId"
@@ -1868,11 +1862,11 @@
                                     <input type="hidden"
                                            name="attributes"
                                            class="attributes-input"
-                                           value="${product.variants[0].color} - ${product.variants[0].size}">
+                                           value="">
                                     <input type="hidden"
                                            name="price"
                                            class="price-input"
-                                           value="${product.variants[0].salePrice}">
+                                           value="">
 
                                     <input type="hidden"
                                            name="quantity"
@@ -1881,10 +1875,12 @@
 
                                     <input type="hidden"
                                            name="imageUrl"
+                                           class="cart-image-input"
                                            value="${product.mainImageUrl}">
 
                                     <button type="submit"
-                                            class="btn btn-cart">
+                                            class="btn btn-cart"
+                                            disabled>
 
                                         <i class="fa-solid fa-cart-shopping me-2"></i>
                                         Add to cart
@@ -1901,7 +1897,7 @@
                                     <input type="hidden"
                                            name="variantId"
                                            class="buy-now-variant-id"
-                                           value="${product.variants[0].id}">
+                                           value="">
 
                                     <input type="hidden"
                                            name="quantity"
@@ -1909,7 +1905,8 @@
                                            value="1">
 
                                     <button type="submit"
-                                            class="btn btn-buy-now">
+                                            class="btn btn-buy-now"
+                                            disabled>
 
                                         <i class="fa-solid fa-bag-shopping me-2"></i>
                                         Buy Now
@@ -2193,126 +2190,278 @@
                                 color: "${v.color}",
                                 size: "${v.size}",
                                 price:${v.salePrice},
-                                stock:${v.stockQuantity}
+                                stock:${v.stockQuantity},
+                                imageUrl: "${v.imageUrl}",
+                                imageVersion: "${not empty v.imageUpdatedAt ? v.imageUpdatedAt.time : 0}"
                             },
             </c:forEach>
                         ];
-                        let selectedColor = variants[0]?.color;
-                        let selectedSize = variants[0]?.size;
+                        let selectedColor = null;
+                        let selectedSize = null;
+
                         const colorButtons = document.querySelectorAll(".color-option");
                         const sizeButtons = document.querySelectorAll(".size-option");
                         const variantIdInput = document.querySelector(".variant-id-input");
                         const buyNowVariant = document.querySelector(".buy-now-variant-id");
+                        const wishlistVariantInput = document.querySelector(".wishlist-variant-id");
+                        const attributesInput = document.querySelector(".attributes-input");
                         const priceInput = document.querySelector(".price-input");
+                        const cartImageInput = document.querySelector(".cart-image-input");
                         const stockText = document.getElementById("stockText");
                         const priceValue = document.getElementById("priceValue");
                         const quantityInput = document.querySelector(".quantity-input");
                         const increaseBtn = document.querySelector(".quantity-increase");
                         const decreaseBtn = document.querySelector(".quantity-decrease");
+                        const addCartButton = document.querySelector(".add-cart-form button[type='submit']");
+                        const buyNowButton = document.querySelector(".buy-now-form button[type='submit']");
+                        const mainProductImage = document.getElementById("mainProductImage");
+                        const mainProductThumb = document.getElementById("mainProductThumb");
+                        const productImagePlaceholder = document.getElementById("productImagePlaceholder");
+                        const mediaBaseUrl = "${pageContext.request.contextPath}/media/product/";
+                        const defaultProductImage = "${product.mainImageUrl}";
 
                         const hiddenQuantity = document.querySelector(".quantity-input-hidden");
                         const buyNowQuantity = document.querySelector(".buy-now-quantity");
 
-                        function updateQuantity() {
+                        function buildImageUrl(fileName, version) {
+                            if (!fileName) {
+                                return "";
+                            }
 
+                            const cacheVersion = version && version !== "0"
+                                    ? "?v=" + encodeURIComponent(version)
+                                    : "";
+
+                            return mediaBaseUrl + encodeURIComponent(fileName) + cacheVersion;
+                        }
+
+                        function showVariantImage(fileName, version) {
+                            const selectedFile = fileName || defaultProductImage;
+
+                            if (!mainProductImage || !selectedFile) {
+                                if (mainProductImage) {
+                                    mainProductImage.style.display = "none";
+                                }
+                                if (mainProductThumb) {
+                                    mainProductThumb.style.display = "none";
+                                }
+                                if (productImagePlaceholder) {
+                                    productImagePlaceholder.style.display = "flex";
+                                }
+                                return;
+                            }
+
+                            const selectedUrl = buildImageUrl(selectedFile, version);
+                            mainProductImage.dataset.currentFile = selectedFile;
+                            mainProductImage.src = selectedUrl;
+                            mainProductImage.style.display = "block";
+
+                            if (mainProductThumb) {
+                                mainProductThumb.src = selectedUrl;
+                                mainProductThumb.style.display = "block";
+                            }
+
+                            if (productImagePlaceholder) {
+                                productImagePlaceholder.style.display = "none";
+                            }
+                        }
+
+                        if (mainProductImage) {
+                            mainProductImage.addEventListener("error", function () {
+                                const currentFile = mainProductImage.dataset.currentFile || "";
+
+                                if (defaultProductImage && currentFile !== defaultProductImage) {
+                                    showVariantImage(defaultProductImage, "");
+                                    return;
+                                }
+
+                                mainProductImage.style.display = "none";
+                                if (mainProductThumb) {
+                                    mainProductThumb.style.display = "none";
+                                }
+                                if (productImagePlaceholder) {
+                                    productImagePlaceholder.style.display = "flex";
+                                }
+                            });
+                        }
+
+                        function updateQuantity() {
                             let qty = parseInt(quantityInput.value) || 1;
                             let max = parseInt(quantityInput.max) || 1;
 
-                            if (qty < 1)
+                            if (qty < 1) {
                                 qty = 1;
-                            if (qty > max)
+                            }
+                            if (qty > max) {
                                 qty = max;
+                            }
 
                             quantityInput.value = qty;
 
-                            if (hiddenQuantity)
+                            if (hiddenQuantity) {
                                 hiddenQuantity.value = qty;
+                            }
 
-                            if (buyNowQuantity)
+                            if (buyNowQuantity) {
                                 buyNowQuantity.value = qty;
+                            }
+                        }
+
+                        function setSelectionReady(ready) {
+                            quantityInput.disabled = !ready;
+                            increaseBtn.disabled = !ready;
+                            decreaseBtn.disabled = !ready;
+                            addCartButton.disabled = !ready;
+                            buyNowButton.disabled = !ready;
+                        }
+
+                        function clearResolvedVariant() {
+                            variantIdInput.value = "";
+                            buyNowVariant.value = "";
+
+                            if (wishlistVariantInput) {
+                                wishlistVariantInput.value = "";
+                            }
+                            if (attributesInput) {
+                                attributesInput.value = "";
+                            }
+                            if (priceInput) {
+                                priceInput.value = "";
+                            }
+                            if (cartImageInput) {
+                                cartImageInput.value = defaultProductImage;
+                            }
+
+                            priceValue.textContent = "Select color and size";
+                            stockText.textContent = "Select color and size";
+                            quantityInput.value = 1;
+                            quantityInput.max = 1;
+                            setSelectionReady(false);
+                            showVariantImage(defaultProductImage, "");
+                            updateQuantity();
+                        }
+
+                        function updateOptionAvailability() {
+                            colorButtons.forEach(btn => {
+                                const available = !selectedSize || variants.some(v =>
+                                    v.size === selectedSize
+                                            && v.color === btn.dataset.color
+                                );
+
+                                btn.disabled = !available;
+                                btn.classList.toggle(
+                                        "active",
+                                        btn.dataset.color === selectedColor
+                                );
+                            });
+
+                            sizeButtons.forEach(btn => {
+                                const available = !selectedColor || variants.some(v =>
+                                    v.color === selectedColor
+                                            && v.size === btn.dataset.size
+                                );
+
+                                btn.disabled = !available;
+                                btn.classList.toggle(
+                                        "active",
+                                        btn.dataset.size === selectedSize
+                                );
+                            });
+                        }
+
+                        function renderVariant() {
+                            updateOptionAvailability();
+
+                            if (!selectedColor || !selectedSize) {
+                                clearResolvedVariant();
+                                updateOptionAvailability();
+                                return;
+                            }
+
+                            const variant = variants.find(v =>
+                                v.color === selectedColor
+                                    && v.size === selectedSize
+                            );
+
+                            if (!variant) {
+                                clearResolvedVariant();
+                                updateOptionAvailability();
+                                return;
+                            }
+
+                            variantIdInput.value = variant.id;
+                            buyNowVariant.value = variant.id;
+
+                            if (wishlistVariantInput) {
+                                wishlistVariantInput.value = variant.id;
+                            }
+                            if (attributesInput) {
+                                attributesInput.value = variant.color + " - " + variant.size;
+                            }
+                            if (priceInput) {
+                                priceInput.value = variant.price;
+                            }
+                            if (cartImageInput) {
+                                cartImageInput.value = variant.imageUrl || defaultProductImage;
+                            }
+
+                            showVariantImage(variant.imageUrl, variant.imageVersion);
+                            stockText.textContent = variant.stock + " in stock";
+                            priceValue.textContent =
+                                    Number(variant.price).toLocaleString("vi-VN") + " ₫";
+                            quantityInput.max = Math.max(1, Number(variant.stock) || 1);
+                            quantityInput.value = 1;
+
+                            setSelectionReady(Number(variant.stock) > 0);
+                            updateQuantity();
                         }
 
                         increaseBtn.addEventListener("click", function () {
-
-                            quantityInput.value = parseInt(quantityInput.value) + 1;
+                            quantityInput.value = (parseInt(quantityInput.value) || 1) + 1;
                             updateQuantity();
-
                         });
 
                         decreaseBtn.addEventListener("click", function () {
-
-                            quantityInput.value = parseInt(quantityInput.value) - 1;
+                            quantityInput.value = (parseInt(quantityInput.value) || 1) - 1;
                             updateQuantity();
-
                         });
 
                         quantityInput.addEventListener("input", updateQuantity);
 
-                        updateQuantity();
-                        function renderVariant() {
-
-                            const variant = variants.find(v =>
-                                v.color === selectedColor &&
-                                        v.size === selectedSize
-                            );
-                            if (!variant)
-                                return;
-                            variantIdInput.value = variant.id;
-                            buyNowVariant.value = variant.id;
-                            priceInput.value = variant.price;
-                            stockText.textContent = variant.stock;
-                            priceValue.innerHTML =
-                                    Number(variant.price).toLocaleString("vi-VN") + " ₫";
-                            quantityInput.max = variant.stock;
-
-                            updateQuantity();
-                            sizeButtons.forEach(btn => {
-
-                                const exist = variants.some(v =>
-                                    v.color === selectedColor &&
-                                            v.size === btn.dataset.size
-                                );
-                                btn.disabled = !exist;
-                                btn.classList.toggle(
-                                        "active",
-                                        btn.dataset.size === selectedSize
-                                        );
-                            });
-                        }
-
                         colorButtons.forEach(btn => {
-
-                            btn.onclick = () => {
-
-                                colorButtons.forEach(b => b.classList.remove("active"));
-                                btn.classList.add("active");
+                            btn.addEventListener("click", function () {
                                 selectedColor = btn.dataset.color;
-                                const first = variants.find(v => v.color === selectedColor);
-                                selectedSize = first.size;
+
+                                if (selectedSize && !variants.some(v =>
+                                    v.color === selectedColor && v.size === selectedSize
+                                )) {
+                                    selectedSize = null;
+                                }
+
                                 renderVariant();
-                            };
-                        });
-                        sizeButtons.forEach(btn => {
-
-                            btn.onclick = () => {
-
-                                if (btn.disabled)
-                                    return;
-                                selectedSize = btn.dataset.size;
-                                renderVariant();
-                            };
-                        });
-                        if (variants.length) {
-
-                            colorButtons.forEach(btn => {
-
-                                btn.classList.toggle(
-                                        "active",
-                                        btn.dataset.color === selectedColor
-                                        );
                             });
-                            renderVariant();
-                        }
+                        });
+
+                        sizeButtons.forEach(btn => {
+                            btn.addEventListener("click", function () {
+                                if (btn.disabled) {
+                                    return;
+                                }
+
+                                selectedSize = btn.dataset.size;
+
+                                if (selectedColor && !variants.some(v =>
+                                    v.color === selectedColor && v.size === selectedSize
+                                )) {
+                                    selectedColor = null;
+                                }
+
+                                renderVariant();
+                            });
+                        });
+
+                        clearResolvedVariant();
+                        updateOptionAvailability();
 
                         // ================= FEEDBACK FILTER =================
 

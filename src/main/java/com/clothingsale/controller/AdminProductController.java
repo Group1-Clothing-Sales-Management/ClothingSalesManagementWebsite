@@ -195,13 +195,13 @@ public class AdminProductController extends HttpServlet {
                 )
         );
 
-        String newImageName = null;
+        StagedProductImage stagedImage = null;
 
         try {
             Part imagePart = request.getPart("productImage");
 
             if (hasUploadedFile(imagePart)) {
-                newImageName = saveProductImage(imagePart);
+                stagedImage = stageProductImage(imagePart);
             }
         } catch (IllegalArgumentException e) {
             redirectToEdit(
@@ -219,13 +219,18 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
+        /*
+         * Chỉ cập nhật dữ liệu Product trước. Ảnh được xử lý riêng để tránh
+         * database trỏ tới file chưa được ghi thành công.
+         */
         boolean updated = productService.updateProduct(
                 product,
-                newImageName
+                null
         );
 
         if (!updated) {
-            deleteProductImage(newImageName);
+            deleteStagedImage(stagedImage);
+
             redirectToEdit(
                     response,
                     productId,
@@ -234,14 +239,72 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        if (newImageName != null
-                && oldProduct.getMainImageUrl() != null
-                && !newImageName.equals(
-                        oldProduct.getMainImageUrl())) {
+        if (stagedImage != null) {
+            String finalImageName
+                    = ProductImageStorage.buildProductImageName(
+                            productId,
+                            0,
+                            stagedImage.getExtension()
+                    );
 
-            deleteProductImage(
-                    oldProduct.getMainImageUrl()
-            );
+            Path backupFile = null;
+
+            try {
+                backupFile = publishStagedProductImage(
+                        stagedImage,
+                        finalImageName
+                );
+
+                String imageError
+                        = productService.saveProductMainImage(
+                                productId,
+                                finalImageName
+                        );
+
+                if (imageError != null) {
+                    rollbackPublishedProductImage(
+                            finalImageName,
+                            backupFile
+                    );
+
+                    deleteStagedImage(stagedImage);
+
+                    redirectToEdit(
+                            response,
+                            productId,
+                            imageError
+                    );
+                    return;
+                }
+
+                deleteStagedImage(stagedImage);
+                deletePathQuietly(backupFile);
+
+                String oldImageName
+                        = oldProduct.getMainImageUrl();
+
+                if (oldImageName != null
+                        && !oldImageName.isBlank()
+                        && !oldImageName.equals(finalImageName)) {
+
+                    deleteProductImage(oldImageName);
+                }
+
+            } catch (IOException e) {
+                rollbackPublishedProductImage(
+                        finalImageName,
+                        backupFile
+                );
+
+                deleteStagedImage(stagedImage);
+
+                redirectToEdit(
+                        response,
+                        productId,
+                        "image-upload-failed"
+                );
+                return;
+            }
         }
 
         redirectToEdit(
@@ -595,20 +658,25 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        String cleanSlug = productService.generateSlug(
+        /*
+         * Product ID chưa tồn tại ở thời điểm này. Slug tạm sẽ được thay bằng
+         * slug chứa ID thật ngay sau khi tạo Product thành công.
+         */
+        String temporarySlug = productService.generateSlug(
                 product.getProductName(),
-                (int) (System.currentTimeMillis() % Integer.MAX_VALUE)
+                (int) (System.currentTimeMillis()
+                % Integer.MAX_VALUE)
         );
 
-        product.setSlug(cleanSlug);
+        product.setSlug(temporarySlug);
 
-        String savedImageName = null;
+        StagedProductImage stagedImage = null;
 
         try {
             Part imagePart = request.getPart("productImage");
 
             if (hasUploadedFile(imagePart)) {
-                savedImageName = saveProductImage(imagePart);
+                stagedImage = stageProductImage(imagePart);
             }
         } catch (IllegalArgumentException e) {
             response.sendRedirect(
@@ -633,7 +701,7 @@ public class AdminProductController extends HttpServlet {
                     product.getProductName()
             );
         } catch (IllegalArgumentException e) {
-            deleteProductImage(savedImageName);
+            deleteStagedImage(stagedImage);
 
             response.sendRedirect(
                     request.getContextPath()
@@ -643,7 +711,7 @@ public class AdminProductController extends HttpServlet {
         }
 
         if (variants.isEmpty()) {
-            deleteProductImage(savedImageName);
+            deleteStagedImage(stagedImage);
 
             response.sendRedirect(
                     request.getContextPath()
@@ -652,20 +720,127 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
+        /*
+         * Nếu có ảnh, database tạm thời lưu tên file staging. Như vậy nếu bước
+         * chuẩn hóa tên file gặp sự cố, Product vẫn còn ảnh hợp lệ thay vì trỏ
+         * tới một file chưa tồn tại.
+         */
+        String stagedImageName = stagedImage != null
+                ? stagedImage.getFileName()
+                : null;
+
         boolean added = productService.createProductWithVariants(
                 product,
-                savedImageName,
+                stagedImageName,
                 variants
         );
 
         if (!added) {
-            deleteProductImage(savedImageName);
+            deleteStagedImage(stagedImage);
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=error"
+            );
+            return;
+        }
+
+        int productId = product.getId();
+
+        if (productId <= 0) {
+            /*
+             * Không xóa staging file vì database có thể đang tham chiếu tới
+             * file này. Trường hợp này chỉ xảy ra khi DAO không trả ID.
+             */
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/manage-product?status=product-id-missing"
+            );
+            return;
+        }
+
+        /*
+         * Chuẩn hóa slug theo ID thật. Thất bại ở bước này không làm mất
+         * Product vừa tạo; Admin vẫn có thể sửa lại sau.
+         */
+        product.setSlug(
+                productService.generateSlug(
+                        product.getProductName(),
+                        productId
+                )
+        );
+
+        productService.updateProduct(product, null);
+
+        if (stagedImage != null) {
+            String finalImageName
+                    = ProductImageStorage.buildProductImageName(
+                            productId,
+                            0,
+                            stagedImage.getExtension()
+                    );
+
+            Path backupFile = null;
+
+            try {
+                backupFile = publishStagedProductImage(
+                        stagedImage,
+                        finalImageName
+                );
+
+                String imageError
+                        = productService.saveProductMainImage(
+                                productId,
+                                finalImageName
+                        );
+
+                if (imageError != null) {
+                    /*
+                     * Database vẫn đang trỏ tới staging file. Chỉ xóa bản final
+                     * và giữ staging file để ảnh Product tiếp tục hoạt động.
+                     */
+                    rollbackPublishedProductImage(
+                            finalImageName,
+                            backupFile
+                    );
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin/manage-product?action=edit&id="
+                            + productId
+                            + "&status="
+                            + imageError
+                    );
+                    return;
+                }
+
+                deleteStagedImage(stagedImage);
+                deletePathQuietly(backupFile);
+
+            } catch (IOException e) {
+                rollbackPublishedProductImage(
+                        finalImageName,
+                        backupFile
+                );
+
+                /*
+                 * Giữ staging file vì database vẫn đang tham chiếu tới nó.
+                 */
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin/manage-product?action=edit&id="
+                        + productId
+                        + "&status=image-upload-failed"
+                );
+                return;
+            }
         }
 
         response.sendRedirect(
                 request.getContextPath()
-                + "/admin/manage-product?status="
-                + (added ? "success" : "error")
+                + "/admin/manage-product?action=edit&id="
+                + productId
+                + "&status=success"
         );
     }
 
@@ -837,27 +1012,26 @@ public class AdminProductController extends HttpServlet {
     }
 
     /**
-     * Lưu ảnh ngoài thư mục deploy. ProductImageStorage đang trỏ tới the
-     * project-root upload directory.
+     * Ghi ảnh Product vào file staging trong upload/product. File này chỉ được
+     * đổi sang tên chuẩn sau khi đã có productId thật từ database.
      */
-    private String saveProductImage(Part filePart)
-            throws IOException {
+    private StagedProductImage stageProductImage(
+            Part filePart) throws IOException {
+
+        if (!hasUploadedFile(filePart)) {
+            return null;
+        }
 
         String originalName = Paths.get(
                 filePart.getSubmittedFileName()
         ).getFileName().toString();
 
-        String extension = getFileExtension(
-                originalName
-        ).toLowerCase(Locale.ROOT);
+        String extension
+                = ProductImageStorage.normalizeExtension(
+                        getFileExtension(originalName)
+                );
 
         String contentType = filePart.getContentType();
-
-        boolean validExtension
-                = "jpg".equals(extension)
-                || "jpeg".equals(extension)
-                || "png".equals(extension)
-                || "webp".equals(extension);
 
         boolean validContentType
                 = contentType != null
@@ -865,24 +1039,23 @@ public class AdminProductController extends HttpServlet {
                 || "image/png".equals(contentType)
                 || "image/webp".equals(contentType));
 
-        if (!validExtension || !validContentType) {
+        if (!validContentType) {
             throw new IllegalArgumentException(
                     "Unsupported image format"
             );
         }
 
-        String savedName
-                = System.currentTimeMillis()
-                + "_"
+        String temporaryName
+                = "product-upload-"
                 + UUID.randomUUID()
                         .toString()
-                        .substring(0, 8)
+                        .replace("-", "")
                 + "."
                 + extension;
 
-        Path targetFile
+        Path temporaryFile
                 = ProductImageStorage.resolveFile(
-                        savedName
+                        temporaryName
                 );
 
         try (InputStream inputStream
@@ -890,12 +1063,157 @@ public class AdminProductController extends HttpServlet {
 
             Files.copy(
                     inputStream,
-                    targetFile,
+                    temporaryFile,
                     StandardCopyOption.REPLACE_EXISTING
             );
         }
 
-        return savedName;
+        return new StagedProductImage(
+                temporaryName,
+                extension,
+                temporaryFile
+        );
+    }
+
+    /**
+     * Copy staging file thành tên chuẩn. Nếu file đích đã tồn tại, tạo một bản
+     * backup để có thể khôi phục khi cập nhật database thất bại.
+     */
+    private Path publishStagedProductImage(
+            StagedProductImage stagedImage,
+            String finalImageName) throws IOException {
+
+        if (stagedImage == null) {
+            return null;
+        }
+
+        Path finalFile
+                = ProductImageStorage.resolveFile(
+                        finalImageName
+                );
+
+        Path backupFile = null;
+
+        if (Files.isRegularFile(finalFile)) {
+            backupFile = Files.createTempFile(
+                    ProductImageStorage.getUploadDirectory(),
+                    "product-image-backup-",
+                    ".tmp"
+            );
+
+            Files.copy(
+                    finalFile,
+                    backupFile,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+        }
+
+        try {
+            Files.copy(
+                    stagedImage.getPath(),
+                    finalFile,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            return backupFile;
+
+        } catch (IOException e) {
+            deletePathQuietly(backupFile);
+            throw e;
+        }
+    }
+
+    private void rollbackPublishedProductImage(
+            String finalImageName,
+            Path backupFile) {
+
+        if (finalImageName == null
+                || finalImageName.isBlank()) {
+            return;
+        }
+
+        try {
+            Path finalFile
+                    = ProductImageStorage.resolveFile(
+                            finalImageName
+                    );
+
+            if (backupFile != null
+                    && Files.isRegularFile(backupFile)) {
+
+                Files.copy(
+                        backupFile,
+                        finalFile,
+                        StandardCopyOption.REPLACE_EXISTING
+                );
+
+                Files.deleteIfExists(backupFile);
+
+            } else {
+
+                Files.deleteIfExists(finalFile);
+            }
+
+        } catch (Exception e) {
+            System.err.println(
+                    "Could not rollback product image: "
+                    + e.getMessage()
+            );
+        }
+    }
+
+    private void deleteStagedImage(
+            StagedProductImage stagedImage) {
+
+        if (stagedImage == null) {
+            return;
+        }
+
+        deletePathQuietly(stagedImage.getPath());
+    }
+
+    private void deletePathQuietly(Path path) {
+        if (path == null) {
+            return;
+        }
+
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            System.err.println(
+                    "Could not delete temporary image: "
+                    + e.getMessage()
+            );
+        }
+    }
+
+    private static final class StagedProductImage {
+
+        private final String fileName;
+        private final String extension;
+        private final Path path;
+
+        private StagedProductImage(
+                String fileName,
+                String extension,
+                Path path) {
+
+            this.fileName = fileName;
+            this.extension = extension;
+            this.path = path;
+        }
+
+        private String getFileName() {
+            return fileName;
+        }
+
+        private String getExtension() {
+            return extension;
+        }
+
+        private Path getPath() {
+            return path;
+        }
     }
 
     private String getFileExtension(String fileName) {
