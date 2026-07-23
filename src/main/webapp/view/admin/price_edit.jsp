@@ -48,9 +48,9 @@
 
         </div>
 
-        <c:if test="${not empty priceFlashMessage}">
-            <div class="alert ${priceFlashType eq 'success' ? 'alert-success' : 'alert-danger'} alert-dismissible fade show">
-                <i class="fa-solid ${priceFlashType eq 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} me-2"></i>
+        <c:if test="${not empty priceFlashMessage and priceFlashType eq 'success'}">
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fa-solid fa-circle-check me-2"></i>
                 <c:out value="${priceFlashMessage}"/>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -137,6 +137,7 @@
                         <form id="priceForm" action="${pageContext.request.contextPath}/admin/prices?action=update" method="POST">
                             <input type="hidden" name="variantId" value="${priceItem.variantId}">
                             <input type="hidden" id="costPrice" value="${priceItem.costPrice}">
+                            <input type="hidden" id="currentSalePrice" value="${priceItem.salePrice}">
 
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -311,17 +312,72 @@
 
 <jsp:include page="/view/admin/common/admin_layout_end.jsp"/>
 
+<c:if test="${not empty priceFlashMessage and priceFlashType ne 'success'}">
+    <div id="serverPriceError" class="d-none"><c:out value="${priceFlashMessage}"/></div>
+</c:if>
+
+<div class="modal fade" id="priceErrorModal" tabindex="-1"
+     aria-labelledby="priceErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="priceErrorModalLabel">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>Invalid Price
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p id="priceErrorMessage" class="mb-0"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger px-4"
+                        data-bs-dismiss="modal">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    const priceForm = document.getElementById("priceForm");
     const costInput = document.getElementById("costPrice");
+    const currentSaleInput = document.getElementById("currentSalePrice");
     const listInput = document.getElementById("listPrice");
     const saleInput = document.getElementById("salePrice");
     const reasonInput = document.getElementById("reason");
     const warningBox = document.getElementById("belowCostWarning");
 
+    const priceErrorModalElement = document.getElementById("priceErrorModal");
+    const priceErrorMessage = document.getElementById("priceErrorMessage");
+    const priceErrorModal = new bootstrap.Modal(priceErrorModalElement);
+
+    let focusAfterModal = null;
+
     function formatMoney(value) {
-        return new Intl.NumberFormat("vi-VN", {maximumFractionDigits: 2}).format(value) + " VND";
+        return new Intl.NumberFormat("vi-VN", {
+            maximumFractionDigits: 2
+        }).format(value) + " VND";
+    }
+
+    function showPriceError(message, inputElement) {
+        priceErrorMessage.textContent = message;
+        focusAfterModal = inputElement || null;
+
+        if (inputElement) {
+            inputElement.classList.add("is-invalid");
+        }
+
+        priceErrorModal.show();
+    }
+
+    function clearPriceError(inputElement) {
+        inputElement.classList.remove("is-invalid");
     }
 
     function updatePreview() {
@@ -331,30 +387,92 @@
 
         const profit = salePrice - cost;
         const margin = salePrice > 0 ? profit / salePrice * 100 : 0;
-        const discount = listPrice > 0 && salePrice < listPrice ? (listPrice - salePrice) / listPrice * 100 : 0;
+        const discount = listPrice > 0 && salePrice < listPrice
+                ? (listPrice - salePrice) / listPrice * 100
+                : 0;
         const belowCost = salePrice > 0 && salePrice < cost;
 
-        document.getElementById("profitPreview").textContent = formatMoney(profit);
-        document.getElementById("marginPreview").textContent = margin.toFixed(2) + "%";
-        document.getElementById("discountPreview").textContent = discount.toFixed(2) + "%";
+        document.getElementById("profitPreview").textContent
+                = formatMoney(profit);
+        document.getElementById("marginPreview").textContent
+                = margin.toFixed(2) + "%";
+        document.getElementById("discountPreview").textContent
+                = discount.toFixed(2) + "%";
 
         warningBox.style.display = belowCost ? "block" : "none";
         reasonInput.required = belowCost;
     }
 
-    document.getElementById("priceForm").addEventListener("submit", function (event) {
+    priceForm.addEventListener("submit", function (event) {
+        const currentSalePrice = Number(currentSaleInput.value) || 0;
         const listPrice = Number(listInput.value);
         const salePrice = Number(saleInput.value);
 
+        clearPriceError(listInput);
+        clearPriceError(saleInput);
+
+        if (!Number.isFinite(listPrice) || listPrice <= 0) {
+            event.preventDefault();
+            showPriceError(
+                    "List price must be greater than 0.",
+                    listInput
+            );
+            return;
+        }
+
+        if (!Number.isFinite(salePrice) || salePrice <= 0) {
+            event.preventDefault();
+            showPriceError(
+                    "Sale price must be greater than 0.",
+                    saleInput
+            );
+            return;
+        }
+
+        if (salePrice < currentSalePrice) {
+            event.preventDefault();
+            showPriceError(
+                    "The new sale price cannot be lower than the current sale price ("
+                    + formatMoney(currentSalePrice)
+                    + ").",
+                    saleInput
+            );
+            return;
+        }
+
         if (salePrice > listPrice) {
             event.preventDefault();
-            alert("Sale price cannot be greater than list price.");
+            showPriceError(
+                    "Sale price cannot be greater than list price.",
+                    saleInput
+            );
         }
     });
 
-    listInput.addEventListener("input", updatePreview);
-    saleInput.addEventListener("input", updatePreview);
+    priceErrorModalElement.addEventListener("hidden.bs.modal", function () {
+        if (focusAfterModal) {
+            focusAfterModal.focus();
+            focusAfterModal.select();
+            focusAfterModal = null;
+        }
+    });
+
+    listInput.addEventListener("input", function () {
+        clearPriceError(listInput);
+        updatePreview();
+    });
+
+    saleInput.addEventListener("input", function () {
+        clearPriceError(saleInput);
+        updatePreview();
+    });
+
     updatePreview();
+
+    const serverPriceError = document.getElementById("serverPriceError");
+    if (serverPriceError && serverPriceError.textContent.trim()) {
+        showPriceError(serverPriceError.textContent.trim(), null);
+    }
 </script>
 </body>
 </html>
