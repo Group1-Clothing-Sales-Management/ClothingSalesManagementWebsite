@@ -2220,6 +2220,7 @@
                         const decreaseBtn = document.querySelector(".quantity-decrease");
                         const addCartButton = document.querySelector(".add-cart-form button[type='submit']");
                         const buyNowButton = document.querySelector(".buy-now-form button[type='submit']");
+                        const wishlistForm = document.querySelector(".detail-wishlist-form");
                         const mainProductImage = document.getElementById("mainProductImage");
                         const mainProductThumb = document.getElementById("mainProductThumb");
                         const productImagePlaceholder = document.getElementById("productImagePlaceholder");
@@ -2228,6 +2229,60 @@
 
                         const hiddenQuantity = document.querySelector(".quantity-input-hidden");
                         const buyNowQuantity = document.querySelector(".buy-now-quantity");
+
+                        function showDetailModal(title, text, isError, showCartLink) {
+                            const modalElement = document.getElementById('cartMessageModal');
+
+                            if (!modalElement || !window.bootstrap) {
+                                alert(text);
+                                return;
+                            }
+
+                            modalElement.classList.toggle('is-error', !!isError);
+
+                            const icon = modalElement.querySelector('.cart-modal-mark i');
+                            if (icon) {
+                                icon.className = isError
+                                        ? 'fa-solid fa-triangle-exclamation'
+                                        : 'fa-solid fa-check';
+                            }
+
+                            const titleElement = document.getElementById('cartMessageTitle');
+                            const textElement = document.getElementById('cartMessageText');
+                            const cartLink = modalElement.querySelector('.modal-footer a');
+
+                            if (titleElement) {
+                                titleElement.textContent = title;
+                            }
+                            if (textElement) {
+                                textElement.textContent = text;
+                            }
+                            if (cartLink) {
+                                cartLink.classList.toggle('d-none', !showCartLink);
+                            }
+
+                            new bootstrap.Modal(modalElement).show();
+                        }
+
+                        if (wishlistForm) {
+                            wishlistForm.addEventListener('submit', function (event) {
+                                const wishlistedInput = wishlistForm.querySelector('input[name="wishlisted"]');
+                                const alreadyWishlisted = wishlistedInput
+                                        && wishlistedInput.value.toLowerCase() === 'true';
+
+                                if (!alreadyWishlisted
+                                        && wishlistVariantInput
+                                        && !wishlistVariantInput.value) {
+                                    event.preventDefault();
+                                    showDetailModal(
+                                            'Choose Variant',
+                                            'Please select color and size before adding to wishlist.',
+                                            true,
+                                            false
+                                    );
+                                }
+                            });
+                        }
 
                         function buildImageUrl(fileName, version) {
                             if (!fileName) {

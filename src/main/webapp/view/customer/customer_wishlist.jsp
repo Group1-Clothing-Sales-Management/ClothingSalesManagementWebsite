@@ -107,6 +107,16 @@
                 box-shadow:0 20px 38px rgba(95,132,214,.20);
             }
 
+            .wishlist-grid {
+                display:grid;
+                grid-template-columns:repeat(5, minmax(0, 1fr));
+                gap:18px;
+            }
+
+            .wishlist-card-body {
+                padding:16px;
+            }
+
             .wishlist-image {
                 display:block;
                 width:100%;
@@ -195,34 +205,22 @@
             }
 
             .wishlist-title {
+                display:block;
                 color:var(--wishlist-ink);
-                font-size:1rem;
+                font-size:.88rem;
                 font-weight:900;
+                text-decoration:none;
+            }
+
+            .wishlist-title:hover,
+            .wishlist-title:focus-visible {
+                color:var(--wishlist-primary-dark);
             }
 
             .wishlist-price {
                 color:#365b9f;
-                font-size:1.28rem;
+                font-size:1.05rem;
                 font-weight:800;
-            }
-
-            .variant-note {
-                min-height:42px;
-                color:var(--wishlist-muted);
-                line-height:1.55;
-            }
-
-            .form-select {
-                min-height:42px;
-                border:1px solid var(--wishlist-line);
-                border-radius:8px;
-                padding:9px 11px;
-                font-size:14px;
-            }
-
-            .form-select:focus {
-                border-color:var(--wishlist-primary);
-                box-shadow:0 0 0 .22rem rgba(138,170,229,.22);
             }
 
             .btn-main {
@@ -240,36 +238,31 @@
                 color:#fff;
             }
 
-            .btn-soft {
-                border:1px solid var(--wishlist-line);
-                border-radius:8px;
-                background:#fff;
-                color:var(--wishlist-muted);
-                font-weight:800;
-            }
-
-            .btn-soft:hover {
-                border-color:var(--wishlist-primary);
-                color:var(--wishlist-primary-dark);
-            }
-
-            .wishlist-remove-btn {
+            .wishlist-toggle-btn {
                 width:34px;
                 height:34px;
-                border:1px solid #f0d5ce;
-                border-radius:8px;
+                border:0;
+                border-radius:50%;
                 display:inline-flex;
                 align-items:center;
                 justify-content:center;
-                color:var(--wishlist-danger);
-                background:#fff;
+                color:#fff;
+                background:var(--wishlist-primary);
                 text-decoration:none;
+                box-shadow:0 10px 22px rgba(95,132,214,.24);
+                transition:background .2s ease, transform .2s ease, box-shadow .2s ease;
             }
 
-            .wishlist-remove-btn:hover,
-            .wishlist-remove-btn:focus-visible {
-                color:#7f2c2a;
-                background:#fff1ed;
+            .wishlist-toggle-btn:hover,
+            .wishlist-toggle-btn:focus-visible {
+                color:#fff;
+                background:var(--wishlist-primary-dark);
+                transform:translateY(-1px);
+                box-shadow:0 14px 28px rgba(95,132,214,.30);
+            }
+
+            .wishlist-toggle-btn i {
+                font-size:14px;
             }
 
             .empty-state {
@@ -293,11 +286,21 @@
                 .wishlist-page { width:100%; padding:18px 14px 48px; }
                 .wishlist-header { padding:18px 16px; }
                 .wishlist-header h2 { font-size:21px; }
+                .wishlist-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; }
+                .wishlist-card-body { padding:12px; }
                 .wishlist-toast {
                     width:min(320px, calc(100vw - 32px));
                     min-height:160px;
                     padding:24px 22px;
                 }
+            }
+
+            @media (min-width:769px) and (max-width:1199px) {
+                .wishlist-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+            }
+
+            @media (max-width:480px) {
+                .wishlist-grid { grid-template-columns:1fr; }
             }
 
         </style>
@@ -314,7 +317,7 @@
                         My Wishlist
                     </h2>
                     <p class="text-muted mb-0 mt-2">
-                        Save products you like and choose the variant when you are ready.
+                        Save products you like and revisit them anytime.
                     </p>
                 </div>
 
@@ -355,128 +358,55 @@
                 </c:when>
 
                 <c:otherwise>
-                    <div class="row g-4">
+                    <div class="wishlist-grid">
                         <c:forEach items="${wishlistItems}" var="item">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="wishlist-card h-100">
-                                    <a href="${pageContext.request.contextPath}/product/detail?id=${item.productId}">
-                                        <c:choose>
-                                            <c:when test="${not empty item.mainImageUrl}">
-                                                <img src="${pageContext.request.contextPath}/media/product/${item.mainImageUrl}"
-                                                     class="wishlist-image wishlist-image-element"
-                                                     data-context-path="${pageContext.request.contextPath}"
-                                                     alt="${fn:escapeXml(item.productName)}"
-                                                     onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
-                                                <div class="wishlist-image wishlist-image-fallback d-none align-items-center justify-content-center">
-                                                    <i class="fa-solid fa-shirt fs-1 text-secondary"></i>
-                                                </div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="wishlist-image wishlist-image-fallback d-flex align-items-center justify-content-center">
-                                                    <i class="fa-solid fa-shirt fs-1 text-secondary"></i>
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </a>
-
-                                    <div class="p-4">
-                                        <div class="d-flex justify-content-between gap-3 mb-2">
-                                            <div class="wishlist-title text-truncate">
-                                                ${item.productName}
+                            <div class="wishlist-card">
+                                <a href="${pageContext.request.contextPath}/product/detail?id=${item.productId}">
+                                    <c:choose>
+                                        <c:when test="${not empty item.mainImageUrl}">
+                                            <img src="${pageContext.request.contextPath}/media/product/${item.mainImageUrl}"
+                                                 class="wishlist-image wishlist-image-element"
+                                                 data-context-path="${pageContext.request.contextPath}"
+                                                 alt="${fn:escapeXml(item.productName)}"
+                                                 onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                            <div class="wishlist-image wishlist-image-fallback d-none align-items-center justify-content-center">
+                                                <i class="fa-solid fa-shirt fs-1 text-secondary"></i>
                                             </div>
-                                            <form action="${pageContext.request.contextPath}/wishlist/delete"
-                                                  method="post"
-                                                  class="m-0">
-                                                <input type="hidden" name="productId" value="${item.productId}">
-                                                <button type="submit"
-                                                        class="wishlist-remove-btn"
-                                                        title="Remove from wishlist">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="wishlist-image wishlist-image-fallback d-flex align-items-center justify-content-center">
+                                                <i class="fa-solid fa-shirt fs-1 text-secondary"></i>
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </a>
 
-                                        <div class="wishlist-price mb-1">
-                                            <c:choose>
-                                                <c:when test="${not empty item.salePrice}">
-                                                    <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> &#8363;
-                                                </c:when>
-                                                <c:otherwise>
-                                                    Contact
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
+                                <div class="wishlist-card-body">
+                                    <div class="d-flex justify-content-between gap-3 mb-2">
+                                        <a href="${pageContext.request.contextPath}/product/detail?id=${item.productId}"
+                                           class="wishlist-title text-truncate">
+                                            <c:out value="${item.productName}"/>
+                                        </a>
+                                        <form action="${pageContext.request.contextPath}/wishlist/toggle"
+                                              method="post"
+                                              class="m-0">
+                                            <input type="hidden" name="productId" value="${item.productId}">
+                                            <input type="hidden" name="wishlisted" value="true">
+                                            <button type="submit"
+                                                    class="wishlist-toggle-btn"
+                                                    title="Remove from wishlist">
+                                                <i class="fa-solid fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
 
-                                        <div class="variant-note small mb-3">
-                                            <i class="fa-solid fa-layer-group me-1"></i>
-                                            ${item.attributeDetails}
-                                            <br>
-                                            <span class="${item.available ? 'text-success' : 'text-danger'}">
-                                                <c:choose>
-                                                    <c:when test="${item.available}">
-                                                        In stock: ${item.stockQuantity}
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        Currently unavailable
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </span>
-                                        </div>
-
+                                    <div class="wishlist-price mb-1">
                                         <c:choose>
-                                            <c:when test="${not empty item.availableVariants}">
-                                                <form action="${pageContext.request.contextPath}/wishlist/update"
-                                                      method="post"
-                                                      class="wishlist-form"
-                                                      data-product-active="${item.productStatus}">
-
-                                                    <input type="hidden" name="productId" value="${item.productId}">
-                                                    <input type="hidden" name="productName" value="${item.productName}">
-                                                    <input type="hidden" name="attributes" class="attributes-input"
-                                                           value="${item.attributeDetails}">
-                                                    <input type="hidden" name="price" class="price-input"
-                                                           value="${item.salePrice}">
-                                                    <input type="hidden" name="quantity" value="1">
-                                                    <input type="hidden"
-                                                           name="imageUrl"
-                                                           class="image-url-input"
-                                                           value="${item.mainImageUrl}">
-
-                                                    <label class="form-label fw-bold">Variant</label>
-                                                    <select name="variantId"
-                                                            class="form-select mb-3 variant-select">
-                                                        <c:forEach items="${item.availableVariants}" var="variant">
-                                                            <option value="${variant.id}"
-                                                                    data-price="${variant.salePrice}"
-                                                                    data-stock="${variant.stockQuantity}"
-                                                                    data-attributes="${variant.attributeDetails}"
-                                                                    data-image-url="${not empty variant.imageUrl ? variant.imageUrl : item.mainImageUrl}"
-                                                                    ${variant.id == item.variantId ? 'selected' : ''}>
-                                                                ${variant.attributeDetails}
-                                                                -
-                                                                <fmt:formatNumber value="${variant.salePrice}" pattern="#,##0"/> &#8363;
-                                                            </option>
-                                                        </c:forEach>
-                                                    </select>
-
-                                                    <div>
-                                                        <button type="submit"
-                                                                formaction="${pageContext.request.contextPath}/customer/buy-now"
-                                                                formmethod="post"
-                                                                class="btn btn-main w-100 wishlist-cart-button">
-                                                            <i class="fa-solid fa-bolt me-1"></i>
-                                                            Buy Now
-                                                        </button>
-                                                    </div>
-                                                </form>
+                                            <c:when test="${not empty item.salePrice}">
+                                                <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> &#8363;
                                             </c:when>
-
                                             <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/product/detail?id=${item.productId}"
-                                                   class="btn btn-soft w-100">
-                                                    <i class="fa-solid fa-eye me-1"></i>
-                                                    View Details
-                                                </a>
+                                                Contact
                                             </c:otherwise>
                                         </c:choose>
                                     </div>
@@ -504,60 +434,6 @@
                 toast.querySelector('.wishlist-toast-close').addEventListener('click', closeToast);
                 timer = setTimeout(closeToast, 3000);
             }());
-
-            document.querySelectorAll('.wishlist-form').forEach(function (form) {
-                var select = form.querySelector('.variant-select');
-                var cartButton = form.querySelector('.wishlist-cart-button');
-
-                function syncVariant() {
-                    var option = select.options[select.selectedIndex];
-                    var stock = parseInt(option.dataset.stock || '0', 10);
-                    var productActive = (form.dataset.productActive || '').toUpperCase() === 'ACTIVE';
-
-                    form.querySelector('.attributes-input').value
-                            = option.dataset.attributes || 'Standard';
-                    form.querySelector('.price-input').value
-                            = option.dataset.price || '0';
-
-                    var imageUrl = option.dataset.imageUrl || '';
-                    var imageInput = form.querySelector('.image-url-input');
-                    var card = form.closest('.wishlist-card');
-                    var imageElement = card
-                            ? card.querySelector('.wishlist-image-element')
-                            : null;
-                    var imageFallback = card
-                            ? card.querySelector('.wishlist-image-fallback')
-                            : null;
-
-                    if (imageInput) {
-                        imageInput.value = imageUrl;
-                    }
-
-                    if (imageElement && imageUrl) {
-                        var contextPath = imageElement.dataset.contextPath || '';
-                        imageElement.src = contextPath
-                                + '/media/product/'
-                                + encodeURIComponent(imageUrl);
-                        imageElement.classList.remove('d-none');
-
-                        if (imageFallback) {
-                            imageFallback.classList.add('d-none');
-                        }
-                    }
-
-                    if (cartButton) {
-                        cartButton.disabled = !productActive || stock <= 0;
-                    }
-                }
-
-                if (select) {
-                    select.addEventListener('change', function () {
-                        syncVariant();
-                        form.requestSubmit();
-                    });
-                    syncVariant();
-                }
-            });
         </script>
 
         <jsp:include page="/view/customer/common/footer.jsp"/>
