@@ -30,7 +30,10 @@
         .badge-pending { background: #dbeafe; color: #1d4ed8; }
         .badge-inactive { background: #fef3c7; color: #92400e; }
         .badge-locked { background: #fee2e2; color: #991b1b; }
-        .avatar-circle { width: 36px; height: 36px; border-radius: 50%; background: #e8eaf6; color: #5c6bc0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; }
+        .customer-cell { display: inline-flex; align-items: center; gap: 8px; }
+        .avatar-circle { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 50%; background: #e8eaf6; color: #5c6bc0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; overflow: hidden; }
+        img.avatar-circle { object-fit: cover; }
+        .avatar-fallback { margin: 0; }
         .form-section-title { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #5c6bc0; margin-bottom: 14px; }
         .empty-state { padding: 56px 0; text-align: center; color: #9ca3af; }
         .breadcrumb { font-size: .82rem; margin-bottom: 6px; }
@@ -113,7 +116,43 @@
                                         <c:forEach var="c" items="${customers}" varStatus="st">
                                             <tr>
                                                 <td class="text-muted">${st.index + 1}</td>
-                                                <td><span class="avatar-circle me-2">${fn:toUpperCase(fn:substring(c.fullName, 0, 1))}</span>${c.fullName}</td>
+                                                <td>
+                                                    <div class="customer-cell">
+                                                        <c:choose>
+                                                            <c:when test="${not empty c.avatarUrl}">
+                                                                <c:choose>
+                                                                    <c:when test="${fn:startsWith(c.avatarUrl, 'http://') or fn:startsWith(c.avatarUrl, 'https://')}">
+                                                                        <c:set var="customerAvatarSrc" value="${c.avatarUrl}"/>
+                                                                    </c:when>
+                                                                    <c:when test="${fn:startsWith(c.avatarUrl, '/')}">
+                                                                        <c:set var="customerAvatarSrc" value="${pageContext.request.contextPath}${c.avatarUrl}"/>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <c:set var="customerAvatarSrc" value="${pageContext.request.contextPath}/${c.avatarUrl}"/>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                                <img class="avatar-circle" src="${fn:escapeXml(customerAvatarSrc)}"
+                                                                     alt="Avatar of ${fn:escapeXml(c.fullName)}"
+                                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"/>
+                                                                <span class="avatar-circle avatar-fallback" style="display: none;">
+                                                                    <c:choose>
+                                                                        <c:when test="${not empty c.fullName}">${fn:toUpperCase(fn:substring(c.fullName, 0, 1))}</c:when>
+                                                                        <c:otherwise>?</c:otherwise>
+                                                                    </c:choose>
+                                                                </span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="avatar-circle">
+                                                                    <c:choose>
+                                                                        <c:when test="${not empty c.fullName}">${fn:toUpperCase(fn:substring(c.fullName, 0, 1))}</c:when>
+                                                                        <c:otherwise>?</c:otherwise>
+                                                                    </c:choose>
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                        <span><c:out value="${c.fullName}"/></span>
+                                                    </div>
+                                                </td>
                                                 <td><code>${c.username}</code></td>
                                                 <td>${c.email}</td>
                                                 <td>${not empty c.phone ? c.phone : '—'}</td>
