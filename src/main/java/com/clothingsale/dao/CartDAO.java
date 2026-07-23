@@ -50,7 +50,7 @@ public class CartDAO {
             "INSERT INTO Cart (user_id, variant_id, quantity) VALUES (?, ?, ?)";
 
     private static final String CHECK_STOCK_SQL =
-            "SELECT pv.stock_quantity "
+            "SELECT (pv.stock_quantity - pv.reserved_quantity) AS available_quantity "
             + "FROM Product_Variant pv "
             + "JOIN Product p ON pv.product_id = p.id "
             + "WHERE pv.id = ? "
@@ -261,7 +261,7 @@ public class CartDAO {
                 try (ResultSet rs = ps.executeQuery()) {
 
                     if (rs.next()) {
-                        return rs.getInt("stock_quantity");
+                        return Math.max(0, rs.getInt("available_quantity"));
                     }
                 }
             }
@@ -290,7 +290,8 @@ public class CartDAO {
             return stocks;
         }
 
-        String sql = "SELECT pv.id, pv.stock_quantity "
+        String sql = "SELECT pv.id, "
+                + "       (pv.stock_quantity - pv.reserved_quantity) AS available_quantity "
                 + "FROM Product_Variant pv "
                 + "JOIN Product p ON pv.product_id = p.id "
                 + "WHERE pv.id IN (" + placeholders(cleanVariantIds.size()) + ") "
@@ -309,7 +310,7 @@ public class CartDAO {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        stocks.put(rs.getInt("id"), rs.getInt("stock_quantity"));
+                        stocks.put(rs.getInt("id"), Math.max(0, rs.getInt("available_quantity")));
                     }
                 }
             }

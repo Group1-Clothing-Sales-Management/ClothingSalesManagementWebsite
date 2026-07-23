@@ -183,65 +183,135 @@ public class OrderManagementDAO {
     }
 
     public boolean approveOrder(int orderId) {
-        String loadSql = "SELECT o.order_status, o.shipment_id, o.shipping_fee "
-                + "FROM [Order] o WHERE o.id = ?";
-        String updateOrderSql = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() WHERE id = ?";
-        String updateShipmentLinkSql = "UPDATE [Order] SET shipment_id = ?, updated_at = GETDATE() WHERE id = ?";
+        String loadSql
+                = "SELECT o.order_status, o.inventory_status, "
+                + "       o.shipment_id, o.shipping_fee "
+                + "FROM [Order] o WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE o.id = ?";
+
+        String updateOrderSql
+                = "UPDATE [Order] "
+                + "SET order_status = ?, "
+                + "    inventory_status = 'DEDUCTED', "
+                + "    updated_at = GETDATE() "
+                + "WHERE id = ? "
+                + "AND order_status = ? "
+                + "AND inventory_status = ?";
+
+        String updateShipmentLinkSql
+                = "UPDATE [Order] "
+                + "SET shipment_id = ?, updated_at = GETDATE() "
+                + "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
-            String currentStatus = null;
-            int shipmentId = 0;
-            BigDecimal shippingFee = BigDecimal.ZERO;
+            try {
+                String currentStatus;
+                String inventoryStatus;
+                int shipmentId;
+                BigDecimal shippingFee;
 
-            try (PreparedStatement psLoad = conn.prepareStatement(loadSql)) {
-                psLoad.setInt(1, orderId);
-                try (ResultSet rs = psLoad.executeQuery()) {
-                    if (!rs.next()) {
-                        conn.rollback();
-                        return false;
+                try (PreparedStatement psLoad
+                        = conn.prepareStatement(loadSql)) {
+
+                    psLoad.setInt(1, orderId);
+
+                    try (ResultSet rs = psLoad.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+
+                        currentStatus = rs.getString("order_status");
+                        inventoryStatus = rs.getString("inventory_status");
+                        shipmentId = rs.getInt("shipment_id");
+                        shippingFee = rs.getBigDecimal("shipping_fee");
                     }
-
-                    currentStatus = rs.getString("order_status");
-                    shipmentId = rs.getInt("shipment_id");
-                    shippingFee = rs.getBigDecimal("shipping_fee");
                 }
-            }
 
-            if (currentStatus == null || !OrderStatusHelper.RAW_PENDING.equalsIgnoreCase(currentStatus.trim())) {
-                conn.rollback();
-                return false;
-            }
+                if (currentStatus == null
+                        || !OrderStatusHelper.RAW_PENDING.equalsIgnoreCase(
+                                currentStatus.trim())) {
 
-            int linkedShipmentId = shipmentId;
-            if (linkedShipmentId <= 0 && shippingFee != null && shippingFee.compareTo(BigDecimal.ZERO) > 0) {
-                linkedShipmentId = insertShipment(
-                        conn,
-                        "Internal Delivery",
-                        "PENDING_PICKUP",
-                        shippingFee);
-            }
-
-            try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
-                psOrder.setString(1, OrderStatusHelper.RAW_CONFIRMED);
-                psOrder.setInt(2, orderId);
-                if (psOrder.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
                 }
-            }
 
-            if (linkedShipmentId > 0 && shipmentId <= 0) {
-                try (PreparedStatement psLink = conn.prepareStatement(updateShipmentLinkSql)) {
-                    psLink.setInt(1, linkedShipmentId);
-                    psLink.setInt(2, orderId);
-                    psLink.executeUpdate();
+                inventoryStatus = inventoryStatus == null
+                        ? "NONE"
+                        : inventoryStatus.trim().toUpperCase();
+
+                if ("RESERVED".equals(inventoryStatus)) {
+                    commitReservedInventory(
+                            conn,
+                            orderId
+                    );
+
+                } else if ("LEGACY_DEDUCTED".equals(inventoryStatus)) {
+                    synchronizeLegacyFifoBatches(
+                            conn,
+                            orderId
+                    );
+
+                } else {
+                    conn.rollback();
+                    return false;
                 }
+
+                int linkedShipmentId = shipmentId;
+
+                if (linkedShipmentId <= 0
+                        && shippingFee != null
+                        && shippingFee.compareTo(BigDecimal.ZERO) > 0) {
+
+                    linkedShipmentId = insertShipment(
+                            conn,
+                            "Internal Delivery",
+                            "PENDING_PICKUP",
+                            shippingFee
+                    );
+                }
+
+                try (PreparedStatement psOrder
+                        = conn.prepareStatement(updateOrderSql)) {
+
+                    psOrder.setString(
+                            1,
+                            OrderStatusHelper.RAW_CONFIRMED
+                    );
+                    psOrder.setInt(2, orderId);
+                    psOrder.setString(
+                            3,
+                            OrderStatusHelper.RAW_PENDING
+                    );
+                    psOrder.setString(4, inventoryStatus);
+
+                    if (psOrder.executeUpdate() == 0) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                if (linkedShipmentId > 0 && shipmentId <= 0) {
+                    try (PreparedStatement psLink
+                            = conn.prepareStatement(
+                                    updateShipmentLinkSql)) {
+
+                        psLink.setInt(1, linkedShipmentId);
+                        psLink.setInt(2, orderId);
+                        psLink.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (Exception transactionError) {
+                conn.rollback();
+                throw transactionError;
             }
 
-            conn.commit();
-            return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -253,77 +323,137 @@ public class OrderManagementDAO {
      * shipment row already exists.
      */
     public boolean cancelOrderByStaff(int orderId) {
-        String loadSql = "SELECT o.order_status, o.shipment_id FROM [Order] o WHERE o.id = ?";
-        String updateOrderSql = "UPDATE [Order] SET order_status = ?, updated_at = GETDATE() "
-                + "WHERE id = ? AND order_status = ?";
-        String updateShipmentSql = "UPDATE Shipment SET shipping_status = ? WHERE id = ?";
-        String selectDetailsSql = "SELECT variant_id, quantity FROM Order_Detail WHERE order_id = ?";
-        String restoreStockSql = "UPDATE Product_Variant SET stock_quantity = stock_quantity + ? WHERE id = ?";
+        String loadSql
+                = "SELECT o.order_status, o.inventory_status, "
+                + "       o.shipment_id, o.voucher_id "
+                + "FROM [Order] o WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE o.id = ?";
+
+        String updateOrderSql
+                = "UPDATE [Order] "
+                + "SET order_status = ?, "
+                + "    inventory_status = 'RELEASED', "
+                + "    updated_at = GETDATE() "
+                + "WHERE id = ? "
+                + "AND order_status = ? "
+                + "AND inventory_status = ?";
+
+        String updateShipmentSql
+                = "UPDATE Shipment "
+                + "SET shipping_status = ? "
+                + "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
 
-            String currentStatus = null;
-            int shipmentId = 0;
+            try {
+                String currentStatus;
+                String inventoryStatus;
+                int shipmentId;
+                Integer voucherId;
 
-            try (PreparedStatement psLoad = conn.prepareStatement(loadSql)) {
-                psLoad.setInt(1, orderId);
-                try (ResultSet rs = psLoad.executeQuery()) {
-                    if (!rs.next()) {
-                        conn.rollback();
-                        return false;
+                try (PreparedStatement psLoad
+                        = conn.prepareStatement(loadSql)) {
+
+                    psLoad.setInt(1, orderId);
+
+                    try (ResultSet rs = psLoad.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+
+                        currentStatus = rs.getString("order_status");
+                        inventoryStatus = rs.getString("inventory_status");
+                        shipmentId = rs.getInt("shipment_id");
+
+                        int loadedVoucherId
+                                = rs.getInt("voucher_id");
+
+                        voucherId = rs.wasNull()
+                                ? null
+                                : loadedVoucherId;
                     }
-                    currentStatus = rs.getString("order_status");
-                    shipmentId = rs.getInt("shipment_id");
                 }
-            }
 
-            if (currentStatus == null || !OrderStatusHelper.RAW_PENDING.equalsIgnoreCase(currentStatus.trim())) {
-                conn.rollback();
-                return false;
-            }
+                if (currentStatus == null
+                        || !OrderStatusHelper.RAW_PENDING.equalsIgnoreCase(
+                                currentStatus.trim())) {
 
-            try (PreparedStatement psOrder = conn.prepareStatement(updateOrderSql)) {
-                psOrder.setString(1, OrderStatusHelper.RAW_CANCELLED);
-                psOrder.setInt(2, orderId);
-                psOrder.setString(3, OrderStatusHelper.RAW_PENDING);
-                if (psOrder.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
                 }
-            }
 
-            // Stock is deducted when the order is created, so cancelling it
-            // must return every order-detail quantity in the same transaction.
-            // The PENDING-only status check above prevents a second restore.
-            try (PreparedStatement psDetails = conn.prepareStatement(selectDetailsSql);
-                    PreparedStatement psRestore = conn.prepareStatement(restoreStockSql)) {
-                psDetails.setInt(1, orderId);
-                try (ResultSet rs = psDetails.executeQuery()) {
-                    while (rs.next()) {
-                        int variantId = rs.getInt("variant_id");
-                        boolean variantIsNull = rs.wasNull();
-                        int quantity = rs.getInt("quantity");
-                        if (!variantIsNull && quantity > 0) {
-                            psRestore.setInt(1, quantity);
-                            psRestore.setInt(2, variantId);
-                            psRestore.addBatch();
-                        }
+                inventoryStatus = inventoryStatus == null
+                        ? "NONE"
+                        : inventoryStatus.trim().toUpperCase();
+
+                if (!isPendingCancellationInventoryStatus(
+                        inventoryStatus)) {
+
+                    conn.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement psOrder
+                        = conn.prepareStatement(updateOrderSql)) {
+
+                    psOrder.setString(
+                            1,
+                            OrderStatusHelper.RAW_CANCELLED
+                    );
+                    psOrder.setInt(2, orderId);
+                    psOrder.setString(
+                            3,
+                            OrderStatusHelper.RAW_PENDING
+                    );
+                    psOrder.setString(4, inventoryStatus);
+
+                    if (psOrder.executeUpdate() == 0) {
+                        conn.rollback();
+                        return false;
                     }
                 }
-                psRestore.executeBatch();
-            }
 
-            if (shipmentId > 0) {
-                try (PreparedStatement psShipment = conn.prepareStatement(updateShipmentSql)) {
-                    psShipment.setString(1, "FAILED");
-                    psShipment.setInt(2, shipmentId);
-                    psShipment.executeUpdate();
+                if ("RESERVED".equals(inventoryStatus)) {
+                    releaseReservedStockForOrder(
+                            conn,
+                            orderId
+                    );
+
+                } else if ("LEGACY_DEDUCTED".equals(
+                        inventoryStatus)) {
+
+                    restoreLegacyStockForOrder(
+                            conn,
+                            orderId
+                    );
                 }
+
+                releaseVoucherUsage(
+                        conn,
+                        voucherId
+                );
+
+                if (shipmentId > 0) {
+                    try (PreparedStatement psShipment
+                            = conn.prepareStatement(
+                                    updateShipmentSql)) {
+
+                        psShipment.setString(1, "FAILED");
+                        psShipment.setInt(2, shipmentId);
+                        psShipment.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (Exception transactionError) {
+                conn.rollback();
+                throw transactionError;
             }
 
-            conn.commit();
-            return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -333,6 +463,548 @@ public class OrderManagementDAO {
     /**
      * Tạo shipment khi một đơn cần được chuyển sang khâu giao hàng.
      */
+    private void commitReservedInventory(
+            Connection conn,
+            int orderId)
+            throws SQLException {
+
+        String sql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=? "
+                + "ORDER BY id";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+
+                    if (variantIsNull || quantity <= 0) {
+                        throw new SQLException(
+                                "Order contains an invalid variant."
+                        );
+                    }
+
+                    variantIds.add(variantId);
+                    quantities.add(quantity);
+                }
+            }
+        }
+
+        if (variantIds.isEmpty()) {
+            throw new SQLException(
+                    "Order does not contain any order details."
+            );
+        }
+
+        for (int i = 0; i < variantIds.size(); i++) {
+            deductReservedVariant(
+                    conn,
+                    orderId,
+                    variantIds.get(i),
+                    quantities.get(i)
+            );
+        }
+    }
+
+    private void deductReservedVariant(
+            Connection conn,
+            int orderId,
+            int variantId,
+            int quantity)
+            throws SQLException {
+
+        String loadSql
+                = "SELECT pv.stock_quantity, "
+                + "       pv.reserved_quantity, "
+                + "       pv.sku, "
+                + "       p.product_name "
+                + "FROM Product_Variant pv "
+                + "WITH (UPDLOCK, HOLDLOCK) "
+                + "INNER JOIN Product p "
+                + "    ON p.id = pv.product_id "
+                + "WHERE pv.id=?";
+
+        String updateSql
+                = "UPDATE Product_Variant "
+                + "SET stock_quantity = stock_quantity - ?, "
+                + "    reserved_quantity = reserved_quantity - ? "
+                + "WHERE id=? "
+                + "AND stock_quantity >= ? "
+                + "AND reserved_quantity >= ?";
+
+        int quantityBefore;
+        int reservedBefore;
+        String sku;
+        String productName;
+
+        try (PreparedStatement ps = conn.prepareStatement(loadSql)) {
+            ps.setInt(1, variantId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException(
+                            "Variant not found: " + variantId
+                    );
+                }
+
+                quantityBefore = rs.getInt("stock_quantity");
+                reservedBefore = rs.getInt("reserved_quantity");
+                sku = rs.getString("sku");
+                productName = rs.getString("product_name");
+            }
+        }
+
+        if (quantityBefore < quantity
+                || reservedBefore < quantity) {
+
+            throw new SQLException(
+                    "Reserved inventory is insufficient for variant "
+                    + variantId
+            );
+        }
+
+        consumeFifoBatches(
+                conn,
+                variantId,
+                quantity
+        );
+
+        try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, quantity);
+            ps.setInt(3, variantId);
+            ps.setInt(4, quantity);
+            ps.setInt(5, quantity);
+
+            if (ps.executeUpdate() == 0) {
+                throw new SQLException(
+                        "Inventory changed while approving variant "
+                        + variantId
+                );
+            }
+        }
+
+        insertInventoryLog(
+                conn,
+                variantId,
+                productName,
+                sku,
+                quantityBefore,
+                -quantity,
+                quantityBefore - quantity,
+                "SALE_OUT",
+                orderId,
+                "Stock deducted after order approval."
+        );
+    }
+
+    private void synchronizeLegacyFifoBatches(
+            Connection conn,
+            int orderId)
+            throws SQLException {
+
+        String detailSql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=? "
+                + "ORDER BY id";
+
+        String variantSql
+                = "SELECT pv.stock_quantity, pv.sku, "
+                + "       p.product_name "
+                + "FROM Product_Variant pv "
+                + "WITH (UPDLOCK, HOLDLOCK) "
+                + "INNER JOIN Product p "
+                + "    ON p.id = pv.product_id "
+                + "WHERE pv.id=?";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement detail
+                = conn.prepareStatement(detailSql)) {
+
+            detail.setInt(1, orderId);
+
+            try (ResultSet rs = detail.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+
+                    if (variantIsNull || quantity <= 0) {
+                        throw new SQLException(
+                                "Legacy order contains an invalid variant."
+                        );
+                    }
+
+                    variantIds.add(variantId);
+                    quantities.add(quantity);
+                }
+            }
+        }
+
+        if (variantIds.isEmpty()) {
+            throw new SQLException(
+                    "Legacy order does not contain order details."
+            );
+        }
+
+        for (int i = 0; i < variantIds.size(); i++) {
+            int variantId = variantIds.get(i);
+            int quantity = quantities.get(i);
+
+            consumeFifoBatches(
+                    conn,
+                    variantId,
+                    quantity
+            );
+
+            int quantityAfter;
+            String sku;
+            String productName;
+
+            try (PreparedStatement variant
+                    = conn.prepareStatement(variantSql)) {
+
+                variant.setInt(1, variantId);
+
+                try (ResultSet variantRs
+                        = variant.executeQuery()) {
+
+                    if (!variantRs.next()) {
+                        throw new SQLException(
+                                "Variant not found: " + variantId
+                        );
+                    }
+
+                    quantityAfter = variantRs.getInt(
+                            "stock_quantity"
+                    );
+                    sku = variantRs.getString("sku");
+                    productName = variantRs.getString(
+                            "product_name"
+                    );
+                }
+            }
+
+            insertInventoryLog(
+                    conn,
+                    variantId,
+                    productName,
+                    sku,
+                    null,
+                    -quantity,
+                    quantityAfter,
+                    "SALE_LEGACY_SYNC",
+                    orderId,
+                    "FIFO batches synchronized for an order "
+                    + "whose Product_Variant stock was deducted "
+                    + "before the reservation migration."
+            );
+        }
+    }
+
+    private void consumeFifoBatches(
+            Connection conn,
+            int variantId,
+            int requestedQuantity)
+            throws SQLException {
+
+        String selectSql
+                = "SELECT id, current_quantity "
+                + "FROM Product_Batch "
+                + "WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE variant_id=? "
+                + "AND current_quantity > 0 "
+                + "ORDER BY created_at ASC, id ASC";
+
+        String updateSql
+                = "UPDATE Product_Batch "
+                + "SET current_quantity=?, "
+                + "    status=? "
+                + "WHERE id=? "
+                + "AND current_quantity=?";
+
+        List<Integer> batchIds = new ArrayList<>();
+        List<Integer> batchQuantities = new ArrayList<>();
+        int totalBatchQuantity = 0;
+
+        try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+            ps.setInt(1, variantId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int currentQuantity = rs.getInt(
+                            "current_quantity"
+                    );
+
+                    batchIds.add(rs.getInt("id"));
+                    batchQuantities.add(currentQuantity);
+                    totalBatchQuantity += currentQuantity;
+                }
+            }
+        }
+
+        if (totalBatchQuantity < requestedQuantity) {
+            throw new SQLException(
+                    "FIFO batch stock is insufficient for variant "
+                    + variantId
+            );
+        }
+
+        int remaining = requestedQuantity;
+
+        for (int i = 0;
+                i < batchIds.size() && remaining > 0;
+                i++) {
+
+            int batchId = batchIds.get(i);
+            int currentQuantity = batchQuantities.get(i);
+            int deducted = Math.min(
+                    currentQuantity,
+                    remaining
+            );
+            int quantityAfter = currentQuantity - deducted;
+            String status = quantityAfter == 0
+                    ? "DEPLETED"
+                    : "AVAILABLE";
+
+            try (PreparedStatement update
+                    = conn.prepareStatement(updateSql)) {
+
+                update.setInt(1, quantityAfter);
+                update.setString(2, status);
+                update.setInt(3, batchId);
+                update.setInt(4, currentQuantity);
+
+                if (update.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Batch changed while approving order."
+                    );
+                }
+            }
+
+            remaining -= deducted;
+        }
+
+        if (remaining != 0) {
+            throw new SQLException(
+                    "Could not complete FIFO stock deduction."
+            );
+        }
+    }
+
+    private void insertInventoryLog(
+            Connection conn,
+            int variantId,
+            String productName,
+            String sku,
+            Integer quantityBefore,
+            int changeQuantity,
+            Integer quantityAfter,
+            String transactionType,
+            int orderId,
+            String note)
+            throws SQLException {
+
+        String sql
+                = "INSERT INTO Inventory_Log "
+                + "("
+                + "variant_id,"
+                + "user_id,"
+                + "product_name_snapshot,"
+                + "sku_snapshot,"
+                + "quantity_before,"
+                + "change_quantity,"
+                + "quantity_after,"
+                + "transaction_type,"
+                + "reference_type,"
+                + "reference_id,"
+                + "note"
+                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, variantId);
+            ps.setNull(2, Types.INTEGER);
+            ps.setString(3, productName);
+            ps.setString(4, sku);
+
+            if (quantityBefore == null) {
+                ps.setNull(5, Types.INTEGER);
+            } else {
+                ps.setInt(5, quantityBefore);
+            }
+
+            ps.setInt(6, changeQuantity);
+
+            if (quantityAfter == null) {
+                ps.setNull(7, Types.INTEGER);
+            } else {
+                ps.setInt(7, quantityAfter);
+            }
+
+            ps.setString(8, transactionType);
+            ps.setString(9, "ORDER");
+            ps.setInt(10, orderId);
+            ps.setString(11, note);
+            ps.executeUpdate();
+        }
+    }
+
+    private boolean isPendingCancellationInventoryStatus(
+            String inventoryStatus) {
+
+        return "RESERVED".equals(inventoryStatus)
+                || "LEGACY_DEDUCTED".equals(inventoryStatus)
+                || "NONE".equals(inventoryStatus);
+    }
+
+    private void releaseReservedStockForOrder(
+            Connection conn,
+            int orderId)
+            throws SQLException {
+
+        String selectSql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=?";
+
+        String updateSql
+                = "UPDATE Product_Variant "
+                + "SET reserved_quantity = reserved_quantity - ? "
+                + "WHERE id=? "
+                + "AND reserved_quantity >= ?";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement select
+                = conn.prepareStatement(selectSql)) {
+
+            select.setInt(1, orderId);
+
+            try (ResultSet rs = select.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+
+                    if (!variantIsNull && quantity > 0) {
+                        variantIds.add(variantId);
+                        quantities.add(quantity);
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < variantIds.size(); i++) {
+            int variantId = variantIds.get(i);
+            int quantity = quantities.get(i);
+
+            try (PreparedStatement update
+                    = conn.prepareStatement(updateSql)) {
+
+                update.setInt(1, quantity);
+                update.setInt(2, variantId);
+                update.setInt(3, quantity);
+
+                if (update.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Reserved stock is inconsistent for variant "
+                            + variantId
+                    );
+                }
+            }
+        }
+    }
+
+    private void restoreLegacyStockForOrder(
+            Connection conn,
+            int orderId)
+            throws SQLException {
+
+        String selectSql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=?";
+
+        String updateSql
+                = "UPDATE Product_Variant "
+                + "SET stock_quantity = stock_quantity + ? "
+                + "WHERE id=?";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement select
+                = conn.prepareStatement(selectSql)) {
+
+            select.setInt(1, orderId);
+
+            try (ResultSet rs = select.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+
+                    if (!variantIsNull && quantity > 0) {
+                        variantIds.add(variantId);
+                        quantities.add(quantity);
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < variantIds.size(); i++) {
+            int variantId = variantIds.get(i);
+            int quantity = quantities.get(i);
+
+            try (PreparedStatement update
+                    = conn.prepareStatement(updateSql)) {
+
+                update.setInt(1, quantity);
+                update.setInt(2, variantId);
+
+                if (update.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Legacy stock could not be restored for variant "
+                            + variantId
+                    );
+                }
+            }
+        }
+    }
+
+    private void releaseVoucherUsage(
+            Connection conn,
+            Integer voucherId)
+            throws SQLException {
+
+        if (voucherId == null || voucherId <= 0) {
+            return;
+        }
+
+        String sql
+                = "UPDATE Voucher "
+                + "SET used_count = used_count - 1 "
+                + "WHERE id=? "
+                + "AND used_count > 0";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, voucherId);
+            ps.executeUpdate();
+        }
+    }
+
     private int insertShipment(Connection conn,
             String carrierName,
             String shippingStatus,

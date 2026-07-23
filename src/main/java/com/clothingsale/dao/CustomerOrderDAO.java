@@ -409,7 +409,7 @@ public class CustomerOrderDAO {
                 + "order_code,"
                 + "user_id,"
                 + "voucher_id,"
-                + "shipment_id," // 👈 THÊM
+                + "shipment_id,"
                 + "recipient_name,"
                 + "recipient_phone,"
                 + "ward_id,"
@@ -419,50 +419,48 @@ public class CustomerOrderDAO {
                 + "shipping_fee,"
                 + "total_payment,"
                 + "order_status,"
+                + "inventory_status,"
                 + "note"
-                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-        PreparedStatement ps = con.prepareStatement(
+        try (PreparedStatement ps = con.prepareStatement(
                 sql,
-                Statement.RETURN_GENERATED_KEYS
-        );
+                Statement.RETURN_GENERATED_KEYS)) {
 
-        String orderCode = "ORD" + System.currentTimeMillis();
+            ps.setString(1, "ORD" + System.currentTimeMillis());
+            ps.setInt(2, userId);
 
-        ps.setString(1, orderCode);
-        ps.setInt(2, userId);
+            if (voucher == null) {
+                ps.setNull(3, Types.INTEGER);
+            } else {
+                ps.setInt(3, voucher.getId());
+            }
 
-        if (voucher == null) {
-            ps.setNull(3, Types.INTEGER);
-        } else {
-            ps.setInt(3, voucher.getId());
-        }
+            if (shipment == null) {
+                ps.setNull(4, Types.INTEGER);
+            } else {
+                ps.setInt(4, shipment.getId());
+            }
 
-        // SHIPMENT
-        if (shipment == null) {
-            ps.setNull(4, Types.INTEGER);
-        } else {
-            ps.setInt(4, shipment.getId());
-        }
+            ps.setString(5, address.getRecipientName());
+            ps.setString(6, address.getRecipientPhone());
+            ps.setString(7, address.getWardId());
+            ps.setString(8, address.getAddressDetail());
+            ps.setBigDecimal(9, subtotal);
+            ps.setBigDecimal(10, discount);
+            ps.setBigDecimal(11, shippingFee);
+            ps.setBigDecimal(12, totalPayment);
+            ps.setString(13, "PENDING");
+            ps.setString(14, "RESERVED");
+            ps.setString(15, note);
 
-        ps.setString(5, address.getRecipientName());
-        ps.setString(6, address.getRecipientPhone());
-        ps.setString(7, address.getWardId());
-        ps.setString(8, address.getAddressDetail());
+            ps.executeUpdate();
 
-        ps.setBigDecimal(9, subtotal);
-        ps.setBigDecimal(10, discount);
-        ps.setBigDecimal(11, shippingFee);
-        ps.setBigDecimal(12, totalPayment);
-
-        ps.setString(13, "PENDING");
-        ps.setString(14, note);
-
-        ps.executeUpdate();
-
-        ResultSet rs = ps.getGeneratedKeys();
-        if (rs.next()) {
-            return rs.getInt(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
         }
 
         throw new SQLException("Create order failed");
@@ -513,7 +511,6 @@ public class CustomerOrderDAO {
             con.setAutoCommit(false);
 
             List<CartItem> cartItems = getCartItems(userId, selectedVariantIds);
-
             if (cartItems.isEmpty()) {
                 con.rollback();
                 return false;
@@ -525,24 +522,15 @@ public class CustomerOrderDAO {
                 return false;
             }
 
-            for (CartItem item : cartItems) {
-                int availableStock = cartDAO.getAvailableStock(item.getVariantId());
-                if (availableStock < item.getQuantity()) {
-                    con.rollback();
-                    return false;
-                }
+            BigDecimal subtotal = calculateSubtotal(cartItems);
+            if (subtotal.compareTo(BigDecimal.ZERO) <= 0) {
+                con.rollback();
+                return false;
             }
 
-            // ===== SUBTOTAL =====
-            BigDecimal subtotal = BigDecimal.ZERO;
-            for (CartItem item : cartItems) {
-                subtotal = subtotal.add(
-                        item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-            }
-
-            // ===== VOUCHER =====
             boolean voucherRequested = voucherCode != null
                     && !voucherCode.trim().isEmpty();
+
             Voucher voucher = voucherRequested
                     ? getVoucherByCode(voucherCode)
                     : null;
@@ -552,16 +540,29 @@ public class CustomerOrderDAO {
                     || hasUserUsedVoucher(userId, voucher.getId())
                     || voucher.getMinOrderValue() == null
                     || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+
                 con.rollback();
                 return false;
             }
 
             BigDecimal discount = calculateDiscount(voucher, subtotal);
-
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
-            BigDecimal totalPayment = subtotal.subtract(discount).add(shippingFee);
+            BigDecimal totalPayment = subtotal
+                    .subtract(discount)
+                    .add(shippingFee);
 
-            // ===== 1. CREATE SHIPMENT (MỚI) =====
+            /*
+             * Reserve every variant inside this transaction.
+             * stock_quantity remains unchanged while the order is PENDING.
+             */
+            for (CartItem item : cartItems) {
+                reserveStock(
+                        con,
+                        item.getVariantId(),
+                        item.getQuantity()
+                );
+            }
+
             Shipment shipment = new Shipment();
             shipment.setCarrierName(carrierName);
             shipment.setShippingStatus("PENDING_PICKUP");
@@ -569,7 +570,6 @@ public class CustomerOrderDAO {
             int shipmentId = createShipment(con, carrierName);
             shipment.setId(shipmentId);
 
-            // ===== 2. CREATE ORDER (CÓ shipmentId) =====
             int orderId = createOrder(
                     con,
                     userId,
@@ -583,52 +583,39 @@ public class CustomerOrderDAO {
                     shipment
             );
 
-            // ===== 3. ORDER DETAIL =====
             for (CartItem item : cartItems) {
                 createOrderDetail(con, orderId, item);
-                decreaseStock(con, item.getVariantId(), item.getQuantity());
             }
 
-            // ===== 4. PAYMENT =====
-            createPayment(con, orderId, paymentMethod, totalPayment);
+            createPayment(
+                    con,
+                    orderId,
+                    paymentMethod,
+                    totalPayment
+            );
 
-            if (voucher != null) {
-                try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE Voucher SET used_count = used_count + 1 WHERE id=? AND used_count < usage_limit")) {
-                    ps.setInt(1, voucher.getId());
-                    if (ps.executeUpdate() == 0) {
-                        throw new SQLException("Voucher usage limit reached");
-                    }
-                }
-            }
+            holdVoucherUsage(con, voucher);
 
-            // ===== 5. CLEAR CART =====
             if (selectedVariantIds == null) {
                 clearCart(con, userId);
             } else {
-                clearCartItems(con, userId, selectedVariantIds);
+                clearCartItems(
+                        con,
+                        userId,
+                        selectedVariantIds
+                );
             }
 
             con.commit();
             return true;
 
         } catch (Exception e) {
-            try {
-                if (con != null) {
-                    con.rollback();
-                }
-            } catch (Exception ex) {
-            }
+            rollbackQuietly(con);
             e.printStackTrace();
             return false;
 
         } finally {
-            try {
-                if (con != null) {
-                    con.close();
-                }
-            } catch (Exception ex) {
-            }
+            closeQuietly(con);
         }
     }
 
@@ -644,7 +631,6 @@ public class CustomerOrderDAO {
         Connection con = null;
 
         try {
-
             con = DBConnection.getConnection();
             con.setAutoCommit(false);
 
@@ -654,40 +640,20 @@ public class CustomerOrderDAO {
             }
 
             UserAddress address = getAddressById(addressId);
-
             if (address == null || address.getUserId() != userId) {
                 con.rollback();
                 return false;
             }
 
-            // ===== CHECK STOCK =====
-            for (CartItem item : cartItems) {
-
-                int availableStock
-                        = cartDAO.getAvailableStock(item.getVariantId());
-
-                if (availableStock < item.getQuantity()) {
-                    con.rollback();
-                    return false;
-                }
-
+            BigDecimal subtotal = calculateSubtotal(cartItems);
+            if (subtotal.compareTo(BigDecimal.ZERO) <= 0) {
+                con.rollback();
+                return false;
             }
 
-            // ===== SUBTOTAL =====
-            BigDecimal subtotal = BigDecimal.ZERO;
-
-            for (CartItem item : cartItems) {
-
-                subtotal = subtotal.add(
-                        item.getPrice().multiply(
-                                BigDecimal.valueOf(item.getQuantity()))
-                );
-
-            }
-
-            // ===== VOUCHER =====
             boolean voucherRequested = voucherCode != null
                     && !voucherCode.trim().isEmpty();
+
             Voucher voucher = voucherRequested
                     ? getVoucherByCode(voucherCode)
                     : null;
@@ -697,119 +663,72 @@ public class CustomerOrderDAO {
                     || hasUserUsedVoucher(userId, voucher.getId())
                     || voucher.getMinOrderValue() == null
                     || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+
                 con.rollback();
                 return false;
             }
 
-            BigDecimal discount
-                    = calculateDiscount(voucher, subtotal);
+            BigDecimal discount = calculateDiscount(voucher, subtotal);
+            BigDecimal shippingFee = BigDecimal.valueOf(30000);
+            BigDecimal totalPayment = subtotal
+                    .subtract(discount)
+                    .add(shippingFee);
 
-            BigDecimal shippingFee
-                    = BigDecimal.valueOf(30000);
+            for (CartItem item : cartItems) {
+                reserveStock(
+                        con,
+                        item.getVariantId(),
+                        item.getQuantity()
+                );
+            }
 
-            BigDecimal totalPayment
-                    = subtotal.subtract(discount)
-                            .add(shippingFee);
-
-            // ===== CREATE SHIPMENT =====
             Shipment shipment = new Shipment();
-
             shipment.setCarrierName(carrierName);
             shipment.setShippingStatus("PENDING_PICKUP");
 
-            int shipmentId
-                    = createShipment(con, carrierName);
-
+            int shipmentId = createShipment(con, carrierName);
             shipment.setId(shipmentId);
 
-            // ===== CREATE ORDER =====
-            int orderId
-                    = createOrder(
-                            con,
-                            userId,
-                            voucher,
-                            address,
-                            subtotal,
-                            discount,
-                            shippingFee,
-                            totalPayment,
-                            note,
-                            shipment);
+            int orderId = createOrder(
+                    con,
+                    userId,
+                    voucher,
+                    address,
+                    subtotal,
+                    discount,
+                    shippingFee,
+                    totalPayment,
+                    note,
+                    shipment
+            );
 
-            // ===== CREATE ORDER DETAILS =====
             for (CartItem item : cartItems) {
-
-                createOrderDetail(
-                        con,
-                        orderId,
-                        item);
-
-                decreaseStock(
-                        con,
-                        item.getVariantId(),
-                        item.getQuantity());
-
+                createOrderDetail(con, orderId, item);
             }
 
-            // ===== PAYMENT =====
             createPayment(
                     con,
                     orderId,
                     paymentMethod,
-                    totalPayment);
+                    totalPayment
+            );
 
-            // ===== UPDATE VOUCHER =====
-            if (voucher != null) {
+            holdVoucherUsage(con, voucher);
 
-                try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE Voucher "
-                        + "SET used_count = used_count + 1 "
-                        + "WHERE id=? "
-                        + "AND used_count < usage_limit")) {
-
-                    ps.setInt(1, voucher.getId());
-
-                    if (ps.executeUpdate() == 0) {
-                        throw new SQLException("Voucher usage limit reached");
-                    }
-
-                }
-
-            }
-
-            // ===== BUY NOW KHÔNG CLEAR CART =====
+            /*
+             * Buy Now does not remove unrelated Cart rows.
+             */
             con.commit();
-
             return true;
 
         } catch (Exception e) {
-
-            try {
-
-                if (con != null) {
-                    con.rollback();
-                }
-
-            } catch (Exception ex) {
-            }
-
+            rollbackQuietly(con);
             e.printStackTrace();
-
             return false;
 
         } finally {
-
-            try {
-
-                if (con != null) {
-                    con.close();
-                }
-
-            } catch (Exception ex) {
-            }
-
+            closeQuietly(con);
         }
-
     }
 
     private void createPayment(
@@ -1001,32 +920,95 @@ public class CustomerOrderDAO {
             int orderId,
             int userId) {
 
-        String sql
+        String loadSql
+                = "SELECT order_status, inventory_status, voucher_id "
+                + "FROM [Order] WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE id=? AND user_id=?";
+
+        String updateSql
                 = "UPDATE [Order] "
-                + "SET order_status='CANCELLED', updated_at=GETDATE() "
+                + "SET order_status='CANCELLED', "
+                + "    inventory_status='RELEASED', "
+                + "    updated_at=GETDATE() "
                 + "WHERE id=? "
                 + "AND user_id=? "
-                + "AND order_status='PENDING'";
+                + "AND order_status='PENDING' "
+                + "AND inventory_status=?";
 
         try (Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
 
             try {
-                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                String orderStatus;
+                String inventoryStatus;
+                Integer voucherId;
+
+                try (PreparedStatement ps = con.prepareStatement(loadSql)) {
                     ps.setInt(1, orderId);
                     ps.setInt(2, userId);
 
-                    // The status transition is also the idempotency guard. A
-                    // repeated cancel cannot restore the same stock twice.
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            con.rollback();
+                            return false;
+                        }
+
+                        orderStatus = rs.getString("order_status");
+                        inventoryStatus = rs.getString("inventory_status");
+
+                        int loadedVoucherId = rs.getInt("voucher_id");
+                        voucherId = rs.wasNull()
+                                ? null
+                                : loadedVoucherId;
+                    }
+                }
+
+                if (!"PENDING".equalsIgnoreCase(orderStatus)) {
+                    con.rollback();
+                    return false;
+                }
+
+                inventoryStatus = inventoryStatus == null
+                        ? "NONE"
+                        : inventoryStatus.trim().toUpperCase();
+
+                if (!isCustomerCancelableInventoryStatus(inventoryStatus)) {
+                    con.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(updateSql)) {
+                    ps.setInt(1, orderId);
+                    ps.setInt(2, userId);
+                    ps.setString(3, inventoryStatus);
+
                     if (ps.executeUpdate() == 0) {
                         con.rollback();
                         return false;
                     }
                 }
 
-                restoreStockForOrder(con, orderId);
+                if ("RESERVED".equals(inventoryStatus)) {
+                    releaseReservedStockForOrder(
+                            con,
+                            orderId
+                    );
+
+                } else if ("LEGACY_DEDUCTED".equals(inventoryStatus)) {
+                    restoreLegacyStockForOrder(
+                            con,
+                            orderId
+                    );
+                }
+
+                releaseVoucherUsage(
+                        con,
+                        voucherId
+                );
+
                 con.commit();
                 return true;
+
             } catch (Exception transactionError) {
                 con.rollback();
                 throw transactionError;
@@ -1034,27 +1016,139 @@ public class CustomerOrderDAO {
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 
     /**
      * Put back the quantities reserved when the order was created.
      */
-    private void restoreStockForOrder(Connection con, int orderId)
+
+
+
+
+    private BigDecimal calculateSubtotal(
+            List<CartItem> cartItems) {
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+
+        for (CartItem item : cartItems) {
+            if (item == null
+                    || item.getPrice() == null
+                    || item.getQuantity() <= 0) {
+
+                continue;
+            }
+
+            subtotal = subtotal.add(
+                    item.getPrice().multiply(
+                            BigDecimal.valueOf(
+                                    item.getQuantity()
+                            )
+                    )
+            );
+        }
+
+        return subtotal;
+    }
+
+    private void reserveStock(
+            Connection con,
+            int variantId,
+            int quantity)
+            throws SQLException {
+
+        if (variantId <= 0 || quantity <= 0) {
+            throw new SQLException(
+                    "Invalid stock reservation request."
+            );
+        }
+
+        String sql
+                = "UPDATE dbo.Product_Variant WITH (UPDLOCK, ROWLOCK) "
+                + "SET reserved_quantity = reserved_quantity + ? "
+                + "WHERE id=? "
+                + "AND status='ACTIVE' "
+                + "AND (stock_quantity - reserved_quantity) >= ? "
+                + "AND EXISTS ("
+                + "    SELECT 1 "
+                + "    FROM dbo.Product p "
+                + "    INNER JOIN dbo.Category c "
+                + "        ON c.id = p.category_id "
+                + "       AND c.status = 1 "
+                + "    WHERE p.id = dbo.Product_Variant.product_id "
+                + "      AND p.status = 'ACTIVE'"
+                + ")";
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, variantId);
+            ps.setInt(3, quantity);
+
+            if (ps.executeUpdate() == 0) {
+                throw new SQLException(
+                        "Not enough available stock for variant "
+                        + variantId
+                );
+            }
+        }
+    }
+
+    private void holdVoucherUsage(
+            Connection con,
+            Voucher voucher)
+            throws SQLException {
+
+        if (voucher == null) {
+            return;
+        }
+
+        String sql
+                = "UPDATE Voucher WITH (UPDLOCK, ROWLOCK) "
+                + "SET used_count = used_count + 1 "
+                + "WHERE id=? "
+                + "AND used_count < usage_limit";
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, voucher.getId());
+
+            if (ps.executeUpdate() == 0) {
+                throw new SQLException(
+                        "Voucher usage limit reached."
+                );
+            }
+        }
+    }
+
+    private boolean isCustomerCancelableInventoryStatus(
+            String inventoryStatus) {
+
+        return "RESERVED".equals(inventoryStatus)
+                || "LEGACY_DEDUCTED".equals(inventoryStatus)
+                || "NONE".equals(inventoryStatus);
+    }
+
+    private void releaseReservedStockForOrder(
+            Connection con,
+            int orderId)
             throws SQLException {
 
         String selectSql
                 = "SELECT variant_id, quantity "
                 + "FROM Order_Detail "
                 + "WHERE order_id=?";
-        String updateSql
-                = "UPDATE Product_Variant "
-                + "SET stock_quantity = stock_quantity + ? "
-                + "WHERE id=?";
 
-        try (PreparedStatement select = con.prepareStatement(selectSql); PreparedStatement update = con.prepareStatement(updateSql)) {
+        String updateSql
+                = "UPDATE Product_Variant WITH (UPDLOCK, ROWLOCK) "
+                + "SET reserved_quantity = reserved_quantity - ? "
+                + "WHERE id=? "
+                + "AND reserved_quantity >= ?";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement select
+                = con.prepareStatement(selectSql)) {
 
             select.setInt(1, orderId);
 
@@ -1064,42 +1158,132 @@ public class CustomerOrderDAO {
                     boolean variantIsNull = rs.wasNull();
                     int quantity = rs.getInt("quantity");
 
-                    // Order_Detail keeps the row when a variant is deleted;
-                    // there is no stock row left to restore in that case.
                     if (!variantIsNull && quantity > 0) {
-                        update.setInt(1, quantity);
-                        update.setInt(2, variantId);
-                        update.addBatch();
+                        variantIds.add(variantId);
+                        quantities.add(quantity);
                     }
                 }
             }
+        }
 
-            update.executeBatch();
+        for (int i = 0; i < variantIds.size(); i++) {
+            int variantId = variantIds.get(i);
+            int quantity = quantities.get(i);
+
+            try (PreparedStatement update
+                    = con.prepareStatement(updateSql)) {
+
+                update.setInt(1, quantity);
+                update.setInt(2, variantId);
+                update.setInt(3, quantity);
+
+                if (update.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Reserved stock is inconsistent for variant "
+                            + variantId
+                    );
+                }
+            }
         }
     }
 
-    public void decreaseStock(
+    private void restoreLegacyStockForOrder(
             Connection con,
-            int variantId,
-            int quantity)
+            int orderId)
             throws SQLException {
 
+        String selectSql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=?";
+
+        String updateSql
+                = "UPDATE Product_Variant WITH (UPDLOCK, ROWLOCK) "
+                + "SET stock_quantity = stock_quantity + ? "
+                + "WHERE id=?";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement select
+                = con.prepareStatement(selectSql)) {
+
+            select.setInt(1, orderId);
+
+            try (ResultSet rs = select.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    boolean variantIsNull = rs.wasNull();
+                    int quantity = rs.getInt("quantity");
+
+                    if (!variantIsNull && quantity > 0) {
+                        variantIds.add(variantId);
+                        quantities.add(quantity);
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < variantIds.size(); i++) {
+            int variantId = variantIds.get(i);
+            int quantity = quantities.get(i);
+
+            try (PreparedStatement update
+                    = con.prepareStatement(updateSql)) {
+
+                update.setInt(1, quantity);
+                update.setInt(2, variantId);
+
+                if (update.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Legacy stock could not be restored for variant "
+                            + variantId
+                    );
+                }
+            }
+        }
+    }
+
+    private void releaseVoucherUsage(
+            Connection con,
+            Integer voucherId)
+            throws SQLException {
+
+        if (voucherId == null || voucherId <= 0) {
+            return;
+        }
+
         String sql
-                = "UPDATE Product_Variant "
-                + "SET stock_quantity = stock_quantity - ? "
+                = "UPDATE Voucher WITH (UPDLOCK, ROWLOCK) "
+                + "SET used_count = used_count - 1 "
                 + "WHERE id=? "
-                + "AND status='ACTIVE' "
-                + "AND stock_quantity >= ?";
+                + "AND used_count > 0";
 
-        PreparedStatement ps
-                = con.prepareStatement(sql);
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, voucherId);
+            ps.executeUpdate();
+        }
+    }
 
-        ps.setInt(1, quantity);
-        ps.setInt(2, variantId);
-        ps.setInt(3, quantity);
+    private void rollbackQuietly(Connection con) {
+        if (con == null) {
+            return;
+        }
 
-        if (ps.executeUpdate() == 0) {
-            throw new SQLException("Not enough stock for variant " + variantId);
+        try {
+            con.rollback();
+        } catch (SQLException ignored) {
+        }
+    }
+
+    private void closeQuietly(Connection con) {
+        if (con == null) {
+            return;
+        }
+
+        try {
+            con.close();
+        } catch (SQLException ignored) {
         }
     }
 
