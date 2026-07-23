@@ -1004,16 +1004,14 @@
                                                     </c:otherwise>
                                                 </c:choose>
 
-                                                <!-- <div class="item-information">
-                                        <div class="item-name">${d.productNameSnapshot}</div>
-                                        <div class="item-meta">
-                                            Variation: ${empty d.variantAttributesSnapshot ? 'Standard' : d.variantAttributesSnapshot}
-                                        </div>
-                                        <div class="item-meta quantity">x${d.quantity}</div>
-                                        <c:if test="${not d.reorderable}">
-                                            <span class="item-note">Currently unavailable for reorder</span>
-                                        </c:if>
-                                    </div> -->
+                                                <div class="item-information">
+                                                    <div class="item-name">${d.productNameSnapshot}</div>
+                                                    <div class="item-meta">
+                                                        Variation: ${empty d.variantAttributesSnapshot ? 'Standard' :
+                                                        d.variantAttributesSnapshot}
+                                                    </div>
+                                                    <div class="item-meta quantity">x${d.quantity}</div>
+                                                </div>
 
                                                 <div class="item-price">
                                                     <c:choose>
