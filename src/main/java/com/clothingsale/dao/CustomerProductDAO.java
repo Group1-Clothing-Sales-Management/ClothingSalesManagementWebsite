@@ -21,25 +21,66 @@ public class CustomerProductDAO {
 
     public List<Category> getActiveCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT id, category_name, slug, status "
-                + "FROM Category WHERE status = 1 ORDER BY id ASC";
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        String sql = "SELECT id, category_name, slug, parent_id, "
+                + "description, status "
+                + "FROM Category "
+                + "WHERE status = 1 "
+                + "ORDER BY CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END, "
+                + "         ISNULL(parent_id, id), id";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Category category = new Category();
                 category.setId(rs.getInt("id"));
                 category.setCategoryName(rs.getString("category_name"));
                 category.setSlug(rs.getString("slug"));
+
+                int parentId = rs.getInt("parent_id");
+                category.setParentId(rs.wasNull() ? null : parentId);
+
+                category.setDescription(rs.getString("description"));
                 category.setStatus(rs.getInt("status"));
                 categories.add(category);
             }
         } catch (SQLException e) {
-            System.err.println("Could not load customer header categories.");
+            System.err.println("Could not load active customer categories.");
             e.printStackTrace();
         }
 
         return categories;
+    }
+
+    public List<Category> getHeaderCategories() {
+        List<Category> categories = getActiveCategories();
+        Map<Integer, Category> categoriesById = new LinkedHashMap<>();
+        List<Category> rootCategories = new ArrayList<>();
+
+        for (Category category : categories) {
+            category.setChildren(new ArrayList<>());
+            categoriesById.put(category.getId(), category);
+        }
+
+        for (Category category : categories) {
+            Integer parentId = category.getParentId();
+
+            if (parentId == null) {
+                rootCategories.add(category);
+                continue;
+            }
+
+            Category parent = categoriesById.get(parentId);
+            if (parent != null) {
+                parent.addChild(category);
+            } else {
+                rootCategories.add(category);
+            }
+        }
+
+        return rootCategories;
     }
 
     public List<Product> getProducts(
@@ -540,7 +581,8 @@ public class CustomerProductDAO {
         }
 
         if (categoryId != null) {
-            sql.append("AND p.category_id = ? ");
+            sql.append("AND (p.category_id = ? OR c.parent_id = ?) ");
+            params.add(categoryId);
             params.add(categoryId);
         }
 

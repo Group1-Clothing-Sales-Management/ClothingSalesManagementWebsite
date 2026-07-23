@@ -545,7 +545,7 @@
                 transition:.2s;
                 font-weight:600;
             }
-            .size-option:hover:not(:disabled){
+            .size-option:hover{
                 border-color:var(--detail-primary);
             }
             .size-option.active{
@@ -554,12 +554,18 @@
                 background:#fffaf8;
                 box-shadow:0 0 0 1px var(--detail-primary);
             }
+            .color-option:disabled,
             .size-option:disabled{
-                background:#efefef;
-                color:#999;
-                border-color:#ddd;
+                opacity:.42;
+                color:#9ca3af;
+                background:#f3f4f6;
+                border-color:#e5e7eb;
                 cursor:not-allowed;
-                opacity:.7;
+                box-shadow:none;
+            }
+            .color-option:disabled:hover,
+            .size-option:disabled:hover{
+                border-color:#e5e7eb;
             }
             .stock-text{
                 margin:0!important;
@@ -2315,6 +2321,53 @@
                             buyNowButton.disabled = !ready;
                         }
 
+                        function getColorImageVariant(color) {
+                            if (!color) {
+                                return null;
+                            }
+
+                            const sameColorVariants = variants.filter(v =>
+                                v.color === color
+                            );
+
+                            return sameColorVariants.find(v =>
+                                v.imageUrl && v.imageUrl.trim() !== ""
+                            ) || sameColorVariants[0] || null;
+                        }
+
+                        function showImageForCurrentSelection(exactVariant) {
+                            if (exactVariant) {
+                                const colorImageVariant = getColorImageVariant(
+                                        exactVariant.color
+                                );
+
+                                const imageFile = exactVariant.imageUrl
+                                        || (colorImageVariant ? colorImageVariant.imageUrl : "")
+                                        || defaultProductImage;
+
+                                const imageVersion = exactVariant.imageUrl
+                                        ? exactVariant.imageVersion
+                                        : (colorImageVariant ? colorImageVariant.imageVersion : "");
+
+                                showVariantImage(imageFile, imageVersion);
+                                return;
+                            }
+
+                            if (selectedColor) {
+                                const colorImageVariant = getColorImageVariant(selectedColor);
+
+                                if (colorImageVariant) {
+                                    showVariantImage(
+                                            colorImageVariant.imageUrl || defaultProductImage,
+                                            colorImageVariant.imageVersion
+                                    );
+                                    return;
+                                }
+                            }
+
+                            showVariantImage(defaultProductImage, "");
+                        }
+
                         function clearResolvedVariant() {
                             variantIdInput.value = "";
                             buyNowVariant.value = "";
@@ -2332,44 +2385,52 @@
                                 cartImageInput.value = defaultProductImage;
                             }
 
-                            priceValue.textContent = "Select color and size";
-                            stockText.textContent = "Select color and size";
+                            let selectionMessage = "Select color and size";
+
+                            if (selectedColor && !selectedSize) {
+                                selectionMessage = "Select size";
+                            } else if (!selectedColor && selectedSize) {
+                                selectionMessage = "Select color";
+                            }
+
+                            priceValue.textContent = selectionMessage;
+                            stockText.textContent = selectionMessage;
                             quantityInput.value = 1;
                             quantityInput.max = 1;
                             setSelectionReady(false);
-                            showVariantImage(defaultProductImage, "");
+                            showImageForCurrentSelection(null);
                             updateQuantity();
                         }
 
                         function updateOptionAvailability() {
                             colorButtons.forEach(btn => {
-                                const available = !selectedSize || variants.some(v =>
-                                    v.size === selectedSize
-                                            && v.color === btn.dataset.color
+                                const color = btn.dataset.color;
+                                const isActive = color === selectedColor;
+
+                                const isAvailable = !selectedSize || variants.some(v =>
+                                    v.size === selectedSize && v.color === color
                                 );
 
-                                btn.disabled = !available;
-                                btn.classList.toggle(
-                                        "active",
-                                        btn.dataset.color === selectedColor
-                                );
+                                // Nút đang chọn luôn được phép bấm lại để bỏ chọn.
+                                btn.disabled = !isActive && !isAvailable;
+                                btn.classList.toggle("active", isActive);
                             });
 
                             sizeButtons.forEach(btn => {
-                                const available = !selectedColor || variants.some(v =>
-                                    v.color === selectedColor
-                                            && v.size === btn.dataset.size
+                                const size = btn.dataset.size;
+                                const isActive = size === selectedSize;
+
+                                const isAvailable = !selectedColor || variants.some(v =>
+                                    v.color === selectedColor && v.size === size
                                 );
 
-                                btn.disabled = !available;
-                                btn.classList.toggle(
-                                        "active",
-                                        btn.dataset.size === selectedSize
-                                );
+                                // Nút đang chọn luôn được phép bấm lại để bỏ chọn.
+                                btn.disabled = !isActive && !isAvailable;
+                                btn.classList.toggle("active", isActive);
                             });
                         }
 
-                        function renderVariant() {
+                        function renderSelection() {
                             updateOptionAvailability();
 
                             if (!selectedColor || !selectedSize) {
@@ -2402,10 +2463,13 @@
                                 priceInput.value = variant.price;
                             }
                             if (cartImageInput) {
-                                cartImageInput.value = variant.imageUrl || defaultProductImage;
+                                const colorImageVariant = getColorImageVariant(variant.color);
+                                cartImageInput.value = variant.imageUrl
+                                        || (colorImageVariant ? colorImageVariant.imageUrl : "")
+                                        || defaultProductImage;
                             }
 
-                            showVariantImage(variant.imageUrl, variant.imageVersion);
+                            showImageForCurrentSelection(variant);
                             stockText.textContent = variant.stock + " in stock";
                             priceValue.textContent =
                                     Number(variant.price).toLocaleString("vi-VN") + " ₫";
@@ -2430,38 +2494,33 @@
 
                         colorButtons.forEach(btn => {
                             btn.addEventListener("click", function () {
-                                selectedColor = btn.dataset.color;
+                                const clickedColor = btn.dataset.color;
 
-                                if (selectedSize && !variants.some(v =>
-                                    v.color === selectedColor && v.size === selectedSize
-                                )) {
-                                    selectedSize = null;
+                                if (selectedColor === clickedColor) {
+                                    selectedColor = null;
+                                } else {
+                                    selectedColor = clickedColor;
                                 }
 
-                                renderVariant();
+                                renderSelection();
                             });
                         });
 
                         sizeButtons.forEach(btn => {
                             btn.addEventListener("click", function () {
-                                if (btn.disabled) {
-                                    return;
+                                const clickedSize = btn.dataset.size;
+
+                                if (selectedSize === clickedSize) {
+                                    selectedSize = null;
+                                } else {
+                                    selectedSize = clickedSize;
                                 }
 
-                                selectedSize = btn.dataset.size;
-
-                                if (selectedColor && !variants.some(v =>
-                                    v.color === selectedColor && v.size === selectedSize
-                                )) {
-                                    selectedColor = null;
-                                }
-
-                                renderVariant();
+                                renderSelection();
                             });
                         });
 
-                        clearResolvedVariant();
-                        updateOptionAvailability();
+                        renderSelection();
 
                         // ================= FEEDBACK FILTER =================
 

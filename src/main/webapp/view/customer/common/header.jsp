@@ -1,294 +1,666 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<c:set var="loggedIn"
-       value="${not empty sessionScope.authUserId}"/>
-<jsp:useBean id="headerProductDAO" class="com.clothingsale.dao.CustomerProductDAO" scope="page"/>
-<c:set var="navCategories"
-       value="${not empty headerCategories ? headerCategories : headerProductDAO.activeCategories}"/>
+<c:set var="loggedIn" value="${not empty sessionScope.authUserId}"/>
+<c:set var="selectedCategoryId" value="${param.categoryId}"/>
 
-<nav class="navbar custom-navbar market-header sticky-top" aria-label="Store navigation">
-    <div class="market-mainbar">
-        <div class="market-header-inner market-mainbar-inner">
-            <a href="${pageContext.request.contextPath}/home" class="market-brand">
-                <i class="fa-solid fa-bag-shopping"></i>
+<jsp:useBean id="headerProductDAO"
+             class="com.clothingsale.dao.CustomerProductDAO"
+             scope="page"/>
+
+<c:set var="navCategoryGroups"
+       value="${not empty headerCategories
+                ? headerCategories
+                : headerProductDAO.headerCategories}"/>
+
+<header class="store-header sticky-top">
+    <div class="store-header-main">
+        <div class="store-header-container store-header-main-inner">
+            <a href="${pageContext.request.contextPath}/home"
+               class="store-brand"
+               aria-label="Clothing Sale home">
+                <span class="store-brand-icon">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                </span>
                 <span>Clothing Sale</span>
             </a>
 
-            <div class="market-search-area">
-                <form action="${pageContext.request.contextPath}/products" method="get" class="market-search">
-                    <input type="text" name="keyword" placeholder="Search shirts, pants, accessories..." aria-label="Search products">
-                    <button type="submit" aria-label="Search products">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                </form>
-
-                <div class="market-category-strip" aria-label="Product categories">
-                    <c:forEach items="${navCategories}" var="category">
-                        <a class="${param.categoryId == category.id ? 'active' : ''}"
-                           href="${pageContext.request.contextPath}/products?categoryId=${category.id}">
-                            <c:out value="${category.categoryName}"/>
-                        </a>
-                    </c:forEach>
-                </div>
-            </div>
-
-            <c:choose>
-                <c:when test="${loggedIn}">
-                    <details class="market-main-account">
-                        <summary aria-haspopup="menu">
-                            <span class="market-user-dot" aria-label="User avatar">
-                                <c:choose>
-                                    <c:when test="${not empty sessionScope.authUsername}">
-                                        <c:out value="${fn:toUpperCase(fn:substring(sessionScope.authUsername, 0, 1))}"/>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <i class="fa-solid fa-user"></i>
-                                    </c:otherwise>
-                                </c:choose>
-                            </span>
-                            <span class="market-main-account-name">
-                                <c:out value="${not empty sessionScope.customerFullName
-                                                ? sessionScope.customerFullName
-                                                : sessionScope.authUsername}" default="Account"/>
-                            </span>
-                            <i class="fa-solid fa-chevron-down market-main-account-chevron"></i>
-                        </summary>
-                        <div class="market-account-menu" role="menu">
-                            <a href="${pageContext.request.contextPath}/customer/profile" role="menuitem">
-                                Profile
-                            </a>
-                            <a href="${pageContext.request.contextPath}/customer/orders" role="menuitem">
-                                My Orders
-                            </a>
-                            <a href="${pageContext.request.contextPath}/customer/returns" role="menuitem">
-                                Returns & Refunds
-                            </a>
-                            <a href="${pageContext.request.contextPath}/customer/vouchers" role="menuitem">
-                                My Vouchers
-                            </a>
-                            <a href="${pageContext.request.contextPath}/wishlist" role="menuitem">
-                                My Wishlist
-                            </a>
-                            <hr>
-                            <a class="js-customer-logout"
-                               href="${pageContext.request.contextPath}/customer/logout"
-                               data-logout-url="${pageContext.request.contextPath}/customer/logout"
-                               role="menuitem">
-                                Logout
-                            </a>
-                        </div>
-                    </details>
-                </c:when>
-                <c:otherwise>
-                    <a href="${pageContext.request.contextPath}/customer/login" class="market-user-action" aria-label="Login">
-                        <i class="fa-solid fa-user"></i>
-                    </a>
-                </c:otherwise>
-            </c:choose>
-
-            <a href="${pageContext.request.contextPath}/cart" class="market-cart" aria-label="Cart">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span class="market-cart-text">Cart</span>
-                <c:if test="${loggedIn and sessionScope.cartCount > 0}">
-                    <span class="market-cart-badge">${sessionScope.cartCount}</span>
+            <form action="${pageContext.request.contextPath}/products"
+                  method="get"
+                  class="store-search"
+                  role="search">
+                <c:if test="${not empty selectedCategoryId}">
+                    <input type="hidden"
+                           name="categoryId"
+                           value="<c:out value='${selectedCategoryId}'/>"/>
                 </c:if>
-            </a>
+
+                <label class="visually-hidden" for="storeHeaderKeyword">
+                    Search products
+                </label>
+                <input id="storeHeaderKeyword"
+                       type="search"
+                       name="keyword"
+                       value="<c:out value='${param.keyword}'/>"
+                       placeholder="Search clothing, accessories and sportswear..."
+                       autocomplete="off"/>
+                <button type="submit" aria-label="Search products">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+
+            <div class="store-header-actions">
+                <c:choose>
+                    <c:when test="${loggedIn}">
+                        <details class="store-account">
+                            <summary aria-haspopup="menu">
+                                <span class="store-user-avatar">
+                                    <c:choose>
+                                        <c:when test="${not empty sessionScope.authUsername}">
+                                            <c:out value="${fn:toUpperCase(fn:substring(sessionScope.authUsername, 0, 1))}"/>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <i class="fa-solid fa-user"></i>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
+
+                                <span class="store-account-name">
+                                    <c:out value="${not empty sessionScope.customerFullName
+                                                    ? sessionScope.customerFullName
+                                                    : sessionScope.authUsername}"
+                                           default="Account"/>
+                                </span>
+
+                                <i class="fa-solid fa-chevron-down store-account-chevron"></i>
+                            </summary>
+
+                            <div class="store-account-menu" role="menu">
+                                <a href="${pageContext.request.contextPath}/customer/profile"
+                                   role="menuitem">
+                                    <i class="fa-regular fa-user"></i>
+                                    Profile
+                                </a>
+                                <a href="${pageContext.request.contextPath}/customer/orders"
+                                   role="menuitem">
+                                    <i class="fa-solid fa-box"></i>
+                                    My Orders
+                                </a>
+                                <a href="${pageContext.request.contextPath}/customer/returns"
+                                   role="menuitem">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    Returns &amp; Refunds
+                                </a>
+                                <a href="${pageContext.request.contextPath}/customer/vouchers"
+                                   role="menuitem">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    My Vouchers
+                                </a>
+                                <a href="${pageContext.request.contextPath}/wishlist"
+                                   role="menuitem">
+                                    <i class="fa-regular fa-heart"></i>
+                                    My Wishlist
+                                </a>
+                                <hr/>
+                                <a class="js-customer-logout"
+                                   href="${pageContext.request.contextPath}/customer/logout"
+                                   data-logout-url="${pageContext.request.contextPath}/customer/logout"
+                                   role="menuitem">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </details>
+                    </c:when>
+
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/customer/login"
+                           class="store-login"
+                           aria-label="Login">
+                            <i class="fa-regular fa-user"></i>
+                            <span>Login</span>
+                        </a>
+                    </c:otherwise>
+                </c:choose>
+
+                <a href="${pageContext.request.contextPath}/cart"
+                   class="store-cart"
+                   aria-label="Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Cart</span>
+                    <c:if test="${loggedIn and sessionScope.cartCount > 0}">
+                        <span class="store-cart-badge">
+                            <c:out value="${sessionScope.cartCount}"/>
+                        </span>
+                    </c:if>
+                </a>
+            </div>
         </div>
     </div>
-</nav>
+
+    <nav class="store-category-nav" aria-label="Product categories">
+        <div class="store-header-container store-category-track">
+            <a href="${pageContext.request.contextPath}/products"
+               class="store-category-all ${empty selectedCategoryId ? 'is-active' : ''}">
+                <i class="fa-solid fa-border-all"></i>
+                All Products
+            </a>
+
+            <c:forEach items="${navCategoryGroups}" var="parentCategory">
+                <c:set var="parentActive"
+                       value="${selectedCategoryId == parentCategory.id}"/>
+
+                <c:forEach items="${parentCategory.children}" var="childCategory">
+                    <c:if test="${selectedCategoryId == childCategory.id}">
+                        <c:set var="parentActive" value="true"/>
+                    </c:if>
+                </c:forEach>
+
+                <div class="store-category-group ${parentActive ? 'is-active' : ''}">
+                    <a href="${pageContext.request.contextPath}/products?categoryId=${parentCategory.id}"
+                       class="store-category-parent">
+                        <c:out value="${parentCategory.categoryName}"/>
+                    </a>
+
+                    <c:if test="${not empty parentCategory.children}">
+                        <button type="button"
+                                class="store-category-toggle"
+                                aria-label="Open ${parentCategory.categoryName} categories"
+                                aria-expanded="false">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+
+                        <div class="store-category-menu">
+                            <a href="${pageContext.request.contextPath}/products?categoryId=${parentCategory.id}"
+                               class="store-category-view-all ${selectedCategoryId == parentCategory.id ? 'is-active' : ''}">
+                                <span>View all</span>
+                                <strong><c:out value="${parentCategory.categoryName}"/></strong>
+                            </a>
+
+                            <div class="store-category-menu-list">
+                                <c:forEach items="${parentCategory.children}" var="childCategory">
+                                    <a href="${pageContext.request.contextPath}/products?categoryId=${childCategory.id}"
+                                       class="${selectedCategoryId == childCategory.id ? 'is-active' : ''}">
+                                        <span><c:out value="${childCategory.categoryName}"/></span>
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </c:forEach>
+                            </div>
+                        </div>
+                    </c:if>
+                </div>
+            </c:forEach>
+        </div>
+    </nav>
+</header>
 
 <style>
-    .market-header{
-        display:block;
-        width:100%;
-        padding:0;
-        border:0;
-        background:transparent;
-        box-shadow:0 2px 10px rgba(122,37,20,.12);
+    :root {
+        --store-blue: #86a8e5;
+        --store-blue-dark: #5f84d6;
+        --store-blue-deep: #365b9f;
+        --store-navy: #17233d;
+        --store-text: #24324a;
+        --store-muted: #6b7890;
+        --store-border: #dbe4f3;
+        --store-surface: #ffffff;
+        --store-soft: #f4f7fc;
     }
 
-    .market-header-inner{
-        width:min(1200px, calc(100% - 32px));
-        max-width:1200px;
-        margin:0 auto;
+    .store-header {
+        z-index: 1035;
+        width: 100%;
+        color: var(--store-text);
+        background: var(--store-surface);
+        box-shadow: 0 5px 24px rgba(49, 78, 130, .14);
     }
 
-    .market-mainbar{
-        color:#fff;
-        background:#c65b3d;
+    .store-header-container {
+        width: min(1500px, calc(100% - 32px));
+        margin: 0 auto;
     }
 
-    .market-login{
-        color:#fff;
-        text-decoration:none;
+    .store-header-main {
+        background: linear-gradient(115deg, var(--store-blue) 0%, #92b1e8 100%);
     }
 
-    .market-login:hover{
-        color:#fff;
-        text-decoration:underline;
+    .store-header-main-inner {
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
     }
 
-    .market-mainbar{
-        min-height:80px;
+    .store-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex: 0 0 auto;
+        color: #fff;
+        font-size: 27px;
+        font-weight: 800;
+        line-height: 1;
+        text-decoration: none;
+        white-space: nowrap;
     }
 
-    .market-mainbar-inner{
-        min-height:58px;
-        display:flex;
-        align-items:center;
-        gap:14px;
+    .store-brand:hover {
+        color: #fff;
     }
 
-    .market-brand{
-        display:flex;
-        align-items:center;
-        gap:8px;
-        min-width:180px;
-        color:#fff;
-        font-size:28px;
-        font-weight:500;
-        text-decoration:none;
-        white-space:nowrap;
+    .store-brand-icon {
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        color: var(--store-blue-dark);
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(54, 91, 159, .18);
     }
 
-    .market-brand:hover{
-        color:#fff;
+    .store-brand-icon i {
+        font-size: 24px;
     }
 
-    .market-brand i{
-        font-size:38px;
+    .store-search {
+        height: 44px;
+        display: flex;
+        flex: 1 1 580px;
+        min-width: 240px;
+        overflow: hidden;
+        border-radius: 11px;
+        background: #fff;
+        box-shadow: 0 6px 20px rgba(54, 91, 159, .16);
     }
 
-    .market-search{
-        display:flex;
-        flex:1;
-        max-width:840px;
-        height:40px;
-        margin-left:18px;
+    .store-search input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        padding: 0 18px;
+        color: var(--store-text);
+        background: transparent;
+        font-size: 15px;
     }
 
-    .market-search input{
-        flex:1;
-        min-width:0;
-        border:2px solid #fff;
-        border-right:0;
-        border-radius:2px 0 0 2px;
-        padding:0 12px;
-        color:#39302c;
-        outline:0;
+    .store-search input::placeholder {
+        color: #8a96aa;
     }
 
-    .market-search button{
-        width:64px;
-        border:0;
-        border-radius:0 2px 2px 0;
-        background:#c65b3d;
-        color:#fff;
+    .store-search button {
+        width: 58px;
+        flex: 0 0 58px;
+        border: 0;
+        color: var(--store-blue-dark);
+        background: #fff;
+        font-size: 21px;
+        transition: background .2s ease, color .2s ease;
     }
 
-    .market-search button:hover{
-        background:#a9462d;
+    .store-search button:hover {
+        color: #fff;
+        background: var(--store-blue-dark);
     }
 
-    .market-cart{
-        position:relative;
-        margin-left:auto;
-        padding:4px 10px;
-        color:#fff;
-        font-size:29px;
-        text-decoration:none;
+    .store-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 0 0 auto;
     }
 
-    .market-cart:hover{
-        color:#fff;
+    .store-account {
+        position: relative;
     }
 
-    .market-cart-badge{
-        position:absolute;
-        top:-3px;
-        right:-2px;
-        min-width:20px;
-        height:18px;
-        padding:1px 5px;
-        border:2px solid #c65b3d;
-        border-radius:10px;
-        background:#fff;
-        color:#c65b3d;
-        font-size:11px;
-        line-height:14px;
-        text-align:center;
+    .store-account summary,
+    .store-login,
+    .store-cart {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        border-radius: 999px;
+        color: #fff;
+        background: rgba(54, 91, 159, .27);
+        text-decoration: none;
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
     }
 
-    .market-account{
-        position:relative;
+    .store-account summary {
+        min-width: 190px;
+        padding: 6px 16px 6px 8px;
+        list-style: none;
     }
 
-    .market-account summary{
-        display:flex;
-        align-items:center;
-        gap:6px;
-        cursor:pointer;
-        list-style:none;
+    .store-account summary::-webkit-details-marker {
+        display: none;
     }
 
-    .market-account summary::-webkit-details-marker{
-        display:none;
+    .store-account summary:hover,
+    .store-login:hover,
+    .store-cart:hover {
+        color: #fff;
+        background: rgba(54, 91, 159, .42);
+        transform: translateY(-1px);
     }
 
-    .market-avatar{
-        width:20px;
-        height:20px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        border-radius:50%;
-        background:#087f68;
-        color:#fff;
-        font-size:11px;
-        font-weight:700;
+    .store-user-avatar {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 34px;
+        border-radius: 50%;
+        color: var(--store-blue-dark);
+        background: #fff;
+        font-size: 14px;
+        font-weight: 800;
     }
 
-    .market-account-menu{
-        position:absolute;
-        z-index:1050;
-        top:calc(100% + 10px);
-        right:0;
-        width:170px;
-        padding:8px 0;
-        border:1px solid #e5e5e5;
-        border-radius:6px;
-        background:#fff;
-        box-shadow:0 8px 22px rgba(37,33,30,.16);
+    .store-account-name {
+        max-width: 126px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        font-weight: 750;
     }
 
-    .market-account-menu a{
-        display:block;
-        padding:9px 14px;
-        color:#25211e;
-        font-size:13px;
-        text-decoration:none;
+    .store-account-chevron {
+        font-size: 11px;
+        transition: transform .2s ease;
     }
 
-    .market-account-menu a:hover{
-        background:#fff3ef;
-        color:#c65b3d;
+    .store-account[open] .store-account-chevron {
+        transform: rotate(180deg);
     }
 
-    .market-account-menu hr{
-        margin:5px 0;
-        border:0;
-        border-top:1px solid #e5e5e5;
+    .store-login {
+        padding: 0 18px;
+        font-weight: 750;
     }
+
+    .store-cart {
+        position: relative;
+        min-width: 118px;
+        padding: 0 20px;
+        font-weight: 750;
+    }
+
+    .store-cart i {
+        font-size: 20px;
+    }
+
+    .store-cart-badge {
+        position: absolute;
+        top: -6px;
+        right: -3px;
+        min-width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+        border: 2px solid var(--store-blue);
+        border-radius: 999px;
+        color: #fff;
+        background: #e05252;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .store-account-menu {
+        position: absolute;
+        z-index: 1085;
+        top: calc(100% + 10px);
+        right: 0;
+        width: 220px;
+        padding: 8px;
+        border: 1px solid var(--store-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 20px 50px rgba(23, 35, 61, .20);
+    }
+
+    .store-account-menu::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        right: 28px;
+        width: 13px;
+        height: 13px;
+        border-top: 1px solid var(--store-border);
+        border-left: 1px solid var(--store-border);
+        background: #fff;
+        transform: rotate(45deg);
+    }
+
+    .store-account-menu a {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 11px;
+        border-radius: 9px;
+        color: var(--store-text);
+        font-size: 13px;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .store-account-menu a i {
+        width: 18px;
+        color: var(--store-blue-dark);
+        text-align: center;
+    }
+
+    .store-account-menu a:hover {
+        color: var(--store-blue-deep);
+        background: #eef4ff;
+    }
+
+    .store-account-menu hr {
+        margin: 6px 4px;
+        border: 0;
+        border-top: 1px solid var(--store-border);
+        opacity: 1;
+    }
+
+    .store-category-nav {
+        min-height: 48px;
+        border-bottom: 1px solid var(--store-border);
+        background: #fff;
+    }
+
+    .store-category-track {
+        min-height: 48px;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .store-category-all,
+    .store-category-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+
+    .store-category-all,
+    .store-category-parent {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 15px;
+        color: var(--store-text);
+        font-size: 13px;
+        font-weight: 750;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .store-category-parent {
+        padding-right: 5px;
+    }
+
+    .store-category-toggle {
+        width: 30px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 8px;
+        color: var(--store-muted);
+        background: transparent;
+        font-size: 10px;
+    }
+
+    .store-category-all:hover,
+    .store-category-parent:hover,
+    .store-category-group:hover .store-category-parent,
+    .store-category-group:hover .store-category-toggle {
+        color: var(--store-blue-deep);
+    }
+
+    .store-category-all::after,
+    .store-category-group::after {
+        content: "";
+        position: absolute;
+        right: 12px;
+        bottom: 0;
+        left: 12px;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: var(--store-blue-dark);
+        transform: scaleX(0);
+        transition: transform .2s ease;
+    }
+
+    .store-category-all.is-active::after,
+    .store-category-group.is-active::after,
+    .store-category-all:hover::after,
+    .store-category-group:hover::after {
+        transform: scaleX(1);
+    }
+
+    .store-category-all.is-active,
+    .store-category-group.is-active .store-category-parent,
+    .store-category-group.is-active .store-category-toggle {
+        color: var(--store-blue-deep);
+    }
+
+    .store-category-menu {
+        position: absolute;
+        z-index: 1080;
+        top: calc(100% - 1px);
+        left: 0;
+        width: 255px;
+        padding: 10px;
+        border: 1px solid var(--store-border);
+        border-radius: 0 0 14px 14px;
+        visibility: hidden;
+        opacity: 0;
+        background: #fff;
+        box-shadow: 0 20px 45px rgba(23, 35, 61, .18);
+        transform: translateY(8px);
+        transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+    }
+
+    .store-category-group:hover .store-category-menu,
+    .store-category-group:focus-within .store-category-menu,
+    .store-category-group.is-open .store-category-menu {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .store-category-view-all {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 11px 12px;
+        border-radius: 10px;
+        color: var(--store-text);
+        background: var(--store-soft);
+        text-decoration: none;
+    }
+
+    .store-category-view-all span {
+        color: var(--store-muted);
+        font-size: 11px;
+    }
+
+    .store-category-view-all strong {
+        color: var(--store-blue-deep);
+        font-size: 14px;
+    }
+
+    .store-category-view-all:hover,
+    .store-category-view-all.is-active {
+        background: #e8f0ff;
+    }
+
+    .store-category-menu-list {
+        display: grid;
+        gap: 3px;
+        margin-top: 7px;
+    }
+
+    .store-category-menu-list a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 11px;
+        border-radius: 9px;
+        color: var(--store-text);
+        font-size: 13px;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .store-category-menu-list a i {
+        color: var(--store-blue-dark);
+        font-size: 10px;
+        opacity: 0;
+        transform: translateX(-5px);
+        transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .store-category-menu-list a:hover,
+    .store-category-menu-list a.is-active {
+        color: var(--store-blue-deep);
+        background: #eef4ff;
+    }
+
+    .store-category-menu-list a:hover i,
+    .store-category-menu-list a.is-active i {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
     .logout-confirm-modal .modal-dialog {
         max-width: 460px;
     }
 
     .logout-confirm-modal .modal-content {
+        overflow: hidden;
         border: 0;
         border-radius: 18px;
-        overflow: hidden;
         box-shadow: 0 26px 80px rgba(15, 23, 42, .26);
     }
 
@@ -299,714 +671,170 @@
     .logout-confirm-icon {
         width: 54px;
         height: 54px;
-        border-radius: 16px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        flex: 0 0 54px;
+        border-radius: 16px;
         color: #fff;
-        background: linear-gradient(135deg, #25211e, #c65b3d);
-        box-shadow: 0 14px 30px rgba(198, 91, 61, .24);
-        flex: 0 0 auto;
+        background: linear-gradient(135deg, var(--store-blue-deep), var(--store-blue));
+        box-shadow: 0 14px 30px rgba(95, 132, 214, .24);
         font-size: 22px;
     }
 
     .logout-confirm-title {
-        margin: 0 0 6px;
-        color: #25211e;
-        font-size: 1.25rem;
+        margin: 2px 0 6px;
+        color: var(--store-navy);
         font-weight: 800;
     }
 
     .logout-confirm-text {
         margin: 0;
-        color: #6f665e;
+        color: var(--store-muted);
+        font-size: 14px;
     }
 
     .logout-confirm-actions {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
-        margin-top: 26px;
-        flex-wrap: wrap;
+        margin-top: 25px;
     }
 
     .logout-confirm-actions .btn {
-        min-height: 42px;
+        min-width: 105px;
         border-radius: 10px;
-        padding: 9px 16px;
         font-weight: 700;
     }
 
     .logout-confirm-actions .btn-danger {
-        background: #a9462d;
-        border-color: #a9462d;
+        border-color: var(--store-blue-dark);
+        background: var(--store-blue-dark);
     }
 
-    .logout-confirm-actions .btn-danger:hover {
-        background: #873724;
-        border-color: #873724;
-    }
-
-    @media (max-width: 900px) {
-        .market-header-inner {
-            width:calc(100% - 24px);
+    @media (max-width: 1180px) {
+        .store-header-main-inner {
+            gap: 12px;
         }
 
-        .market-mainbar {
-            padding-bottom:10px;
+        .store-brand {
+            font-size: 23px;
         }
 
-        .market-mainbar-inner {
-            min-height:92px;
-            flex-wrap:wrap;
-            padding-top:10px;
+        .store-account summary {
+            min-width: 155px;
         }
 
-        .market-brand {
-            min-width:0;
-            font-size:24px;
+        .store-account-name {
+            max-width: 92px;
         }
 
-        .market-brand i {
-            font-size:32px;
-        }
-
-        .market-search {
-            order:3;
-            flex:0 0 100%;
-            max-width:none;
-            height:38px;
-            margin:0;
-        }
-
-        .market-cart {
-            margin-left:auto;
-        }
-
-    }
-
-    @media (max-width: 576px) {
-        .market-mainbar-inner {
-            min-height:86px;
-            width:calc(100% - 20px);
-        }
-
-        .market-brand {
-            font-size:21px;
-        }
-
-        .market-brand i {
-            font-size:29px;
-        }
-
-        .market-cart {
-            font-size:25px;
-        }
-
-        .market-account-menu {
-            right:-4px;
-        }
-
-        .logout-confirm-actions .btn {
-            width: 100%;
-        }
-    }
-
-    /* Baby blue header refresh */
-    .market-header{
-        background:#fff;
-        box-shadow:0 8px 28px rgba(95,132,214,.16);
-    }
-
-    .market-mainbar{
-        color:#fff;
-        background:#8AAAE5;
-        padding:12px 0 0;
-    }
-
-    .market-login{
-        color:#fff;
-        font-weight:700;
-    }
-
-    .market-mainbar-inner{
-        min-height:70px;
-        gap:18px;
-    }
-
-    .market-brand{
-        color:#fff;
-        font-weight:800;
-        letter-spacing:0;
-        min-width:300px;
-        font-size:32px;
-    }
-
-    .market-brand:hover{
-        color:#fff;
-    }
-
-    .market-brand i{
-        width:58px;
-        height:58px;
-        border-radius:8px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        background:#fff;
-        color:#5f84d6;
-        font-size:31px;
-        box-shadow:0 12px 24px rgba(95,132,214,.22);
-    }
-
-    .market-catalog{
-        min-width:150px;
-        height:54px;
-        border-radius:999px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:10px;
-        color:#fff;
-        background:rgba(54,91,159,.32);
-        text-decoration:none;
-        font-size:18px;
-        font-weight:800;
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
-        transition:background .18s ease, transform .18s ease;
-    }
-
-    .market-catalog:hover{
-        color:#fff;
-        background:rgba(54,91,159,.48);
-        transform:translateY(-1px);
-    }
-
-    .market-catalog i{
-        font-size:23px;
-    }
-
-    .market-search{
-        height:58px;
-        max-width:none;
-        margin-left:0;
-        border-radius:8px;
-        overflow:hidden;
-        box-shadow:0 12px 28px rgba(95,132,214,.18);
-    }
-
-    .market-search input{
-        border:0;
-        padding:0 22px;
-        color:#1f2937;
-        background:#fff;
-        font-size:16px;
-    }
-
-    .market-search input::placeholder{
-        color:#8b98ad;
-    }
-
-    .market-search button{
-        width:76px;
-        border:0;
-        background:#fff;
-        color:#5f84d6;
-        font-size:24px;
-    }
-
-    .market-search button:hover{
-        background:#eef4ff;
-        color:#365b9f;
-    }
-
-    .market-user-action{
-        width:58px;
-        height:58px;
-        border-radius:50%;
-        flex:0 0 58px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        color:#fff;
-        background:rgba(54,91,159,.32);
-        text-decoration:none;
-        font-size:24px;
-        font-weight:800;
-        transition:background .18s ease, transform .18s ease;
-    }
-
-    .market-user-action:hover{
-        color:#fff;
-        background:rgba(54,91,159,.48);
-        transform:translateY(-1px);
-    }
-
-    .market-main-account{
-        position:relative;
-        flex:0 0 auto;
-    }
-
-    .market-main-account summary{
-        min-width:190px;
-        height:58px;
-        border-radius:999px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:10px;
-        padding:0 16px 0 10px;
-        color:#fff;
-        background:rgba(54,91,159,.32);
-        cursor:pointer;
-        list-style:none;
-        font-weight:800;
-        transition:background .18s ease, transform .18s ease;
-    }
-
-    .market-main-account summary::-webkit-details-marker{
-        display:none;
-    }
-
-    .market-main-account summary:hover{
-        background:rgba(54,91,159,.48);
-        transform:translateY(-1px);
-    }
-
-    .market-main-account-name{
-        max-width:125px;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        white-space:nowrap;
-        font-size:16px;
-    }
-
-    .market-main-account-chevron{
-        font-size:12px;
-        opacity:.9;
-    }
-
-    .market-main-account .market-account-menu{
-        top:calc(100% + 10px);
-        right:0;
-    }
-
-    .market-user-dot{
-        width:30px;
-        height:30px;
-        border-radius:50%;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        background:#fff;
-        color:#5f84d6;
-        font-size:14px;
-        font-weight:900;
-    }
-
-    .market-cart{
-        min-width:142px;
-        height:58px;
-        border-radius:999px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:10px;
-        color:#fff;
-        background:rgba(31,41,55,.22);
-        font-size:21px;
-        font-weight:800;
-        transition:transform .18s ease;
-    }
-
-    .market-cart:hover{
-        color:#fff;
-        transform:translateY(-1px);
-        background:rgba(31,41,55,.32);
-    }
-
-    .market-cart i{
-        font-size:25px;
-    }
-
-    .market-cart-text{
-        font-size:18px;
-        line-height:1;
-    }
-
-    .market-cart-badge{
-        border-color:#8AAAE5;
-        color:#5f84d6;
-        background:#fff;
-    }
-
-    .market-avatar{
-        background:#fff;
-        color:#5f84d6;
-    }
-
-    .market-account-menu{
-        border-color:#d7e1f5;
-        border-radius:8px;
-        box-shadow:0 18px 42px rgba(95,132,214,.18);
-    }
-
-    .market-account-menu a{
-        color:#1f2937;
-    }
-
-    .market-account-menu a:hover{
-        background:#eef4ff;
-        color:#365b9f;
-    }
-
-    .logout-confirm-icon{
-        background:linear-gradient(135deg,#5f84d6,#8AAAE5);
-        box-shadow:0 14px 30px rgba(95,132,214,.28);
-    }
-
-    .logout-confirm-title{
-        color:#1f2937;
-    }
-
-    .logout-confirm-text{
-        color:#61708a;
-    }
-
-    .logout-confirm-actions .btn-danger{
-        background:#8AAAE5;
-        border-color:#8AAAE5;
-    }
-
-    .logout-confirm-actions .btn-danger:hover{
-        background:#5f84d6;
-        border-color:#5f84d6;
-    }
-
-    @media (max-width: 900px) {
-        .market-mainbar {
-            padding-bottom:12px;
-        }
-
-        .market-mainbar-inner {
-            min-height:96px;
-            flex-wrap:wrap;
-            padding-top:12px;
-        }
-
-        .market-brand {
-            min-width:0;
-            font-size:24px;
-        }
-
-        .market-brand i {
-            width:40px;
-            height:40px;
-            font-size:24px;
-        }
-
-        .market-search {
-            order:4;
-            flex:0 0 100%;
-            max-width:none;
-            height:44px;
-            margin:0;
-        }
-
-        .market-catalog{
-            order:3;
-            min-width:132px;
-            height:42px;
-            font-size:15px;
-        }
-
-        .market-user-action{
-            width:42px;
-            height:42px;
-            flex-basis:42px;
-            font-size:18px;
-        }
-
-        .market-main-account summary{
-            min-width:42px;
-            width:42px;
-            height:42px;
-            padding:0;
-        }
-
-        .market-main-account-name,
-        .market-main-account-chevron{
-            display:none;
-        }
-
-        .market-main-account .market-user-dot{
-            width:26px;
-            height:26px;
-            font-size:12px;
-        }
-
-        .market-cart {
-            margin-left:auto;
-            min-width:46px;
-            width:46px;
-            height:42px;
-            padding:0;
-            border-radius:50%;
-        }
-
-        .market-cart-text{
-            display:none;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .market-mainbar-inner {
-            min-height:88px;
-        }
-
-        .market-brand {
-            font-size:21px;
-        }
-
-        .market-brand i {
-            width:36px;
-            height:36px;
-            font-size:21px;
-        }
-
-        .market-cart {
-            font-size:25px;
-        }
-
-        .market-catalog{
-            min-width:118px;
-            height:38px;
-            font-size:14px;
-        }
-
-        .market-user-action{
-            width:38px;
-            height:38px;
-            flex-basis:38px;
-            font-size:16px;
-        }
-
-        .market-main-account summary{
-            min-width:38px;
-            width:38px;
-            height:38px;
-        }
-    }
-
-    /* Compact header with inline categories */
-    .market-mainbar{
-        padding:8px 0 7px;
-    }
-
-    .market-mainbar-inner{
-        min-height:68px;
-        gap:14px;
-        align-items:center;
-    }
-
-    .market-brand{
-        min-width:260px;
-        font-size:28px;
-    }
-
-    .market-brand i{
-        width:48px;
-        height:48px;
-        font-size:26px;
-    }
-
-    .market-catalog{
-        min-width:138px;
-        height:44px;
-        gap:8px;
-        font-size:16px;
-    }
-
-    .market-catalog i{
-        font-size:20px;
-    }
-
-    .market-search-area{
-        flex:1 1 420px;
-        min-width:260px;
-        display:flex;
-        flex-direction:column;
-        gap:7px;
-    }
-
-    .market-search{
-        width:100%;
-        height:44px;
-        margin:0;
-    }
-
-    .market-search input{
-        padding:0 18px;
-        font-size:15px;
-    }
-
-    .market-search button{
-        width:62px;
-        font-size:21px;
-    }
-
-    .market-category-strip{
-        min-height:18px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:24px;
-        overflow:hidden;
-        color:#fff;
-    }
-
-    .market-category-strip a{
-        color:#fff;
-        font-size:13px;
-        font-weight:800;
-        line-height:1;
-        text-decoration:none;
-        text-shadow:0 1px 8px rgba(54,91,159,.25);
-        white-space:nowrap;
-    }
-
-    .market-category-strip a:hover{
-        color:#eef4ff;
-        text-decoration:underline;
-        text-underline-offset:4px;
-    }
-
-    .market-category-strip a.active{
-        color:#fff;
-        text-decoration:underline;
-        text-decoration-thickness:2px;
-        text-underline-offset:5px;
-    }
-
-    .market-user-action{
-        width:48px;
-        height:48px;
-        flex-basis:48px;
-        font-size:20px;
-    }
-
-    .market-main-account summary{
-        min-width:176px;
-        height:48px;
-        padding:0 14px 0 9px;
-    }
-
-    .market-user-dot{
-        width:28px;
-        height:28px;
-        font-size:13px;
-    }
-
-    .market-main-account-name{
-        max-width:116px;
-        font-size:15px;
-    }
-
-    .market-cart{
-        min-width:122px;
-        height:48px;
-        gap:9px;
-        font-size:19px;
-    }
-
-    .market-cart i{
-        font-size:22px;
-    }
-
-    .market-cart-text{
-        font-size:16px;
-    }
-
-    @media (max-width: 1100px) {
-        .market-brand{
-            min-width:220px;
-            font-size:24px;
-        }
-
-        .market-category-strip{
-            gap:16px;
-        }
-
-        .market-main-account summary{
-            min-width:150px;
+        .store-category-track {
+            justify-content: flex-start;
         }
     }
 
     @media (max-width: 900px) {
-        .market-mainbar{
-            padding:8px 0 10px;
+        .store-header-main {
+            padding: 10px 0;
         }
 
-        .market-mainbar-inner{
-            min-height:112px;
-            gap:10px;
+        .store-header-main-inner {
+            flex-wrap: wrap;
         }
 
-        .market-search-area{
-            order:5;
-            flex:0 0 100%;
-            min-width:0;
-            gap:8px;
+        .store-search {
+            order: 5;
+            flex-basis: 100%;
         }
 
-        .market-search{
-            height:42px;
+        .store-header-actions {
+            margin-left: auto;
         }
 
-        .market-category-strip{
-            justify-content:flex-start;
-            gap:10px;
-            overflow-x:auto;
-            padding-bottom:2px;
-            scrollbar-width:none;
+        .store-category-track {
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 5px 0;
         }
 
-        .market-category-strip::-webkit-scrollbar{
-            display:none;
+        .store-category-nav,
+        .store-category-track {
+            min-height: 44px;
         }
 
-        .market-category-strip a{
-            padding:6px 10px;
-            border-radius:999px;
-            background:rgba(54,91,159,.22);
-            font-size:12px;
+        .store-category-all,
+        .store-category-parent {
+            min-height: 38px;
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+
+        .store-category-group::after,
+        .store-category-all::after {
+            right: 8px;
+            left: 8px;
         }
     }
 
-    @media (max-width: 576px) {
-        .market-brand{
-            font-size:20px;
+    @media (max-width: 620px) {
+        .store-header-container {
+            width: min(100% - 20px, 1500px);
         }
 
-        .market-brand i{
-            width:36px;
-            height:36px;
-            font-size:20px;
+        .store-brand {
+            font-size: 20px;
         }
 
-        .market-catalog{
-            min-width:112px;
-            height:36px;
-            font-size:13px;
+        .store-brand-icon {
+            width: 40px;
+            height: 40px;
         }
 
-        .market-search{
-            height:40px;
+        .store-account summary {
+            min-width: 46px;
+            width: 46px;
+            padding: 5px;
+        }
+
+        .store-account-name,
+        .store-account-chevron,
+        .store-login span,
+        .store-cart span:not(.store-cart-badge) {
+            display: none;
+        }
+
+        .store-login,
+        .store-cart {
+            width: 46px;
+            min-width: 46px;
+            padding: 0;
+        }
+
+        .store-category-track {
+            justify-content: flex-start;
+        }
+
+        .store-category-menu {
+            right: auto;
+            left: 50%;
+            width: min(280px, calc(100vw - 20px));
+            border-radius: 14px;
+            transform: translate(-50%, 8px);
+        }
+
+        .store-category-group:hover .store-category-menu,
+        .store-category-group:focus-within .store-category-menu,
+        .store-category-group.is-open .store-category-menu {
+            transform: translate(-50%, 0);
         }
     }
 </style>
 
-<div class="modal fade logout-confirm-modal" id="customerLogoutModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade logout-confirm-modal"
+     id="customerLogoutModal"
+     tabindex="-1"
+     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-body">
@@ -1045,7 +873,47 @@
 
 <script>
     (function () {
-        document.querySelectorAll('.market-account, .market-main-account').forEach(function (account) {
+        var categoryGroups = document.querySelectorAll('.store-category-group');
+
+        categoryGroups.forEach(function (group) {
+            var toggle = group.querySelector('.store-category-toggle');
+
+            if (!toggle) {
+                return;
+            }
+
+            toggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                var willOpen = !group.classList.contains('is-open');
+
+                categoryGroups.forEach(function (otherGroup) {
+                    otherGroup.classList.remove('is-open');
+                    var otherToggle = otherGroup.querySelector('.store-category-toggle');
+                    if (otherToggle) {
+                        otherToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                group.classList.toggle('is-open', willOpen);
+                toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            categoryGroups.forEach(function (group) {
+                if (!group.contains(event.target)) {
+                    group.classList.remove('is-open');
+                    var toggle = group.querySelector('.store-category-toggle');
+                    if (toggle) {
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.store-account').forEach(function (account) {
             var summary = account.querySelector('summary');
 
             if (!summary) {
@@ -1055,6 +923,7 @@
             account.addEventListener('toggle', function () {
                 summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
             });
+
             summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
 
             document.addEventListener('click', function (event) {
@@ -1063,13 +932,23 @@
                     summary.setAttribute('aria-expanded', 'false');
                 }
             });
+        });
 
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && account.open) {
-                    account.removeAttribute('open');
-                    summary.setAttribute('aria-expanded', 'false');
-                    summary.focus();
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            categoryGroups.forEach(function (group) {
+                group.classList.remove('is-open');
+                var toggle = group.querySelector('.store-category-toggle');
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', 'false');
                 }
+            });
+
+            document.querySelectorAll('.store-account[open]').forEach(function (account) {
+                account.removeAttribute('open');
             });
         });
 
@@ -1083,13 +962,12 @@
 
         logoutLink.addEventListener('click', function (event) {
             event.preventDefault();
-            var logoutUrl = logoutLink.getAttribute('data-logout-url') || logoutLink.href;
-            confirmLogoutButton.href = logoutUrl;
+            confirmLogoutButton.href = logoutLink.getAttribute('data-logout-url') || logoutLink.href;
 
             if (window.bootstrap && window.bootstrap.Modal) {
-                bootstrap.Modal.getOrCreateInstance(logoutModalElement).show();
+                window.bootstrap.Modal.getOrCreateInstance(logoutModalElement).show();
             } else {
-                window.location.href = logoutUrl;
+                window.location.href = confirmLogoutButton.href;
             }
         });
     })();

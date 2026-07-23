@@ -4,6 +4,7 @@ import com.clothingsale.dao.CustomerProductDAO;
 import com.clothingsale.model.Product;
 import com.clothingsale.model.ProductVariant;
 import com.clothingsale.model.CartItem;
+import com.clothingsale.model.Category;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +14,14 @@ import java.util.Map;
 public class CustomerProductService {
 
     private final CustomerProductDAO productDAO = new CustomerProductDAO();
+
+    public List<Category> getActiveCategories() {
+        return productDAO.getActiveCategories();
+    }
+
+    public List<Category> getHeaderCategories() {
+        return productDAO.getHeaderCategories();
+    }
 
     public List<Product> getProducts(
             String keyword,

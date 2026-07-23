@@ -67,6 +67,11 @@ public class CustomerHomePageController extends HttpServlet {
                 maxPrice = Double.parseDouble(maxPriceStr);
             }
 
+            request.setAttribute(
+                    "headerCategories",
+                    productService.getHeaderCategories()
+            );
+
             // Lấy danh sách sản phẩm
             List<Product> loadedProducts = productService.getProducts(
                     keyword,
