@@ -22,8 +22,6 @@
         }
         body.detail-shell { background: radial-gradient(circle at 90% 8%, #edf4ff 0, transparent 28rem), var(--detail-bg); color: var(--detail-ink); }
         .detail-page { width: min(1180px, calc(100% - 32px)); margin: 30px auto 72px; }
-        .detail-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 17px; color: var(--detail-muted); font-size: 13px; font-weight: 700; text-decoration: none; }
-        .detail-back:hover { color: var(--detail-blue-dark); }
         .detail-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0,1fr) 255px; gap: 25px; padding: 30px 34px; border-radius: 24px; color: #fff; background: linear-gradient(120deg, #365b9f 0%, #6f95df 62%, #9bb9ef 100%); box-shadow: 0 18px 38px rgba(72,111,181,.2); }
         .detail-hero::after { position: absolute; right: -78px; bottom: -160px; width: 370px; height: 370px; border: 1px solid rgba(255,255,255,.24); border-radius: 50%; box-shadow: 0 0 0 28px rgba(255,255,255,.06), 0 0 0 57px rgba(255,255,255,.045); content: ""; }
         .detail-hero__main, .detail-hero__amount { position: relative; z-index: 1; }
@@ -125,8 +123,6 @@
 <body class="detail-shell">
 <jsp:include page="/view/customer/common/header.jsp"/>
 <main class="detail-page">
-    <a class="detail-back" href="${pageContext.request.contextPath}/customer/returns"><i class="fa-solid fa-arrow-left"></i> Back to returns</a>
-
     <c:choose>
         <c:when test="${empty returnRequest}"><div class="alert alert-danger detail-card border-0 p-4"><i class="fa-solid fa-circle-exclamation me-2"></i>Return request not found.</div></c:when>
         <c:otherwise>

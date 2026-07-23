@@ -291,7 +291,7 @@
 
                                 <label class="form-label" for="customerNote">Additional information <span class="text-muted fw-normal">(optional)</span></label>
                                 <textarea id="customerNote" name="customerNote" class="form-control mb-4" rows="3" maxlength="1000" placeholder="Tell us what happened or add a helpful note..."></textarea>
-                                <div class="form-actions"><a class="btn btn-light" href="${pageContext.request.contextPath}/customer/returns"><i class="fa-solid fa-arrow-left me-2"></i>Back to requests</a><button class="btn btn-primary" type="submit"><i class="fa-solid fa-paper-plane me-2"></i>Submit request</button></div>
+                                <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-paper-plane me-2"></i>Submit request</button></div>
                             </form>
                         </div>
                     </c:when>
