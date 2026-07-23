@@ -541,10 +541,21 @@ public class CustomerOrderDAO {
             }
 
             // ===== VOUCHER =====
-            Voucher voucher = getVoucherByCode(voucherCode);
-            if (voucher != null && hasUserUsedVoucher(userId, voucher.getId())) {
-                voucher = null;
+            boolean voucherRequested = voucherCode != null
+                    && !voucherCode.trim().isEmpty();
+            Voucher voucher = voucherRequested
+                    ? getVoucherByCode(voucherCode)
+                    : null;
+
+            if (voucherRequested
+                    && (voucher == null
+                    || hasUserUsedVoucher(userId, voucher.getId())
+                    || voucher.getMinOrderValue() == null
+                    || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+                con.rollback();
+                return false;
             }
+
             BigDecimal discount = calculateDiscount(voucher, subtotal);
 
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
@@ -675,13 +686,19 @@ public class CustomerOrderDAO {
             }
 
             // ===== VOUCHER =====
-            Voucher voucher = getVoucherByCode(voucherCode);
+            boolean voucherRequested = voucherCode != null
+                    && !voucherCode.trim().isEmpty();
+            Voucher voucher = voucherRequested
+                    ? getVoucherByCode(voucherCode)
+                    : null;
 
-            if (voucher != null
-                    && hasUserUsedVoucher(userId, voucher.getId())) {
-
-                voucher = null;
-
+            if (voucherRequested
+                    && (voucher == null
+                    || hasUserUsedVoucher(userId, voucher.getId())
+                    || voucher.getMinOrderValue() == null
+                    || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+                con.rollback();
+                return false;
             }
 
             BigDecimal discount

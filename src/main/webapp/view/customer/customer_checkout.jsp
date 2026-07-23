@@ -523,6 +523,13 @@
                 </div>
             </c:if>
 
+            <c:if test="${not empty checkoutError}">
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+                    <c:out value="${checkoutError}"/>
+                </div>
+            </c:if>
+
             <c:if test="${not empty voucherError}">
                 <div class="alert alert-danger">
                     <i class="fa-solid fa-ticket me-2"></i>
@@ -582,11 +589,13 @@
                                                varStatus="status">
 
                                         <c:set var="isSelectedAddress"
-                                               value="${(not empty defaultAddressId
+                                               value="${not empty selectedAddressId
+                                                        ? address.id == selectedAddressId
+                                                        : ((not empty defaultAddressId
                                                         and address.id == defaultAddressId)
                                                         or
                                                         (empty defaultAddressId
-                                                        and status.first)}"/>
+                                                        and status.first))}"/>
 
                                         <div class="col-12">
 
@@ -684,7 +693,10 @@
                                                value="GHN"
                                                form="checkoutForm"
                                                class="form-check-input"
-                                               checked>
+                                               <c:if test="${empty selectedCarrierName
+                                                             or selectedCarrierName == 'GHN'}">
+                                                   checked
+                                               </c:if>>
 
                                         <div>
                                             <div class="fw-semibold">
@@ -709,7 +721,10 @@
                                                name="carrierName"
                                                value="SELF"
                                                form="checkoutForm"
-                                               class="form-check-input">
+                                               class="form-check-input"
+                                               <c:if test="${selectedCarrierName == 'SELF'}">
+                                                   checked
+                                               </c:if>>
 
                                         <div>
                                             <div class="fw-semibold">
@@ -747,7 +762,10 @@
                                                value="COD"
                                                form="checkoutForm"
                                                class="form-check-input"
-                                               checked>
+                                               <c:if test="${empty selectedPaymentMethod
+                                                             or selectedPaymentMethod == 'COD'}">
+                                                   checked
+                                               </c:if>>
 
                                         <div>
                                             <div class="fw-semibold">
@@ -772,7 +790,10 @@
                                                name="paymentMethod"
                                                value="VNPAY"
                                                form="checkoutForm"
-                                               class="form-check-input">
+                                               class="form-check-input"
+                                               <c:if test="${selectedPaymentMethod == 'VNPAY'}">
+                                                   checked
+                                               </c:if>>
 
                                         <div>
                                             <div class="fw-semibold">
@@ -802,7 +823,7 @@
                                   class="form-control"
                                   rows="4"
                                   maxlength="500"
-                                  placeholder="Notes for the store or delivery staff..."></textarea>
+                                  placeholder="Notes for the store or delivery staff..."><c:out value="${checkoutNote}"/></textarea>
                     </div>
                 </div>
 
@@ -875,7 +896,8 @@
                                             </div>
 
                                             <form method="post"
-                                                  action="${contextPath}/customer/checkout">
+                                                  action="${contextPath}/customer/checkout"
+                                                  class="voucher-state-form">
 
                                                 <input type="hidden"
                                                        name="action"
@@ -884,6 +906,22 @@
                                                 <input type="hidden"
                                                        name="voucherCode"
                                                        value="">
+
+                                                <input type="hidden"
+                                                       name="selectedAddressId"
+                                                       class="voucher-state-address">
+
+                                                <input type="hidden"
+                                                       name="selectedCarrierName"
+                                                       class="voucher-state-carrier">
+
+                                                <input type="hidden"
+                                                       name="selectedPaymentMethod"
+                                                       class="voucher-state-payment">
+
+                                                <input type="hidden"
+                                                       name="checkoutNote"
+                                                       class="voucher-state-note">
 
                                                 <button type="submit"
                                                         class="btn-remove-voucher">
@@ -1214,6 +1252,51 @@
                             }
                     );
                 }
+
+
+                document.querySelectorAll(".voucher-state-form")
+                        .forEach(function (voucherForm) {
+                            voucherForm.addEventListener("submit", function () {
+                                const address = document.querySelector(
+                                        'input[name="addressId"]:checked'
+                                        );
+                                const carrier = document.querySelector(
+                                        'input[name="carrierName"]:checked'
+                                        );
+                                const payment = document.querySelector(
+                                        'input[name="paymentMethod"]:checked'
+                                        );
+                                const note = document.querySelector(
+                                        'textarea[name="note"]'
+                                        );
+
+                                const addressField = voucherForm.querySelector(
+                                        ".voucher-state-address"
+                                        );
+                                const carrierField = voucherForm.querySelector(
+                                        ".voucher-state-carrier"
+                                        );
+                                const paymentField = voucherForm.querySelector(
+                                        ".voucher-state-payment"
+                                        );
+                                const noteField = voucherForm.querySelector(
+                                        ".voucher-state-note"
+                                        );
+
+                                if (addressField) {
+                                    addressField.value = address ? address.value : "";
+                                }
+                                if (carrierField) {
+                                    carrierField.value = carrier ? carrier.value : "GHN";
+                                }
+                                if (paymentField) {
+                                    paymentField.value = payment ? payment.value : "COD";
+                                }
+                                if (noteField) {
+                                    noteField.value = note ? note.value : "";
+                                }
+                            });
+                        });
             });
 
             function handleCheckoutImageError(imageElement) {
@@ -1321,11 +1404,11 @@
 
                                     <c:set var="voucherApplied"
                                            value="${not empty voucherCode
-                                                    and voucherCode == cv.code}"/>
+                                                    and voucherCode eq cv.code}"/>
 
                                     <c:set var="bestVoucher"
                                            value="${not empty bestVoucherCode
-                                                    and bestVoucherCode == cv.code}"/>
+                                                    and bestVoucherCode eq cv.code}"/>
 
                                     <div class="voucher-item
                                          ${voucherApplied ? 'applied' : ''}
@@ -1503,23 +1586,36 @@
 
                                                         <form method="post"
                                                               action="${contextPath}/customer/checkout"
-                                                              id="checkoutForm">
+                                                              class="voucher-state-form">
 
                                                             <input type="hidden"
                                                                    name="action"
-                                                                   value="placeOrder">
+                                                                   value="applyVoucher">
 
                                                             <input type="hidden"
                                                                    name="voucherCode"
-                                                                   value="${fn:escapeXml(voucherCode)}">
+                                                                   value="${fn:escapeXml(cv.code)}">
 
-                                                            <!-- Các field khác -->
+                                                            <input type="hidden"
+                                                                   name="selectedAddressId"
+                                                                   class="voucher-state-address">
+
+                                                            <input type="hidden"
+                                                                   name="selectedCarrierName"
+                                                                   class="voucher-state-carrier">
+
+                                                            <input type="hidden"
+                                                                   name="selectedPaymentMethod"
+                                                                   class="voucher-state-payment">
+
+                                                            <input type="hidden"
+                                                                   name="checkoutNote"
+                                                                   class="voucher-state-note">
 
                                                             <button type="submit"
-                                                                    class="btn btn-dark w-100">
+                                                                    class="btn btn-sm btn-apply-voucher">
 
-                                                                <i class="fa-solid fa-lock me-2"></i>
-                                                                Place Order
+                                                                Apply
                                                             </button>
                                                         </form>
                                                     </c:otherwise>
