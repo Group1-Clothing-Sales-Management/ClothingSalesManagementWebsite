@@ -162,6 +162,8 @@ public class CartController extends HttpServlet {
 
         switch (action) {
             case "add": {
+                session.removeAttribute("cartMessage");
+
                 int variantId = parsePositiveInt(
                         request.getParameter("variantId")
                 );
@@ -175,13 +177,8 @@ public class CartController extends HttpServlet {
                 }
 
                 if (variantId <= 0) {
-                    session.setAttribute(
-                            "cartMessage",
-                            "Please select a valid product variant."
-                    );
-
                     response.sendRedirect(
-                            buildAddToCartRedirect(request, false)
+                            buildAddToCartRedirect(request)
                     );
                     return;
                 }
@@ -193,13 +190,8 @@ public class CartController extends HttpServlet {
                 int stock = dao.getAvailableStock(variantId);
 
                 if (databaseItem == null || stock <= 0) {
-                    session.setAttribute(
-                            "cartMessage",
-                            "This item is unavailable or out of stock."
-                    );
-
                     response.sendRedirect(
-                            buildAddToCartRedirect(request, false)
+                            buildAddToCartRedirect(request)
                     );
                     return;
                 }
@@ -215,14 +207,8 @@ public class CartController extends HttpServlet {
                 }
 
                 if (newQuantity > stock) {
-                    session.setAttribute(
-                            "cartMessage",
-                            "Only " + stock
-                            + " item(s) are available in stock."
-                    );
-
                     response.sendRedirect(
-                            buildAddToCartRedirect(request, false)
+                            buildAddToCartRedirect(request)
                     );
                     return;
                 }
@@ -237,11 +223,6 @@ public class CartController extends HttpServlet {
                     );
                     existingItem.setQuantity(newQuantity);
                 }
-
-                session.setAttribute(
-                        "cartMessage",
-                        "Item added to your cart."
-                );
 
                 LOGGER.log(
                         Level.FINE,
@@ -275,12 +256,14 @@ public class CartController extends HttpServlet {
                 }
 
                 response.sendRedirect(
-                        buildAddToCartRedirect(request, true)
+                        buildAddToCartRedirect(request)
                 );
                 break;
             }
 
             case "buyNow": {
+                session.removeAttribute("cartMessage");
+
                 int variantId = parsePositiveInt(
                         request.getParameter("variantId")
                 );
@@ -294,13 +277,8 @@ public class CartController extends HttpServlet {
                 }
 
                 if (variantId <= 0) {
-                    session.setAttribute(
-                            "cartMessage",
-                            "Please select a valid product variant."
-                    );
-
                     response.sendRedirect(
-                            buildAddToCartRedirect(request, false)
+                            buildAddToCartRedirect(request)
                     );
                     return;
                 }
@@ -312,13 +290,8 @@ public class CartController extends HttpServlet {
                 int stock = dao.getAvailableStock(variantId);
 
                 if (databaseItem == null || stock <= 0) {
-                    session.setAttribute(
-                            "cartMessage",
-                            "This item is unavailable or out of stock."
-                    );
-
                     response.sendRedirect(
-                            buildAddToCartRedirect(request, false)
+                            buildAddToCartRedirect(request)
                     );
                     return;
                 }
@@ -736,14 +709,66 @@ public class CartController extends HttpServlet {
         writeAnonCartCookie(response, cart);
     }
 
-    private String buildAddToCartRedirect(HttpServletRequest request, boolean success) {
+    private String buildAddToCartRedirect(HttpServletRequest request) {
         String referer = request.getHeader("Referer");
         String contextPath = request.getContextPath();
         String target = (referer != null && !referer.trim().isEmpty())
                 ? referer
                 : contextPath + "/home";
-        String separator = target.contains("?") ? "&" : "?";
-        return target + separator + (success ? "cartAdded=1" : "cartError=1");
+
+        String lowerTarget = target.toLowerCase();
+        String contextRoot = contextPath == null ? "" : contextPath;
+        String cartPath = contextRoot + "/cart";
+        String checkoutPath = contextRoot + "/customer/checkout";
+
+        if (lowerTarget.contains(cartPath.toLowerCase())
+                || lowerTarget.contains(checkoutPath.toLowerCase())
+                || lowerTarget.contains((contextRoot + "/admin").toLowerCase())
+                || lowerTarget.contains((contextRoot + "/staff").toLowerCase())) {
+            target = contextRoot + "/home";
+        }
+
+        return removeAddToCartStatusParams(target);
+    }
+
+    private String removeAddToCartStatusParams(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return "";
+        }
+
+        String hash = "";
+        int hashIndex = url.indexOf('#');
+        if (hashIndex >= 0) {
+            hash = url.substring(hashIndex);
+            url = url.substring(0, hashIndex);
+        }
+
+        String query = "";
+        int queryIndex = url.indexOf('?');
+        if (queryIndex >= 0) {
+            query = url.substring(queryIndex + 1);
+            url = url.substring(0, queryIndex);
+        }
+
+        if (query.isEmpty()) {
+            return url + hash;
+        }
+
+        StringJoiner keptParams = new StringJoiner("&");
+        for (String parameter : query.split("&")) {
+            String name = parameter;
+            int equalsIndex = parameter.indexOf('=');
+            if (equalsIndex >= 0) {
+                name = parameter.substring(0, equalsIndex);
+            }
+
+            if (!"cartAdded".equals(name) && !"cartError".equals(name)) {
+                keptParams.add(parameter);
+            }
+        }
+
+        String cleanQuery = keptParams.toString();
+        return url + (cleanQuery.isEmpty() ? "" : "?" + cleanQuery) + hash;
     }
 
     // Anonymous cart cookie helpers

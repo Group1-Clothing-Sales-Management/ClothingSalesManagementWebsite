@@ -2198,7 +2198,8 @@
                                 price:${v.salePrice},
                                 stock:${v.stockQuantity},
                                 imageUrl: "${v.imageUrl}",
-                                imageVersion: "${not empty v.imageUpdatedAt ? v.imageUpdatedAt.time : 0}"
+                                imageVersion: "${not empty v.imageUpdatedAt ? v.imageUpdatedAt.time : 0}",
+                                cartQuantity:${not empty sessionScope.cart[v.id] ? sessionScope.cart[v.id].quantity : 0}
                             },
             </c:forEach>
                         ];
@@ -2218,6 +2219,7 @@
                         const quantityInput = document.querySelector(".quantity-input");
                         const increaseBtn = document.querySelector(".quantity-increase");
                         const decreaseBtn = document.querySelector(".quantity-decrease");
+                        const addCartForm = document.querySelector(".add-cart-form");
                         const addCartButton = document.querySelector(".add-cart-form button[type='submit']");
                         const buyNowButton = document.querySelector(".buy-now-form button[type='submit']");
                         const wishlistForm = document.querySelector(".detail-wishlist-form");
@@ -2374,6 +2376,39 @@
                             decreaseBtn.disabled = !ready;
                             addCartButton.disabled = !ready;
                             buyNowButton.disabled = !ready;
+
+                            if (!ready && addCartButton) {
+                                addCartButton.innerHTML =
+                                        '<i class="fa-solid fa-cart-shopping me-2"></i>Add to cart';
+                            }
+                        }
+
+                        function getCartQuantity(variant) {
+                            return Math.max(
+                                    0,
+                                    Number(variant && variant.cartQuantity) || 0
+                            );
+                        }
+
+                        function getRemainingCartStock(variant) {
+                            return Math.max(
+                                    0,
+                                    (Number(variant && variant.stock) || 0)
+                                    - getCartQuantity(variant)
+                            );
+                        }
+
+                        function renderAddCartAvailability(variant) {
+                            if (!addCartButton) {
+                                return;
+                            }
+
+                            const remainingStock = getRemainingCartStock(variant);
+                            const canAddToCart = remainingStock > 0;
+                            addCartButton.disabled = !canAddToCart;
+                            addCartButton.innerHTML = canAddToCart
+                                    ? '<i class="fa-solid fa-cart-shopping me-2"></i>Add to cart'
+                                    : '<i class="fa-solid fa-circle-check me-2"></i>Max in cart';
                         }
 
                         function getColorImageVariant(color) {
@@ -2525,14 +2560,35 @@
                             }
 
                             showImageForCurrentSelection(variant);
-                            stockText.textContent = variant.stock + " in stock";
+                            const stockQuantity = Number(variant.stock) || 0;
+                            const cartQuantity = getCartQuantity(variant);
+                            const remainingStock = getRemainingCartStock(variant);
+                            stockText.textContent = stockQuantity + " in stock"
+                                    + (cartQuantity > 0
+                                            ? " (" + cartQuantity + " in cart)"
+                                            : "");
                             priceValue.textContent =
                                     Number(variant.price).toLocaleString("vi-VN") + " ₫";
-                            quantityInput.max = Math.max(1, Number(variant.stock) || 1);
+                            quantityInput.max = Math.max(1, remainingStock || 1);
                             quantityInput.value = 1;
 
-                            setSelectionReady(Number(variant.stock) > 0);
+                            setSelectionReady(stockQuantity > 0);
+                            quantityInput.disabled = remainingStock <= 0;
+                            increaseBtn.disabled = remainingStock <= 0;
+                            decreaseBtn.disabled = remainingStock <= 0;
+                            renderAddCartAvailability(variant);
                             updateQuantity();
+                        }
+
+                        if (addCartForm) {
+                            addCartForm.addEventListener('submit', function (event) {
+                                const variantId = Number(variantIdInput.value) || 0;
+                                const variant = variants.find(v => Number(v.id) === variantId);
+
+                                if (!variant || getRemainingCartStock(variant) <= 0) {
+                                    event.preventDefault();
+                                }
+                            });
                         }
 
                         increaseBtn.addEventListener("click", function () {
@@ -2672,40 +2728,18 @@
                             window.history.replaceState({}, '', cleanUrl);
                         }
 
-                        // ================= CART MODAL =================
+                        // ================= CART STATUS CLEANUP =================
 
                         if (params.has('cartAdded') || params.has('cartError')) {
-
-                            var modalElement =
-                                    document.getElementById('cartMessageModal');
-                            var isError =
-                                    params.has('cartError');
-                            modalElement.classList.toggle('is-error', isError);
-                            var icon =
-                                    modalElement.querySelector('.cart-modal-mark i');
-                            if (icon) {
-
-                                icon.className =
-                                        isError
-                                        ? 'fa-solid fa-triangle-exclamation'
-                                        : 'fa-solid fa-check';
-                            }
-
-                            document.getElementById('cartMessageTitle').textContent =
-                                    isError
-                                    ? 'Could Not Add Item'
-                                    : 'Cart Updated';
-                            document.getElementById('cartMessageText').textContent =
-                                    params.has('wishlistAdded')
-                                    ? 'Added to your wishlist.'
-                                    : params.has('wishlistRemoved')
-                                    ? 'Removed from wishlist.'
-                                    : params.has('wishlistError')
-                                    ? 'Unable to update your wishlist.'
-                                    : params.has('cartAdded')
-                                    ? 'Item added to your cart.'
-                                    : 'Could not add this item to your cart. Please check available stock.';
-                            new bootstrap.Modal(modalElement).show();
+                            params.delete('cartAdded');
+                            params.delete('cartError');
+                            window.history.replaceState(
+                                    {},
+                                    '',
+                                    window.location.pathname
+                                    + (params.toString() ? '?' + params.toString() : '')
+                                    + window.location.hash
+                            );
                         }
 
         </script>

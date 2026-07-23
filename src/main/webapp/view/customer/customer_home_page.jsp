@@ -1239,6 +1239,8 @@
                                                 <c:forEach items="${p.variants}" var="v">
                                                     <option value="${v.id}"
                                                             data-price="${v.salePrice}"
+                                                            data-stock="${v.stockQuantity}"
+                                                            data-cart-quantity="${not empty sessionScope.cart[v.id] ? sessionScope.cart[v.id].quantity : 0}"
                                                             data-attributes="${v.attributeDetails}">
                                                         ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> &#8363;
                                                     </option>
@@ -1357,29 +1359,47 @@
                     var option = select.options[select.selectedIndex];
                     form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
                     form.querySelector('.price-input').value = option.dataset.price || '0';
+
+                    var stock = parseInt(option.dataset.stock || '0', 10);
+                    var cartQuantity = parseInt(option.dataset.cartQuantity || '0', 10);
+                    var canAddToCart = Math.max(0, stock - cartQuantity) > 0;
+                    var button = form.querySelector('button[type="submit"]');
+
+                    if (button) {
+                        button.disabled = !canAddToCart;
+                        button.innerHTML = canAddToCart
+                                ? '<i class="fa-solid fa-cart-plus"></i> Add to cart'
+                                : '<i class="fa-solid fa-circle-check"></i> Max in cart';
+                    }
                 }
                 select.addEventListener('change', syncVariant);
                 syncVariant();
             });
 
+            document.querySelectorAll('.add-cart-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    var select = form.querySelector('.variant-select');
+                    var option = select ? select.options[select.selectedIndex] : null;
+                    var stock = option ? parseInt(option.dataset.stock || '0', 10) : 0;
+                    var cartQuantity = option ? parseInt(option.dataset.cartQuantity || '0', 10) : 0;
+
+                    if (Math.max(0, stock - cartQuantity) <= 0) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
             var params = new URLSearchParams(window.location.search);
             if (params.has('cartAdded') || params.has('cartError')) {
-                var modalElement = document.getElementById('cartMessageModal');
-                var isError = params.has('cartError');
-                modalElement.classList.toggle('is-error', isError);
-                var icon = modalElement.querySelector('.cart-modal-mark i');
-                if (icon) {
-                    icon.className = isError
-                            ? 'fa-solid fa-triangle-exclamation'
-                            : 'fa-solid fa-check';
-                }
-                document.getElementById('cartMessageTitle').textContent =
-                        isError ? 'Could Not Add Item' : 'Cart Updated';
-                var message = params.has('cartAdded')
-                        ? 'Item added to your cart.'
-                        : 'Could not add this item to your cart. Please check available stock.';
-                document.getElementById('cartMessageText').textContent = message;
-                new bootstrap.Modal(modalElement).show();
+                params.delete('cartAdded');
+                params.delete('cartError');
+                window.history.replaceState(
+                        {},
+                        '',
+                        window.location.pathname
+                        + (params.toString() ? '?' + params.toString() : '')
+                        + window.location.hash
+                );
             }
 
             var wishlistToast = document.getElementById('wishlistToast');

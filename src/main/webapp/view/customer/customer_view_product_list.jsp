@@ -878,6 +878,8 @@
 
                                                 <option value="${v.id}"
                                                         data-price="${v.salePrice}"
+                                                        data-stock="${v.stockQuantity}"
+                                                        data-cart-quantity="${not empty sessionScope.cart[v.id] ? sessionScope.cart[v.id].quantity : 0}"
                                                         data-attributes="${v.attributeDetails}">
 
                                                     ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> &#8363;
@@ -939,6 +941,43 @@
         </div>
 
         <script>
+            document.querySelectorAll('.variant-select').forEach(function (select) {
+                function syncVariant() {
+                    var form = select.closest('.add-cart-form');
+                    var option = select.options[select.selectedIndex];
+                    form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
+                    form.querySelector('.price-input').value = option.dataset.price || '0';
+
+                    var stock = parseInt(option.dataset.stock || '0', 10);
+                    var cartQuantity = parseInt(option.dataset.cartQuantity || '0', 10);
+                    var canAddToCart = Math.max(0, stock - cartQuantity) > 0;
+                    var button = form.querySelector('button[type="submit"]');
+
+                    if (button) {
+                        button.disabled = !canAddToCart;
+                        button.innerHTML = canAddToCart
+                                ? '<i class="fa-solid fa-cart-plus"></i> Add To Cart'
+                                : '<i class="fa-solid fa-circle-check"></i> Max in cart';
+                    }
+                }
+
+                select.addEventListener('change', syncVariant);
+                syncVariant();
+            });
+
+            document.querySelectorAll('.add-cart-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    var select = form.querySelector('.variant-select');
+                    var option = select ? select.options[select.selectedIndex] : null;
+                    var stock = option ? parseInt(option.dataset.stock || '0', 10) : 0;
+                    var cartQuantity = option ? parseInt(option.dataset.cartQuantity || '0', 10) : 0;
+
+                    if (Math.max(0, stock - cartQuantity) <= 0) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
             var wishlistParams = new URLSearchParams(window.location.search);
             var wishlistToast = document.getElementById('wishlistToast');
             var wishlistToastText = document.getElementById('wishlistToastText');

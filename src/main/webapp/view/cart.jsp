@@ -219,7 +219,7 @@
 
         .cart-grid {
             display:grid;
-            grid-template-columns:40px minmax(300px, 1fr) 190px 130px 140px 140px 100px;
+            grid-template-columns:40px minmax(260px, 1fr) 150px 110px 100px 130px 130px 90px;
             gap:14px;
             align-items:center;
         }
@@ -694,6 +694,7 @@
             }
 
             .variant-block,
+            .variant-size-cell,
             .price-col,
             .quantity-control,
             .amount-col,
@@ -1043,6 +1044,50 @@
             font-weight:800;
         }
 
+        .variant-picker-select {
+            width:min(130px, 100%);
+            min-height:42px;
+            border:1px solid var(--cart-line);
+            border-radius:8px;
+            padding:7px 28px 7px 11px;
+            background:#fff;
+            color:#365b9f;
+            font-weight:800;
+            box-shadow:0 8px 18px rgba(95,132,214,.10);
+        }
+
+        .variant-picker-select:focus {
+            border-color:#8AAAE5;
+            box-shadow:0 0 0 3px rgba(138,170,229,.18);
+            outline:0;
+        }
+
+        .variant-size-cell {
+            min-height:42px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            gap:4px;
+            text-align:center;
+        }
+
+        .variant-cell-label {
+            color:var(--cart-muted);
+            font-size:12px;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:.04em;
+        }
+
+        .variant-cell-value {
+            min-width:0;
+            overflow:hidden;
+            color:#365b9f;
+            font-weight:800;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
         .quantity-control {
             border-color:var(--cart-line);
             border-radius:8px;
@@ -1183,7 +1228,8 @@
                 </div>
                 <div class="product-col">Product</div>
                 <div class="text-center">Unit Price</div>
-                <div class="text-center">Variation</div>
+                <div class="text-center">Color</div>
+                <div class="text-center">Size</div>
                 <div class="text-center">Quantity</div>
                 <div class="text-center">Subtotal</div>
                 <div class="text-center">Action</div>
@@ -1229,6 +1275,34 @@
                        if (attributes == null || attributes.trim().isEmpty()) {
                            attributes = "Standard";
                        }
+                       String selectedColor = it.getColor();
+                       if (selectedColor == null || selectedColor.trim().isEmpty()) {
+                           selectedColor = "Standard";
+                       }
+                       String selectedSize = it.getSize();
+                       if (selectedSize == null || selectedSize.trim().isEmpty()) {
+                           selectedSize = "Standard";
+                       }
+                       if ("Standard".equals(selectedColor) && attributes.contains("Color:")) {
+                           String parsedColor = attributes.substring(attributes.indexOf("Color:") + 6).trim();
+                           int separatorIndex = parsedColor.indexOf("/");
+                           if (separatorIndex >= 0) {
+                               parsedColor = parsedColor.substring(0, separatorIndex).trim();
+                           }
+                           if (!parsedColor.isEmpty()) {
+                               selectedColor = parsedColor;
+                           }
+                       }
+                       if ("Standard".equals(selectedSize) && attributes.contains("Size:")) {
+                           String parsedSize = attributes.substring(attributes.indexOf("Size:") + 5).trim();
+                           int separatorIndex = parsedSize.indexOf("/");
+                           if (separatorIndex >= 0) {
+                               parsedSize = parsedSize.substring(0, separatorIndex).trim();
+                           }
+                           if (!parsedSize.isEmpty()) {
+                               selectedSize = parsedSize;
+                           }
+                       }
                        java.util.List variants = variantsByProductId != null
                                ? (java.util.List) variantsByProductId.get(it.getProductId())
                                : null;
@@ -1240,6 +1314,21 @@
                                    currentStock = stockVariant.getStockQuantity();
                                    break;
                                }
+                           }
+                       }
+                       java.util.LinkedHashSet<String> colorOptions = new java.util.LinkedHashSet<>();
+                       java.util.LinkedHashSet<String> sizeOptions = new java.util.LinkedHashSet<>();
+                       if (variants != null && !variants.isEmpty()) {
+                           for (Object optionObject : variants) {
+                               com.clothingsale.model.ProductVariant optionVariant = (com.clothingsale.model.ProductVariant) optionObject;
+                               String optionColor = optionVariant.getColor() != null && !optionVariant.getColor().trim().isEmpty()
+                                       ? optionVariant.getColor().trim()
+                                       : "Standard";
+                               String optionSize = optionVariant.getSize() != null && !optionVariant.getSize().trim().isEmpty()
+                                       ? optionVariant.getSize().trim()
+                                       : "Standard";
+                               colorOptions.add(optionColor);
+                               sizeOptions.add(optionSize);
                            }
                        }
                 %>
@@ -1292,6 +1381,8 @@
                                        <% for (Object vo : variants) {
                                                com.clothingsale.model.ProductVariant v = (com.clothingsale.model.ProductVariant) vo;
                                                String detail = v.getAttributeDetails() != null ? v.getAttributeDetails() : "Standard";
+                                               String variantColor = v.getColor() != null && !v.getColor().trim().isEmpty() ? v.getColor().trim() : "Standard";
+                                               String variantSize = v.getSize() != null && !v.getSize().trim().isEmpty() ? v.getSize().trim() : "Standard";
                                                java.math.BigDecimal variantPrice = v.getSalePrice() != null ? v.getSalePrice() : java.math.BigDecimal.ZERO;
                                                boolean selected = v.getId() == it.getVariantId();
                                                String variantImage = v.getImageUrl() != null ? v.getImageUrl() : "";
@@ -1302,6 +1393,8 @@
                                             <option value="<%= v.getId() %>"
                                                     data-price="<%= variantPrice %>"
                                                     data-attributes="<%= detail %>"
+                                                    data-color="<%= variantColor %>"
+                                                    data-size="<%= variantSize %>"
                                                     data-stock="<%= v.getStockQuantity() %>"
                                                     data-image="<%= variantImage %>"
                                                     data-image-version="<%= variantImageVersion %>"
@@ -1311,47 +1404,33 @@
                                             </option>
                                         <% } %>
                                     </select>
-                                    <button type="button" class="variant-trigger" aria-expanded="false">
-                                        <span class="variant-trigger-label">Variant</span>
-                                        <span class="variant-trigger-value"><%= attributes %></span>
-                                        <i class="fa-solid fa-caret-down"></i>
-                                    </button>
-                                    <div class="variant-popover" hidden>
-                                        <span class="variant-popover-arrow" aria-hidden="true"></span>
-                                        <div class="variant-choice-row">
-                                            <div class="variant-choice-label">Options:</div>
-                                            <div class="variant-choice-list">
-                                                <% for (Object vo : variants) {
-                                                        com.clothingsale.model.ProductVariant v = (com.clothingsale.model.ProductVariant) vo;
-                                                        String detail = v.getAttributeDetails() != null ? v.getAttributeDetails() : "Standard";
-                                                        java.math.BigDecimal variantPrice = v.getSalePrice() != null ? v.getSalePrice() : java.math.BigDecimal.ZERO;
-                                                        boolean selected = v.getId() == it.getVariantId();
-                                                        String variantImage = v.getImageUrl() != null ? v.getImageUrl() : "";
-                                                        long variantImageVersion = v.getImageUpdatedAt() != null
-                                                                ? v.getImageUpdatedAt().getTime()
-                                                                : 0L;
-                                                %>
-                                                    <button type="button"
-                                                            class="variant-choice <%= selected ? "is-selected" : "" %>"
-                                                            data-value="<%= v.getId() %>"
-                                                            data-price="<%= variantPrice %>"
-                                                            data-attributes="<%= detail %>"
-                                                            data-stock="<%= v.getStockQuantity() %>"
-                                                            data-image="<%= variantImage %>"
-                                                            data-image-version="<%= variantImageVersion %>"
-                                                            <%= (v.getStockQuantity() <= 0 && !selected) ? "disabled" : "" %>>
-                                                        <%= detail %>
-                                                    </button>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                        <div class="variant-stock-line">
-                                            Stock: <strong class="variant-stock-value"><%= currentStock %></strong>
-                                        </div>
-                                    </div>
+                                    <select class="cart-color-select variant-picker-select" aria-label="Choose color">
+                                        <% for (String colorOption : colorOptions) { %>
+                                            <option value="<%= colorOption %>"
+                                                    <%= colorOption.equals(selectedColor) ? "selected" : "" %>>
+                                                <%= colorOption %>
+                                            </option>
+                                        <% } %>
+                                    </select>
                                 <% } else { %>
                                     <input type="hidden" name="newVariantId" value="<%= it.getVariantId() %>">
-                                    <div class="variant-static"><%= attributes %></div>
+                                    <div class="variant-static variant-color-value"><%= selectedColor %></div>
+                                <% } %>
+                            </div>
+
+                            <div class="variant-size-cell">
+                                <% if (variants != null && !variants.isEmpty()) { %>
+                                    <select class="cart-size-select variant-picker-select" aria-label="Choose size">
+                                        <% for (String sizeOption : sizeOptions) { %>
+                                            <option value="<%= sizeOption %>"
+                                                    <%= sizeOption.equals(selectedSize) ? "selected" : "" %>>
+                                                <%= sizeOption %>
+                                            </option>
+                                        <% } %>
+                                    </select>
+                                <% } else { %>
+                                    <span class="variant-cell-label">Size</span>
+                                    <span class="variant-cell-value variant-size-value"><%= selectedSize %></span>
                                 <% } %>
                             </div>
 
@@ -1550,6 +1629,57 @@
             placeholder.style.display = "none";
         }
 
+        function getVariantOptions(form) {
+            var select = form.querySelector('.variant-select');
+            return select ? Array.prototype.slice.call(select.options) : [];
+        }
+
+        function isAvailableVariantOption(option) {
+            return option && !option.disabled;
+        }
+
+        function findVariantOption(form, color, size) {
+            return getVariantOptions(form).find(function(option) {
+                return isAvailableVariantOption(option)
+                        && option.dataset.color === color
+                        && option.dataset.size === size;
+            });
+        }
+
+        function findFallbackVariantOption(form, field, value) {
+            return getVariantOptions(form).find(function(option) {
+                return isAvailableVariantOption(option)
+                        && option.dataset[field] === value;
+            });
+        }
+
+        function updateVariantPickerAvailability(form) {
+            var colorSelect = form.querySelector('.cart-color-select');
+            var sizeSelect = form.querySelector('.cart-size-select');
+
+            if (!colorSelect || !sizeSelect) {
+                return;
+            }
+
+            var selectedColor = colorSelect.value;
+            var options = getVariantOptions(form);
+
+            Array.prototype.slice.call(colorSelect.options).forEach(function(option) {
+                option.disabled = !options.some(function(variantOption) {
+                    return isAvailableVariantOption(variantOption)
+                            && variantOption.dataset.color === option.value;
+                });
+            });
+
+            Array.prototype.slice.call(sizeSelect.options).forEach(function(option) {
+                option.disabled = !options.some(function(variantOption) {
+                    return isAvailableVariantOption(variantOption)
+                            && variantOption.dataset.color === selectedColor
+                            && variantOption.dataset.size === option.value;
+                });
+            });
+        }
+
         function syncVariantSelect(select) {
             var form = select.closest('.cart-update-form');
             var option = select.options[select.selectedIndex];
@@ -1557,9 +1687,24 @@
                 return;
             }
 
-            var triggerValue = form.querySelector('.variant-trigger-value');
-            if (triggerValue) {
-                triggerValue.textContent = option.dataset.attributes || option.textContent.trim() || 'Standard';
+            var colorSelect = form.querySelector('.cart-color-select');
+            if (colorSelect) {
+                colorSelect.value = option.dataset.color || 'Standard';
+            }
+
+            var sizeSelect = form.querySelector('.cart-size-select');
+            if (sizeSelect) {
+                sizeSelect.value = option.dataset.size || 'Standard';
+            }
+
+            var colorValue = form.querySelector('.variant-color-value');
+            if (colorValue) {
+                colorValue.textContent = option.dataset.color || 'Standard';
+            }
+
+            var sizeValue = form.querySelector('.variant-size-value');
+            if (sizeValue) {
+                sizeValue.textContent = option.dataset.size || 'Standard';
             }
 
             var stock = parseInt(option.dataset.stock, 10);
@@ -1576,7 +1721,41 @@
             }
 
             previewSelectedVariantImage(form, option);
+            updateVariantPickerAvailability(form);
             updateQuantityButtons(form);
+        }
+
+        function chooseVariantFromPickers(form, changedField) {
+            var hiddenSelect = form.querySelector('.variant-select');
+            var colorSelect = form.querySelector('.cart-color-select');
+            var sizeSelect = form.querySelector('.cart-size-select');
+
+            if (!hiddenSelect || !colorSelect || !sizeSelect) {
+                return;
+            }
+
+            var selectedColor = colorSelect.value;
+            var selectedSize = sizeSelect.value;
+            var option = findVariantOption(form, selectedColor, selectedSize);
+
+            if (!option) {
+                option = changedField === 'color'
+                        ? findFallbackVariantOption(form, 'color', selectedColor)
+                        : findFallbackVariantOption(form, 'size', selectedSize);
+            }
+
+            if (!option) {
+                syncVariantSelect(hiddenSelect);
+                return;
+            }
+
+            var changedVariant = hiddenSelect.value !== option.value;
+            hiddenSelect.value = option.value;
+            syncVariantSelect(hiddenSelect);
+
+            if (changedVariant) {
+                submitCartForm(form);
+            }
         }
 
         function markVariantChoice(popover, value) {
@@ -1661,6 +1840,24 @@
                     closeVariantPopover(popover);
                     submitCartForm(form);
                 });
+            });
+        });
+
+        document.querySelectorAll('.cart-color-select').forEach(function(select) {
+            select.addEventListener('change', function() {
+                var form = select.closest('.cart-update-form');
+                if (form) {
+                    chooseVariantFromPickers(form, 'color');
+                }
+            });
+        });
+
+        document.querySelectorAll('.cart-size-select').forEach(function(select) {
+            select.addEventListener('change', function() {
+                var form = select.closest('.cart-update-form');
+                if (form) {
+                    chooseVariantFromPickers(form, 'size');
+                }
             });
         });
 
