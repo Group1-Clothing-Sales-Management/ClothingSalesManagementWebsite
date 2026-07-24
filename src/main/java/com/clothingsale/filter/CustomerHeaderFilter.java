@@ -52,7 +52,10 @@ public class CustomerHeaderFilter implements Filter {
                 return (List<Category>) cached;
             }
 
-            List<Category> categories = productDAO.getActiveCategories();
+            // The header renders root categories and their children as dropdowns.
+            // Do not pass the flat active-category list here, otherwise child
+            // categories are rendered as additional top-level navigation items.
+            List<Category> categories = productDAO.getHeaderCategories();
             context.setAttribute(CATEGORIES_CACHE_KEY, categories);
             context.setAttribute(CATEGORIES_CACHE_TIME_KEY, now);
             return categories;
