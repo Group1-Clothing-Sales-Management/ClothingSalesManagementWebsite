@@ -320,14 +320,15 @@
                 position:relative;
                 aspect-ratio:1 / 1;
                 overflow:hidden;
-                background:#f1ebe5;
+                background:#ffffff;
             }
 
             .product-image{
                 width:100%;
                 height:100%;
                 display:block;
-                object-fit:cover;
+                object-fit:contain;
+                background:#ffffff;
                 transition:transform .25s ease;
             }
 
@@ -632,11 +633,6 @@
                 color:#fff;
             }
 
-            .product-meta{
-                color:var(--catalog-muted);
-                font-weight:500;
-            }
-
             .wishlist-toast{
                 background:#1f2937;
                 box-shadow:0 18px 40px rgba(31,41,55,.22);
@@ -674,6 +670,7 @@
                 object-fit: contain;
                 background: #ffffff;
             }
+
         </style>
 
     </head>
@@ -696,84 +693,7 @@
                 </p>
 
             </div>
-
-            <!-- SEARCH -->
-
-            <c:if test="${not empty param.keyword or not empty param.categoryId}">
-                <form action="${pageContext.request.contextPath}/products"
-                      method="get"
-                      class="card search-card p-4 mb-5">
-                    <c:if test="${not empty param.categoryId}">
-                        <input type="hidden" name="categoryId" value="${param.categoryId}">
-                    </c:if>
-
-                    <div class="row">
-
-                        <div class="col-md-4">
-
-                            <input type="text"
-                                   name="keyword"
-                                   value="${param.keyword}"
-                                   class="form-control"
-                                   placeholder="Search product">
-
-                        </div>
-
-                        <div class="col-md-2">
-
-                            <input type="number"
-                                   name="minPrice"
-                                   value="${param.minPrice}"
-                                   class="form-control"
-                                   placeholder="Min Price">
-
-                        </div>
-
-                        <div class="col-md-2">
-
-                            <input type="number"
-                                   name="maxPrice"
-                                   value="${param.maxPrice}"
-                                   class="form-control"
-                                   placeholder="Max Price">
-
-                        </div>
-
-                        <div class="col-md-2">
-
-                            <select name="sort"
-                                    class="form-select">
-
-                                <option value="">
-                                    Sort
-                                </option>
-
-                                <option value="priceAsc">
-                                    Price ↑
-                                </option>
-
-                                <option value="priceDesc">
-                                    Price ↓
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <div class="col-md-2">
-
-                            <button class="btn btn-danger w-100">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                Search
-                            </button>
-                        </div>
-
-                    </div>
-
-                </form>
-            </c:if>
-
-            <div class="product-grid">
+<div class="product-grid">
 
                 <c:forEach items="${products}" var="p">
 
@@ -845,13 +765,7 @@
                                             <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                                         </button>
                                     </form>
-
-                                    <div class="product-meta">
-                                        <span>${p.variants[0].attributeDetails}</span>
-                                        <span>${p.variants[0].stockQuantity} in stock</span>
-                                    </div>
-
-                                </c:if>
+</c:if>
 
                             </div>
 

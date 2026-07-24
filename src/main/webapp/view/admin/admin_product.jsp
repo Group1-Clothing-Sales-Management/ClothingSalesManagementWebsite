@@ -89,6 +89,185 @@
                 font-size: .82rem;
                 font-weight: 700;
             }
+
+            .admin-product-table {
+                min-width: 1160px;
+                table-layout: fixed;
+                border-color: #dfe5ec;
+            }
+            .admin-product-table thead th {
+                padding: 13px 14px;
+                border-color: #334155;
+                font-size: .8rem;
+                font-weight: 700;
+                letter-spacing: .01em;
+                line-height: 1.25;
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+            .admin-product-table tbody td {
+                padding: 13px 14px;
+                border-color: #e2e8f0;
+                color: #334155;
+                font-size: .9rem;
+                vertical-align: middle;
+            }
+            .admin-product-table tbody tr {
+                height: 88px;
+            }
+            .admin-product-table tbody tr:hover {
+                background-color: #f8fbff;
+            }
+            .product-summary {
+                display: flex;
+                align-items: center;
+                gap: 13px;
+                min-width: 0;
+            }
+            .product-summary .product-image-box {
+                flex: 0 0 62px;
+                width: 62px;
+                height: 62px;
+                margin: 0;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(15, 23, 42, .08);
+            }
+            .product-summary-content {
+                min-width: 0;
+            }
+            .product-summary-name {
+                display: block;
+                overflow: hidden;
+                color: #111827;
+                font-size: .98rem;
+                font-weight: 650;
+                line-height: 1.4;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .product-meta-text {
+                display: inline-block;
+                max-width: 100%;
+                overflow: hidden;
+                color: #334155;
+                font-size: .88rem;
+                font-weight: 600;
+                line-height: 1.4;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .featured-control-form {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                margin: 0;
+            }
+            .featured-switch-wrap {
+                display: inline-flex;
+                align-items: center;
+                min-width: 132px;
+                min-height: 38px;
+                padding: 7px 11px;
+                border: 1px solid #d9e1ea;
+                border-radius: 10px;
+                background: #f8fafc;
+                transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+            }
+            .featured-switch-wrap.is-active {
+                border-color: #f4c95d;
+                background: #fff9e8;
+            }
+            .featured-switch-wrap.is-saving {
+                border-color: #86b7fe;
+                background: #eef6ff;
+                box-shadow: 0 0 0 .15rem rgba(13, 110, 253, .08);
+            }
+            .featured-switch-wrap .form-check {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-height: 0;
+                margin: 0;
+                padding-left: 0;
+            }
+            .featured-switch-wrap .form-check-input {
+                float: none;
+                flex: 0 0 auto;
+                width: 2rem;
+                height: 1.08rem;
+                margin: 0;
+                cursor: pointer;
+            }
+            .featured-switch-wrap .form-check-input:disabled {
+                cursor: not-allowed;
+                opacity: .55;
+            }
+            .featured-switch-wrap .form-check-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                margin: 0;
+                color: #64748b;
+                font-size: .78rem;
+                font-weight: 700;
+                line-height: 1;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+            .featured-switch-wrap.is-active .form-check-label {
+                color: #9a6700;
+            }
+            .featured-switch-wrap.is-saving .form-check-label {
+                color: #0d6efd;
+            }
+            .featured-saving-icon {
+                display: none;
+                font-size: .75rem;
+            }
+            .featured-switch-wrap.is-saving .featured-saving-icon {
+                display: inline-block;
+            }
+            .product-status-badge {
+                min-width: 82px;
+                padding: 7px 11px;
+                border-radius: 8px;
+                font-size: .75rem;
+                font-weight: 700;
+                letter-spacing: .02em;
+            }
+            .product-action-group {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                white-space: nowrap;
+            }
+            .product-action-group .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 38px;
+                width: 38px;
+                height: 36px;
+                min-width: 38px;
+                padding: 0;
+                border-radius: 8px;
+                font-size: .84rem;
+            }
+            @media (max-width: 1399.98px) {
+                .admin-product-table {
+                    min-width: 1120px;
+                }
+                .admin-product-table thead th,
+                .admin-product-table tbody td {
+                    padding-left: 11px;
+                    padding-right: 11px;
+                }
+                .product-action-group .btn {
+                    min-width: 38px;
+                    padding: 0;
+                }
+            }
         </style>
     </head>
     <body>
@@ -129,7 +308,7 @@
                                     <input type="search"
                                            id="productSearchInput"
                                            class="form-control"
-                                           placeholder="Search by product ID, name, category or brand..."
+                                           placeholder="Search by product name, category or brand..."
                                            autocomplete="off">
                                     <button type="button"
                                             class="btn btn-outline-secondary"
@@ -196,86 +375,171 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0">
+                        <table class="table table-striped table-hover align-middle border variant-table admin-table admin-product-table mb-0">
+                            <colgroup>
+                                <col style="width: 25%;">
+                                <col style="width: 10%;">
+                                <col style="width: 10%;">
+                                <col style="width: 15%;">
+                                <col style="width: 5%;">
+                                <col style="width: 15%;">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th style="width: 100px;">ID</th>
-                                    <th style="width: 100px;">Image</th>
-                                    <th>Product Name</th>
-                                    <th>Category ID</th>
-                                    <th>Brand ID</th>
-                                    <th>Status</th>
-                                    <th style="width: 300px;">Actions</th>
+                                    <th class="text-start">Product</th>
+                                    <th class="text-start">Category</th>
+                                    <th class="text-start">Brand</th>
+                                    <th class="text-start">Featured on Home</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="productTableBody">
                                 <c:forEach var="prod" items="${products}">
+                                    <c:set var="productCategoryName" value="Category ${prod.categoryId}" />
+                                    <c:forEach var="cat" items="${categories}">
+                                        <c:if test="${cat.id == prod.categoryId}">
+                                            <c:set var="productCategoryName" value="${cat.categoryName}" />
+                                        </c:if>
+                                    </c:forEach>
+
+                                    <c:set var="productBrandName" value="Brand ${prod.brandId}" />
+                                    <c:forEach var="br" items="${brands}">
+                                        <c:if test="${br.id == prod.brandId}">
+                                            <c:set var="productBrandName" value="${br.brandName}" />
+                                        </c:if>
+                                    </c:forEach>
+
                                     <tr class="product-row"
                                         data-product-id="${prod.id}"
                                         data-category-id="${prod.categoryId}"
                                         data-brand-id="${prod.brandId}"
-                                        data-status="${prod.status}">
-                                        <td class="fw-bold text-secondary">#PROD-${prod.id}</td>
+                                        data-status="${prod.status}"
+                                        data-featured="${prod.featured}">
                                         <td>
-                                            <div class="product-image-box shadow-sm">
-                                                <c:choose>
-                                                    <c:when test="${not empty prod.mainImageUrl}">
-                                                        <c:url var="productImageUrl"
-                                                               value="/media/product/${prod.mainImageUrl}" />
-                                                        <img src="${productImageUrl}"
-                                                             class="product-img"
-                                                             alt="${prod.productName}"
-                                                             loading="lazy"
-                                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                        <div class="product-image-placeholder"
-                                                             style="display: none;"
-                                                             title="Image file not found">
-                                                            <i class="fa-regular fa-image"></i>
-                                                        </div>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <div class="product-image-placeholder"
-                                                             style="display: flex;"
-                                                             title="No product image">
-                                                            <i class="fa-regular fa-image"></i>
-                                                        </div>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                            <div class="product-summary">
+                                                <div class="product-image-box">
+                                                    <c:choose>
+                                                        <c:when test="${not empty prod.mainImageUrl}">
+                                                            <c:url var="productImageUrl"
+                                                                   value="/media/product/${prod.mainImageUrl}" />
+                                                            <img src="${productImageUrl}"
+                                                                 class="product-img"
+                                                                 alt="${prod.productName}"
+                                                                 loading="lazy"
+                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                            <div class="product-image-placeholder"
+                                                                 style="display: none;"
+                                                                 title="Image file not found">
+                                                                <i class="fa-regular fa-image"></i>
+                                                            </div>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <div class="product-image-placeholder"
+                                                                 style="display: flex;"
+                                                                 title="No product image">
+                                                                <i class="fa-regular fa-image"></i>
+                                                            </div>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                                <div class="product-summary-content">
+                                                    <span class="product-summary-name product-name-cell"
+                                                          title="${prod.productName}">
+                                                        ${prod.productName}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td class="text-start product-name-cell">
-                                            <span class="fw-semibold text-dark">${prod.productName}</span>
+
+                                        <td class="text-start">
+                                            <span class="product-meta-text" title="${productCategoryName}">
+                                                ${productCategoryName}
+                                            </span>
                                         </td>
-                                        <td><span class="badge bg-light text-dark border px-2.5 py-1.5">${prod.categoryId}</span></td>
-                                        <td><span class="badge bg-light text-dark border px-2.5 py-1.5">${prod.brandId}</span></td>
+
+                                        <td class="text-start">
+                                            <span class="product-meta-text" title="${productBrandName}">
+                                                ${productBrandName}
+                                            </span>
+                                        </td>
+
                                         <td>
-                                            <span class="badge ${prod.status == 'ACTIVE' ? 'bg-success' : 'bg-secondary'} px-3 py-1.5">
+                                            <form class="featured-control-form"
+                                                  action="${pageContext.request.contextPath}/admin/manage-product"
+                                                  method="POST"
+                                                  enctype="multipart/form-data">
+                                                <input type="hidden" name="action" value="UPDATE_FEATURED">
+                                                <input type="hidden" name="productId" value="${prod.id}">
+                                                <input type="hidden"
+                                                       name="featured"
+                                                       class="featured-hidden-value"
+                                                       value="${prod.featured ? 'true' : 'false'}">
+
+                                                <div class="featured-switch-wrap ${prod.featured ? 'is-active' : ''}"
+                                                     title="${prod.status != 'ACTIVE'
+                                                              ? 'Activate the product before changing Homepage Featured'
+                                                              : 'Turn on or off. Changes are saved automatically.'}">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input featured-toggle"
+                                                               type="checkbox"
+                                                               role="switch"
+                                                               id="featured-${prod.id}"
+                                                               ${prod.featured ? 'checked' : ''}
+                                                               ${prod.status != 'ACTIVE' ? 'disabled' : ''}>
+                                                        <label class="form-check-label"
+                                                               for="featured-${prod.id}">
+                                                            <i class="fa-solid fa-spinner fa-spin featured-saving-icon"></i>
+                                                            <span class="featured-toggle-text">
+                                                                ${prod.featured ? 'Featured' : 'Not featured'}
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </td>
+
+                                        <td class="text-center">
+                                            <span class="badge product-status-badge ${prod.status == 'ACTIVE' ? 'bg-success' : 'bg-secondary'}">
                                                 ${prod.status}
                                             </span>
                                         </td>
+
                                         <td>
-                                            <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}" class="btn btn-sm btn-outline-info me-1 px-3">
-                                                <i class="fa-solid fa-eye"></i> View
-                                            </a>
-                                            <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${prod.id}"
-                                               class="btn btn-sm btn-outline-warning me-1 px-3">
-                                                <i class="fa-solid fa-pen-to-square"></i> Edit
-                                            </a>
-                                            <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteProduct(${prod.id})">
-                                                <i class="fa-solid fa-trash"></i> Delete
-                                            </button>
+                                            <div class="product-action-group">
+                                                <a href="${pageContext.request.contextPath}/AdminManageProduct?action=view&id=${prod.id}"
+                                                   class="btn btn-outline-info"
+                                                   title="View product">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </a>
+                                                <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${prod.id}"
+                                                   class="btn btn-outline-warning"
+                                                   title="Edit product">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-outline-danger"
+                                                        onclick="deleteProduct(${prod.id})"
+                                                        title="Delete product">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:forEach>
+
                                 <tr id="productNoResultsRow" class="d-none">
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="6" class="text-center py-5 text-muted">
                                         <i class="fa-solid fa-magnifying-glass mb-2 d-block fs-4"></i>
                                         No products match the current search and filters.
                                     </td>
                                 </tr>
+
                                 <c:if test="${empty products}">
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">No products found. Click "Add New Product" to start.</td>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No products found. Click "Add New Product" to start.
+                                        </td>
                                     </tr>
                                 </c:if>
                             </tbody>
@@ -765,6 +1029,49 @@
                                                     });
 
                                                     renderVariants();
+                                                });
+
+                                                document.addEventListener("DOMContentLoaded", function () {
+                                                    const featuredForms = document.querySelectorAll(".featured-control-form");
+
+                                                    featuredForms.forEach(function (form) {
+                                                        const toggle = form.querySelector(".featured-toggle");
+                                                        const hiddenValue = form.querySelector(".featured-hidden-value");
+                                                        const switchWrap = form.querySelector(".featured-switch-wrap");
+                                                        const toggleText = form.querySelector(".featured-toggle-text");
+
+                                                        if (!toggle || !hiddenValue || !switchWrap || !toggleText) {
+                                                            return;
+                                                        }
+
+                                                        toggle.addEventListener("change", function () {
+                                                            const enabled = toggle.checked;
+
+                                                            hiddenValue.value = enabled ? "true" : "false";
+                                                            toggle.disabled = true;
+                                                            switchWrap.classList.toggle("is-active", enabled);
+                                                            switchWrap.classList.add("is-saving");
+                                                            toggleText.textContent = "Saving...";
+
+                                                            form.submit();
+                                                        });
+                                                    });
+
+                                                    const status = new URLSearchParams(window.location.search).get("status");
+                                                    const messages = {
+                                                        "featured-enabled": ["Featured enabled", "The product is now displayed in Featured Products.", "success"],
+                                                        "featured-disabled": ["Featured disabled", "The product was removed from Featured Products.", "success"],
+                                                        "invalid-featured-order": ["Invalid order", "Display order must be a positive number.", "warning"],
+                                                        "product-not-eligible-for-featured": ["Cannot feature product", "The product must be active and have at least one active variant with a valid price.", "warning"],
+                                                        "featured-update-failed": ["Update failed", "The Featured Products setting could not be saved.", "error"],
+                                                        "product-not-found": ["Product not found", "The selected product no longer exists.", "error"],
+                                                        "invalid-product-id": ["Invalid product", "The selected product ID is invalid.", "warning"],
+                                                        "invalid-request": ["Invalid request", "The Featured Products request is invalid.", "warning"]
+                                                    };
+
+                                                    if (status && messages[status]) {
+                                                        Swal.fire(messages[status][0], messages[status][1], messages[status][2]);
+                                                    }
                                                 });
 
                                                 function deleteProduct(id) {

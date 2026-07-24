@@ -1,1455 +1,1789 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
+
 <fmt:setLocale value="vi_VN"/>
 
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>Clothing Sale</title>
+        <title>Clothing Sale | Home</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+              rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+              rel="stylesheet">
+
+        <c:url var="customerThemeUrl" value="/assets/customer-theme.css"/>
+        <link href="${customerThemeUrl}" rel="stylesheet">
 
         <style>
-
-            :root{
-                --ink:#1f2937;
-                --ink-soft:#61708a;
-                --primary:#8AAAE5;
-                --primary-dark:#5f84d6;
-                --accent:#ffffff;
-                --bg:#eef4ff;
-                --surface:#ffffff;
-                --border:#d7e1f5;
-                --shadow:0 18px 42px rgba(95,132,214,.14);
-            }
-
-            body{
-                background:var(--bg);
-                font-family:'Segoe UI',sans-serif;
-                color:var(--ink);
-            }
-
-            .btn-danger{
-                background:var(--primary)!important;
-                border-color:var(--primary)!important;
-                color:#fff!important;
-                font-weight:700;
-            }
-
-            .btn-danger:hover,
-            .btn-danger:focus-visible{
-                background:var(--primary-dark)!important;
-                border-color:var(--primary-dark)!important;
-            }
-
-            .btn-outline-dark{
-                border-color:var(--ink);
-                color:var(--ink);
-                font-weight:700;
-            }
-
-            .btn-outline-dark:hover,
-            .btn-outline-dark:focus-visible{
-                background:var(--ink);
-                color:#fff;
-            }
-
-            .hero{
-                padding:34px 0 30px;
-            }
-
-            .hero-panel{
-                position:relative;
-                overflow:hidden;
-                border-radius:24px;
-                padding:38px 42px;
-                background:linear-gradient(115deg,#fffdf9 0%,#f5e8dc 100%);
-                border:1px solid var(--border);
-            }
-
-            .hero-panel:after{
-                content:'';
-                position:absolute;
-                width:230px;
-                height:230px;
-                right:40%;
-                bottom:-150px;
-                border-radius:50%;
-                background:rgba(230,157,79,.18);
-            }
-
-            .hero-content,
-            .hero-visual{
-                position:relative;
-                z-index:1;
-            }
-
-            .hero-kicker{
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                margin-bottom:14px;
-                color:var(--primary-dark);
-                font-size:.75rem;
-                font-weight:800;
-                letter-spacing:.12em;
-                text-transform:uppercase;
-            }
-
-            .hero-kicker:before{
-                content:'';
-                width:28px;
-                height:2px;
-                background:var(--accent);
-            }
-
-            .hero-title{
-                max-width:520px;
-                margin:0;
-                font-size:clamp(2.4rem,5vw,4.35rem);
-                font-weight:800;
-                letter-spacing:-.04em;
-                color:var(--ink);
-                line-height:1.02;
-            }
-
-            .hero-text{
-                max-width:500px;
-                color:var(--ink-soft);
-                font-size:1rem;
-                line-height:1.65;
-            }
-
-            .hero-benefits{
-                display:flex;
-                flex-wrap:wrap;
-                gap:10px 18px;
-                margin:22px 0 0;
-                padding:0;
-                color:var(--ink-soft);
-                font-size:.87rem;
-                font-weight:600;
-                list-style:none;
-            }
-
-            .hero-benefits i{
-                margin-right:6px;
-                color:var(--primary);
-            }
-
-            .hero-image{
-                width:100%;
-                min-height:275px;
-                max-height:330px;
-                object-fit:cover;
-                border-radius:18px;
-                box-shadow:0 18px 38px rgba(74,54,39,.18);
-            }
-
-            .search-card{
-                border:1px solid var(--border);
-                border-radius:18px;
-                background:var(--surface);
-                box-shadow:var(--shadow);
-            }
-
-            .search-heading{
-                display:flex;
-                align-items:center;
-                gap:10px;
-                margin:0;
-                color:var(--ink);
-                font-size:1rem;
-                font-weight:800;
-            }
-
-            .search-heading i{
-                color:var(--primary);
-            }
-
-            .search-hint{
-                margin:3px 0 0;
-                color:var(--ink-soft);
-                font-size:.82rem;
-            }
-
-            .filter-label{
-                display:block;
-                margin-bottom:6px;
-                color:var(--ink-soft);
-                font-size:.75rem;
-                font-weight:700;
-                letter-spacing:.02em;
-            }
-
-            .form-control,
-            .form-select{
-                min-height:44px;
-                border:1px solid var(--border);
-                border-radius:10px;
-                padding:9px 12px;
-                color:var(--ink);
-                background-color:#fffdfa;
-            }
-
-            .form-control::placeholder{
-                color:#9a9189;
-            }
-
-            .form-control:focus,
-            .form-select:focus{
-                border-color:var(--primary);
-                box-shadow:0 0 0 .2rem rgba(198,91,61,.16);
-            }
-
-            .section-heading{
-                display:flex;
-                align-items:end;
-                justify-content:space-between;
-                gap:16px;
-                margin:38px 0 18px;
-            }
-
-            .section-title{
-                margin:0;
-                font-size:clamp(1.55rem,2.6vw,2rem);
-                font-weight:800;
-                letter-spacing:-.025em;
-                color:var(--ink);
-            }
-
-            .section-subtitle{
-                margin:5px 0 0;
-                color:var(--ink-soft);
-                font-size:.9rem;
-            }
-
-            .result-count{
-                flex:0 0 auto;
-                padding:7px 11px;
-                border-radius:999px;
-                background:#f1e6dc;
-                color:var(--primary-dark);
-                font-size:.78rem;
-                font-weight:800;
-            }
-
-            .product-card{
-                border:1px solid var(--border);
-                border-radius:16px;
-                overflow:hidden;
-                background:var(--surface);
-                box-shadow:0 4px 14px rgba(74,54,39,.04);
-                transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-                position:relative;
-            }
-
-            .product-card:hover{
-                transform:translateY(-4px);
-                border-color:#d9b6a4;
-                box-shadow:0 16px 28px rgba(74,54,39,.12);
-            }
-
-            .product-image{
-                height:250px;
-                object-fit:cover;
-                background:#f1ebe5;
-            }
-
-            .product-card .card-body{
-                padding:16px 16px 8px;
-            }
-
-            .product-card h6{
-                min-height:20px;
-                color:var(--ink);
-            }
-
-            .product-price{
-                color:var(--primary-dark);
-                font-size:1.15rem;
-                font-weight:800;
-            }
-
-            .product-info{
-                display:flex;
-                align-items:center;
-                justify-content:space-between;
-                gap:8px;
-                margin-top:8px;
-                color:var(--ink-soft);
-                font-size:.76rem;
-            }
-
-            .product-info span:first-child{
-                min-width:0;
-                overflow:hidden;
-                text-overflow:ellipsis;
-                white-space:nowrap;
-            }
-
-            .product-info .stock-ok{
-                flex:0 0 auto;
-            }
-
-            .stock-ok{
-                color:#28714d;
-            }
-
-            .wishlist-heart-form{
-                position:absolute;
-                top:12px;
-                right:12px;
-                z-index:5;
-                margin:0;
-            }
-
-            .wishlist-heart{
-                width:38px;
-                height:38px;
-                border:1px solid rgba(255,255,255,.75);
-                border-radius:50%;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                background:rgba(255,255,255,.94);
-                color:var(--primary);
-                box-shadow:0 6px 16px rgba(74,54,39,.18);
-                transition:.2s;
-            }
-
-            .wishlist-heart:hover,
-            .wishlist-heart.is-active{
-                background:var(--primary);
-                color:#fff;
-                transform:scale(1.05);
-            }
-
-            .wishlist-toast{
-                position:fixed;
-                top:84px;
-                right:20px;
-                z-index:1080;
-                min-width:260px;
-                max-width:360px;
-                padding:13px 16px;
-                border-radius:12px;
-                background:var(--ink);
-                color:#fff;
-                box-shadow:0 18px 40px rgba(37,33,30,.22);
-                opacity:0;
-                transform:translateY(-12px);
-                pointer-events:none;
-                transition:.25s;
-                font-size:.9rem;
-                font-weight:700;
-            }
-
-            .wishlist-toast.show{
-                opacity:1;
-                transform:translateY(0);
-            }
-
-            .wishlist-toast.is-error{
-                background:#a53e2d;
-            }
-
-            .card-footer{
-                padding:8px 16px 16px;
-                background:var(--surface)!important;
-                border-top:0;
-            }
-
-            .card-footer .form-select{
-                min-height:38px;
-                padding-top:6px;
-                padding-bottom:6px;
-                font-size:.78rem;
-            }
-
-            .product-actions{
-                display:grid;
-                grid-template-columns:1fr 1.25fr;
-                gap:8px;
-            }
-
-            .product-actions .btn{
-                min-height:38px;
-                padding:7px 8px;
-                border-radius:9px;
-                font-size:.78rem;
-            }
-
-            .fa-box-open{
-                color:var(--primary)!important;
-            }
-
-            .empty-state{
-                padding:58px 20px;
-                border:1px dashed #d8c9bc;
-                border-radius:18px;
-                background:rgba(255,255,255,.55);
-            }
-
-            .home-more{
-                display:flex;
-                justify-content:center;
-                margin:26px 0 8px;
-            }
-
-            .home-more .btn{
-                min-width:210px;
-                border-radius:8px;
-                padding:10px 20px;
-            }
-
-            /* Compact marketplace-style product grid */
-            .product-grid{
-                display:grid;
-                grid-template-columns:repeat(6,minmax(0,1fr));
-                gap:12px;
-            }
-
-            .product-item{
-                min-width:0;
-            }
-
-            .product-card{
-                border-radius:5px;
-                box-shadow:0 1px 3px rgba(74,54,39,.12);
-            }
-
-            .product-card:hover{
-                transform:translateY(-2px);
-                border-color:#d8b29f;
-                box-shadow:0 5px 14px rgba(74,54,39,.16);
-            }
-
-            .product-image-link{
-                display:block;
-                position:relative;
-                aspect-ratio:1 / 1;
-                overflow:hidden;
-                background:#f1ebe5;
-            }
-
-            .product-image{
-                width:100%;
-                height:100%;
-                display:block;
-                transition:transform .25s ease;
-            }
-
-            .product-card:hover .product-image{
-                transform:scale(1.03);
-            }
-
-            .product-ribbon,
-            .product-stock-badge{
-                position:absolute;
-                z-index:2;
-                top:0;
-                padding:4px 6px;
-                font-size:.66rem;
-                line-height:1;
-                font-weight:800;
-            }
-
-            .product-ribbon{
-                left:0;
-                color:#fff;
-                background:var(--primary);
-            }
-
-            .product-stock-badge{
-                right:0;
-                color:#8b4a27;
-                background:#fff3dc;
-            }
-
-            .product-card .card-body{
-                padding:8px 9px 3px;
-            }
-
-            .product-card h6{
-                min-height:36px;
-                margin-bottom:4px!important;
-                font-size:.82rem;
-                line-height:1.35;
-                display:-webkit-box;
-                -webkit-box-orient:vertical;
-                -webkit-line-clamp:2;
-                overflow:hidden;
-                white-space:normal;
-            }
-
-            .product-title-link{
-                color:var(--ink);
-                text-decoration:none;
-            }
-
-            .product-title-link:hover{
-                color:var(--primary-dark);
-            }
-
-            .product-price{
-                font-size:1rem;
-                line-height:1.2;
-                white-space:nowrap;
-                overflow:hidden;
-                text-overflow:ellipsis;
-            }
-
-            .product-info{
-                margin-top:5px;
-                font-size:.68rem;
-            }
-
-            .product-info .stock-ok{
-                color:#81766d;
-            }
-
-            .product-info span:first-child{
-                display:none;
-            }
-
-            .product-info{
-                justify-content:flex-end;
-            }
-
-            .product-card .wishlist-heart-form{
-                position:static;
-                display:block;
-                margin:6px 0 2px;
-            }
-
-            .product-card .wishlist-heart{
-                width:30px;
-                height:30px;
-                border:1px solid #efd4c8;
-                background:#fff;
-                color:var(--primary);
-                box-shadow:none;
-                font-size:.82rem;
-            }
-
-            .product-card .wishlist-heart:hover,
-            .product-card .wishlist-heart.is-active{
-                background:var(--primary);
-                color:#fff;
-            }
-
-            .product-card .card-footer{
-                display:none;
-            }
-
-            .card-footer{
-                padding:5px 9px 9px;
-            }
-
-            .card-footer .form-select{
-                min-height:32px;
-                margin-bottom:5px!important;
-                padding:4px 7px;
-                font-size:.69rem;
-            }
-
-            .product-actions{
-                grid-template-columns:1fr 1.35fr;
-                gap:5px;
-            }
-
-            .product-actions .btn{
-                min-height:32px;
-                padding:5px 4px;
-                border-radius:4px;
-                font-size:.69rem;
-                white-space:nowrap;
-            }
-
-            @media(max-width:1199px){
-                .product-grid{
-                    grid-template-columns:repeat(5,minmax(0,1fr));
-                }
-            }
-
-            @media(max-width:991px){
-                .product-grid{
-                    grid-template-columns:repeat(4,minmax(0,1fr));
-                }
-            }
-
-            @media(max-width:767px){
-                .product-grid{
-                    grid-template-columns:repeat(3,minmax(0,1fr));
-                    gap:9px;
-                }
-            }
-
-            @media(max-width:575px){
-                .product-grid{
-                    grid-template-columns:repeat(2,minmax(0,1fr));
-                    gap:8px;
-                }
-            }
-
-            .cart-message-modal .modal-dialog{
-                max-width:520px;
-            }
-
-            .cart-message-modal .modal-content{
-                border:0;
-                border-radius:18px;
-                overflow:hidden;
-                box-shadow:0 24px 70px rgba(15,23,42,.24);
-            }
-
-            .cart-message-modal .modal-header{
-                border:0;
-                padding:28px 28px 12px;
-                align-items:center;
-            }
-
-            .cart-message-modal .modal-body{
-                color:var(--ink-soft);
-                padding:8px 28px 20px;
-                font-size:1rem;
-            }
-
-            .cart-message-modal .modal-footer{
-                border:0;
-                gap:10px;
-                padding:0 28px 28px;
-            }
-
-            .cart-message-modal .modal-title{
-                display:flex;
-                align-items:center;
-                gap:12px;
-                color:var(--ink);
-                font-weight:800;
-            }
-
-            .cart-modal-mark{
-                width:42px;
-                height:42px;
-                border-radius:14px;
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                color:#fff;
-                background:linear-gradient(135deg,var(--ink),var(--primary));
-                box-shadow:0 12px 24px rgba(198,91,61,.24);
-            }
-
-            .cart-message-modal.is-error .cart-modal-mark{
-                background:linear-gradient(135deg,#873724,#c65b3d);
-                box-shadow:0 12px 24px rgba(198,91,61,.22);
-            }
-
-            .cart-message-modal .modal-footer .btn{
-                border-radius:10px;
-                min-height:42px;
-                padding:9px 16px;
-                font-weight:700;
-            }
-
-            .cart-message-modal .modal-footer .btn-danger{
-                background:var(--primary)!important;
-                border-color:var(--primary)!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-danger:hover{
-                background:var(--primary-dark)!important;
-                border-color:var(--primary-dark)!important;
-            }
-
-            /* RESPONSIVE */
-
-            @media(max-width:768px){
-
-                .hero{
-                    padding:20px 0;
-                }
-
-                .hero-panel{
-                    padding:28px 22px;
-                    text-align:center;
-                }
-
-                .hero-title,
-                .hero-text{
-                    margin-left:auto;
-                    margin-right:auto;
-                }
-
-                .hero-benefits{
-                    justify-content:center;
-                }
-
-                .hero-image{
-                    min-height:210px;
-                    max-height:250px;
-                    margin-top:26px;
-                }
-
-                .section-heading{
-                    align-items:start;
-                    flex-direction:column;
-                }
-
-                .cart-message-modal .modal-footer .btn{
-                    width:100%;
-                }
-            }
-
-            /* Cart message modal */
-            .cart-message-modal .modal-content{
-                border:0;
-                border-radius:20px;
-                overflow:hidden;
-                box-shadow:0 24px 70px rgba(37,33,30,.22);
-            }
-
-            .cart-message-modal .modal-header{
-                padding:28px 28px 10px;
-                border:0;
-            }
-
-            .cart-message-modal .modal-title{
-                color:var(--ink);
-                font-size:1.25rem;
-                font-weight:800;
-            }
-
-            .cart-message-modal .modal-body{
-                padding:8px 28px 20px;
-                color:var(--ink-soft);
-                font-size:.98rem;
-            }
-
-            .cart-modal-mark{
-                width:44px;
-                height:44px;
-                border-radius:14px;
-                background:#e8f5ee;
-                color:#287a58;
-                box-shadow:none;
-            }
-
-            .cart-message-modal.is-error .cart-modal-mark{
-                background:#fbe9e6;
-                color:#bd4a38;
-                box-shadow:none;
-            }
-
-            .cart-message-modal .modal-footer{
-                gap:10px;
-                padding:0 28px 28px;
-                border:0;
-            }
-
-            .cart-message-modal .modal-footer .btn{
-                min-height:44px;
-                padding:9px 18px;
-                border-radius:10px;
-                font-weight:700;
-            }
-
-            .cart-message-modal .modal-footer .btn-outline-dark{
-                border:1px solid #25211e!important;
-                background:#fff!important;
-                color:#25211e!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-outline-dark:hover{
-                background:#25211e!important;
-                color:#fff!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-danger{
-                background:#c65b3d!important;
-                border:1px solid #c65b3d!important;
-                color:#fff!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-danger:hover{
-                background:#a9462d!important;
-                border-color:#a9462d!important;
-            }
-
-            /* Baby blue storefront refresh */
-            body{
+            :root {
+                --home-page-bg: #f4f7fc;
+                --home-surface: #ffffff;
+                --home-surface-soft: #eef4ff;
+                --home-primary: #5f84d6;
+                --home-primary-dark: #365b9f;
+                --home-primary-light: #dce8fb;
+                --home-ink: #17233d;
+                --home-text: #283750;
+                --home-muted: #6b7890;
+                --home-border: #dbe4f3;
+                --home-danger: #d9485f;
+                --home-warning: #dc8a15;
+                --home-success: #16805b;
+                --home-shadow-sm: 0 5px 18px rgba(49, 78, 130, .08);
+                --home-shadow-md: 0 16px 38px rgba(49, 78, 130, .13);
+                --home-container: 1320px;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                min-width: 320px;
+                margin: 0;
+                background: var(--home-page-bg);
+                color: var(--home-text);
+                font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            }
+
+            .home-page {
+                flex: 1 0 auto;
+                width: 100%;
+                padding-bottom: 64px;
+            }
+
+            .home-container {
+                width: min(var(--home-container), calc(100% - 48px));
+                margin: 0 auto;
+            }
+
+            .home-hero {
+                padding: 32px 0 0;
+            }
+
+            .home-hero-panel {
+                position: relative;
+                min-height: 410px;
+                overflow: hidden;
+                border: 1px solid var(--home-border);
+                border-radius: 26px;
                 background:
-                    linear-gradient(135deg, rgba(138,170,229,.14) 0 24%, transparent 24% 100%),
-                    linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+                    radial-gradient(circle at 82% 24%, rgba(255, 255, 255, .9) 0 9%, transparent 10%),
+                    radial-gradient(circle at 91% 74%, rgba(255, 255, 255, .55) 0 15%, transparent 16%),
+                    linear-gradient(120deg, #dce8fb 0%, #eef4ff 42%, #a9c0ea 100%);
+                box-shadow: var(--home-shadow-md);
             }
 
-            .container{
-                max-width:1220px;
+            .home-hero-panel::before {
+                content: "";
+                position: absolute;
+                top: -110px;
+                right: -80px;
+                width: 380px;
+                height: 380px;
+                border: 74px solid rgba(255, 255, 255, .28);
+                border-radius: 50%;
             }
 
-            .btn-danger{
-                background:var(--primary)!important;
-                border-color:var(--primary)!important;
-                color:#fff!important;
-                box-shadow:0 12px 26px rgba(95,132,214,.22);
+            .home-hero-inner {
+                position: relative;
+                z-index: 1;
+                min-height: 410px;
+                display: grid;
+                grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+                align-items: center;
+                gap: 42px;
+                padding: 54px 60px;
             }
 
-            .btn-danger:hover,
-            .btn-danger:focus-visible{
-                background:var(--primary-dark)!important;
-                border-color:var(--primary-dark)!important;
+            .home-kicker {
+                display: inline-flex;
+                align-items: center;
+                gap: 9px;
+                margin-bottom: 16px;
+                color: var(--home-primary-dark);
+                font-size: .78rem;
+                font-weight: 800;
+                letter-spacing: .12em;
+                text-transform: uppercase;
             }
 
-            .btn-outline-dark{
-                border-color:#9bb4e8;
-                color:#365b9f;
-                background:#fff;
+            .home-kicker::before {
+                content: "";
+                width: 30px;
+                height: 3px;
+                border-radius: 99px;
+                background: var(--home-primary);
             }
 
-            .btn-outline-dark:hover,
-            .btn-outline-dark:focus-visible{
-                border-color:var(--primary-dark);
-                background:var(--primary-dark);
-                color:#fff;
+            .home-hero-title {
+                max-width: 720px;
+                margin: 0;
+                color: var(--home-ink);
+                font-size: clamp(2.65rem, 5.2vw, 5rem);
+                font-weight: 850;
+                letter-spacing: -.055em;
+                line-height: .98;
             }
 
-            .hero{
-                padding:30px 0 20px;
+            .home-hero-copy {
+                max-width: 620px;
+                margin: 22px 0 0;
+                color: #4f607c;
+                font-size: 1.02rem;
+                line-height: 1.75;
             }
 
-            .hero-panel{
-                border:1px solid rgba(138,170,229,.38);
-                border-radius:8px;
-                background:
-                    linear-gradient(135deg, rgba(255,255,255,.96), rgba(238,244,255,.92)),
-                    #fff;
-                box-shadow:0 24px 70px rgba(95,132,214,.16);
+            .home-hero-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-top: 28px;
             }
 
-            .hero-panel:after{
-                right:36%;
-                bottom:-145px;
-                background:rgba(138,170,229,.22);
+            .home-btn-primary,
+            .home-btn-secondary {
+                min-height: 46px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 9px;
+                padding: 11px 20px;
+                border: 1px solid transparent;
+                border-radius: 11px;
+                font-size: .9rem;
+                font-weight: 750;
+                text-decoration: none;
+                transition: transform .2s ease, background-color .2s ease,
+                    border-color .2s ease, color .2s ease, box-shadow .2s ease;
             }
 
-            .hero-kicker{
-                color:var(--primary-dark);
+            .home-btn-primary {
+                color: #fff;
+                background: var(--home-primary-dark);
+                box-shadow: 0 10px 22px rgba(54, 91, 159, .22);
             }
 
-            .hero-kicker:before{
-                background:var(--primary);
+            .home-btn-primary:hover {
+                color: #fff;
+                background: #284b89;
+                transform: translateY(-2px);
             }
 
-            .hero-image{
-                border-radius:8px;
-                box-shadow:0 20px 42px rgba(95,132,214,.22);
+            .home-btn-secondary {
+                color: var(--home-primary-dark);
+                border-color: rgba(54, 91, 159, .28);
+                background: rgba(255, 255, 255, .72);
             }
 
-            .search-card{
-                border-color:rgba(138,170,229,.42);
-                border-radius:8px;
-                box-shadow:var(--shadow);
+            .home-btn-secondary:hover {
+                color: var(--home-primary-dark);
+                border-color: var(--home-primary);
+                background: #fff;
+                transform: translateY(-2px);
             }
 
-            .form-control,
-            .form-select{
-                border-color:var(--border);
-                border-radius:8px;
-                background:#fff;
+            .home-hero-stats {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
             }
 
-            .form-control:focus,
-            .form-select:focus{
-                border-color:rgba(138,170,229,.86);
-                box-shadow:0 0 0 .22rem rgba(138,170,229,.20);
+            .home-stat-card {
+                min-height: 122px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 20px;
+                border: 1px solid rgba(255, 255, 255, .76);
+                border-radius: 18px;
+                background: rgba(255, 255, 255, .7);
+                box-shadow: 0 13px 32px rgba(54, 91, 159, .12);
+                backdrop-filter: blur(12px);
             }
 
-            .section-heading{
-                margin:34px 0 18px;
-                padding:0 2px;
+            .home-stat-card.is-wide {
+                grid-column: 1 / -1;
+                min-height: 112px;
             }
 
-            .section-title{
-                color:var(--ink);
-                letter-spacing:0;
+            .home-stat-icon {
+                width: 38px;
+                height: 38px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 11px;
+                color: #fff;
+                background: linear-gradient(135deg, var(--home-primary), var(--home-primary-dark));
             }
 
-            .result-count{
-                border:1px solid rgba(138,170,229,.36);
-                background:#fff;
-                color:var(--primary-dark);
+            .home-stat-value {
+                margin-top: 14px;
+                color: var(--home-ink);
+                font-size: 1.7rem;
+                font-weight: 850;
+                line-height: 1;
             }
 
-            .product-grid{
-                gap:16px;
+            .home-stat-label {
+                margin-top: 6px;
+                color: var(--home-muted);
+                font-size: .78rem;
+                font-weight: 650;
             }
 
-            .product-card{
-                border:1px solid rgba(138,170,229,.30);
-                border-radius:8px;
-                background:#fff;
-                box-shadow:0 8px 26px rgba(31,41,55,.08);
+            .home-section {
+                padding-top: 64px;
             }
 
-            .product-card:hover{
-                transform:translateY(-4px);
-                border-color:rgba(138,170,229,.78);
-                box-shadow:0 20px 38px rgba(95,132,214,.20);
+            .home-section-header {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 24px;
+                margin-bottom: 22px;
             }
 
-            .product-image-link{
-                background:#eef4ff;
+            .home-section-kicker {
+                display: block;
+                margin-bottom: 7px;
+                color: var(--home-primary);
+                font-size: .72rem;
+                font-weight: 800;
+                letter-spacing: .11em;
+                text-transform: uppercase;
             }
 
-            .product-ribbon,
-            .product-stock-badge{
-                top:8px;
-                border-radius:0 8px 8px 0;
-                padding:6px 8px;
-                font-size:.68rem;
+            .home-section-title {
+                margin: 0;
+                color: var(--home-ink);
+                font-size: clamp(1.65rem, 2.8vw, 2.2rem);
+                font-weight: 820;
+                letter-spacing: -.035em;
             }
 
-            .product-ribbon{
-                background:var(--primary);
-                color:#fff;
+            .home-section-description {
+                max-width: 680px;
+                margin: 7px 0 0;
+                color: var(--home-muted);
+                font-size: .92rem;
+                line-height: 1.65;
             }
 
-            .product-stock-badge{
-                right:8px;
-                border-radius:8px;
-                background:#fff;
-                color:#365b9f;
-                box-shadow:0 8px 18px rgba(31,41,55,.10);
+            .home-section-link {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--home-primary-dark);
+                font-size: .86rem;
+                font-weight: 750;
+                text-decoration: none;
             }
 
-            .product-card .card-body{
-                padding:11px 12px 8px;
+            .home-section-link:hover {
+                color: var(--home-primary);
             }
 
-            .product-card h6{
-                min-height:40px;
-                font-size:.86rem;
+            .home-category-grid {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 14px;
             }
 
-            .product-title-link:hover{
-                color:var(--primary-dark);
+            .home-category-card {
+                min-height: 150px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 18px;
+                overflow: hidden;
+                border: 1px solid var(--home-border);
+                border-radius: 17px;
+                color: var(--home-text);
+                background: var(--home-surface);
+                box-shadow: var(--home-shadow-sm);
+                text-decoration: none;
+                transition: transform .2s ease, border-color .2s ease,
+                    box-shadow .2s ease;
             }
 
-            .product-price{
-                color:#365b9f;
-                font-size:1.05rem;
-                letter-spacing:.01em;
+            .home-category-card:hover {
+                color: var(--home-text);
+                border-color: #afc4e8;
+                box-shadow: var(--home-shadow-md);
+                transform: translateY(-4px);
             }
 
-            .product-card .wishlist-heart-form{
-                margin:8px 0 2px;
+            .home-category-icon {
+                width: 46px;
+                height: 46px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 14px;
+                color: var(--home-primary-dark);
+                background: var(--home-primary-light);
+                font-size: 1.15rem;
             }
 
-            .product-card .wishlist-heart{
-                width:34px;
-                height:34px;
-                border-color:#d7e1f5;
-                color:var(--primary-dark);
-                background:#fff;
-                box-shadow:0 8px 18px rgba(95,132,214,.14);
+            .home-category-name {
+                display: block;
+                margin-top: 19px;
+                overflow: hidden;
+                color: var(--home-ink);
+                font-size: .94rem;
+                font-weight: 760;
+                line-height: 1.35;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            .product-card .wishlist-heart:hover,
-            .product-card .wishlist-heart.is-active{
-                background:var(--primary);
-                border-color:var(--primary);
-                color:#fff;
+            .home-category-meta {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                margin-top: 6px;
+                color: var(--home-muted);
+                font-size: .73rem;
+                font-weight: 600;
             }
 
-            .product-info .stock-ok{
-                color:#61708a;
-                font-weight:700;
+            .home-product-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 20px;
             }
 
-            .home-more .btn{
-                min-width:240px;
-                border-radius:8px;
-                border-color:#9bb4e8;
-                box-shadow:0 12px 28px rgba(95,132,214,.12);
+            .home-product-card {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid var(--home-border);
+                border-radius: 17px;
+                background: var(--home-surface);
+                box-shadow: var(--home-shadow-sm);
+                transition: transform .22s ease, border-color .22s ease,
+                    box-shadow .22s ease;
             }
 
-            .wishlist-toast{
-                background:#1f2937;
-                box-shadow:0 18px 40px rgba(31,41,55,.22);
+            .home-product-card:hover {
+                border-color: #afc4e8;
+                box-shadow: var(--home-shadow-md);
+                transform: translateY(-5px);
             }
 
-            .wishlist-toast.is-error{
-                background:#9f3a38;
+            .home-product-media {
+                position: relative;
+                display: block;
+                aspect-ratio: 4 / 4.35;
+                overflow: hidden;
+                background: #edf2f9;
             }
 
-            .cart-modal-mark{
-                background:#eef4ff;
-                color:var(--primary-dark);
-            }
-
-            .cart-message-modal .modal-footer .btn-outline-dark{
-                border-color:#9bb4e8!important;
-                color:#365b9f!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-outline-dark:hover{
-                background:var(--primary-dark)!important;
-                color:#fff!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-danger{
-                background:var(--primary)!important;
-                border-color:var(--primary)!important;
-            }
-
-            .cart-message-modal .modal-footer .btn-danger:hover{
-                background:var(--primary-dark)!important;
-                border-color:var(--primary-dark)!important;
-            }
-            .product-image-placeholder {
+            .home-product-image {
                 width: 100%;
                 height: 100%;
-                min-height: 220px;
+                display: block;
+                object-fit: contain;
+                background: #fff;
+                transition: transform .28s ease;
+            }
+
+            .home-product-card:hover .home-product-image {
+                transform: scale(1.035);
+            }
+
+            .home-product-placeholder {
+                width: 100%;
+                height: 100%;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 gap: 10px;
-                background: #eef4ff;
-                color: #71809b;
-                text-align: center;
+                color: #8a97aa;
+                background:
+                    linear-gradient(135deg, #edf2f9 0%, #f8fafd 100%);
             }
 
-            .product-image-placeholder i {
-                font-size: 42px;
+            .home-product-placeholder i {
+                font-size: 2.1rem;
             }
 
-            .product-image-placeholder span {
-                font-size: 13px;
+            .home-product-placeholder span {
+                font-size: .76rem;
+                font-weight: 650;
+            }
+
+            .home-product-badge {
+                position: absolute;
+                top: 13px;
+                left: 13px;
+                z-index: 2;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                min-height: 28px;
+                padding: 5px 9px;
+                border-radius: 999px;
+                color: #fff;
+                font-size: .68rem;
+                font-weight: 800;
+                letter-spacing: .02em;
+                box-shadow: 0 6px 16px rgba(23, 35, 61, .16);
+            }
+
+            .home-product-badge.is-featured {
+                background: linear-gradient(135deg, #5f84d6, #365b9f);
+            }
+
+            .home-product-badge.is-best {
+                background: linear-gradient(135deg, #f2a630, #cf7710);
+            }
+
+            .home-product-badge.is-sale {
+                background: linear-gradient(135deg, #e45c70, #c93950);
+            }
+
+            .home-wishlist-form {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 3;
+                margin: 0;
+            }
+
+            .home-wishlist-button {
+                width: 38px;
+                height: 38px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid rgba(219, 228, 243, .92);
+                border-radius: 50%;
+                color: var(--home-primary-dark);
+                background: rgba(255, 255, 255, .94);
+                box-shadow: 0 7px 18px rgba(49, 78, 130, .14);
+                transition: color .2s ease, background-color .2s ease,
+                    transform .2s ease;
+            }
+
+            .home-wishlist-button:hover,
+            .home-wishlist-button.is-active {
+                color: #fff;
+                background: var(--home-danger);
+                transform: scale(1.06);
+            }
+
+            .home-product-content {
+                flex: 1 1 auto;
+                display: flex;
+                flex-direction: column;
+                padding: 17px 17px 15px;
+            }
+
+            .home-product-title {
+                min-height: 44px;
+                margin: 0;
+                display: -webkit-box;
+                overflow: hidden;
+                color: var(--home-ink);
+                font-size: .96rem;
+                font-weight: 760;
+                line-height: 1.45;
+                text-overflow: ellipsis;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+            }
+
+            .home-product-title a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            .home-product-title a:hover {
+                color: var(--home-primary);
+            }
+
+            .home-product-description {
+                min-height: 39px;
+                margin: 8px 0 0;
+                display: -webkit-box;
+                overflow: hidden;
+                color: var(--home-muted);
+                font-size: .76rem;
+                line-height: 1.5;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+            }
+
+            .home-price-row {
+                min-height: 48px;
+                display: flex;
+                align-items: flex-end;
+                flex-wrap: wrap;
+                gap: 6px 9px;
+                margin-top: 13px;
+            }
+
+            .home-current-price {
+                color: var(--home-primary-dark);
+                font-size: 1.12rem;
+                font-weight: 850;
+                line-height: 1.1;
+            }
+
+            .home-list-price {
+                color: #9aa5b5;
+                font-size: .78rem;
+                font-weight: 650;
+                text-decoration: line-through;
+            }
+
+            .home-discount {
+                padding: 3px 6px;
+                border-radius: 6px;
+                color: #bd2f46;
+                background: #fff0f3;
+                font-size: .67rem;
+                font-weight: 800;
+            }
+
+            .home-product-meta {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-top: 10px;
+                color: var(--home-muted);
+                font-size: .72rem;
+                font-weight: 650;
+            }
+
+            .home-product-meta span {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .home-stock {
+                flex: 0 0 auto;
+                color: var(--home-success);
+            }
+
+            .home-product-purchase {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 8px;
+                margin-top: auto;
+                padding-top: 14px;
+            }
+
+            .home-variant-select {
+                min-width: 0;
+                height: 39px;
+                border: 1px solid var(--home-border);
+                border-radius: 9px;
+                padding: 6px 30px 6px 10px;
+                color: var(--home-text);
+                background-color: #fff;
+                font-size: .74rem;
                 font-weight: 600;
             }
 
-            .product-image {
+            .home-variant-select:focus {
+                border-color: var(--home-primary);
+                outline: 0;
+                box-shadow: 0 0 0 .18rem rgba(95, 132, 214, .14);
+            }
+
+            .home-add-cart-button {
+                width: 42px;
+                height: 39px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid var(--home-primary-dark);
+                border-radius: 9px;
+                color: #fff;
+                background: var(--home-primary-dark);
+                transition: background-color .2s ease, border-color .2s ease,
+                    transform .2s ease;
+            }
+
+            .home-add-cart-button:hover:not(:disabled) {
+                border-color: #284b89;
+                background: #284b89;
+                transform: translateY(-1px);
+            }
+
+            .home-add-cart-button:disabled {
+                cursor: not-allowed;
+                opacity: .55;
+            }
+
+            .home-detail-link {
+                min-height: 39px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 14px;
+                padding: 8px 12px;
+                border: 1px solid var(--home-border);
+                border-radius: 9px;
+                color: var(--home-primary-dark);
+                font-size: .78rem;
+                font-weight: 750;
+                text-decoration: none;
+            }
+
+            .home-detail-link:hover {
+                color: #fff;
+                border-color: var(--home-primary-dark);
+                background: var(--home-primary-dark);
+            }
+
+            .home-empty-state {
+                padding: 36px 24px;
+                border: 1px dashed #b9c8df;
+                border-radius: 17px;
+                color: var(--home-muted);
+                background: rgba(255, 255, 255, .62);
+                text-align: center;
+            }
+
+            .home-empty-state i {
+                display: block;
+                margin-bottom: 12px;
+                color: var(--home-primary);
+                font-size: 1.8rem;
+            }
+
+            .home-benefit-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px;
+            }
+
+            .home-benefit-card {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                min-height: 100px;
+                padding: 18px;
+                border: 1px solid var(--home-border);
+                border-radius: 16px;
+                background: var(--home-surface);
+                box-shadow: var(--home-shadow-sm);
+            }
+
+            .home-benefit-icon {
+                flex: 0 0 46px;
+                width: 46px;
+                height: 46px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 14px;
+                color: var(--home-primary-dark);
+                background: var(--home-primary-light);
+                font-size: 1.05rem;
+            }
+
+            .home-benefit-title {
+                margin: 0;
+                color: var(--home-ink);
+                font-size: .88rem;
+                font-weight: 760;
+            }
+
+            .home-benefit-text {
+                margin: 4px 0 0;
+                color: var(--home-muted);
+                font-size: .72rem;
+                line-height: 1.45;
+            }
+
+            .home-alert {
+                margin-top: 24px;
+                border: 1px solid #f1c2c9;
+                border-radius: 13px;
+                color: #9e2739;
+                background: #fff3f5;
+            }
+
+            .home-toast {
+                position: fixed;
+                top: 92px;
+                right: 22px;
+                z-index: 1080;
+                min-width: 270px;
+                max-width: 390px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 14px 16px;
+                border-radius: 12px;
+                color: #fff;
+                background: var(--home-ink);
+                box-shadow: 0 18px 42px rgba(23, 35, 61, .22);
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(-12px);
+                transition: opacity .25s ease, transform .25s ease;
+            }
+
+            .home-toast.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .home-toast.is-error {
+                background: #a53244;
+            }
+
+            @media (max-width: 1199.98px) {
+                .home-hero-inner {
+                    grid-template-columns: 1fr .8fr;
+                    padding: 46px 42px;
+                }
+
+                .home-category-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .home-product-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                .home-benefit-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 991.98px) {
+                .home-container {
+                    width: min(var(--home-container), calc(100% - 40px));
+                }
+
+                .home-hero-panel,
+                .home-hero-inner {
+                    min-height: 0;
+                }
+
+                .home-hero-inner {
+                    grid-template-columns: 1fr;
+                    gap: 30px;
+                    padding: 42px 34px;
+                }
+
+                .home-hero-stats {
+                    max-width: 640px;
+                }
+
+                .home-product-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 767.98px) {
+                .home-page {
+                    padding-bottom: 48px;
+                }
+
+                .home-container {
+                    width: calc(100% - 32px);
+                }
+
+                .home-hero {
+                    padding-top: 20px;
+                }
+
+                .home-hero-panel {
+                    border-radius: 20px;
+                }
+
+                .home-hero-inner {
+                    padding: 34px 24px;
+                }
+
+                .home-hero-title {
+                    font-size: clamp(2.25rem, 12vw, 3.35rem);
+                }
+
+                .home-section {
+                    padding-top: 48px;
+                }
+
+                .home-section-header {
+                    align-items: flex-start;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .home-category-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 10px;
+                }
+
+                .home-category-card {
+                    min-height: 132px;
+                    padding: 15px;
+                }
+
+                .home-benefit-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            @media (max-width: 479.98px) {
+                .home-hero-actions {
+                    flex-direction: column;
+                }
+
+                .home-btn-primary,
+                .home-btn-secondary {
+                    width: 100%;
+                }
+
+                .home-hero-stats {
+                    grid-template-columns: 1fr;
+                }
+
+                .home-stat-card.is-wide {
+                    grid-column: auto;
+                }
+
+                .home-product-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        
+            /* Homepage product cards use the same structure as Product List. */
+            .home-product-grid {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 16px;
+            }
+
+            .home-product-card {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid rgba(138, 170, 229, .30);
+                border-radius: 8px;
+                background: #ffffff;
+                box-shadow: 0 8px 26px rgba(31, 41, 55, .08);
+                transition: transform .2s ease, border-color .2s ease,
+                    box-shadow .2s ease;
+            }
+
+            .home-product-card:hover {
+                border-color: rgba(138, 170, 229, .78);
+                box-shadow: 0 20px 38px rgba(95, 132, 214, .20);
+                transform: translateY(-4px);
+            }
+
+            .home-product-media {
+                position: relative;
+                display: block;
+                aspect-ratio: 1 / 1;
+                overflow: hidden;
+                background: #eef4ff;
+            }
+
+            .home-product-image {
                 width: 100%;
                 height: 100%;
+                display: block;
                 object-fit: contain;
                 background: #ffffff;
+                transition: transform .25s ease;
             }
-        </style>
 
+            .home-product-card:hover .home-product-image {
+                transform: scale(1.03);
+            }
+
+            .home-product-badge {
+                position: absolute;
+                z-index: 2;
+                top: 8px;
+                left: 0;
+                min-height: 28px;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 6px 8px;
+                border-radius: 0 8px 8px 0;
+                color: #ffffff;
+                font-size: .68rem;
+                font-weight: 800;
+                line-height: 1;
+                box-shadow: none;
+            }
+
+            .home-product-stock-badge {
+                position: absolute;
+                z-index: 2;
+                top: 8px;
+                right: 8px;
+                min-height: 28px;
+                display: inline-flex;
+                align-items: center;
+                padding: 6px 8px;
+                border-radius: 8px;
+                color: #365b9f;
+                background: #ffffff;
+                box-shadow: 0 8px 18px rgba(31, 41, 55, .10);
+                font-size: .68rem;
+                font-weight: 800;
+                line-height: 1;
+            }
+
+            .home-product-content {
+                flex: 1 1 auto;
+                display: flex;
+                flex-direction: column;
+                padding: 11px 12px 8px;
+            }
+
+            .home-product-title {
+                min-height: 40px;
+                margin: 0 0 4px;
+                display: -webkit-box;
+                overflow: hidden;
+                color: var(--home-ink);
+                font-size: .86rem;
+                font-weight: 760;
+                line-height: 1.35;
+                text-overflow: ellipsis;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+            }
+
+            .home-price-row {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 5px 8px;
+                margin-top: 6px;
+            }
+
+            .home-current-price {
+                color: var(--home-primary-dark);
+                font-size: 1.05rem;
+                font-weight: 850;
+                line-height: 1.2;
+            }
+
+            .home-list-price {
+                color: #9aa5b5;
+                font-size: .74rem;
+                font-weight: 650;
+                text-decoration: line-through;
+            }
+
+            .home-discount {
+                padding: 3px 6px;
+                border-radius: 6px;
+                color: #bd2f46;
+                background: #fff0f3;
+                font-size: .66rem;
+                font-weight: 800;
+            }
+
+            .home-wishlist-form {
+                position: static;
+                display: block;
+                margin: 8px 0 2px;
+            }
+
+            .home-wishlist-button {
+                width: 34px;
+                height: 34px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #d7e1f5;
+                border-radius: 50%;
+                color: var(--home-primary-dark);
+                background: #ffffff;
+                box-shadow: 0 8px 18px rgba(95, 132, 214, .14);
+                transition: color .2s ease, background-color .2s ease,
+                    border-color .2s ease, transform .2s ease;
+            }
+
+            .home-wishlist-button:hover,
+            .home-wishlist-button.is-active {
+                border-color: var(--home-primary);
+                color: #ffffff;
+                background: var(--home-primary);
+                transform: scale(1.04);
+            }
+
+            @media (max-width: 1199.98px) {
+                .home-product-grid {
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 991.98px) {
+                .home-product-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 767.98px) {
+                .home-product-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 479.98px) {
+                .home-product-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+        </style>
     </head>
 
     <body>
         <jsp:include page="/view/customer/common/header.jsp"/>
-        <!-- HERO -->
 
-        <section class="hero">
-            <div class="container">
-                <div class="hero-panel">
-                    <div class="row align-items-center g-4">
-                        <div class="col-lg-6 hero-content">
-                            <span class="hero-kicker">New season edit</span>
-                            <h1 class="hero-title">Find your everyday favourite.</h1>
-                            <p class="hero-text mt-3">
-                                Curated clothing, sneakers and accessories that make getting dressed simple.
-                            </p>
-                            <ul class="hero-benefits">
-                                <li><i class="fa-solid fa-circle-check"></i>Easy shopping</li>
-                                <li><i class="fa-solid fa-tag"></i>Good value</li>
-                                <li><i class="fa-solid fa-truck"></i>Fast delivery</li>
-                            </ul>
-                        </div>
-                        <div class="col-lg-6 hero-visual">
-                            <img
-                                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1000&q=80"
-                                class="hero-image"
-                                alt="Clothing collection"
-                                loading="eager">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <main class="home-page">
+            <section class="home-hero">
+                <div class="home-container">
+                    <div class="home-hero-panel">
+                        <div class="home-hero-inner">
+                            <div>
+                                <span class="home-kicker">Style made simple</span>
+                                <h1 class="home-hero-title">
+                                    Discover pieces made for every day.
+                                </h1>
+                                <p class="home-hero-copy">
+                                    Shop Admin-curated favourites, proven best sellers,
+                                    and live sale prices in one consistent shopping experience.
+                                </p>
 
-        <!-- MAIN -->
+                                <div class="home-hero-actions">
+                                    <a href="${pageContext.request.contextPath}/products"
+                                       class="home-btn-primary">
+                                        Shop all products
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
 
-        <div class="container">
+                                    <a href="${pageContext.request.contextPath}/products?promotion=sale"
+                                       class="home-btn-secondary">
+                                        Explore sale
+                                        <i class="fa-solid fa-tag"></i>
+                                    </a>
+                                </div>
+                            </div>
 
-            <!-- SEARCH + FILTER -->
+                            <div class="home-hero-stats" aria-label="Homepage collections">
+                                <div class="home-stat-card">
+                                    <span class="home-stat-icon">
+                                        <i class="fa-solid fa-star"></i>
+                                    </span>
+                                    <div>
+                                        <div class="home-stat-value">
+                                            ${fn:length(featuredProducts)}
+                                        </div>
+                                        <div class="home-stat-label">Featured products</div>
+                                    </div>
+                                </div>
 
-            <c:if test="${not empty param.keyword}">
-                <form action="${pageContext.request.contextPath}/home" method="GET" class="card search-card p-3 p-md-4 mb-5">
-                    <div class="mb-3">
-                        <h2 class="search-heading"><i class="fa-solid fa-sliders"></i> Find the right piece</h2>
-                        <p class="search-hint">Search by name, narrow by budget, or sort the collection.</p>
-                    </div>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-6 col-md-2">
-                            <label class="filter-label" for="minPrice">Min price</label>
-                            <input id="minPrice" type="number" name="minPrice" value="${param.minPrice}" class="form-control" placeholder="0" min="0">
-                        </div>
-                        <div class="col-6 col-md-2">
-                            <label class="filter-label" for="maxPrice">Max price</label>
-                            <input id="maxPrice" type="number" name="maxPrice" value="${param.maxPrice}" class="form-control" placeholder="Any" min="0">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="filter-label" for="sort">Sort by</label>
-                            <select id="sort" name="sort" class="form-select">
-                                <option value="" ${empty param.sort ? 'selected' : ''}>Recommended</option>
-                                <option value="priceAsc" ${param.sort == 'priceAsc' ? 'selected' : ''}>Price: low to high</option>
-                                <option value="priceDesc" ${param.sort == 'priceDesc' ? 'selected' : ''}>Price: high to low</option>
-                                <option value="newest" ${param.sort == 'newest' ? 'selected' : ''}>Newest first</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="filter-label" for="keyword">Search</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-transparent border-end-0" style="border-color:var(--border); color:var(--primary);"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                <input id="keyword" type="text" name="keyword" value="${param.keyword}" class="form-control border-start-0" placeholder="Try &quot;hoodie&quot; or &quot;sneakers&quot;">
+                                <div class="home-stat-card">
+                                    <span class="home-stat-icon">
+                                        <i class="fa-solid fa-ranking-star"></i>
+                                    </span>
+                                    <div>
+                                        <div class="home-stat-value">
+                                            ${fn:length(bestSellerProducts)}
+                                        </div>
+                                        <div class="home-stat-label">Current best sellers</div>
+                                    </div>
+                                </div>
+
+                                <div class="home-stat-card is-wide">
+                                    <span class="home-stat-icon">
+                                        <i class="fa-solid fa-percent"></i>
+                                    </span>
+                                    <div>
+                                        <div class="home-stat-value">
+                                            ${fn:length(onSaleProducts)}
+                                        </div>
+                                        <div class="home-stat-label">
+                                            Products currently offered at a lower sale price
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2 d-flex gap-2">
-                            <button class="btn btn-danger flex-grow-1"><i class="fa-solid fa-magnifying-glass me-1"></i> Search</button>
-                            <c:if test="${not empty param.keyword or not empty param.minPrice or not empty param.maxPrice or not empty param.sort}">
-                                <a href="${pageContext.request.contextPath}/home" class="btn btn-outline-dark" title="Clear filters" aria-label="Clear filters"><i class="fa-solid fa-rotate-left"></i></a>
-                                </c:if>
-                        </div>
                     </div>
-                </form>
-            </c:if>
 
-            <!-- PRODUCT SECTION TITLE -->
-
-            <div class="section-heading">
-                <div>
-                    <h2 class="section-title">Featured products</h2>
-                    <p class="section-subtitle">Pieces selected for your next everyday look.</p>
+                    <c:if test="${not empty errorMessage}">
+                        <div class="alert home-alert mb-0" role="alert">
+                            <i class="fa-solid fa-circle-exclamation me-2"></i>
+                            <c:out value="${errorMessage}"/>
+                        </div>
+                    </c:if>
                 </div>
-                <c:if test="${not empty products}">
-                    <span class="result-count">${products.size()} items</span>
-                </c:if>
-            </div>
-            <!-- PRODUCT LIST -->
+            </section>
 
-            <c:if test="${not empty products}">
+            <section class="home-section" id="featuredProducts"
+                     aria-labelledby="featuredProductsTitle">
+                <div class="home-container">
+                    <div class="home-section-header">
+                        <div>
+                            <span class="home-section-kicker">Selected by Admin</span>
+                            <h2 class="home-section-title" id="featuredProductsTitle">
+                                Featured products
+                            </h2>
+                            <p class="home-section-description">
+                                A curated selection chosen directly from Product Management.
+                            </p>
+                        </div>
 
-                <div id="products" class="product-grid">
+                        <a href="${pageContext.request.contextPath}/products"
+                           class="home-section-link">
+                            View all
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
 
-                    <c:forEach items="${products}"
-                               var="p">
+                    <c:choose>
+                        <c:when test="${not empty featuredProducts}">
+                            <div class="home-product-grid">
+                                <c:forEach items="${featuredProducts}"
+                                           var="p"
+                                           varStatus="productStatus">
+                                    <c:set var="displayVariant" value="${null}"/>
+                                    <c:forEach items="${p.variants}" var="v">
+                                        <c:if test="${v.stockQuantity > 0
+                                                      and (empty displayVariant
+                                                           or v.salePrice < displayVariant.salePrice)}">
+                                            <c:set var="displayVariant" value="${v}"/>
+                                        </c:if>
+                                    </c:forEach>
 
-                        <div class="product-item">
+                                    <c:set var="isWishlisted"
+                                           value="${wishlistProductIds.contains(p.id)}"/>
 
-                            <c:set var="isWishlisted"
-                                   value="${wishlistProductIds.contains(p.id)}"/>
+                                                                        <article class="home-product-card">
+                                        <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
+                                           class="home-product-media">
+                                            <span class="home-product-badge is-featured">Featured</span>
 
-                            <div class="card product-card h-100">
+                                            <c:if test="${not empty displayVariant}">
+                                                <span class="home-product-stock-badge">In stock</span>
+                                            </c:if>
 
-                                <!-- IMAGE -->
-
-                                <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
-                                   class="product-image-link">
-
-                                    <span class="product-ribbon">Featured</span>
-
-                                    <c:if test="${not empty p.variants}">
-                                        <span class="product-stock-badge">In stock</span>
-                                    </c:if>
-
-                                    <c:choose>
-                                        <c:when test="${not empty p.mainImageUrl}">
-                                            <c:url var="productImageUrl"
-                                                   value="/media/product/${p.mainImageUrl}" />
-
-                                            <img src="${productImageUrl}"
-                                                 class="product-image"
-                                                 alt="<c:out value='${p.productName}'/>"
-                                                 loading="lazy"
-                                                 decoding="async"
-                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-
-                                            <div class="product-image-placeholder" style="display:none;">
-                                                <i class="fa-regular fa-image"></i>
-                                                <span>Image not available</span>
-                                            </div>
-                                        </c:when>
-
-                                        <c:otherwise>
-                                            <div class="product-image-placeholder">
-                                                <i class="fa-regular fa-image"></i>
-                                                <span>No product image</span>
-                                            </div>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </a>   
-                                <!-- BODY -->
-
-                                <div class="card-body">
-
-                                    <h6 class="fw-bold text-truncate mb-2">
-                                        <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="product-title-link">
-                                            ${p.productName}
+                                            <c:choose>
+                                                <c:when test="${not empty p.mainImageUrl}">
+                                                    <c:url var="featuredImageUrl"
+                                                           value="/media/product/${p.mainImageUrl}"/>
+                                                    <img src="${featuredImageUrl}"
+                                                         class="home-product-image"
+                                                         alt="${fn:escapeXml(p.productName)}"
+                                                         loading="lazy"
+                                                         decoding="async"
+                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                    <div class="home-product-placeholder"
+                                                         style="display:none;">
+                                                        <i class="fa-regular fa-image"></i>
+                                                        <span>Image unavailable</span>
+                                                    </div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div class="home-product-placeholder">
+                                                        <i class="fa-regular fa-image"></i>
+                                                        <span>No product image</span>
+                                                    </div>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </a>
-                                    </h6>
-                                    <c:choose>
-                                        <c:when test="${not empty p.variants}">
-                                            <div class="product-price mb-2">
-                                                <fmt:formatNumber value="${p.variants[0].salePrice}" pattern="#,##0"/> &#8363;
-                                            </div>
+
+                                        <div class="home-product-content">
+                                            <h3 class="home-product-title">
+                                                <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
+                                                    <c:out value="${p.productName}"/>
+                                                </a>
+                                            </h3>
+
+                                            <c:if test="${not empty displayVariant}">
+                                                <div class="home-price-row">
+                                                    <span class="home-current-price">
+                                                        <fmt:formatNumber value="${displayVariant.salePrice}"
+                                                                          pattern="#,##0"/>
+                                                        &#8363;
+                                                    </span>
+
+                                                    <c:if test="${displayVariant.listPrice > displayVariant.salePrice}">
+                                                        <span class="home-list-price">
+                                                            <fmt:formatNumber value="${displayVariant.listPrice}"
+                                                                              pattern="#,##0"/>
+                                                            &#8363;
+                                                        </span>
+                                                        <span class="home-discount">
+                                                            -<fmt:formatNumber
+                                                                value="${(displayVariant.listPrice - displayVariant.salePrice)
+                                                                         * 100 / displayVariant.listPrice}"
+                                                                maxFractionDigits="0"/>%
+                                                        </span>
+                                                    </c:if>
+                                                </div>
+                                            </c:if>
+
                                             <form action="${pageContext.request.contextPath}/wishlist/toggle"
                                                   method="post"
-                                                  class="wishlist-heart-form">
+                                                  class="home-wishlist-form">
                                                 <input type="hidden" name="productId" value="${p.id}">
-                                                <input type="hidden" name="variantId"
-                                                       value="${not empty p.variants ? p.variants[0].id : ''}">
-                                                <input type="hidden" name="wishlisted" value="${isWishlisted}">
+                                                <input type="hidden"
+                                                       name="variantId"
+                                                       value="${not empty displayVariant ? displayVariant.id : ''}">
+                                                <input type="hidden"
+                                                       name="wishlisted"
+                                                       value="${isWishlisted}">
                                                 <button type="submit"
-                                                        class="wishlist-heart ${isWishlisted ? 'is-active' : ''}"
-                                                        title="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+                                                        class="home-wishlist-button ${isWishlisted ? 'is-active' : ''}"
+                                                        title="${isWishlisted
+                                                                 ? 'Remove from wishlist'
+                                                                 : 'Add to wishlist'}">
                                                     <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                                                 </button>
                                             </form>
-                                            <div class="product-info">
-                                                <span><i class="fa-solid fa-palette me-1"></i>${p.variants[0].attributeDetails}</span>
-                                                <span class="stock-ok"><i class="fa-solid fa-box me-1"></i>${p.variants[0].stockQuantity} left</span>
-                                            </div>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <div class="text-secondary">
-                                                Contact
-                                            </div>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                                <!-- FOOTER -->
-                                <div class="card-footer bg-white">
-                                    <c:if test="${not empty p.variants}">
-                                        <form action="${pageContext.request.contextPath}/cart"
-                                              method="post"
-                                              class="add-cart-form"
-                                              style="margin:0">
-                                            <label class="visually-hidden" for="variant-${p.id}">Choose a variant for ${p.productName}</label>
-                                            <select id="variant-${p.id}" name="variantId" class="form-select form-select-sm mb-2 variant-select">
-                                                <c:forEach items="${p.variants}" var="v">
-                                                    <option value="${v.id}"
-                                                            data-price="${v.salePrice}"
-                                                            data-stock="${v.stockQuantity}"
-                                                            data-cart-quantity="${not empty sessionScope.cart[v.id] ? sessionScope.cart[v.id].quantity : 0}"
-                                                            data-attributes="${v.attributeDetails}">
-                                                        ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> &#8363;
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
-                                            <input type="hidden" name="productId" value="${p.id}" />
-                                            <input type="hidden" name="productName" value="${p.productName}" />
-                                            <input type="hidden" name="attributes" class="attributes-input" value="${p.variants[0].attributeDetails}" />
-                                            <input type="hidden" name="price" class="price-input" value="${p.variants[0].salePrice}" />
-                                            <input type="hidden" name="quantity" value="1" />
-                                            <input type="hidden" name="imageUrl" value="${p.mainImageUrl}" />
-                                            <div class="product-actions">
-                                                <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="btn btn-outline-dark">
-                                                    Details
-                                                </a>
-                                                <button type="submit" class="btn btn-danger">
-                                                    <i class="fa-solid fa-cart-plus"></i>
-                                                    Add to cart
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </c:if>
-                                    <c:if test="${empty p.variants}">
-                                        <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}" class="btn btn-outline-dark w-100">
-                                            View details
-                                        </a>
-                                    </c:if>
+                                        </div>
+                                    </article>
+                                </c:forEach>
+                            </div>
+                        </c:when>
 
-                                </div>
+                        <c:otherwise>
+                            <div class="home-empty-state">
+                                <i class="fa-regular fa-star"></i>
+                                No Featured Products have been selected yet.
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </section>
 
+            <c:if test="${not empty bestSellerProducts}">
+                <section class="home-section" id="bestSellerProducts"
+                         aria-labelledby="bestSellerProductsTitle">
+                    <div class="home-container">
+                        <div class="home-section-header">
+                            <div>
+                                <span class="home-section-kicker">Customer favourites</span>
+                                <h2 class="home-section-title" id="bestSellerProductsTitle">
+                                    Best sellers
+                                </h2>
+                                <p class="home-section-description">
+                                    Ranked from quantities sold in successfully delivered orders.
+                                </p>
                             </div>
 
+                            <a href="${pageContext.request.contextPath}/products?sort=best-selling"
+                               class="home-section-link">
+                                View all best sellers
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
                         </div>
 
-                    </c:forEach>
+                        <div class="home-product-grid">
+                            <c:forEach items="${bestSellerProducts}"
+                                       var="p"
+                                       varStatus="productStatus">
+                                <c:set var="displayVariant" value="${null}"/>
+                                <c:forEach items="${p.variants}" var="v">
+                                    <c:if test="${v.stockQuantity > 0
+                                                  and (empty displayVariant
+                                                       or v.salePrice < displayVariant.salePrice)}">
+                                        <c:set var="displayVariant" value="${v}"/>
+                                    </c:if>
+                                </c:forEach>
 
-                </div>
+                                <c:set var="isWishlisted"
+                                       value="${wishlistProductIds.contains(p.id)}"/>
 
-                <c:if test="${hasMoreProducts}">
-                    <c:url var="productsPageUrl" value="/products">
-                        <c:param name="keyword" value="${param.keyword}"/>
-                        <c:param name="categoryId" value="${param.categoryId}"/>
-                        <c:param name="minPrice" value="${param.minPrice}"/>
-                        <c:param name="maxPrice" value="${param.maxPrice}"/>
-                        <c:param name="sort" value="${param.sort}"/>
-                    </c:url>
-                    <div class="home-more">
-                        <a href="${productsPageUrl}" class="btn btn-outline-dark">
-                            View more products <i class="fa-solid fa-arrow-right ms-2"></i>
-                        </a>
+                                                                <article class="home-product-card">
+                                    <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
+                                       class="home-product-media">
+                                        <span class="home-product-badge is-best">Best seller</span>
+
+                                        <c:if test="${not empty displayVariant}">
+                                            <span class="home-product-stock-badge">In stock</span>
+                                        </c:if>
+
+                                        <c:choose>
+                                            <c:when test="${not empty p.mainImageUrl}">
+                                                <c:url var="bestSellerImageUrl"
+                                                       value="/media/product/${p.mainImageUrl}"/>
+                                                <img src="${bestSellerImageUrl}"
+                                                     class="home-product-image"
+                                                     alt="${fn:escapeXml(p.productName)}"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="home-product-placeholder"
+                                                     style="display:none;">
+                                                    <i class="fa-regular fa-image"></i>
+                                                    <span>Image unavailable</span>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="home-product-placeholder">
+                                                    <i class="fa-regular fa-image"></i>
+                                                    <span>No product image</span>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </a>
+
+                                    <div class="home-product-content">
+                                        <h3 class="home-product-title">
+                                            <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
+                                                <c:out value="${p.productName}"/>
+                                            </a>
+                                        </h3>
+
+                                        <c:if test="${not empty displayVariant}">
+                                            <div class="home-price-row">
+                                                <span class="home-current-price">
+                                                    <fmt:formatNumber value="${displayVariant.salePrice}"
+                                                                      pattern="#,##0"/>
+                                                    &#8363;
+                                                </span>
+
+                                                <c:if test="${displayVariant.listPrice > displayVariant.salePrice}">
+                                                    <span class="home-list-price">
+                                                        <fmt:formatNumber value="${displayVariant.listPrice}"
+                                                                          pattern="#,##0"/>
+                                                        &#8363;
+                                                    </span>
+                                                    <span class="home-discount">
+                                                        -<fmt:formatNumber
+                                                            value="${(displayVariant.listPrice - displayVariant.salePrice)
+                                                                     * 100 / displayVariant.listPrice}"
+                                                            maxFractionDigits="0"/>%
+                                                    </span>
+                                                </c:if>
+                                            </div>
+                                        </c:if>
+
+                                        <form action="${pageContext.request.contextPath}/wishlist/toggle"
+                                              method="post"
+                                              class="home-wishlist-form">
+                                            <input type="hidden" name="productId" value="${p.id}">
+                                            <input type="hidden"
+                                                   name="variantId"
+                                                   value="${not empty displayVariant ? displayVariant.id : ''}">
+                                            <input type="hidden"
+                                                   name="wishlisted"
+                                                   value="${isWishlisted}">
+                                            <button type="submit"
+                                                    class="home-wishlist-button ${isWishlisted ? 'is-active' : ''}"
+                                                    title="${isWishlisted
+                                                             ? 'Remove from wishlist'
+                                                             : 'Add to wishlist'}">
+                                                <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </article>
+                            </c:forEach>
+                        </div>
                     </div>
-                </c:if>
-
+                </section>
             </c:if>
 
+            <c:if test="${not empty onSaleProducts}">
+                <section class="home-section" id="onSaleProducts"
+                         aria-labelledby="onSaleProductsTitle">
+                    <div class="home-container">
+                        <div class="home-section-header">
+                            <div>
+                                <span class="home-section-kicker">Live Admin pricing</span>
+                                <h2 class="home-section-title" id="onSaleProductsTitle">
+                                    On sale now
+                                </h2>
+                                <p class="home-section-description">
+                                    Products appear here automatically when an active Variant has
+                                    a Sale Price lower than its List Price.
+                                </p>
+                            </div>
 
-            <!-- EMPTY PRODUCT -->
+                            <a href="${pageContext.request.contextPath}/products?promotion=sale"
+                               class="home-section-link">
+                                View all sale products
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
 
-            <c:if test="${empty products}">
+                        <div class="home-product-grid">
+                            <c:forEach items="${onSaleProducts}"
+                                       var="p"
+                                       varStatus="productStatus">
+                                <c:set var="displayVariant" value="${null}"/>
+                                <c:set var="bestDiscountRatio" value="-1"/>
 
-                <div class="text-center empty-state">
+                                <c:forEach items="${p.variants}" var="v">
+                                    <c:if test="${v.stockQuantity > 0
+                                                  and v.listPrice > v.salePrice}">
+                                        <c:set var="variantDiscountRatio"
+                                               value="${(v.listPrice - v.salePrice) / v.listPrice}"/>
+                                        <c:if test="${empty displayVariant
+                                                      or variantDiscountRatio > bestDiscountRatio}">
+                                            <c:set var="displayVariant" value="${v}"/>
+                                            <c:set var="bestDiscountRatio"
+                                                   value="${variantDiscountRatio}"/>
+                                        </c:if>
+                                    </c:if>
+                                </c:forEach>
 
-                    <i class="fa-solid fa-box-open fa-4x text-secondary"></i>
+                                <c:set var="isWishlisted"
+                                       value="${wishlistProductIds.contains(p.id)}"/>
 
-                    <h3 class="mt-4">
+                                                                <article class="home-product-card">
+                                    <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}"
+                                       class="home-product-media">
+                                        <span class="home-product-badge is-sale">
+                                            <c:choose>
+                                                <c:when test="${not empty displayVariant}">
+                                                    Sale
+                                                    <fmt:formatNumber
+                                                        value="${(displayVariant.listPrice - displayVariant.salePrice)
+                                                                 * 100 / displayVariant.listPrice}"
+                                                        maxFractionDigits="0"/>%
+                                                </c:when>
+                                                <c:otherwise>
+                                                    On sale
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </span>
 
-                        No Products Found
+                                        <c:if test="${not empty displayVariant}">
+                                            <span class="home-product-stock-badge">In stock</span>
+                                        </c:if>
 
-                    </h3>
+                                        <c:choose>
+                                            <c:when test="${not empty p.mainImageUrl}">
+                                                <c:url var="saleImageUrl"
+                                                       value="/media/product/${p.mainImageUrl}"/>
+                                                <img src="${saleImageUrl}"
+                                                     class="home-product-image"
+                                                     alt="${fn:escapeXml(p.productName)}"
+                                                     loading="lazy"
+                                                     decoding="async"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="home-product-placeholder"
+                                                     style="display:none;">
+                                                    <i class="fa-regular fa-image"></i>
+                                                    <span>Image unavailable</span>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="home-product-placeholder">
+                                                    <i class="fa-regular fa-image"></i>
+                                                    <span>No product image</span>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </a>
 
-                    <p class="text-secondary">
+                                    <div class="home-product-content">
+                                        <h3 class="home-product-title">
+                                            <a href="${pageContext.request.contextPath}/product/detail?id=${p.id}">
+                                                <c:out value="${p.productName}"/>
+                                            </a>
+                                        </h3>
 
-                        Please try another keyword.
+                                        <c:if test="${not empty displayVariant}">
+                                            <div class="home-price-row">
+                                                <span class="home-current-price">
+                                                    <fmt:formatNumber value="${displayVariant.salePrice}"
+                                                                      pattern="#,##0"/>
+                                                    &#8363;
+                                                </span>
+                                                <span class="home-list-price">
+                                                    <fmt:formatNumber value="${displayVariant.listPrice}"
+                                                                      pattern="#,##0"/>
+                                                    &#8363;
+                                                </span>
+                                                <span class="home-discount">
+                                                    -<fmt:formatNumber
+                                                        value="${(displayVariant.listPrice - displayVariant.salePrice)
+                                                                 * 100 / displayVariant.listPrice}"
+                                                        maxFractionDigits="0"/>%
+                                                </span>
+                                            </div>
+                                        </c:if>
 
-                    </p>
-
-                </div>
-
+                                        <form action="${pageContext.request.contextPath}/wishlist/toggle"
+                                              method="post"
+                                              class="home-wishlist-form">
+                                            <input type="hidden" name="productId" value="${p.id}">
+                                            <input type="hidden"
+                                                   name="variantId"
+                                                   value="${not empty displayVariant ? displayVariant.id : ''}">
+                                            <input type="hidden"
+                                                   name="wishlisted"
+                                                   value="${isWishlisted}">
+                                            <button type="submit"
+                                                    class="home-wishlist-button ${isWishlisted ? 'is-active' : ''}"
+                                                    title="${isWishlisted
+                                                             ? 'Remove from wishlist'
+                                                             : 'Add to wishlist'}">
+                                                <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </article>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </section>
             </c:if>
 
-        </div>
+            <section class="home-section" aria-labelledby="homeBenefitsTitle">
+                <div class="home-container">
+                    <div class="home-section-header">
+                        <div>
+                            <span class="home-section-kicker">Shop with confidence</span>
+                            <h2 class="home-section-title" id="homeBenefitsTitle">
+                                A smoother shopping experience
+                            </h2>
+                        </div>
+                    </div>
 
-        <div class="wishlist-toast" id="wishlistToast">
-            <i class="fa-solid fa-heart me-2"></i>
-            <span id="wishlistToastText"></span>
-        </div>
-
-        <div class="modal fade cart-message-modal" id="cartMessageModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <span class="cart-modal-mark">
-                                <i class="fa-solid fa-check"></i>
+                    <div class="home-benefit-grid">
+                        <article class="home-benefit-card">
+                            <span class="home-benefit-icon">
+                                <i class="fa-solid fa-box-open"></i>
                             </span>
-                            <span id="cartMessageTitle">Cart Updated</span>
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="cartMessageText">
-                        Item added to your cart.
-                    </div>
-                    <div class="modal-footer">
-                        <a href="${pageContext.request.contextPath}/cart" class="btn btn-outline-dark">View Cart</a>
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Continue Shopping</button>
+                            <div>
+                                <h3 class="home-benefit-title">Live availability</h3>
+                                <p class="home-benefit-text">
+                                    Available Variants and stock are loaded from current inventory.
+                                </p>
+                            </div>
+                        </article>
+
+                        <article class="home-benefit-card">
+                            <span class="home-benefit-icon">
+                                <i class="fa-solid fa-tags"></i>
+                            </span>
+                            <div>
+                                <h3 class="home-benefit-title">Current pricing</h3>
+                                <p class="home-benefit-text">
+                                    List Price and Sale Price reflect Admin Price Management.
+                                </p>
+                            </div>
+                        </article>
+
+                        <article class="home-benefit-card">
+                            <span class="home-benefit-icon">
+                                <i class="fa-solid fa-heart"></i>
+                            </span>
+                            <div>
+                                <h3 class="home-benefit-title">Save favourites</h3>
+                                <p class="home-benefit-text">
+                                    Keep products in your Wishlist and return to them later.
+                                </p>
+                            </div>
+                        </article>
+
+                        <article class="home-benefit-card">
+                            <span class="home-benefit-icon">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </span>
+                            <div>
+                                <h3 class="home-benefit-title">Clear order flow</h3>
+                                <p class="home-benefit-text">
+                                    Review Cart, Checkout and Order History in one consistent flow.
+                                </p>
+                            </div>
+                        </article>
                     </div>
                 </div>
-            </div>
+            </section>
+        </main>
+
+        <div class="home-toast" id="homeWishlistToast" role="status" aria-live="polite">
+            <i class="fa-solid fa-heart"></i>
+            <span id="homeWishlistToastText"></span>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            document.querySelectorAll('.variant-select').forEach(function (select) {
-                function syncVariant() {
-                    var form = select.closest('.add-cart-form');
-                    var option = select.options[select.selectedIndex];
-                    form.querySelector('.attributes-input').value = option.dataset.attributes || 'Standard';
-                    form.querySelector('.price-input').value = option.dataset.price || '0';
+            (function () {
+                "use strict";
 
-                    var stock = parseInt(option.dataset.stock || '0', 10);
-                    var cartQuantity = parseInt(option.dataset.cartQuantity || '0', 10);
-                    var canAddToCart = Math.max(0, stock - cartQuantity) > 0;
-                    var button = form.querySelector('button[type="submit"]');
+                function formatCurrency(value) {
+                    var numericValue = Number(value || 0);
+                    return new Intl.NumberFormat("vi-VN", {
+                        maximumFractionDigits: 0
+                    }).format(numericValue) + " ₫";
+                }
 
-                    if (button) {
-                        button.disabled = !canAddToCart;
-                        button.innerHTML = canAddToCart
-                                ? '<i class="fa-solid fa-cart-plus"></i> Add to cart'
-                                : '<i class="fa-solid fa-circle-check"></i> Max in cart';
+                document.querySelectorAll(".home-add-cart-form").forEach(function (form) {
+                    var select = form.querySelector(".home-variant-select");
+                    var card = form.closest(".home-product-card");
+                    var button = form.querySelector(".home-add-cart-button");
+
+                    if (!select || !card || !button) {
+                        return;
                     }
-                }
-                select.addEventListener('change', syncVariant);
-                syncVariant();
-            });
 
-            document.querySelectorAll('.add-cart-form').forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    var select = form.querySelector('.variant-select');
-                    var option = select ? select.options[select.selectedIndex] : null;
-                    var stock = option ? parseInt(option.dataset.stock || '0', 10) : 0;
-                    var cartQuantity = option ? parseInt(option.dataset.cartQuantity || '0', 10) : 0;
+                    var currentPrice = card.querySelector(".home-current-price");
+                    var listPrice = card.querySelector(".home-list-price");
+                    var discount = card.querySelector(".home-discount");
+                    var variantLabel = card.querySelector(".home-variant-label");
+                    var stockLabel = card.querySelector(".home-stock");
 
-                    if (Math.max(0, stock - cartQuantity) <= 0) {
-                        event.preventDefault();
+                    function syncVariant() {
+                        var option = select.options[select.selectedIndex];
+
+                        if (!option) {
+                            button.disabled = true;
+                            return;
+                        }
+
+                        var salePrice = Number(option.dataset.price || 0);
+                        var originalPrice = Number(option.dataset.listPrice || salePrice);
+                        var stock = Number(option.dataset.stock || 0);
+                        var cartQuantity = Number(option.dataset.cartQuantity || 0);
+                        var remaining = Math.max(0, stock - cartQuantity);
+                        var attributes = option.dataset.attributes || "Standard";
+
+                        if (currentPrice) {
+                            currentPrice.textContent = formatCurrency(salePrice);
+                        }
+
+                        if (listPrice) {
+                            listPrice.textContent = formatCurrency(originalPrice);
+                            listPrice.style.display = originalPrice > salePrice ? "" : "none";
+                        }
+
+                        if (discount) {
+                            if (originalPrice > salePrice && originalPrice > 0) {
+                                discount.textContent = "-"
+                                        + Math.round((originalPrice - salePrice) * 100 / originalPrice)
+                                        + "%";
+                                discount.style.display = "";
+                            } else {
+                                discount.style.display = "none";
+                            }
+                        }
+
+                        if (variantLabel) {
+                            variantLabel.innerHTML = '<i class="fa-solid fa-layer-group me-1"></i>'
+                                    + attributes;
+                        }
+
+                        if (stockLabel) {
+                            stockLabel.innerHTML = '<i class="fa-solid fa-box me-1"></i>'
+                                    + stock + " in stock";
+                        }
+
+                        button.disabled = remaining <= 0;
+                        button.title = remaining > 0
+                                ? "Add selected variant to cart"
+                                : "Maximum available quantity is already in your cart";
                     }
+
+                    select.addEventListener("change", syncVariant);
+
+                    form.addEventListener("submit", function (event) {
+                        if (button.disabled) {
+                            event.preventDefault();
+                            return;
+                        }
+
+                        sessionStorage.setItem(
+                                "homeScrollY",
+                                String(window.scrollY || 0)
+                        );
+                    });
+
+                    syncVariant();
                 });
-            });
 
-            var params = new URLSearchParams(window.location.search);
-            if (params.has('cartAdded') || params.has('cartError')) {
-                params.delete('cartAdded');
-                params.delete('cartError');
-                window.history.replaceState(
-                        {},
-                        '',
-                        window.location.pathname
-                        + (params.toString() ? '?' + params.toString() : '')
-                        + window.location.hash
-                );
-            }
+                var toast = document.getElementById("homeWishlistToast");
+                var toastText = document.getElementById("homeWishlistToastText");
+                var params = new URLSearchParams(window.location.search);
 
-            var wishlistToast = document.getElementById('wishlistToast');
-            var wishlistToastText = document.getElementById('wishlistToastText');
+                function showToast(message, isError) {
+                    if (!toast || !toastText) {
+                        return;
+                    }
 
-            function showWishlistToast(message, isError) {
-                if (!wishlistToast || !wishlistToastText) {
-                    return;
+                    toast.classList.toggle("is-error", Boolean(isError));
+                    toastText.textContent = message;
+                    toast.classList.add("show");
+
+                    clearTimeout(toast.hideTimer);
+                    toast.hideTimer = setTimeout(function () {
+                        toast.classList.remove("show");
+                    }, 2600);
                 }
 
-                wishlistToast.classList.toggle('is-error', !!isError);
-                wishlistToastText.textContent = message;
-                wishlistToast.classList.add('show');
-                clearTimeout(wishlistToast.hideTimer);
-                wishlistToast.hideTimer = setTimeout(function () {
-                    wishlistToast.classList.remove('show');
-                }, 2600);
-            }
+                if (params.has("wishlistAdded")
+                        || params.has("wishlistRemoved")
+                        || params.has("wishlistError")) {
 
-            if (params.has('wishlistAdded') || params.has('wishlistRemoved') || params.has('wishlistError')) {
-                var wishlistMessage = 'Added to your wishlist.';
-                var wishlistIsError = false;
+                    var message = "Added to your Wishlist.";
+                    var isError = false;
 
-                if (params.has('wishlistRemoved')) {
-                    wishlistMessage = 'Removed from your wishlist.';
+                    if (params.has("wishlistRemoved")) {
+                        message = "Removed from your Wishlist.";
+                    }
+
+                    if (params.has("wishlistError")) {
+                        message = "Unable to update your Wishlist.";
+                        isError = true;
+                    }
+
+                    showToast(message, isError);
                 }
 
-                if (params.has('wishlistError')) {
-                    wishlistMessage = 'Unable to update your wishlist.';
-                    wishlistIsError = true;
+                document.querySelectorAll(".home-wishlist-form").forEach(function (form) {
+                    form.addEventListener("submit", function () {
+                        sessionStorage.setItem(
+                                "homeScrollY",
+                                String(window.scrollY || 0)
+                        );
+                    });
+                });
+
+                var savedScrollY = sessionStorage.getItem("homeScrollY");
+
+                if (savedScrollY !== null) {
+                    sessionStorage.removeItem("homeScrollY");
+                    requestAnimationFrame(function () {
+                        window.scrollTo(0, Number(savedScrollY) || 0);
+                    });
                 }
-
-                showWishlistToast(wishlistMessage, wishlistIsError);
-            }
-
-            document.querySelectorAll('.wishlist-heart-form').forEach(function (form) {
-                form.addEventListener('submit', function () {
-                    sessionStorage.setItem('wishlistScrollY', String(window.scrollY || 0));
-                });
-            });
-
-            var savedWishlistScroll = sessionStorage.getItem('wishlistScrollY');
-            if (savedWishlistScroll !== null) {
-                sessionStorage.removeItem('wishlistScrollY');
-                requestAnimationFrame(function () {
-                    window.scrollTo(0, parseInt(savedWishlistScroll, 10) || 0);
-                });
-            }
+            })();
         </script>
-        <jsp:include page="/view/customer/common/footer.jsp"/>
-    </body>
 
+         <jsp:include page="/view/customer/common/footer.jsp"/>
+    </body>
 </html>

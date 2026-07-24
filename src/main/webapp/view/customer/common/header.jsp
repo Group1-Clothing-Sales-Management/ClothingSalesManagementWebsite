@@ -3,62 +3,101 @@
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <c:set var="loggedIn" value="${not empty sessionScope.authUserId}"/>
-<c:set var="selectedCategoryId" value="${param.categoryId}"/>
+<c:set var="requestUri" value="${pageContext.request.requestURI}"/>
 
-<jsp:useBean id="headerProductDAO"
-             class="com.clothingsale.dao.CustomerProductDAO"
-             scope="page"/>
+<c:set var="activeCategoryId"
+       value="${not empty requestScope.selectedCategoryId
+                ? requestScope.selectedCategoryId
+                : (not empty param.categoryId
+                   ? param.categoryId
+                   : (not empty requestScope.product
+                      ? requestScope.product.categoryId
+                      : null))}"/>
 
-<c:set var="navCategoryGroups"
-       value="${not empty headerCategories
-                ? headerCategories
-                : headerProductDAO.headerCategories}"/>
+<c:set var="isProductListPage"
+       value="${fn:endsWith(requestUri, '/products')
+                or fn:endsWith(requestUri, '/product')}"/>
 
-<header class="store-header sticky-top">
-    <div class="store-header-main">
-        <div class="store-header-container store-header-main-inner">
+<c:set var="allProductsActive"
+       value="${isProductListPage and empty activeCategoryId}"/>
+
+<c:set var="headerDisplayName"
+       value="${not empty sessionScope.customerFullName
+                ? sessionScope.customerFullName
+                : (not empty sessionScope.authFullName
+                   ? sessionScope.authFullName
+                   : sessionScope.authUsername)}"/>
+
+<c:set var="headerCartCount"
+       value="${not empty sessionScope.cart
+                ? fn:length(sessionScope.cart)
+                : 0}"/>
+
+<header class="customer-store-header sticky-top">
+    <div class="customer-store-header-main">
+        <div class="customer-layout-container customer-store-header-row">
             <a href="${pageContext.request.contextPath}/home"
-               class="store-brand"
-               aria-label="Clothing Sale home">
-                <span class="store-brand-icon">
+               class="customer-store-brand"
+               aria-label="Go to Clothing Sale homepage">
+                <span class="customer-store-brand-mark">
                     <i class="fa-solid fa-bag-shopping"></i>
                 </span>
-                <span>Clothing Sale</span>
+                <span class="customer-store-brand-name">Clothing Sale</span>
             </a>
 
             <form action="${pageContext.request.contextPath}/products"
                   method="get"
-                  class="store-search"
+                  class="customer-store-search"
                   role="search">
-                <c:if test="${not empty selectedCategoryId}">
-                    <input type="hidden"
-                           name="categoryId"
-                           value="<c:out value='${selectedCategoryId}'/>"/>
-                </c:if>
-
-                <label class="visually-hidden" for="storeHeaderKeyword">
+                <label class="visually-hidden"
+                       for="customerStoreSearchInput">
                     Search products
                 </label>
-                <input id="storeHeaderKeyword"
+
+                <input id="customerStoreSearchInput"
                        type="search"
                        name="keyword"
                        value="<c:out value='${param.keyword}'/>"
-                       placeholder="Search clothing, accessories and sportswear..."
+                       placeholder="Search products..."
                        autocomplete="off"/>
+
                 <button type="submit" aria-label="Search products">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </form>
 
-            <div class="store-header-actions">
+            <div class="customer-store-actions">
+                <a href="${pageContext.request.contextPath}/wishlist"
+                   class="customer-store-action customer-store-wishlist"
+                   aria-label="Wishlist"
+                   title="Wishlist">
+                    <span class="customer-store-action-icon">
+                        <i class="fa-regular fa-heart"></i>
+                    </span>
+                    <span class="customer-store-action-label">Wishlist</span>
+
+                    <c:if test="${sessionScope.wishlistCount > 0}">
+                        <span class="customer-store-count-badge">
+                            <c:out value="${sessionScope.wishlistCount}"/>
+                        </span>
+                    </c:if>
+                </a>
+
                 <c:choose>
                     <c:when test="${loggedIn}">
-                        <details class="store-account">
-                            <summary aria-haspopup="menu">
-                                <span class="store-user-avatar">
+                        <details class="customer-store-account">
+                            <summary aria-haspopup="menu"
+                                     aria-expanded="false">
+                                <span class="customer-store-user-avatar">
                                     <c:choose>
-                                        <c:when test="${not empty sessionScope.authUsername}">
-                                            <c:out value="${fn:toUpperCase(fn:substring(sessionScope.authUsername, 0, 1))}"/>
+                                        <c:when test="${not empty headerDisplayName}">
+                                            <c:out value="${fn:toUpperCase(
+                                                            fn:substring(
+                                                                headerDisplayName,
+                                                                0,
+                                                                1
+                                                            )
+                                                        )}"/>
                                         </c:when>
                                         <c:otherwise>
                                             <i class="fa-solid fa-user"></i>
@@ -66,49 +105,67 @@
                                     </c:choose>
                                 </span>
 
-                                <span class="store-account-name">
-                                    <c:out value="${not empty sessionScope.customerFullName
-                                                    ? sessionScope.customerFullName
-                                                    : sessionScope.authUsername}"
-                                           default="Account"/>
+                                <span class="customer-store-account-copy">
+                                    <small>Account</small>
+                                    <strong>
+                                        <c:out value="${headerDisplayName}"
+                                               default="Customer"/>
+                                    </strong>
                                 </span>
 
-                                <i class="fa-solid fa-chevron-down store-account-chevron"></i>
+                                <i class="fa-solid fa-chevron-down
+                                   customer-store-account-chevron"></i>
                             </summary>
 
-                            <div class="store-account-menu" role="menu">
+                            <div class="customer-store-account-menu"
+                                 role="menu">
+                                <div class="customer-store-account-menu-heading">
+                                    <span>Signed in as</span>
+                                    <strong>
+                                        <c:out value="${headerDisplayName}"
+                                               default="Customer"/>
+                                    </strong>
+                                </div>
+
                                 <a href="${pageContext.request.contextPath}/customer/profile"
                                    role="menuitem">
                                     <i class="fa-regular fa-user"></i>
-                                    Profile
+                                    <span>Profile</span>
                                 </a>
+
                                 <a href="${pageContext.request.contextPath}/customer/orders"
                                    role="menuitem">
                                     <i class="fa-solid fa-box"></i>
-                                    My Orders
+                                    <span>My Orders</span>
                                 </a>
+
                                 <a href="${pageContext.request.contextPath}/customer/returns"
                                    role="menuitem">
                                     <i class="fa-solid fa-rotate-left"></i>
-                                    Returns &amp; Refunds
+                                    <span>Returns &amp; Refunds</span>
                                 </a>
+
                                 <a href="${pageContext.request.contextPath}/customer/vouchers"
                                    role="menuitem">
                                     <i class="fa-solid fa-ticket"></i>
-                                    My Vouchers
+                                    <span>My Vouchers</span>
                                 </a>
+
                                 <a href="${pageContext.request.contextPath}/wishlist"
                                    role="menuitem">
                                     <i class="fa-regular fa-heart"></i>
-                                    My Wishlist
+                                    <span>My Wishlist</span>
                                 </a>
+
                                 <hr/>
-                                <a class="js-customer-logout"
+
+                                <a class="js-customer-logout
+                                   customer-store-logout-link"
                                    href="${pageContext.request.contextPath}/customer/logout"
                                    data-logout-url="${pageContext.request.contextPath}/customer/logout"
                                    role="menuitem">
                                     <i class="fa-solid fa-right-from-bracket"></i>
-                                    Logout
+                                    <span>Logout</span>
                                 </a>
                             </div>
                         </details>
@@ -116,22 +173,29 @@
 
                     <c:otherwise>
                         <a href="${pageContext.request.contextPath}/customer/login"
-                           class="store-login"
-                           aria-label="Login">
-                            <i class="fa-regular fa-user"></i>
-                            <span>Login</span>
+                           class="customer-store-action customer-store-login"
+                           aria-label="Login"
+                           title="Login">
+                            <span class="customer-store-action-icon">
+                                <i class="fa-regular fa-user"></i>
+                            </span>
+                            <span class="customer-store-action-label">Login</span>
                         </a>
                     </c:otherwise>
                 </c:choose>
 
                 <a href="${pageContext.request.contextPath}/cart"
-                   class="store-cart"
-                   aria-label="Cart">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    <span>Cart</span>
-                    <c:if test="${loggedIn and sessionScope.cartCount > 0}">
-                        <span class="store-cart-badge">
-                            <c:out value="${sessionScope.cartCount}"/>
+                   class="customer-store-action customer-store-cart"
+                   aria-label="Shopping cart"
+                   title="Shopping cart">
+                    <span class="customer-store-action-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </span>
+                    <span class="customer-store-action-label">Cart</span>
+
+                    <c:if test="${headerCartCount > 0}">
+                        <span class="customer-store-count-badge">
+                            <c:out value="${headerCartCount}"/>
                         </span>
                     </c:if>
                 </a>
@@ -139,50 +203,66 @@
         </div>
     </div>
 
-    <nav class="store-category-nav" aria-label="Product categories">
-        <div class="store-header-container store-category-track">
+    <nav class="customer-store-category-nav"
+         aria-label="Product categories">
+        <div class="customer-layout-container
+             customer-store-category-track">
             <a href="${pageContext.request.contextPath}/products"
-               class="store-category-all ${empty selectedCategoryId ? 'is-active' : ''}">
+               class="customer-store-category-all
+                      ${allProductsActive ? 'is-active' : ''}">
                 <i class="fa-solid fa-border-all"></i>
-                All Products
+                <span>All Products</span>
             </a>
 
-            <c:forEach items="${navCategoryGroups}" var="parentCategory">
+            <c:forEach items="${headerCategories}"
+                       var="parentCategory">
                 <c:set var="parentActive"
-                       value="${selectedCategoryId == parentCategory.id}"/>
+                       value="${activeCategoryId == parentCategory.id}"/>
 
-                <c:forEach items="${parentCategory.children}" var="childCategory">
-                    <c:if test="${selectedCategoryId == childCategory.id}">
+                <c:forEach items="${parentCategory.children}"
+                           var="childCategory">
+                    <c:if test="${activeCategoryId == childCategory.id}">
                         <c:set var="parentActive" value="true"/>
                     </c:if>
                 </c:forEach>
 
-                <div class="store-category-group ${parentActive ? 'is-active' : ''}">
+                <div class="customer-store-category-group
+                     ${parentActive ? 'is-active' : ''}">
                     <a href="${pageContext.request.contextPath}/products?categoryId=${parentCategory.id}"
-                       class="store-category-parent">
+                       class="customer-store-category-parent">
                         <c:out value="${parentCategory.categoryName}"/>
                     </a>
 
                     <c:if test="${not empty parentCategory.children}">
                         <button type="button"
-                                class="store-category-toggle"
-                                aria-label="Open ${parentCategory.categoryName} categories"
+                                class="customer-store-category-toggle"
+                                aria-label="Open ${fn:escapeXml(parentCategory.categoryName)} categories"
                                 aria-expanded="false">
                             <i class="fa-solid fa-chevron-down"></i>
                         </button>
 
-                        <div class="store-category-menu">
+                        <div class="customer-store-category-menu">
                             <a href="${pageContext.request.contextPath}/products?categoryId=${parentCategory.id}"
-                               class="store-category-view-all ${selectedCategoryId == parentCategory.id ? 'is-active' : ''}">
+                               class="customer-store-category-overview
+                                      ${activeCategoryId == parentCategory.id
+                                        ? 'is-active'
+                                        : ''}">
                                 <span>View all</span>
-                                <strong><c:out value="${parentCategory.categoryName}"/></strong>
+                                <strong>
+                                    <c:out value="${parentCategory.categoryName}"/>
+                                </strong>
                             </a>
 
-                            <div class="store-category-menu-list">
-                                <c:forEach items="${parentCategory.children}" var="childCategory">
+                            <div class="customer-store-category-menu-list">
+                                <c:forEach items="${parentCategory.children}"
+                                           var="childCategory">
                                     <a href="${pageContext.request.contextPath}/products?categoryId=${childCategory.id}"
-                                       class="${selectedCategoryId == childCategory.id ? 'is-active' : ''}">
-                                        <span><c:out value="${childCategory.categoryName}"/></span>
+                                       class="${activeCategoryId == childCategory.id
+                                                ? 'is-active'
+                                                : ''}">
+                                        <span>
+                                            <c:out value="${childCategory.categoryName}"/>
+                                        </span>
                                         <i class="fa-solid fa-arrow-right"></i>
                                     </a>
                                 </c:forEach>
@@ -197,254 +277,316 @@
 
 <style>
     :root {
-        --store-blue: #86a8e5;
-        --store-blue-dark: #5f84d6;
-        --store-blue-deep: #365b9f;
-        --store-navy: #17233d;
-        --store-text: #24324a;
-        --store-muted: #6b7890;
-        --store-border: #dbe4f3;
-        --store-surface: #ffffff;
-        --store-soft: #f4f7fc;
+        --customer-layout-max-width: 1320px;
+        --customer-layout-gutter: 24px;
+
+        --customer-header-blue: #86a8e5;
+        --customer-header-blue-light: #9bb7e9;
+        --customer-header-blue-dark: #5f84d6;
+        --customer-header-blue-deep: #365b9f;
+        --customer-header-navy: #17233d;
+        --customer-header-text: #283750;
+        --customer-header-muted: #6b7890;
+        --customer-header-border: #dbe4f3;
+        --customer-header-surface: #ffffff;
+        --customer-header-soft: #f4f7fc;
     }
 
-    .store-header {
+    .customer-layout-container {
+        width: min(
+            var(--customer-layout-max-width),
+            calc(100% - (var(--customer-layout-gutter) * 2))
+        );
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .customer-store-header {
         z-index: 1035;
         width: 100%;
-        color: var(--store-text);
-        background: var(--store-surface);
+        color: var(--customer-header-text);
+        background: var(--customer-header-surface);
         box-shadow: 0 5px 24px rgba(49, 78, 130, .14);
     }
 
-    .store-header-container {
-        width: min(1500px, calc(100% - 32px));
-        margin: 0 auto;
+    .customer-store-header-main {
+        background: linear-gradient(
+            115deg,
+            var(--customer-header-blue) 0%,
+            var(--customer-header-blue-light) 100%
+        );
     }
 
-    .store-header-main {
-        background: linear-gradient(115deg, var(--store-blue) 0%, #92b1e8 100%);
-    }
-
-    .store-header-main-inner {
-        min-height: 72px;
+    .customer-store-header-row {
+        min-height: 76px;
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 18px;
     }
 
-    .store-brand {
+    .customer-store-brand {
+        flex: 0 0 auto;
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        flex: 0 0 auto;
-        color: #fff;
-        font-size: 27px;
-        font-weight: 800;
+        color: #ffffff;
+        font-size: 1.55rem;
+        font-weight: 850;
         line-height: 1;
+        letter-spacing: -.035em;
         text-decoration: none;
         white-space: nowrap;
     }
 
-    .store-brand:hover {
-        color: #fff;
+    .customer-store-brand:hover {
+        color: #ffffff;
     }
 
-    .store-brand-icon {
-        width: 48px;
-        height: 48px;
+    .customer-store-brand-mark {
+        width: 46px;
+        height: 46px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 13px;
-        color: var(--store-blue-dark);
-        background: #fff;
+        color: var(--customer-header-blue-dark);
+        background: #ffffff;
         box-shadow: 0 8px 20px rgba(54, 91, 159, .18);
     }
 
-    .store-brand-icon i {
-        font-size: 24px;
+    .customer-store-brand-mark i {
+        font-size: 1.35rem;
     }
 
-    .store-search {
+    .customer-store-search {
         height: 44px;
         display: flex;
-        flex: 1 1 580px;
-        min-width: 240px;
+        flex: 1 1 520px;
+        min-width: 220px;
         overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, .68);
         border-radius: 11px;
-        background: #fff;
-        box-shadow: 0 6px 20px rgba(54, 91, 159, .16);
+        background: #ffffff;
+        box-shadow: 0 6px 20px rgba(54, 91, 159, .15);
     }
 
-    .store-search input {
-        flex: 1;
+    .customer-store-search input {
+        flex: 1 1 auto;
         min-width: 0;
         border: 0;
         outline: 0;
-        padding: 0 18px;
-        color: var(--store-text);
+        padding: 0 16px;
+        color: var(--customer-header-text);
         background: transparent;
-        font-size: 15px;
+        font-size: .9rem;
     }
 
-    .store-search input::placeholder {
+    .customer-store-search input::placeholder {
         color: #8a96aa;
     }
 
-    .store-search button {
-        width: 58px;
-        flex: 0 0 58px;
+    .customer-store-search button {
+        width: 54px;
+        flex: 0 0 54px;
         border: 0;
-        color: var(--store-blue-dark);
-        background: #fff;
-        font-size: 21px;
-        transition: background .2s ease, color .2s ease;
+        color: var(--customer-header-blue-deep);
+        background: #ffffff;
+        font-size: 1.05rem;
+        transition: color .2s ease, background-color .2s ease;
     }
 
-    .store-search button:hover {
-        color: #fff;
-        background: var(--store-blue-dark);
+    .customer-store-search button:hover {
+        color: #ffffff;
+        background: var(--customer-header-blue-deep);
     }
 
-    .store-header-actions {
+    .customer-store-actions {
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
-        gap: 12px;
-        flex: 0 0 auto;
+        gap: 9px;
     }
 
-    .store-account {
+    .customer-store-action,
+    .customer-store-account summary {
         position: relative;
-    }
-
-    .store-account summary,
-    .store-login,
-    .store-cart {
         min-height: 46px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        border: 1px solid rgba(255, 255, 255, .18);
-        border-radius: 999px;
-        color: #fff;
-        background: rgba(54, 91, 159, .27);
+        gap: 8px;
+        border: 1px solid rgba(255, 255, 255, .2);
+        border-radius: 12px;
+        color: #ffffff;
+        background: rgba(54, 91, 159, .25);
         text-decoration: none;
         cursor: pointer;
-        transition: background .2s ease, transform .2s ease;
+        transition: color .2s ease, background-color .2s ease,
+            transform .2s ease;
     }
 
-    .store-account summary {
-        min-width: 190px;
-        padding: 6px 16px 6px 8px;
-        list-style: none;
+    .customer-store-action {
+        min-width: 86px;
+        padding: 0 13px;
     }
 
-    .store-account summary::-webkit-details-marker {
-        display: none;
-    }
-
-    .store-account summary:hover,
-    .store-login:hover,
-    .store-cart:hover {
-        color: #fff;
-        background: rgba(54, 91, 159, .42);
+    .customer-store-action:hover,
+    .customer-store-account summary:hover {
+        color: #ffffff;
+        background: rgba(54, 91, 159, .4);
         transform: translateY(-1px);
     }
 
-    .store-user-avatar {
+    .customer-store-action-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+    }
+
+    .customer-store-action-label {
+        font-size: .78rem;
+        font-weight: 750;
+    }
+
+    .customer-store-count-badge {
+        position: absolute;
+        top: -7px;
+        right: -5px;
+        min-width: 21px;
+        height: 21px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        border: 2px solid var(--customer-header-blue);
+        border-radius: 999px;
+        color: #ffffff;
+        background: #d9485f;
+        font-size: .64rem;
+        font-weight: 850;
+        line-height: 1;
+    }
+
+    .customer-store-account {
+        position: relative;
+        margin: 0;
+    }
+
+    .customer-store-account summary {
+        min-width: 164px;
+        max-width: 205px;
+        padding: 5px 12px 5px 6px;
+        list-style: none;
+    }
+
+    .customer-store-account summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .customer-store-user-avatar {
         width: 34px;
         height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: 0 0 34px;
-        border-radius: 50%;
-        color: var(--store-blue-dark);
-        background: #fff;
-        font-size: 14px;
-        font-weight: 800;
+        border-radius: 10px;
+        color: var(--customer-header-blue-deep);
+        background: #ffffff;
+        font-size: .78rem;
+        font-weight: 850;
     }
 
-    .store-account-name {
-        max-width: 126px;
+    .customer-store-account-copy {
+        min-width: 0;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.15;
+    }
+
+    .customer-store-account-copy small {
+        color: rgba(255, 255, 255, .78);
+        font-size: .62rem;
+        font-weight: 650;
+    }
+
+    .customer-store-account-copy strong {
+        max-width: 112px;
         overflow: hidden;
+        color: #ffffff;
+        font-size: .76rem;
+        font-weight: 780;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 14px;
-        font-weight: 750;
     }
 
-    .store-account-chevron {
-        font-size: 11px;
+    .customer-store-account-chevron {
+        flex: 0 0 auto;
+        font-size: .62rem;
         transition: transform .2s ease;
     }
 
-    .store-account[open] .store-account-chevron {
+    .customer-store-account[open]
+    .customer-store-account-chevron {
         transform: rotate(180deg);
     }
 
-    .store-login {
-        padding: 0 18px;
-        font-weight: 750;
-    }
-
-    .store-cart {
-        position: relative;
-        min-width: 118px;
-        padding: 0 20px;
-        font-weight: 750;
-    }
-
-    .store-cart i {
-        font-size: 20px;
-    }
-
-    .store-cart-badge {
-        position: absolute;
-        top: -6px;
-        right: -3px;
-        min-width: 22px;
-        height: 22px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 6px;
-        border: 2px solid var(--store-blue);
-        border-radius: 999px;
-        color: #fff;
-        background: #e05252;
-        font-size: 11px;
-        font-weight: 800;
-    }
-
-    .store-account-menu {
+    .customer-store-account-menu {
         position: absolute;
         z-index: 1085;
-        top: calc(100% + 10px);
+        top: calc(100% + 11px);
         right: 0;
-        width: 220px;
+        width: 236px;
         padding: 8px;
-        border: 1px solid var(--store-border);
+        border: 1px solid var(--customer-header-border);
         border-radius: 14px;
-        background: #fff;
-        box-shadow: 0 20px 50px rgba(23, 35, 61, .20);
+        background: #ffffff;
+        box-shadow: 0 22px 54px rgba(23, 35, 61, .22);
     }
 
-    .store-account-menu::before {
+    .customer-store-account-menu::before {
         content: "";
         position: absolute;
         top: -7px;
-        right: 28px;
+        right: 25px;
         width: 13px;
         height: 13px;
-        border-top: 1px solid var(--store-border);
-        border-left: 1px solid var(--store-border);
-        background: #fff;
+        border-top: 1px solid var(--customer-header-border);
+        border-left: 1px solid var(--customer-header-border);
+        background: #ffffff;
         transform: rotate(45deg);
     }
 
-    .store-account-menu a {
+    .customer-store-account-menu-heading {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin: 2px 2px 7px;
+        padding: 10px;
+        border-radius: 10px;
+        background: var(--customer-header-soft);
+    }
+
+    .customer-store-account-menu-heading span {
+        color: var(--customer-header-muted);
+        font-size: .65rem;
+        font-weight: 650;
+    }
+
+    .customer-store-account-menu-heading strong {
+        overflow: hidden;
+        color: var(--customer-header-navy);
+        font-size: .8rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .customer-store-account-menu a {
         position: relative;
         z-index: 1;
         display: flex;
@@ -452,223 +594,248 @@
         gap: 10px;
         padding: 10px 11px;
         border-radius: 9px;
-        color: var(--store-text);
-        font-size: 13px;
+        color: var(--customer-header-text);
+        font-size: .78rem;
         font-weight: 650;
         text-decoration: none;
     }
 
-    .store-account-menu a i {
+    .customer-store-account-menu a i {
         width: 18px;
-        color: var(--store-blue-dark);
+        color: var(--customer-header-blue-deep);
         text-align: center;
     }
 
-    .store-account-menu a:hover {
-        color: var(--store-blue-deep);
+    .customer-store-account-menu a:hover {
+        color: var(--customer-header-blue-deep);
         background: #eef4ff;
     }
 
-    .store-account-menu hr {
+    .customer-store-account-menu
+    .customer-store-logout-link:hover {
+        color: #b83247;
+        background: #fff1f3;
+    }
+
+    .customer-store-account-menu
+    .customer-store-logout-link:hover i {
+        color: #b83247;
+    }
+
+    .customer-store-account-menu hr {
         margin: 6px 4px;
         border: 0;
-        border-top: 1px solid var(--store-border);
+        border-top: 1px solid var(--customer-header-border);
         opacity: 1;
     }
 
-    .store-category-nav {
-        min-height: 48px;
-        border-bottom: 1px solid var(--store-border);
-        background: #fff;
+    .customer-store-category-nav {
+        min-height: 50px;
+        border-bottom: 1px solid var(--customer-header-border);
+        background: #ffffff;
     }
 
-    .store-category-track {
-        min-height: 48px;
+    .customer-store-category-track {
+        min-height: 50px;
         display: flex;
         align-items: stretch;
         justify-content: center;
-        gap: 4px;
+        gap: 2px;
     }
 
-    .store-category-all,
-    .store-category-group {
+    .customer-store-category-all,
+    .customer-store-category-group {
         position: relative;
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
-        flex: 0 0 auto;
     }
 
-    .store-category-all,
-    .store-category-parent {
-        min-height: 48px;
+    .customer-store-category-all,
+    .customer-store-category-parent {
+        min-height: 50px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 0 15px;
-        color: var(--store-text);
-        font-size: 13px;
+        padding: 0 13px;
+        color: var(--customer-header-text);
+        font-size: .78rem;
         font-weight: 750;
         text-decoration: none;
         white-space: nowrap;
     }
 
-    .store-category-parent {
-        padding-right: 5px;
+    .customer-store-category-parent {
+        padding-right: 4px;
     }
 
-    .store-category-toggle {
-        width: 30px;
-        height: 36px;
+    .customer-store-category-toggle {
+        width: 29px;
+        height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border: 0;
         border-radius: 8px;
-        color: var(--store-muted);
+        color: var(--customer-header-muted);
         background: transparent;
-        font-size: 10px;
+        font-size: .58rem;
     }
 
-    .store-category-all:hover,
-    .store-category-parent:hover,
-    .store-category-group:hover .store-category-parent,
-    .store-category-group:hover .store-category-toggle {
-        color: var(--store-blue-deep);
+    .customer-store-category-all:hover,
+    .customer-store-category-parent:hover,
+    .customer-store-category-group:hover
+    .customer-store-category-parent,
+    .customer-store-category-group:hover
+    .customer-store-category-toggle {
+        color: var(--customer-header-blue-deep);
     }
 
-    .store-category-all::after,
-    .store-category-group::after {
+    .customer-store-category-all::after,
+    .customer-store-category-group::after {
         content: "";
         position: absolute;
-        right: 12px;
+        right: 10px;
         bottom: 0;
-        left: 12px;
+        left: 10px;
         height: 3px;
         border-radius: 3px 3px 0 0;
-        background: var(--store-blue-dark);
+        background: var(--customer-header-blue-dark);
         transform: scaleX(0);
         transition: transform .2s ease;
     }
 
-    .store-category-all.is-active::after,
-    .store-category-group.is-active::after,
-    .store-category-all:hover::after,
-    .store-category-group:hover::after {
+    .customer-store-category-all.is-active::after,
+    .customer-store-category-group.is-active::after,
+    .customer-store-category-all:hover::after,
+    .customer-store-category-group:hover::after {
         transform: scaleX(1);
     }
 
-    .store-category-all.is-active,
-    .store-category-group.is-active .store-category-parent,
-    .store-category-group.is-active .store-category-toggle {
-        color: var(--store-blue-deep);
+    .customer-store-category-all.is-active,
+    .customer-store-category-group.is-active
+    .customer-store-category-parent,
+    .customer-store-category-group.is-active
+    .customer-store-category-toggle {
+        color: var(--customer-header-blue-deep);
     }
 
-    .store-category-menu {
+    .customer-store-category-menu {
         position: absolute;
         z-index: 1080;
         top: calc(100% - 1px);
         left: 0;
-        width: 255px;
+        width: 258px;
         padding: 10px;
-        border: 1px solid var(--store-border);
+        border: 1px solid var(--customer-header-border);
         border-radius: 0 0 14px 14px;
         visibility: hidden;
         opacity: 0;
-        background: #fff;
+        background: #ffffff;
         box-shadow: 0 20px 45px rgba(23, 35, 61, .18);
         transform: translateY(8px);
-        transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+        transition: opacity .18s ease, transform .18s ease,
+            visibility .18s ease;
     }
 
-    .store-category-group:hover .store-category-menu,
-    .store-category-group:focus-within .store-category-menu,
-    .store-category-group.is-open .store-category-menu {
+    .customer-store-category-group:nth-last-child(-n+2)
+    .customer-store-category-menu {
+        right: 0;
+        left: auto;
+    }
+
+    .customer-store-category-group:hover
+    .customer-store-category-menu,
+    .customer-store-category-group:focus-within
+    .customer-store-category-menu,
+    .customer-store-category-group.is-open
+    .customer-store-category-menu {
         visibility: visible;
         opacity: 1;
         transform: translateY(0);
     }
 
-    .store-category-view-all {
+    .customer-store-category-overview {
         display: flex;
         flex-direction: column;
         gap: 2px;
         padding: 11px 12px;
         border-radius: 10px;
-        color: var(--store-text);
-        background: var(--store-soft);
+        color: var(--customer-header-text);
+        background: var(--customer-header-soft);
         text-decoration: none;
     }
 
-    .store-category-view-all span {
-        color: var(--store-muted);
-        font-size: 11px;
+    .customer-store-category-overview span {
+        color: var(--customer-header-muted);
+        font-size: .66rem;
     }
 
-    .store-category-view-all strong {
-        color: var(--store-blue-deep);
-        font-size: 14px;
+    .customer-store-category-overview strong {
+        color: var(--customer-header-blue-deep);
+        font-size: .82rem;
     }
 
-    .store-category-view-all:hover,
-    .store-category-view-all.is-active {
+    .customer-store-category-overview:hover,
+    .customer-store-category-overview.is-active {
         background: #e8f0ff;
     }
 
-    .store-category-menu-list {
+    .customer-store-category-menu-list {
         display: grid;
         gap: 3px;
         margin-top: 7px;
     }
 
-    .store-category-menu-list a {
+    .customer-store-category-menu-list a {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
         padding: 10px 11px;
         border-radius: 9px;
-        color: var(--store-text);
-        font-size: 13px;
+        color: var(--customer-header-text);
+        font-size: .76rem;
         font-weight: 650;
         text-decoration: none;
     }
 
-    .store-category-menu-list a i {
-        color: var(--store-blue-dark);
-        font-size: 10px;
+    .customer-store-category-menu-list a i {
+        color: var(--customer-header-blue-dark);
+        font-size: .58rem;
         opacity: 0;
         transform: translateX(-5px);
         transition: opacity .18s ease, transform .18s ease;
     }
 
-    .store-category-menu-list a:hover,
-    .store-category-menu-list a.is-active {
-        color: var(--store-blue-deep);
+    .customer-store-category-menu-list a:hover,
+    .customer-store-category-menu-list a.is-active {
+        color: var(--customer-header-blue-deep);
         background: #eef4ff;
     }
 
-    .store-category-menu-list a:hover i,
-    .store-category-menu-list a.is-active i {
+    .customer-store-category-menu-list a:hover i,
+    .customer-store-category-menu-list a.is-active i {
         opacity: 1;
         transform: translateX(0);
     }
 
-    .logout-confirm-modal .modal-dialog {
+    .customer-logout-modal .modal-dialog {
         max-width: 460px;
     }
 
-    .logout-confirm-modal .modal-content {
+    .customer-logout-modal .modal-content {
         overflow: hidden;
         border: 0;
         border-radius: 18px;
         box-shadow: 0 26px 80px rgba(15, 23, 42, .26);
     }
 
-    .logout-confirm-modal .modal-body {
+    .customer-logout-modal .modal-body {
         padding: 28px;
     }
 
-    .logout-confirm-icon {
+    .customer-logout-icon {
         width: 54px;
         height: 54px;
         display: inline-flex;
@@ -676,162 +843,177 @@
         justify-content: center;
         flex: 0 0 54px;
         border-radius: 16px;
-        color: #fff;
-        background: linear-gradient(135deg, var(--store-blue-deep), var(--store-blue));
+        color: #ffffff;
+        background: linear-gradient(
+            135deg,
+            var(--customer-header-blue-deep),
+            var(--customer-header-blue)
+        );
         box-shadow: 0 14px 30px rgba(95, 132, 214, .24);
-        font-size: 22px;
+        font-size: 1.3rem;
     }
 
-    .logout-confirm-title {
+    .customer-logout-title {
         margin: 2px 0 6px;
-        color: var(--store-navy);
+        color: var(--customer-header-navy);
         font-weight: 800;
     }
 
-    .logout-confirm-text {
+    .customer-logout-text {
         margin: 0;
-        color: var(--store-muted);
-        font-size: 14px;
+        color: var(--customer-header-muted);
+        font-size: .84rem;
     }
 
-    .logout-confirm-actions {
+    .customer-logout-actions {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
         margin-top: 25px;
     }
 
-    .logout-confirm-actions .btn {
+    .customer-logout-actions .btn {
         min-width: 105px;
         border-radius: 10px;
         font-weight: 700;
     }
 
-    .logout-confirm-actions .btn-danger {
-        border-color: var(--store-blue-dark);
-        background: var(--store-blue-dark);
+    .customer-logout-actions .btn-danger {
+        border-color: var(--customer-header-blue-dark);
+        background: var(--customer-header-blue-dark);
     }
 
-    @media (max-width: 1180px) {
-        .store-header-main-inner {
+    @media (max-width: 1199.98px) {
+        .customer-store-header-row {
             gap: 12px;
         }
 
-        .store-brand {
-            font-size: 23px;
+        .customer-store-brand-name {
+            display: none;
         }
 
-        .store-account summary {
-            min-width: 155px;
+        .customer-store-action {
+            min-width: 46px;
+            width: 46px;
+            padding: 0;
         }
 
-        .store-account-name {
-            max-width: 92px;
+        .customer-store-action-label {
+            display: none;
         }
 
-        .store-category-track {
+        .customer-store-account summary {
+            min-width: 48px;
+            width: 48px;
+            padding: 6px;
+        }
+
+        .customer-store-account-copy,
+        .customer-store-account-chevron {
+            display: none;
+        }
+
+        .customer-store-category-track {
             justify-content: flex-start;
         }
     }
 
-    @media (max-width: 900px) {
-        .store-header-main {
+    @media (max-width: 767.98px) {
+        :root {
+            --customer-layout-gutter: 16px;
+        }
+
+        .customer-store-header-main {
             padding: 10px 0;
         }
 
-        .store-header-main-inner {
+        .customer-store-header-row {
+            min-height: 108px;
             flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .store-search {
-            order: 5;
-            flex-basis: 100%;
+        .customer-store-brand-name {
+            display: inline;
+            font-size: 1.18rem;
         }
 
-        .store-header-actions {
-            margin-left: auto;
-        }
-
-        .store-category-track {
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 5px 0;
-        }
-
-        .store-category-nav,
-        .store-category-track {
-            min-height: 44px;
-        }
-
-        .store-category-all,
-        .store-category-parent {
-            min-height: 38px;
-            padding-right: 10px;
-            padding-left: 10px;
-        }
-
-        .store-category-group::after,
-        .store-category-all::after {
-            right: 8px;
-            left: 8px;
-        }
-    }
-
-    @media (max-width: 620px) {
-        .store-header-container {
-            width: min(100% - 20px, 1500px);
-        }
-
-        .store-brand {
-            font-size: 20px;
-        }
-
-        .store-brand-icon {
+        .customer-store-brand-mark {
             width: 40px;
             height: 40px;
         }
 
-        .store-account summary {
-            min-width: 46px;
-            width: 46px;
-            padding: 5px;
+        .customer-store-actions {
+            margin-left: auto;
         }
 
-        .store-account-name,
-        .store-account-chevron,
-        .store-login span,
-        .store-cart span:not(.store-cart-badge) {
-            display: none;
+        .customer-store-search {
+            order: 10;
+            flex: 1 0 100%;
+            height: 42px;
         }
 
-        .store-login,
-        .store-cart {
-            width: 46px;
-            min-width: 46px;
-            padding: 0;
+        .customer-store-category-nav {
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            scrollbar-width: thin;
         }
 
-        .store-category-track {
+        .customer-store-category-track {
+            width: max-content;
+            min-width: 100%;
             justify-content: flex-start;
         }
 
-        .store-category-menu {
-            right: auto;
-            left: 50%;
-            width: min(280px, calc(100vw - 20px));
-            border-radius: 14px;
-            transform: translate(-50%, 8px);
+        .customer-store-category-all,
+        .customer-store-category-parent {
+            min-height: 46px;
+            padding-right: 11px;
+            padding-left: 11px;
         }
 
-        .store-category-group:hover .store-category-menu,
-        .store-category-group:focus-within .store-category-menu,
-        .store-category-group.is-open .store-category-menu {
-            transform: translate(-50%, 0);
+        .customer-store-category-toggle,
+        .customer-store-category-menu {
+            display: none;
+        }
+
+        .customer-store-category-parent {
+            padding-right: 11px;
+        }
+    }
+
+    @media (max-width: 479.98px) {
+        .customer-store-brand-name {
+            display: none;
+        }
+
+        .customer-store-actions {
+            gap: 6px;
+        }
+
+        .customer-store-action,
+        .customer-store-account summary {
+            width: 42px;
+            min-width: 42px;
+            min-height: 42px;
+        }
+
+        .customer-store-user-avatar {
+            width: 30px;
+            height: 30px;
+            flex-basis: 30px;
+        }
+
+        .customer-store-account-menu {
+            position: fixed;
+            top: 68px;
+            right: 12px;
+            width: min(236px, calc(100vw - 24px));
         }
     }
 </style>
 
-<div class="modal fade logout-confirm-modal"
+<div class="modal fade customer-logout-modal"
      id="customerLogoutModal"
      tabindex="-1"
      aria-hidden="true">
@@ -839,27 +1021,31 @@
         <div class="modal-content">
             <div class="modal-body">
                 <div class="d-flex align-items-start gap-3">
-                    <div class="logout-confirm-icon">
+                    <div class="customer-logout-icon">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </div>
+
                     <div class="pe-4">
-                        <h5 class="logout-confirm-title">Sign out?</h5>
-                        <p class="logout-confirm-text">
-                            You will leave your customer account and return to the store homepage.
+                        <h5 class="customer-logout-title">Sign out?</h5>
+                        <p class="customer-logout-text">
+                            You will leave your customer account and return
+                            to the store homepage.
                         </p>
                     </div>
+
                     <button type="button"
                             class="btn-close ms-auto"
                             data-bs-dismiss="modal"
                             aria-label="Close"></button>
                 </div>
 
-                <div class="logout-confirm-actions">
+                <div class="customer-logout-actions">
                     <button type="button"
                             class="btn btn-outline-secondary"
                             data-bs-dismiss="modal">
                         Cancel
                     </button>
+
                     <a id="confirmCustomerLogoutButton"
                        href="${pageContext.request.contextPath}/customer/logout"
                        class="btn btn-danger">
@@ -873,100 +1059,161 @@
 
 <script>
     (function () {
-        var categoryGroups = document.querySelectorAll('.store-category-group');
+        "use strict";
+
+        var categoryGroups = document.querySelectorAll(
+                ".customer-store-category-group"
+        );
 
         categoryGroups.forEach(function (group) {
-            var toggle = group.querySelector('.store-category-toggle');
+            var toggle = group.querySelector(
+                    ".customer-store-category-toggle"
+            );
 
             if (!toggle) {
                 return;
             }
 
-            toggle.addEventListener('click', function (event) {
+            toggle.addEventListener("click", function (event) {
                 event.preventDefault();
                 event.stopPropagation();
 
-                var willOpen = !group.classList.contains('is-open');
+                var shouldOpen = !group.classList.contains("is-open");
 
                 categoryGroups.forEach(function (otherGroup) {
-                    otherGroup.classList.remove('is-open');
-                    var otherToggle = otherGroup.querySelector('.store-category-toggle');
+                    otherGroup.classList.remove("is-open");
+
+                    var otherToggle = otherGroup.querySelector(
+                            ".customer-store-category-toggle"
+                    );
+
                     if (otherToggle) {
-                        otherToggle.setAttribute('aria-expanded', 'false');
+                        otherToggle.setAttribute(
+                                "aria-expanded",
+                                "false"
+                        );
                     }
                 });
 
-                group.classList.toggle('is-open', willOpen);
-                toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                group.classList.toggle("is-open", shouldOpen);
+                toggle.setAttribute(
+                        "aria-expanded",
+                        shouldOpen ? "true" : "false"
+                );
             });
         });
 
-        document.addEventListener('click', function (event) {
+        document.addEventListener("click", function (event) {
             categoryGroups.forEach(function (group) {
-                if (!group.contains(event.target)) {
-                    group.classList.remove('is-open');
-                    var toggle = group.querySelector('.store-category-toggle');
-                    if (toggle) {
-                        toggle.setAttribute('aria-expanded', 'false');
-                    }
+                if (group.contains(event.target)) {
+                    return;
+                }
+
+                group.classList.remove("is-open");
+
+                var toggle = group.querySelector(
+                        ".customer-store-category-toggle"
+                );
+
+                if (toggle) {
+                    toggle.setAttribute(
+                            "aria-expanded",
+                            "false"
+                    );
                 }
             });
         });
 
-        document.querySelectorAll('.store-account').forEach(function (account) {
-            var summary = account.querySelector('summary');
+        document.querySelectorAll(
+                ".customer-store-account"
+        ).forEach(function (account) {
+            var summary = account.querySelector("summary");
 
             if (!summary) {
                 return;
             }
 
-            account.addEventListener('toggle', function () {
-                summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
+            account.addEventListener("toggle", function () {
+                summary.setAttribute(
+                        "aria-expanded",
+                        account.open ? "true" : "false"
+                );
             });
 
-            summary.setAttribute('aria-expanded', account.open ? 'true' : 'false');
-
-            document.addEventListener('click', function (event) {
+            document.addEventListener("click", function (event) {
                 if (!account.contains(event.target)) {
-                    account.removeAttribute('open');
-                    summary.setAttribute('aria-expanded', 'false');
+                    account.removeAttribute("open");
+                    summary.setAttribute(
+                            "aria-expanded",
+                            "false"
+                    );
                 }
             });
         });
 
-        document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') {
+        document.addEventListener("keydown", function (event) {
+            if (event.key !== "Escape") {
                 return;
             }
 
             categoryGroups.forEach(function (group) {
-                group.classList.remove('is-open');
-                var toggle = group.querySelector('.store-category-toggle');
+                group.classList.remove("is-open");
+
+                var toggle = group.querySelector(
+                        ".customer-store-category-toggle"
+                );
+
                 if (toggle) {
-                    toggle.setAttribute('aria-expanded', 'false');
+                    toggle.setAttribute(
+                            "aria-expanded",
+                            "false"
+                    );
                 }
             });
 
-            document.querySelectorAll('.store-account[open]').forEach(function (account) {
-                account.removeAttribute('open');
+            document.querySelectorAll(
+                    ".customer-store-account[open]"
+            ).forEach(function (account) {
+                account.removeAttribute("open");
             });
         });
 
-        var logoutLink = document.querySelector('.js-customer-logout');
-        var logoutModalElement = document.getElementById('customerLogoutModal');
-        var confirmLogoutButton = document.getElementById('confirmCustomerLogoutButton');
+        var logoutLink = document.querySelector(
+                ".js-customer-logout"
+        );
 
-        if (!logoutLink || !logoutModalElement || !confirmLogoutButton) {
+        var logoutModalElement = document.getElementById(
+                "customerLogoutModal"
+        );
+
+        var confirmLogoutButton = document.getElementById(
+                "confirmCustomerLogoutButton"
+        );
+
+        if (!logoutLink
+                || !logoutModalElement
+                || !confirmLogoutButton) {
             return;
         }
 
-        logoutLink.addEventListener('click', function (event) {
+        logoutLink.addEventListener("click", function (event) {
             event.preventDefault();
-            confirmLogoutButton.href = logoutLink.getAttribute('data-logout-url') || logoutLink.href;
 
-            if (window.bootstrap && window.bootstrap.Modal) {
-                window.bootstrap.Modal.getOrCreateInstance(logoutModalElement).show();
-            } else {
+            confirmLogoutButton.href
+                    = logoutLink.getAttribute("data-logout-url")
+                    || logoutLink.href;
+
+            if (window.bootstrap
+                    && window.bootstrap.Modal) {
+
+                window.bootstrap.Modal
+                        .getOrCreateInstance(logoutModalElement)
+                        .show();
+
+                return;
+            }
+
+            if (window.confirm("Sign out of your customer account?")) {
                 window.location.href = confirmLogoutButton.href;
             }
         });

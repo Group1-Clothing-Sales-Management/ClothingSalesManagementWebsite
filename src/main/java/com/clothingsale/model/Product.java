@@ -1,7 +1,7 @@
 package com.clothingsale.model;
 
 import java.sql.Timestamp;
-import java.util.List; // 1. Bổ sung import List
+import java.util.List;
 
 public class Product {
 
@@ -16,14 +16,15 @@ public class Product {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private String mainImageUrl;
-
-    // 2. Thêm thuộc tính variants để liên kết dữ liệu quan hệ 1-N
     private List<ProductVariant> variants;
+
+    // Homepage configuration managed from Admin Product Management.
+    private boolean featured;
+    private Integer featuredDisplayOrder;
 
     public Product() {
     }
 
-    // Constructor cũ giữ nguyên hoặc bổ sung nếu cần
     public Product(int id, String productName, String slug, int brandId, int categoryId,
             String shortDescription, String longDescription, String status,
             Timestamp createdAt, Timestamp updatedAt, String mainImageUrl) {
@@ -40,16 +41,16 @@ public class Product {
         this.mainImageUrl = mainImageUrl;
     }
 
-    // 3. Bổ sung Getter và Setter cho thuộc tính variants (Bắt buộc để JSTL EL hoạt động)
-    public List<ProductVariant> getVariants() {
-        return variants;
+    public Product(int id, String productName, String slug, int brandId, int categoryId,
+            String shortDescription, String longDescription, String status,
+            Timestamp createdAt, Timestamp updatedAt, String mainImageUrl,
+            boolean featured, Integer featuredDisplayOrder) {
+        this(id, productName, slug, brandId, categoryId, shortDescription,
+                longDescription, status, createdAt, updatedAt, mainImageUrl);
+        this.featured = featured;
+        this.featuredDisplayOrder = featuredDisplayOrder;
     }
 
-    public void setVariants(List<ProductVariant> variants) {
-        this.variants = variants;
-    }
-
-    // Các Getters và Setters cũ bên dưới giữ nguyên hoàn toàn...
     public int getId() {
         return id;
     }
@@ -136,5 +137,29 @@ public class Product {
 
     public void setMainImageUrl(String mainImageUrl) {
         this.mainImageUrl = mainImageUrl;
+    }
+
+    public List<ProductVariant> getVariants() {
+        return variants;
+    }
+
+    public void setVariants(List<ProductVariant> variants) {
+        this.variants = variants;
+    }
+
+    public boolean isFeatured() {
+        return featured;
+    }
+
+    public void setFeatured(boolean featured) {
+        this.featured = featured;
+    }
+
+    public Integer getFeaturedDisplayOrder() {
+        return featuredDisplayOrder;
+    }
+
+    public void setFeaturedDisplayOrder(Integer featuredDisplayOrder) {
+        this.featuredDisplayOrder = featuredDisplayOrder;
     }
 }

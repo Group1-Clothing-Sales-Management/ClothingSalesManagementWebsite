@@ -22,6 +22,7 @@ public class AdminManageProductDAO {
 
         String sql = "SELECT p.id, p.product_name, p.slug, p.brand_id, p.category_id, "
                 + "p.short_description, p.long_description, p.status, "
+                + "p.is_featured, p.featured_display_order, "
                 + "p.created_at, p.updated_at, img.image_url AS main_image_url "
                 + "FROM Product p "
                 + "LEFT JOIN Product_Image img "
@@ -46,6 +47,7 @@ public class AdminManageProductDAO {
     public Product getProductById(int productId) {
         String sql = "SELECT p.id, p.product_name, p.slug, p.brand_id, p.category_id, "
                 + "p.short_description, p.long_description, p.status, "
+                + "p.is_featured, p.featured_display_order, "
                 + "p.created_at, p.updated_at, img.image_url AS main_image_url "
                 + "FROM Product p "
                 + "LEFT JOIN Product_Image img "
@@ -148,6 +150,10 @@ public class AdminManageProductDAO {
                 + "SET status = 'INACTIVE' "
                 + "WHERE product_id = ? AND status <> 'INACTIVE'";
 
+        String clearFeaturedSql = "UPDATE Product SET "
+                + "is_featured = 0, featured_display_order = NULL, "
+                + "updated_at = GETDATE() WHERE id = ?";
+
         String findImageSql = "SELECT TOP 1 id FROM Product_Image "
                 + "WHERE product_id = ? "
                 + "AND variant_id IS NULL "
@@ -186,6 +192,12 @@ public class AdminManageProductDAO {
                 if ("INACTIVE".equals(product.getStatus())) {
                     try (PreparedStatement ps = conn.prepareStatement(
                             deactivateVariantsSql)) {
+                        ps.setInt(1, product.getId());
+                        ps.executeUpdate();
+                    }
+
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            clearFeaturedSql)) {
                         ps.setInt(1, product.getId());
                         ps.executeUpdate();
                     }
@@ -276,7 +288,8 @@ public class AdminManageProductDAO {
                 + "SET status = 'INACTIVE' WHERE product_id = ?";
 
         String deleteProductSql = "UPDATE Product "
-                + "SET status = 'DELETED', updated_at = GETDATE() "
+                + "SET status = 'DELETED', is_featured = 0, "
+                + "featured_display_order = NULL, updated_at = GETDATE() "
                 + "WHERE id = ? AND status <> 'DELETED'";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -350,6 +363,122 @@ public class AdminManageProductDAO {
                 conn.rollback();
                 throw e;
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Lấy thứ tự tiếp theo khi bật Featured cho một Product mới.
+     */
+    public int getNextFeaturedDisplayOrder() {
+        String sql = "SELECT ISNULL(MAX(featured_display_order), 0) + 1 "
+                + "FROM Product WHERE is_featured = 1 "
+                + "AND status <> 'DELETED'";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            return rs.next() ? rs.getInt(1) : 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 1;
+        }
+    }
+
+    /**
+     * Product chỉ đủ điều kiện Featured khi Product và Category đang hoạt động,
+     * đồng thời có ít nhất một Variant ACTIVE với giá bán hợp lệ.
+     */
+    public boolean isProductEligibleForFeatured(int productId) {
+        if (productId <= 0) {
+            return false;
+        }
+
+        String sql = "SELECT COUNT(*) FROM Product p "
+                + "INNER JOIN Category c ON c.id = p.category_id "
+                + "WHERE p.id = ? "
+                + "AND p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "AND EXISTS ("
+                + "SELECT 1 FROM Product_Variant pv "
+                + "WHERE pv.product_id = p.id "
+                + "AND pv.status = 'ACTIVE' "
+                + "AND ISNULL(pv.list_price, 0) > 0 "
+                + "AND ISNULL(pv.sale_price, 0) > 0 "
+                + "AND pv.sale_price <= pv.list_price"
+                + ")";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Bật hoặc tắt Product trong khu vực Featured Products của Homepage.
+     * Phương thức này không thay đổi status, giá hoặc tồn kho của Product.
+     */
+    public boolean updateFeaturedStatus(
+            int productId,
+            boolean featured,
+            Integer displayOrder) {
+
+        if (productId <= 0) {
+            return false;
+        }
+
+        String sql;
+
+        if (featured) {
+            if (displayOrder == null || displayOrder < 1) {
+                return false;
+            }
+
+            sql = "UPDATE p SET p.is_featured = 1, "
+                    + "p.featured_display_order = ?, "
+                    + "p.updated_at = GETDATE() "
+                    + "FROM Product p "
+                    + "INNER JOIN Category c ON c.id = p.category_id "
+                    + "WHERE p.id = ? "
+                    + "AND p.status = 'ACTIVE' "
+                    + "AND c.status = 1 "
+                    + "AND EXISTS ("
+                    + "SELECT 1 FROM Product_Variant pv "
+                    + "WHERE pv.product_id = p.id "
+                    + "AND pv.status = 'ACTIVE' "
+                    + "AND ISNULL(pv.list_price, 0) > 0 "
+                    + "AND ISNULL(pv.sale_price, 0) > 0 "
+                    + "AND pv.sale_price <= pv.list_price"
+                    + ")";
+        } else {
+            sql = "UPDATE Product SET is_featured = 0, "
+                    + "featured_display_order = NULL, "
+                    + "updated_at = GETDATE() "
+                    + "WHERE id = ? AND status <> 'DELETED'";
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            if (featured) {
+                ps.setInt(1, displayOrder);
+                ps.setInt(2, productId);
+            } else {
+                ps.setInt(1, productId);
+            }
+
+            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -721,6 +850,12 @@ public class AdminManageProductDAO {
         product.setShortDescription(rs.getString("short_description"));
         product.setLongDescription(rs.getString("long_description"));
         product.setStatus(rs.getString("status"));
+        product.setFeatured(rs.getBoolean("is_featured"));
+
+        int featuredDisplayOrder = rs.getInt("featured_display_order");
+        product.setFeaturedDisplayOrder(
+                rs.wasNull() ? null : featuredDisplayOrder);
+
         product.setCreatedAt(rs.getTimestamp("created_at"));
         product.setUpdatedAt(rs.getTimestamp("updated_at"));
         product.setMainImageUrl(rs.getString("main_image_url"));

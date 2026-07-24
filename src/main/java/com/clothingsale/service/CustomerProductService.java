@@ -13,6 +13,9 @@ import java.util.Map;
 
 public class CustomerProductService {
 
+    private static final int DEFAULT_HOMEPAGE_LIMIT = 8;
+    private static final int MAX_HOMEPAGE_LIMIT = 50;
+
     private final CustomerProductDAO productDAO = new CustomerProductDAO();
 
     public List<Category> getActiveCategories() {
@@ -69,6 +72,27 @@ public class CustomerProductService {
         return products;
     }
 
+    public List<Product> getFeaturedProducts(int limit) {
+        int safeLimit = normalizeHomepageLimit(limit);
+        return prepareHomepageProducts(
+                productDAO.getFeaturedProducts(safeLimit)
+        );
+    }
+
+    public List<Product> getBestSellingProducts(int limit) {
+        int safeLimit = normalizeHomepageLimit(limit);
+        return prepareHomepageProducts(
+                productDAO.getBestSellingProducts(safeLimit)
+        );
+    }
+
+    public List<Product> getOnSaleProducts(int limit) {
+        int safeLimit = normalizeHomepageLimit(limit);
+        return prepareHomepageProducts(
+                productDAO.getOnSaleProducts(safeLimit)
+        );
+    }
+
     public Product getProductById(int id) {
 
         return productDAO.getProductById(id);
@@ -100,6 +124,33 @@ public class CustomerProductService {
 
     }
 
+    private List<Product> prepareHomepageProducts(List<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Product> validProducts = new ArrayList<>();
+        for (Product product : products) {
+            if (product != null) {
+                validProducts.add(product);
+            }
+        }
+
+        if (validProducts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        populateVariants(validProducts);
+        return validProducts;
+    }
+
+    private int normalizeHomepageLimit(int limit) {
+        if (limit <= 0) {
+            return DEFAULT_HOMEPAGE_LIMIT;
+        }
+        return Math.min(limit, MAX_HOMEPAGE_LIMIT);
+    }
+
     private void populateVariants(List<Product> products) {
         if (products == null || products.isEmpty()) {
             return;
@@ -107,17 +158,31 @@ public class CustomerProductService {
 
         List<Integer> productIds = new ArrayList<>();
         for (Product product : products) {
-            if (product != null) {
+            if (product != null && !productIds.contains(product.getId())) {
                 productIds.add(product.getId());
             }
+        }
+
+        if (productIds.isEmpty()) {
+            return;
         }
 
         Map<Integer, List<ProductVariant>> variantsByProductId
                 = productDAO.getVariantsByProductIds(productIds);
 
         for (Product product : products) {
-            List<ProductVariant> variants = variantsByProductId.get(product.getId());
-            product.setVariants(variants != null ? variants : Collections.emptyList());
+            if (product == null) {
+                continue;
+            }
+
+            List<ProductVariant> variants
+                    = variantsByProductId.get(product.getId());
+
+            product.setVariants(
+                    variants != null
+                            ? variants
+                            : Collections.emptyList()
+            );
         }
     }
 }

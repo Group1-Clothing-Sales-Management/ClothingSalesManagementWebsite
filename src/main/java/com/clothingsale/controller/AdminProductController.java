@@ -103,6 +103,11 @@ public class AdminProductController extends HttpServlet {
                     handleUpdateVariantStatus(request, response);
                     break;
 
+                case "UPDATE_FEATURED":
+                case "UPDATE_FEATURED_STATUS":
+                    handleUpdateFeaturedStatus(request, response);
+                    break;
+
                 case "ADD_VARIANT":
                 case "ADD_VARIANTS":
                     handleAddVariants(request, response);
@@ -547,6 +552,82 @@ public class AdminProductController extends HttpServlet {
                 + (updated
                         ? "variant-updated"
                         : "variant-update-failed")
+        );
+    }
+
+    /**
+     * Bật hoặc tắt Product trong khu vực Featured Products của Customer
+     * Homepage. Thao tác này chỉ cập nhật thông tin Featured trong bảng
+     * Product, không thay đổi status, giá hoặc tồn kho của Product/Variant.
+     */
+    private void handleUpdateFeaturedStatus(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        int productId;
+
+        try {
+            productId = Integer.parseInt(
+                    getMultipartParameter(request, "productId")
+            );
+        } catch (Exception e) {
+            redirectToProductList(response, "invalid-request");
+            return;
+        }
+
+        String featuredRaw
+                = getMultipartParameter(request, "featured");
+
+        boolean featured = "true".equalsIgnoreCase(featuredRaw)
+                || "1".equals(featuredRaw)
+                || "on".equalsIgnoreCase(featuredRaw)
+                || "yes".equalsIgnoreCase(featuredRaw);
+
+        Integer displayOrder = null;
+        String displayOrderRaw
+                = getMultipartParameter(request, "displayOrder");
+
+        if (featured
+                && displayOrderRaw != null
+                && !displayOrderRaw.isBlank()) {
+
+            try {
+                displayOrder = Integer.valueOf(displayOrderRaw);
+
+                if (displayOrder <= 0) {
+                    redirectToProductList(
+                            response,
+                            "invalid-featured-order"
+                    );
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                redirectToProductList(
+                        response,
+                        "invalid-featured-order"
+                );
+                return;
+            }
+        }
+
+        String updateError
+                = productService.updateFeaturedStatus(
+                        productId,
+                        featured,
+                        displayOrder
+                );
+
+        if (updateError != null) {
+            redirectToProductList(response, updateError);
+            return;
+        }
+
+        redirectToProductList(
+                response,
+                featured
+                        ? "featured-enabled"
+                        : "featured-disabled"
         );
     }
 
@@ -1274,6 +1355,22 @@ public class AdminProductController extends HttpServlet {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private void redirectToProductList(
+            HttpServletResponse response,
+            String status)
+            throws IOException {
+
+        String redirectUrl
+                = getServletContext().getContextPath()
+                + "/admin/manage-product";
+
+        if (status != null && !status.isBlank()) {
+            redirectUrl += "?status=" + status;
+        }
+
+        response.sendRedirect(redirectUrl);
     }
 
     private void redirectToEdit(

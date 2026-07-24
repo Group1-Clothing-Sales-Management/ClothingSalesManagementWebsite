@@ -116,6 +116,7 @@ public class CustomerProductDAO {
                 + "p.brand_id, p.category_id, "
                 + "p.short_description, p.long_description, "
                 + "p.status, p.created_at, p.updated_at, "
+                + "p.is_featured, p.featured_display_order, "
                 + "img.image_url AS main_image_url, "
                 + "MIN(pv.sale_price) AS min_sale_price, "
                 + "MAX(pv.sale_price) AS max_sale_price "
@@ -155,6 +156,7 @@ public class CustomerProductDAO {
                 + "p.brand_id, p.category_id, "
                 + "p.short_description, p.long_description, "
                 + "p.status, p.created_at, p.updated_at, "
+                + "p.is_featured, p.featured_display_order, "
                 + "img.image_url "
         );
 
@@ -182,14 +184,118 @@ public class CustomerProductDAO {
         return products;
     }
 
+    /**
+     * Lấy các Product được Admin chủ động bật Featured trong Manage Product.
+     * Danh sách được sắp theo featured_display_order và chỉ trả Product hiện
+     * vẫn có thể bán cho Customer.
+     */
+    public List<Product> getFeaturedProducts(int limit) {
+        int safeLimit = normalizeHomepageLimit(limit);
+
+        String sql = "SELECT TOP " + safeLimit + " "
+                + homepageProductProjection()
+                + homepageProductFromClause()
+                + "WHERE p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "AND p.is_featured = 1 "
+                + "AND p.featured_display_order IS NOT NULL "
+                + purchasableProductExistsClause()
+                + "ORDER BY p.featured_display_order ASC, p.id ASC";
+
+        return executeHomepageProductQuery(
+                sql,
+                "Could not load featured products for Customer Homepage."
+        );
+    }
+
+    /**
+     * Lấy Product bán chạy dựa trên tổng quantity của các đơn DELIVERED.
+     * Dữ liệu được gộp theo Product nên một Product có nhiều Variant vẫn chỉ
+     * xuất hiện một lần.
+     */
+    public List<Product> getBestSellingProducts(int limit) {
+        int safeLimit = normalizeHomepageLimit(limit);
+
+        String sql = "WITH ProductSales AS ("
+                + "    SELECT sold_variant.product_id, "
+                + "           SUM(od.quantity) AS sold_quantity, "
+                + "           MAX(COALESCE(o.updated_at, o.created_at)) "
+                + "               AS last_sold_at "
+                + "    FROM Order_Detail od "
+                + "    INNER JOIN [Order] o "
+                + "        ON o.id = od.order_id "
+                + "    INNER JOIN Product_Variant sold_variant "
+                + "        ON sold_variant.id = od.variant_id "
+                + "    WHERE o.order_status = 'DELIVERED' "
+                + "    GROUP BY sold_variant.product_id"
+                + ") "
+                + "SELECT TOP " + safeLimit + " "
+                + homepageProductProjection()
+                + "FROM ProductSales sales "
+                + "INNER JOIN Product p ON p.id = sales.product_id "
+                + homepageCategoryAndImageJoins()
+                + "WHERE p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + purchasableProductExistsClause()
+                + "ORDER BY sales.sold_quantity DESC, "
+                + "         sales.last_sold_at DESC, p.id DESC";
+
+        return executeHomepageProductQuery(
+                sql,
+                "Could not load best-selling products for Customer Homepage."
+        );
+    }
+
+    /**
+     * Lấy Product đang có ít nhất một Variant giảm giá thật sự.
+     * sale_price phải nhỏ hơn list_price; Product được ưu tiên theo phần trăm
+     * giảm cao nhất của Variant đang còn hàng.
+     */
+    public List<Product> getOnSaleProducts(int limit) {
+        int safeLimit = normalizeHomepageLimit(limit);
+
+        String sql = "SELECT TOP " + safeLimit + " "
+                + homepageProductProjection()
+                + homepageProductFromClause()
+                + "CROSS APPLY ("
+                + "    SELECT TOP 1 "
+                + "           sale_variant.sale_price, "
+                + "           CAST((sale_variant.list_price "
+                + "                 - sale_variant.sale_price) "
+                + "                / NULLIF(sale_variant.list_price, 0) "
+                + "                AS DECIMAL(18,6)) AS discount_ratio "
+                + "    FROM Product_Variant sale_variant "
+                + "    WHERE sale_variant.product_id = p.id "
+                + "    AND sale_variant.status = 'ACTIVE' "
+                + "    AND sale_variant.stock_quantity > 0 "
+                + "    AND ISNULL(sale_variant.list_price, 0) > 0 "
+                + "    AND ISNULL(sale_variant.sale_price, 0) > 0 "
+                + "    AND sale_variant.sale_price "
+                + "        < sale_variant.list_price "
+                + "    ORDER BY discount_ratio DESC, "
+                + "             sale_variant.sale_price ASC, "
+                + "             sale_variant.id ASC"
+                + ") sale_pick "
+                + "WHERE p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "ORDER BY sale_pick.discount_ratio DESC, "
+                + "         sale_pick.sale_price ASC, "
+                + "         p.updated_at DESC, p.id DESC";
+
+        return executeHomepageProductQuery(
+                sql,
+                "Could not load sale products for Customer Homepage."
+        );
+    }
+
     public Product getProductById(int id) {
         String sql
                 = "SELECT "
-                + "p.id, "
-                + "p.product_name, "
-                + "p.short_description, "
-                + "p.long_description, "
-                + "p.created_at, "
+                + "p.id, p.product_name, p.slug, "
+                + "p.brand_id, p.category_id, "
+                + "p.short_description, p.long_description, "
+                + "p.status, p.created_at, p.updated_at, "
+                + "p.is_featured, p.featured_display_order, "
                 + "img.image_url "
                 + "FROM Product p "
                 + "INNER JOIN Category c "
@@ -228,13 +334,24 @@ public class CustomerProductDAO {
                 Product product = new Product();
                 product.setId(rs.getInt("id"));
                 product.setProductName(rs.getString("product_name"));
+                product.setSlug(rs.getString("slug"));
+                product.setBrandId(rs.getInt("brand_id"));
+                product.setCategoryId(rs.getInt("category_id"));
                 product.setShortDescription(
                         rs.getString("short_description"));
                 product.setLongDescription(
                         rs.getString("long_description"));
+                product.setStatus(rs.getString("status"));
                 product.setCreatedAt(rs.getTimestamp("created_at"));
+                product.setUpdatedAt(rs.getTimestamp("updated_at"));
                 product.setMainImageUrl(rs.getString("image_url"));
-                product.setStatus("ACTIVE");
+                product.setFeatured(rs.getBoolean("is_featured"));
+
+                int featuredOrder = rs.getInt("featured_display_order");
+                product.setFeaturedDisplayOrder(
+                        rs.wasNull() ? null : featuredOrder
+                );
+
                 product.setVariants(getVariantsByProductId(id));
 
                 return product;
@@ -566,6 +683,87 @@ public class CustomerProductDAO {
         return sizes;
     }
 
+    private List<Product> executeHomepageProductQuery(
+            String sql,
+            String errorMessage) {
+
+        List<Product> products = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                products.add(mapProduct(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println(errorMessage);
+            e.printStackTrace();
+        }
+
+        return products;
+    }
+
+    private String homepageProductProjection() {
+        return "p.id, p.product_name, p.slug, "
+                + "p.brand_id, p.category_id, "
+                + "p.short_description, p.long_description, "
+                + "p.status, p.created_at, p.updated_at, "
+                + "p.is_featured, p.featured_display_order, "
+                + "COALESCE(product_img.image_url, "
+                + "         variant_img.image_url) AS main_image_url ";
+    }
+
+    private String homepageProductFromClause() {
+        return "FROM Product p "
+                + homepageCategoryAndImageJoins();
+    }
+
+    private String homepageCategoryAndImageJoins() {
+        return "INNER JOIN Category c "
+                + "ON c.id = p.category_id "
+                + "OUTER APPLY ("
+                + "    SELECT TOP 1 pi.image_url "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = p.id "
+                + "    AND pi.variant_id IS NULL "
+                + "    ORDER BY pi.is_main DESC, "
+                + "             pi.sort_order, pi.id"
+                + ") product_img "
+                + "OUTER APPLY ("
+                + "    SELECT TOP 1 pi.image_url "
+                + "    FROM Product_Variant image_variant "
+                + "    INNER JOIN Product_Image pi "
+                + "        ON pi.variant_id = image_variant.id "
+                + "       AND pi.product_id = image_variant.product_id "
+                + "    WHERE image_variant.product_id = p.id "
+                + "    AND image_variant.status = 'ACTIVE' "
+                + "    ORDER BY image_variant.stock_quantity DESC, "
+                + "             pi.is_main DESC, pi.sort_order, pi.id"
+                + ") variant_img ";
+    }
+
+    private String purchasableProductExistsClause() {
+        return "AND EXISTS ("
+                + "    SELECT 1 "
+                + "    FROM Product_Variant available_variant "
+                + "    WHERE available_variant.product_id = p.id "
+                + "    AND available_variant.status = 'ACTIVE' "
+                + "    AND available_variant.stock_quantity > 0 "
+                + "    AND ISNULL(available_variant.list_price, 0) > 0 "
+                + "    AND ISNULL(available_variant.sale_price, 0) > 0 "
+                + "    AND available_variant.sale_price "
+                + "        <= available_variant.list_price"
+                + ") ";
+    }
+
+    private int normalizeHomepageLimit(int limit) {
+        if (limit <= 0) {
+            return 8;
+        }
+        return Math.min(limit, 50);
+    }
+
     private void appendProductFilters(
             StringBuilder sql,
             List<Object> params,
@@ -627,6 +825,13 @@ public class CustomerProductDAO {
         product.setCreatedAt(rs.getTimestamp("created_at"));
         product.setUpdatedAt(rs.getTimestamp("updated_at"));
         product.setMainImageUrl(rs.getString("main_image_url"));
+        product.setFeatured(rs.getBoolean("is_featured"));
+
+        int featuredOrder = rs.getInt("featured_display_order");
+        product.setFeaturedDisplayOrder(
+                rs.wasNull() ? null : featuredOrder
+        );
+
         return product;
     }
 
