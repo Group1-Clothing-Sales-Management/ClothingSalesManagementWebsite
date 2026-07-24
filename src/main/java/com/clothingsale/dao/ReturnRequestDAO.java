@@ -17,7 +17,8 @@ import java.util.Map;
 
 /**
  * DAO cho nghiệp vụ đổi trả.
- * Các thao tác thay đổi nhiều bảng đều dùng một transaction để dữ liệu không bị dở dang.
+ * Các thao tác thay đổi nhiều bảng đều dùng một transaction để dữ liệu không bị
+ * dở dang.
  */
 public class ReturnRequestDAO {
 
@@ -57,7 +58,10 @@ public class ReturnRequestDAO {
         }
     }
 
-    /** Không cho tạo thêm yêu cầu đang xử lý cho cùng một đơn để tránh hoàn tiền hai lần. */
+    /**
+     * Không cho tạo thêm yêu cầu đang xử lý cho cùng một đơn để tránh hoàn tiền hai
+     * lần.
+     */
     public boolean hasOpenRequest(int orderId) {
         String sql = "SELECT COUNT(*) FROM Return_Request WHERE order_id = ? "
                 + "AND status IN ('PENDING','INFO_REQUIRED','APPROVED','RECEIVED','REFUND_PENDING')";
@@ -72,7 +76,9 @@ public class ReturnRequestDAO {
         }
     }
 
-    /** Tạo header, các dòng sản phẩm và lịch sử PENDING trong cùng một transaction. */
+    /**
+     * Tạo header, các dòng sản phẩm và lịch sử PENDING trong cùng một transaction.
+     */
     public int createRequest(String code, int userId, int orderId, String type, String reason,
             String customerNote, String bankId, String bankName, String accountName,
             String accountNumber, Map<Integer, Integer> quantities) throws SQLException {
@@ -148,8 +154,14 @@ public class ReturnRequestDAO {
                                 continue;
                             }
                             add.setInt(1, requestId);
-                            if (rs.getObject("id") == null) add.setNull(2, java.sql.Types.INTEGER); else add.setInt(2, rs.getInt("id"));
-                            if (rs.getObject("variant_id") == null) add.setNull(3, java.sql.Types.INTEGER); else add.setInt(3, rs.getInt("variant_id"));
+                            if (rs.getObject("id") == null)
+                                add.setNull(2, java.sql.Types.INTEGER);
+                            else
+                                add.setInt(2, rs.getInt("id"));
+                            if (rs.getObject("variant_id") == null)
+                                add.setNull(3, java.sql.Types.INTEGER);
+                            else
+                                add.setInt(3, rs.getInt("variant_id"));
                             add.setString(4, rs.getString("product_name_snapshot"));
                             add.setString(5, rs.getString("variant_attributes_snapshot"));
                             add.setInt(6, requested);
@@ -176,12 +188,16 @@ public class ReturnRequestDAO {
         }
     }
 
-    /** Lấy mã đơn hàng trong cùng transaction để nội dung chuyển khoản không bị giả mạo từ form. */
+    /**
+     * Lấy mã đơn hàng trong cùng transaction để nội dung chuyển khoản không bị giả
+     * mạo từ form.
+     */
     private String getOrderCode(Connection con, int orderId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("SELECT order_code FROM [Order] WHERE id=?")) {
             ps.setInt(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) throw new SQLException("Order not found.");
+                if (!rs.next())
+                    throw new SQLException("Order not found.");
                 return rs.getString(1);
             }
         }
@@ -203,12 +219,14 @@ public class ReturnRequestDAO {
                 String findSql = "SELECT id FROM Return_Request WITH (UPDLOCK, ROWLOCK) "
                         + "WHERE status='APPROVED' AND COALESCE(reviewed_at, requested_at) <= DATEADD(DAY, -3, GETDATE())";
                 try (PreparedStatement ps = con.prepareStatement(findSql); ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) expiredIds.add(rs.getInt(1));
+                    while (rs.next())
+                        expiredIds.add(rs.getInt(1));
                 }
                 for (Integer id : expiredIds) {
                     try (PreparedStatement ps = con.prepareStatement(
                             "UPDATE Return_Request SET status='CANCELLED', staff_note=? WHERE id=? AND status='APPROVED'")) {
-                        ps.setString(1, "Automatically cancelled because the store did not receive the returned package within 3 days.");
+                        ps.setString(1,
+                                "Automatically cancelled because the store did not receive the returned package within 3 days.");
                         ps.setInt(2, id);
                         if (ps.executeUpdate() == 1) {
                             // Không có người thao tác trực tiếp nên changed_by được lưu là NULL.
@@ -237,10 +255,22 @@ public class ReturnRequestDAO {
             String key = keyword == null ? "" : keyword.trim();
             String normalizedStatus = status == null ? "" : status.trim().toUpperCase();
             int i = 1;
-            ps.setString(i++, key); ps.setString(i++, key); ps.setString(i++, "%" + key + "%"); ps.setString(i++, key); ps.setString(i++, "%" + key + "%"); ps.setString(i++, "%" + key + "%");
-            ps.setString(i++, normalizedStatus); ps.setString(i++, normalizedStatus); ps.setString(i, normalizedStatus);
-            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.add(mapRequest(rs)); }
-        } catch (SQLException e) { e.printStackTrace(); }
+            ps.setString(i++, key);
+            ps.setString(i++, key);
+            ps.setString(i++, "%" + key + "%");
+            ps.setString(i++, key);
+            ps.setString(i++, "%" + key + "%");
+            ps.setString(i++, "%" + key + "%");
+            ps.setString(i++, normalizedStatus);
+            ps.setString(i++, normalizedStatus);
+            ps.setString(i, normalizedStatus);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    result.add(mapRequest(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return result;
     }
 
@@ -255,33 +285,53 @@ public class ReturnRequestDAO {
                     return request;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
-    /** Khách bổ sung thông tin theo yêu cầu của Staff và đưa hồ sơ về hàng chờ kiểm tra. */
+    /**
+     * Khách bổ sung thông tin theo yêu cầu của Staff và đưa hồ sơ về hàng chờ kiểm
+     * tra.
+     */
     public boolean supplementInfo(int requestId, int customerId, String note) throws SQLException {
         try (Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
                 String current = null;
-                try (PreparedStatement ps = con.prepareStatement("SELECT rr.status FROM Return_Request rr WHERE rr.id=? AND rr.customer_id=?")) {
+                try (PreparedStatement ps = con.prepareStatement(
+                        "SELECT rr.status FROM Return_Request rr WHERE rr.id=? AND rr.customer_id=?")) {
                     ps.setInt(1, requestId);
                     ps.setInt(2, customerId);
-                    try (ResultSet rs = ps.executeQuery()) { if (rs.next()) current = rs.getString(1); }
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next())
+                            current = rs.getString(1);
+                    }
                 }
                 if (!"INFO_REQUIRED".equals(current) || note == null || note.trim().isEmpty()) {
                     con.rollback();
                     return false;
                 }
-                try (PreparedStatement ps = con.prepareStatement("UPDATE Return_Request SET customer_note=CONCAT(ISNULL(customer_note,''), CHAR(13)+CHAR(10), 'Additional information: ', ?), status='PENDING' WHERE id=? AND customer_id=? AND status='INFO_REQUIRED'")) {
-                    ps.setString(1, note.trim()); ps.setInt(2, requestId); ps.setInt(3, customerId);
-                    if (ps.executeUpdate() != 1) { con.rollback(); return false; }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Return_Request SET customer_note=CONCAT(ISNULL(customer_note,''), CHAR(13)+CHAR(10), 'Additional information: ', ?), status='PENDING' WHERE id=? AND customer_id=? AND status='INFO_REQUIRED'")) {
+                    ps.setString(1, note.trim());
+                    ps.setInt(2, requestId);
+                    ps.setInt(3, customerId);
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
                 }
                 addHistory(con, requestId, current, "PENDING", note.trim(), customerId);
                 con.commit();
                 return true;
-            } catch (SQLException e) { con.rollback(); throw e; } finally { con.setAutoCommit(true); }
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
         }
     }
 
@@ -290,8 +340,13 @@ public class ReturnRequestDAO {
         String sql = baseRequestSql() + " WHERE " + where + " ORDER BY rr.requested_at DESC, rr.id DESC";
         try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.add(mapRequest(rs)); }
-        } catch (SQLException e) { e.printStackTrace(); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    result.add(mapRequest(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return result;
     }
 
@@ -301,8 +356,13 @@ public class ReturnRequestDAO {
                 + "LEFT JOIN Product_Variant pv ON pv.id = ri.variant_id WHERE ri.return_request_id = ? ORDER BY ri.id";
         try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, requestId);
-            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.add(mapReturnItem(rs)); }
-        } catch (SQLException e) { e.printStackTrace(); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    result.add(mapReturnItem(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return result;
     }
 
@@ -324,26 +384,48 @@ public class ReturnRequestDAO {
             try {
                 // Đổi trạng thái trước trong cùng transaction để hai nhân viên bấm đồng thời
                 // không thể cùng cộng tồn kho cho một yêu cầu.
-                try (PreparedStatement ps = con.prepareStatement("UPDATE Return_Request SET status='RECEIVED', received_by=?, received_at=GETDATE(), staff_note=? WHERE id=? AND status='APPROVED'")) {
-                    ps.setInt(1, staffId); ps.setString(2, note); ps.setInt(3, requestId);
-                    if (ps.executeUpdate() != 1) { con.rollback(); return false; }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Return_Request SET status='RECEIVED', received_by=?, received_at=GETDATE(), staff_note=? WHERE id=? AND status='APPROVED'")) {
+                    ps.setInt(1, staffId);
+                    ps.setString(2, note);
+                    ps.setInt(3, requestId);
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
                 }
                 List<ReturnRequestItem> items = getItems(requestId);
                 for (ReturnRequestItem item : items) {
-                    if (item.getVariantId() <= 0) continue;
+                    if (item.getVariantId() <= 0)
+                        continue;
                     String update = "UPDATE Product_Variant SET stock_quantity = stock_quantity + ? WHERE id = ?";
-                    try (PreparedStatement ps = con.prepareStatement(update)) { ps.setInt(1, item.getQuantity()); ps.setInt(2, item.getVariantId()); ps.executeUpdate(); }
+                    try (PreparedStatement ps = con.prepareStatement(update)) {
+                        ps.setInt(1, item.getQuantity());
+                        ps.setInt(2, item.getVariantId());
+                        ps.executeUpdate();
+                    }
                     String log = "INSERT INTO Inventory_Log(variant_id, user_id, product_name_snapshot, quantity_before, change_quantity, quantity_after, transaction_type, reference_type, reference_id, note) "
                             + "SELECT pv.id, ?, p.product_name, pv.stock_quantity - ?, ?, pv.stock_quantity, 'RETURN_IN', 'RETURN_REQUEST', ?, ? "
                             + "FROM Product_Variant pv JOIN Product p ON p.id = pv.product_id WHERE pv.id = ?";
                     try (PreparedStatement ps = con.prepareStatement(log)) {
-                        ps.setInt(1, staffId); ps.setInt(2, item.getQuantity()); ps.setInt(3, item.getQuantity()); ps.setInt(4, requestId); ps.setString(5, note); ps.setInt(6, item.getVariantId()); ps.executeUpdate();
+                        ps.setInt(1, staffId);
+                        ps.setInt(2, item.getQuantity());
+                        ps.setInt(3, item.getQuantity());
+                        ps.setInt(4, requestId);
+                        ps.setString(5, note);
+                        ps.setInt(6, item.getVariantId());
+                        ps.executeUpdate();
                     }
                 }
                 addHistory(con, requestId, "APPROVED", "RECEIVED", note, staffId);
                 con.commit();
                 return true;
-            } catch (SQLException e) { con.rollback(); throw e; } finally { con.setAutoCommit(true); }
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
         }
     }
 
@@ -358,15 +440,48 @@ public class ReturnRequestDAO {
             try {
                 String code = "";
                 int orderId = 0;
-                try (PreparedStatement ps = con.prepareStatement("SELECT order_id, request_code FROM Return_Request WHERE id=?")) { ps.setInt(1, requestId); try (ResultSet rs = ps.executeQuery()) { if (!rs.next()) throw new SQLException("Return request not found."); orderId=rs.getInt(1); code=rs.getString(2); } }
-                // Claim trạng thái trước để thao tác hoàn tiền có tính idempotent khi bị bấm lặp.
-                try (PreparedStatement ps = con.prepareStatement("UPDATE Return_Request SET status='COMPLETED', refunded_by=?, refunded_at=GETDATE(), staff_note=? WHERE id=? AND status='REFUND_PENDING'")) { ps.setInt(1, adminId); ps.setString(2, note); ps.setInt(3, requestId); if (ps.executeUpdate() != 1) { con.rollback(); return false; } }
-                try (PreparedStatement ps = con.prepareStatement("UPDATE Payment SET payment_status='REFUNDED', transaction_reference=?, payment_date=GETDATE() WHERE order_id=?")) { ps.setString(1, "REFUND-" + code); ps.setInt(2, orderId); ps.executeUpdate(); }
-                try (PreparedStatement ps = con.prepareStatement("UPDATE [Order] SET order_status='RETURNED', updated_at=GETDATE() WHERE id=?")) { ps.setInt(1, orderId); ps.executeUpdate(); }
+                try (PreparedStatement ps = con
+                        .prepareStatement("SELECT order_id, request_code FROM Return_Request WHERE id=?")) {
+                    ps.setInt(1, requestId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next())
+                            throw new SQLException("Return request not found.");
+                        orderId = rs.getInt(1);
+                        code = rs.getString(2);
+                    }
+                }
+                // Claim trạng thái trước để thao tác hoàn tiền có tính idempotent khi bị bấm
+                // lặp.
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Return_Request SET status='COMPLETED', refunded_by=?, refunded_at=GETDATE(), staff_note=? WHERE id=? AND status='REFUND_PENDING'")) {
+                    ps.setInt(1, adminId);
+                    ps.setString(2, note);
+                    ps.setInt(3, requestId);
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
+                }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE Payment SET payment_status='REFUNDED', transaction_reference=?, payment_date=GETDATE() WHERE order_id=?")) {
+                    ps.setString(1, "REFUND-" + code);
+                    ps.setInt(2, orderId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE [Order] SET order_status='RETURNED', updated_at=GETDATE() WHERE id=?")) {
+                    ps.setInt(1, orderId);
+                    ps.executeUpdate();
+                }
                 addHistory(con, requestId, "REFUND_PENDING", "COMPLETED", note, adminId);
                 con.commit();
                 return true;
-            } catch (SQLException e) { con.rollback(); throw e; } finally { con.setAutoCommit(true); }
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
         }
     }
 
@@ -382,11 +497,13 @@ public class ReturnRequestDAO {
                 int orderId = 0;
                 String current = null;
                 try (PreparedStatement ps = con.prepareStatement(
-                        // Khóa dòng trong transaction để không thể cộng tồn kho hai lần khi hai người cùng xác nhận.
+                        // Khóa dòng trong transaction để không thể cộng tồn kho hai lần khi hai người
+                        // cùng xác nhận.
                         "SELECT order_id, request_code, status FROM Return_Request WITH (UPDLOCK, ROWLOCK) WHERE id=?")) {
                     ps.setInt(1, requestId);
                     try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) throw new SQLException("Return request not found.");
+                        if (!rs.next())
+                            throw new SQLException("Return request not found.");
                         orderId = rs.getInt("order_id");
                         code = rs.getString("request_code");
                         current = rs.getString("status");
@@ -402,14 +519,17 @@ public class ReturnRequestDAO {
 
                 try (PreparedStatement ps = con.prepareStatement(
                         "UPDATE Return_Request SET status='COMPLETED', refunded_by=?, refunded_at=GETDATE(), "
-                        + "refund_confirmed_by=?, refund_confirmed_at=GETDATE(), refund_proof_path=?, staff_note=? "
-                        + "WHERE id=? AND status='RECEIVED'")) {
+                                + "refund_confirmed_by=?, refund_confirmed_at=GETDATE(), refund_proof_path=?, staff_note=? "
+                                + "WHERE id=? AND status='RECEIVED'")) {
                     ps.setInt(1, operatorId);
                     ps.setInt(2, operatorId);
                     ps.setString(3, proofPath);
                     ps.setString(4, note);
                     ps.setInt(5, requestId);
-                    if (ps.executeUpdate() != 1) { con.rollback(); return false; }
+                    if (ps.executeUpdate() != 1) {
+                        con.rollback();
+                        return false;
+                    }
                 }
 
                 try (PreparedStatement ps = con.prepareStatement(
@@ -442,7 +562,8 @@ public class ReturnRequestDAO {
     private boolean changeStatus(int requestId, int userId, String target, String note,
             String qrUrl, String transferDescription) throws SQLException {
         String current = getStatus(requestId);
-        if (current == null || !canChange(current, target)) return false;
+        if (current == null || !canChange(current, target))
+            return false;
         try (Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
@@ -454,23 +575,37 @@ public class ReturnRequestDAO {
                         + " WHERE id=? AND status=?";
                 try (PreparedStatement ps = con.prepareStatement(sql)) {
                     int i = 1;
-                    ps.setString(i++, target); ps.setString(i++, note); ps.setInt(i++, userId);
-                    ps.setString(i++, target); ps.setInt(i++, userId); ps.setString(i++, target);
+                    ps.setString(i++, target);
+                    ps.setString(i++, note);
+                    ps.setInt(i++, userId);
+                    ps.setString(i++, target);
+                    ps.setInt(i++, userId);
+                    ps.setString(i++, target);
                     if ("APPROVED".equals(target)) {
                         ps.setString(i++, qrUrl);
                         ps.setString(i++, transferDescription);
                     }
-                    ps.setInt(i++, requestId); ps.setString(i, current);
-                    if (ps.executeUpdate() != 1) throw new SQLException("The request was already updated.");
+                    ps.setInt(i++, requestId);
+                    ps.setString(i, current);
+                    if (ps.executeUpdate() != 1)
+                        throw new SQLException("The request was already updated.");
                 }
-                con.commit(); return true;
-            } catch (SQLException e) { con.rollback(); throw e; } finally { con.setAutoCommit(true); }
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
         }
     }
 
     private boolean canChange(String current, String target) {
-        if ("PENDING".equals(current) || "INFO_REQUIRED".equals(current)) return "APPROVED".equals(target) || "REJECTED".equals(target) || "INFO_REQUIRED".equals(target);
-        if ("RECEIVED".equals(current)) return "REFUND_PENDING".equals(target);
+        if ("PENDING".equals(current) || "INFO_REQUIRED".equals(current))
+            return "APPROVED".equals(target) || "REJECTED".equals(target) || "INFO_REQUIRED".equals(target);
+        if ("RECEIVED".equals(current))
+            return "REFUND_PENDING".equals(target);
         return "REFUND_PENDING".equals(current) && "REJECTED".equals(target);
     }
 
@@ -484,14 +619,18 @@ public class ReturnRequestDAO {
         }
     }
 
-    private void addHistory(Connection con, int id, String oldStatus, String newStatus, String note, Integer userId) throws SQLException {
+    private void addHistory(Connection con, int id, String oldStatus, String newStatus, String note, Integer userId)
+            throws SQLException {
         String sql = "INSERT INTO Return_Request_History(return_request_id, old_status, new_status, note, changed_by) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.setString(2, oldStatus);
             ps.setString(3, newStatus);
             ps.setString(4, note);
-            if (userId == null) ps.setNull(5, java.sql.Types.INTEGER); else ps.setInt(5, userId);
+            if (userId == null)
+                ps.setNull(5, java.sql.Types.INTEGER);
+            else
+                ps.setInt(5, userId);
             ps.executeUpdate();
         }
     }
@@ -499,7 +638,9 @@ public class ReturnRequestDAO {
     public Map<String, Integer> getStatusCounts() {
         Map<String, Integer> result = new LinkedHashMap<>();
         String sql = "SELECT status, COUNT(*) total FROM Return_Request GROUP BY status";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 result.put(rs.getString(1), rs.getInt(2));
             }
@@ -510,8 +651,12 @@ public class ReturnRequestDAO {
     }
 
     public BigDecimal getTotalRefunded() {
-        String sql = "SELECT ISNULL(SUM(refund_amount), 0) FROM Return_Request WHERE status = 'COMPLETED'";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        String sql = "SELECT ISNULL(SUM(rr.refund_amount), 0) FROM Return_Request rr "
+                + "LEFT JOIN Payment p ON p.order_id = rr.order_id "
+                + "WHERE rr.status = 'COMPLETED' OR p.payment_status = 'REFUNDED'";
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -522,9 +667,14 @@ public class ReturnRequestDAO {
     public List<ReturnReportRow> getReportRows() {
         List<ReturnReportRow> result = new ArrayList<>();
         String sql = "SELECT ri.product_name_snapshot, pv.sku, SUM(ri.quantity) quantity_returned, MAX(ISNULL(pv.stock_quantity,0)) current_stock, SUM(ri.quantity * ri.unit_price) refund_amount "
-                + "FROM Return_Request_Item ri JOIN Return_Request rr ON rr.id=ri.return_request_id LEFT JOIN Product_Variant pv ON pv.id=ri.variant_id "
-                + "WHERE rr.status='COMPLETED' GROUP BY ri.product_name_snapshot, pv.sku ORDER BY quantity_returned DESC";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+                + "FROM Return_Request_Item ri JOIN Return_Request rr ON rr.id=ri.return_request_id "
+                + "LEFT JOIN Product_Variant pv ON pv.id=ri.variant_id "
+                + "LEFT JOIN Payment p ON p.order_id = rr.order_id "
+                + "WHERE rr.status='COMPLETED' OR p.payment_status='REFUNDED' "
+                + "GROUP BY ri.product_name_snapshot, pv.sku ORDER BY quantity_returned DESC";
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 ReturnReportRow row = new ReturnReportRow();
                 row.setProductName(rs.getString(1));
