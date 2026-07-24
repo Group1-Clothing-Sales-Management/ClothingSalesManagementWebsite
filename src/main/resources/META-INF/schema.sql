@@ -221,12 +221,16 @@ CREATE TABLE dbo.Product (
 CREATE TABLE dbo.Product_Image (
     id INT IDENTITY(1,1) NOT NULL,
     product_id INT NOT NULL,
+    variant_id INT NULL,
     image_url VARCHAR(255) NOT NULL,
     is_main BIT NOT NULL
         CONSTRAINT DF_ProductImage_Main DEFAULT (0),
     sort_order INT NOT NULL
         CONSTRAINT DF_ProductImage_Sort DEFAULT (0),
+    updated_at DATETIME2(0) NOT NULL
+        CONSTRAINT DF_ProductImage_UpdatedAt DEFAULT (SYSDATETIME()),
     CONSTRAINT PK_Product_Image PRIMARY KEY (id),
+    CONSTRAINT CK_ProductImage_SortOrder CHECK (sort_order >= 0),
     CONSTRAINT FK_ProductImage_Product FOREIGN KEY (product_id)
         REFERENCES dbo.Product(id) ON DELETE CASCADE
 );
@@ -268,6 +272,14 @@ CREATE TABLE dbo.Product_Variant (
     CONSTRAINT FK_ProductVariant_PriceUser FOREIGN KEY (price_updated_by)
         REFERENCES dbo.[User](id) ON DELETE SET NULL
 );
+
+CREATE UNIQUE INDEX UX_ProductVariant_Id_ProductId
+    ON dbo.Product_Variant(id, product_id);
+
+ALTER TABLE dbo.Product_Image
+ADD CONSTRAINT FK_ProductImage_VariantProduct
+    FOREIGN KEY (variant_id, product_id)
+    REFERENCES dbo.Product_Variant(id, product_id);
 
 CREATE TABLE dbo.Variant_Attribute_Value (
     variant_id INT NOT NULL,
@@ -781,6 +793,14 @@ CREATE INDEX IX_Category_ParentStatus ON dbo.Category(parent_id, status);
 CREATE INDEX IX_Product_CategoryStatus ON dbo.Product(category_id, status);
 CREATE INDEX IX_Product_BrandStatus ON dbo.Product(brand_id, status);
 CREATE INDEX IX_ProductImage_Main ON dbo.Product_Image(product_id, is_main);
+CREATE UNIQUE INDEX UX_ProductImage_ProductMain
+    ON dbo.Product_Image(product_id)
+    WHERE variant_id IS NULL
+      AND is_main = 1;
+CREATE UNIQUE INDEX UX_ProductImage_VariantMain
+    ON dbo.Product_Image(variant_id)
+    WHERE variant_id IS NOT NULL
+      AND is_main = 1;
 CREATE INDEX IX_ProductVariant_ProductStatus ON dbo.Product_Variant(product_id, status);
 CREATE INDEX IX_ProductVariant_Stock ON dbo.Product_Variant(stock_quantity, status);
 CREATE INDEX IX_PriceHistory_VariantDate
