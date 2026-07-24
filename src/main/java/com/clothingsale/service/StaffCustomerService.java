@@ -97,6 +97,8 @@ public class StaffCustomerService {
 
         if (isBlank(c.getEmail())) {
             errors.put("email", "Email cannot be empty.");
+        } else if (c.getEmail().length() <= 6) {
+            errors.put("email", "Email must be greater than 6 characters.");
         } else if (!isValidEmail(c.getEmail())) {
             errors.put("email", "Invalid email format.");
         } else if (dao.isEmailExists(c.getEmail(), c.getId())) {
