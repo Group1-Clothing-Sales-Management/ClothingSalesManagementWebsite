@@ -210,38 +210,24 @@
             <jsp:param name="activeTab" value="inventory"/>
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
 
+                <div class="page-header">
+
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-truck-ramp-box"/>
+                        <jsp:param name="title" value="Create Stock Receipt"/>
+                        <jsp:param name="subtitle" value="Save the receipt as a draft first. Inventory changes only after confirmation."/>
+                    </jsp:include>
+
+                </div>
+
                 <c:if test="${not empty inventoryFlashMessage}">
-                    <div class="alert alert-danger">
+                    <div class="d-none" data-admin-toast data-admin-toast-type="error">
                         <c:out value="${inventoryFlashMessage}"/>
                     </div>
                 </c:if>
-
-                <div class="d-flex flex-wrap
-                     justify-content-between
-                     align-items-center
-                     gap-3 mb-4">
-
-                    <div>
-                        
-
-                        <h1 class="page-heading mb-1">
-                            <i class="fa-solid
-                               fa-truck-ramp-box
-                               me-2 text-primary"></i>
-                            Create Stock Receipt
-                        </h1>
-
-                        <p class="helper-text mb-0">
-                            Save the receipt as a draft first.
-                            Inventory changes only after confirmation.
-                        </p>
-                    </div>
-
-                    
-                </div>
 
                 <c:if test="${empty supplierList}">
                     <div class="alert alert-warning">

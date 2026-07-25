@@ -5,6 +5,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Edit Voucher Configuration - Admin Panel</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -34,18 +35,19 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
 
                 <jsp:useBean id="now" class="java.util.Date" />
                 <c:set var="isActive" value="${now.time >= voucher.startDate.time && now.time <= voucher.endDate.time}" />
                 <c:set var="isExpired" value="${now.time > voucher.endDate.time || voucher.usedCount >= voucher.usageLimit}" />
 
-                <div class="page-header mb-4">
-                    <div>
-                        <h2 class="page-title">Edit Voucher: ${voucher.code}</h2>
-                        <p class="page-subtitle text-muted mb-0">Modify details and operational thresholds for this campaign configuration</p>
-                    </div>
+                <div class="page-header">
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
+                        <jsp:param name="title" value="Edit Voucher: ${voucher.code}"/>
+                        <jsp:param name="subtitle" value="Modify details and operational thresholds for this campaign configuration."/>
+                    </jsp:include>
                 </div>
 
                 <c:if test="${not empty successMessage}">

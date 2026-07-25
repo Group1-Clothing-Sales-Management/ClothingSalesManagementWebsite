@@ -147,10 +147,11 @@
 
     <c:if test="${empty pageMode or pageMode eq 'list'}">
         <div class="page-header">
-            <div>
-                <h1 class="page-title"><i class="bi bi-person-badge-fill"></i>Staff Management</h1>
-                <div class="subtext">View, create, update, and delete staff accounts.</div>
-            </div>
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="fa-solid fa-user-tie"/>
+                <jsp:param name="title" value="Staff Management"/>
+                <jsp:param name="subtitle" value="View, create, update, and manage staff accounts."/>
+            </jsp:include>
             <a href="${staffBasePath}?action=add" class="btn btn-primary btn-sm px-3">
                 <i class="bi bi-person-plus-fill me-1"></i>Add Staff
             </a>
@@ -269,6 +270,14 @@
     </c:if>
 
     <c:if test="${pageMode eq 'add' or pageMode eq 'edit'}">
+        <div class="page-header">
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="${pageMode eq 'add' ? 'fa-solid fa-user-plus' : 'fa-solid fa-user-pen'}"/>
+                <jsp:param name="title" value="${pageMode eq 'add' ? 'Add New Staff' : 'Edit Staff Info'}"/>
+                <jsp:param name="subtitle" value="${pageMode eq 'add' ? 'Create a new internal staff account.' : 'Update profile data and account status.'}"/>
+            </jsp:include>
+        </div>
+
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Dashboard</a></li>
@@ -277,19 +286,7 @@
             </ol>
         </nav>
 
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">
-                    <i class="bi ${pageMode eq 'add' ? 'bi-person-plus-fill' : 'bi-pencil-square'}"></i>
-                    ${pageMode eq 'add' ? 'Add New Staff' : 'Edit Staff Info'}
-                </h1>
-                <div class="field-note">
-                    ${pageMode eq 'add' ? 'Create a new internal staff account.' : 'Update profile data and account status.'}
-                </div>
-            </div>
-        </div>
-
-        <div class="card card-main mx-auto" style="max-width: 780px;">
+        <div class="card card-main">
             <div class="card-body p-4">
                 <form method="post" action="${staffBasePath}">
                     <input type="hidden" name="action" value="${pageMode eq 'add' ? 'add' : 'update'}"/>

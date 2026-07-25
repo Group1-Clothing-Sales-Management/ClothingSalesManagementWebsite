@@ -32,14 +32,15 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
 
                 <div class="page-header">
-                    <div>
-                        <h1 class="page-title">Product Details</h1>
-                        <p class="page-subtitle mb-0">Inspect the product master record and its current variants.</p>
-                    </div>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-box"/>
+                        <jsp:param name="title" value="Product Details"/>
+                        <jsp:param name="subtitle" value="Inspect the product master record and its current variants."/>
+                    </jsp:include>
                     <c:if test="${not empty variants}">
                         <a href="${pageContext.request.contextPath}/StaffManageProducts?action=edit&sku=${variants[0].sku}"
                            class="btn btn-primary">

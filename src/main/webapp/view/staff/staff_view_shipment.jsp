@@ -4,12 +4,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shipment Status Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
     <style>
         .table { table-layout: fixed; }
-        .table td { vertical-align: middle; height: 64px; }
+        .table td { vertical-align: middle; }
         .note-failure {
             font-size: .8rem;
             color: #991b1b;
@@ -31,9 +32,13 @@
     <jsp:param name="activeTab" value="shipments" />
 </jsp:include>
 
-        <div class="py-5 px-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-dark fw-bold">Shipment Status Management</h2>
+        <div class="admin-page">
+            <div class="page-header">
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-truck-fast"/>
+                    <jsp:param name="title" value="Shipment Status Management"/>
+                    <jsp:param name="subtitle" value="Search shipments and keep delivery statuses up to date."/>
+                </jsp:include>
             </div>
 
             <c:if test="${not empty sessionScope.successMsg}">

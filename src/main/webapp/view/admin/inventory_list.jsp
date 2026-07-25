@@ -71,41 +71,16 @@
     <jsp:param name="activeTab" value="inventory"/>
 </jsp:include>
 
-<div class="main-content admin-page">
+<div class="admin-page">
     <div class="container-fluid">
 
-        <c:if test="${not empty inventoryFlashMessage}">
-            <div class="alert
-                        ${inventoryFlashType eq 'success'
-                          ? 'alert-success'
-                          : 'alert-danger'}">
+        <div class="page-header">
 
-                <c:out value="${inventoryFlashMessage}"/>
-            </div>
-        </c:if>
-
-        <div class="d-flex flex-wrap
-                    justify-content-between
-                    align-items-center
-                    gap-3 mb-4">
-
-            <div>
-                <div class="small fw-semibold
-                            text-primary text-uppercase mb-1">
-                    Inventory
-                </div>
-
-                <h1 class="page-heading mb-1">
-                    <i class="fa-solid
-                              fa-file-invoice-dollar
-                              me-2 text-primary"></i>
-                    Stock Receipts
-                </h1>
-
-                <p class="text-muted mb-0">
-                    Create, review, and confirm incoming stock.
-                </p>
-            </div>
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="fa-solid fa-file-invoice-dollar"/>
+                <jsp:param name="title" value="Stock Receipts"/>
+                <jsp:param name="subtitle" value="Create, review, and confirm incoming stock."/>
+            </jsp:include>
 
             <a href="${pageContext.request.contextPath}/admin/inventory?action=IMPORT_PAGE"
                class="btn btn-success px-4">
@@ -114,6 +89,14 @@
                 New Stock Receipt
             </a>
         </div>
+
+        <c:if test="${not empty inventoryFlashMessage}">
+            <div class="d-none"
+                 data-admin-toast
+                 data-admin-toast-type="${inventoryFlashType eq 'success' ? 'success' : 'error'}">
+                <c:out value="${inventoryFlashMessage}"/>
+            </div>
+        </c:if>
 
         <div class="card content-card">
             <div class="card-body p-0">

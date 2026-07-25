@@ -6,6 +6,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Price Management</title>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -86,7 +87,7 @@
             <jsp:param name="activeTab" value="prices"/>
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
 
                 <c:set var="totalCount" value="0"/>
@@ -110,13 +111,12 @@
                     </c:if>
                 </c:forEach>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 class="fw-bold mb-1">
-                            <i class="fa-solid fa-tags me-2 text-primary"></i>Price Management
-                        </h2>
-                        <p class="text-muted mb-0">Manage list prices and current sale prices for product variants.</p>
-                    </div>
+                <div class="page-header">
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-coins"/>
+                        <jsp:param name="title" value="Price Management"/>
+                        <jsp:param name="subtitle" value="Manage list prices and current sale prices for product variants."/>
+                    </jsp:include>
                 </div>
 
                 <c:if test="${not empty priceFlashMessage}">

@@ -126,10 +126,11 @@
         <c:choose>
             <c:when test="${pageMode eq 'detail'}">
                 <div class="page-header">
-                    <div>
-                        <h1 class="page-title"><i class="bi bi-receipt-cutoff"></i>Order Details</h1>
-                        <div class="subtext mt-1">Review order information, track shipment, confirm or cancel when needed.</div>
-                    </div>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-receipt"/>
+                        <jsp:param name="title" value="Order Details"/>
+                        <jsp:param name="subtitle" value="Review order information, track shipment, confirm or cancel when needed."/>
+                    </jsp:include>
                 </div>
 
                 <div class="row g-4">
@@ -357,10 +358,11 @@
 
             <c:otherwise>
                 <div class="page-header">
-                    <div>
-                        <h1 class="page-title"><i class="bi bi-receipt"></i>Order Management</h1>
-                        <div class="subtext mt-1">View orders, confirm orders, cancel orders, and update status across the order lifecycle.</div>
-                    </div>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-receipt"/>
+                        <jsp:param name="title" value="Order Management"/>
+                        <jsp:param name="subtitle" value="View orders, confirm orders, cancel orders, and update their lifecycle status."/>
+                    </jsp:include>
                 </div>
 
                 <div class="card card-main mb-4">
@@ -491,7 +493,6 @@
             </c:otherwise>
         </c:choose>
     </div>
-</div>
 
 <c:if test="${showVnpayTransferInfo}">
     <div class="modal fade" id="vnpayTransferModal" tabindex="-1" aria-hidden="true">
@@ -590,6 +591,5 @@
         }, 4500);
     });
 </script>
-        </div>
 </body>
 </html>

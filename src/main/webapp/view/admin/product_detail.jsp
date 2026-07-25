@@ -5,6 +5,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Product Details - Admin Panel</title>
 
         <link rel="stylesheet"
@@ -221,14 +222,13 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="container admin-page">
+        <div class="admin-page">
             <div class="page-header">
-                <div>
-                    <h1 class="page-title">Product Details</h1>
-                    <p class="page-subtitle mb-0">
-                        Inspect the product master record and manage its variants.
-                    </p>
-                </div>
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-box"/>
+                    <jsp:param name="title" value="Product Details"/>
+                    <jsp:param name="subtitle" value="Inspect the product master record and manage its variants."/>
+                </jsp:include>
 
                 <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${product.id}"
                    class="btn btn-primary">
@@ -730,6 +730,8 @@
                            name="status"
                            id="submitVariantStatus">
                 </form>
+
+                <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

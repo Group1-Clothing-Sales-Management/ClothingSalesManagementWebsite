@@ -4,36 +4,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Revenue Report - Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-            background-color: #f8fafc;
-        }
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-        .stat-number {
-            color: #000000 !important;
-            font-weight: 700;
-        }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <jsp:include page="/view/admin/sidebar.jsp">
-        <jsp:param name="activeTab" value="reports" />
-    </jsp:include>
+<jsp:include page="/view/admin/common/admin_layout_start.jsp">
+    <jsp:param name="activeTab" value="reports" />
+</jsp:include>
 
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold text-dark"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Revenue Reports</h2>
+    <div class="admin-page">
+        <div class="page-header">
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="fa-solid fa-chart-pie"/>
+                <jsp:param name="title" value="Revenue Reports"/>
+                <jsp:param name="subtitle" value="Monitor revenue performance and export filtered business data."/>
+            </jsp:include>
         </div>
 
         <c:if test="${not empty errorMessage}">
@@ -81,20 +71,24 @@
 
 <div class="row mb-4 g-3">
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm text-white" 
-             style="background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;">
-            <div class="card-body p-4">
-                <h6 class="text-uppercase mb-2 fw-bold small" style="color: rgba(255,255,255,0.85);">Total Revenue</h6>
-                <h2 class="mb-0 stat-number" style="color: #ffffff !important;">${reportData.totalRevenue} VND</h2>
+        <div class="card admin-stat-card h-100">
+            <div class="card-body">
+                <span class="admin-stat-icon"><i class="fa-solid fa-coins"></i></span>
+                <div>
+                    <div class="admin-stat-label">Total Revenue</div>
+                    <p class="admin-stat-value">${reportData.totalRevenue} VND</p>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm text-white" 
-             style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;">
-            <div class="card-body p-4">
-                <h6 class="text-uppercase mb-2 fw-bold small" style="color: rgba(255,255,255,0.85);">Completed Orders</h6>
-                <h2 class="mb-0 stat-number" style="color: #ffffff !important;">${reportData.completedOrdersCount} orders</h2>
+        <div class="card admin-stat-card h-100">
+            <div class="card-body">
+                <span class="admin-stat-icon"><i class="fa-solid fa-circle-check"></i></span>
+                <div>
+                    <div class="admin-stat-label">Completed Orders</div>
+                    <p class="admin-stat-value">${reportData.completedOrdersCount} orders</p>
+                </div>
             </div>
         </div>
     </div>
@@ -138,7 +132,8 @@
             </div>
         </div>
     </div>
-</div>
+
+<jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
 <script>
     const timeLabels = [];

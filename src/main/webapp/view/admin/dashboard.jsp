@@ -469,17 +469,15 @@
         </jsp:include>
 
         <main class="dashboard-page admin-page">
-            <div class="dashboard-header">
-                <div>
-                    <h1 class="dashboard-title">Business Dashboard</h1>
-                    
-                    <div class="date-summary">
-                        <i class="fa-regular fa-calendar"></i>
-                        <span>${dashboardData.rangeLabel}: ${dashboardData.startDate} to ${dashboardData.endDate}</span>
-                    </div>
-                </div>
+            <div class="page-header">
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-chart-line"/>
+                    <jsp:param name="title" value="Business Dashboard"/>
+                    <jsp:param name="subtitle" value="${dashboardData.rangeLabel}: ${dashboardData.startDate} to ${dashboardData.endDate}"/>
+                </jsp:include>
+            </div>
 
-                <div class="filter-panel">
+                <div class="filter-panel mb-4">
                     <form class="filter-form" method="get"
                           action="${pageContext.request.contextPath}/admin/dashboard" id="dashboardFilterForm">
                         <div class="filter-field">
@@ -511,7 +509,6 @@
                         </button>
                     </form>
                 </div>
-            </div>
 
             <c:if test="${not empty dashboardData.errorMessage}">
                 <div class="alert alert-dashboard d-flex align-items-start gap-2 mb-4" role="alert">

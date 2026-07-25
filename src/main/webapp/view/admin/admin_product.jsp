@@ -4,6 +4,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Product Management</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -97,13 +98,15 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
 
                 <div class="page-header">
-                    <h2 class="page-title">
-                        <i class="fa-solid fa-box-open me-2 text-primary"></i>Product Management
-                    </h2>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-box-open"/>
+                        <jsp:param name="title" value="Product Management"/>
+                        <jsp:param name="subtitle" value="Manage product profiles, variants and availability."/>
+                    </jsp:include>
                     <button class="btn btn-primary px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#createProductModal">
                         <i class="fa-solid fa-plus me-1"></i> Add New Product
                     </button>

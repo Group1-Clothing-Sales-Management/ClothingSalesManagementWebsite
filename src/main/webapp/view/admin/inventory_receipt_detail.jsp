@@ -28,16 +28,14 @@
     <jsp:param name="activeTab" value="inventory"/>
 </jsp:include>
 
-<div class="main-content admin-page">
+<div class="admin-page">
     <div class="container-fluid">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <div>
-                <div class="small fw-semibold text-primary text-uppercase mb-1">Inventory</div>
-                <h1 class="h3 mb-1">Stock Receipt Details</h1>
-                <p class="text-muted mb-0">
-                    <c:out value="${receipt.receiptCode}"/>
-                </p>
-            </div>
+        <div class="page-header">
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="fa-solid fa-file-invoice"/>
+                <jsp:param name="title" value="Stock Receipt Details"/>
+                <jsp:param name="subtitle" value="${receipt.receiptCode}"/>
+            </jsp:include>
         </div>
 
         <c:if test="${not empty inventoryFlashMessage}">

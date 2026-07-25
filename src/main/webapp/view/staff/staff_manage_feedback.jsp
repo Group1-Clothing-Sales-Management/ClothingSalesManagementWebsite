@@ -223,10 +223,11 @@
             <%-- ===== DANH SÁCH FEEDBACK ===== --%>
             <c:when test="${pageMode eq 'list' or empty pageMode}">
                 <div class="page-header">
-                    <div>
-                        <h1 class="page-title"><i class="bi bi-chat-left-text-fill"></i>Feedback Management</h1>
-                        <div class="subtext mt-1">View customer feedback, open the detail screen, and reply. Delete is available to admins only.</div>
-                    </div>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-comments"/>
+                        <jsp:param name="title" value="Feedback Management"/>
+                        <jsp:param name="subtitle" value="View customer feedback, open details and manage replies."/>
+                    </jsp:include>
                 </div>
 
                 <div class="card card-main">
@@ -361,10 +362,11 @@
             <%-- ===== CHI TIẾT FEEDBACK ===== --%>
             <c:otherwise>
                 <div class="page-header">
-                    <div>
-                        <h1 class="page-title"><i class="bi bi-chat-right-text-fill"></i>Feedback Detail</h1>
-                        <div class="subtext mt-1">This screen shows the full context so Staff/Admin can decide how to respond.</div>
-                    </div>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-comment-dots"/>
+                        <jsp:param name="title" value="Feedback Detail"/>
+                        <jsp:param name="subtitle" value="Review the full feedback context and decide how to respond."/>
+                    </jsp:include>
                 </div>
 
                 <div class="row g-4">

@@ -5,6 +5,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Voucher Campaign Management - Admin Panel</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -51,14 +52,15 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
 
-                <div class="page-header d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 class="page-title">Voucher Management</h2>
-                        <p class="page-subtitle text-muted mb-0">Monitor, filter, and schedule store-wide discount campaigns smoothly</p>
-                    </div>
+                <div class="page-header">
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-ticket"/>
+                        <jsp:param name="title" value="Voucher Management"/>
+                        <jsp:param name="subtitle" value="Monitor, filter, and schedule store-wide discount campaigns."/>
+                    </jsp:include>
                     <a href="${pageContext.request.contextPath}/admin/voucher?action=create" class="btn btn-primary font-weight-bold px-4">
                         <i class="fas fa-plus-circle mr-2"></i> Create New Voucher
                     </a>

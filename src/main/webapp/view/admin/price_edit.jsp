@@ -32,19 +32,15 @@
     <jsp:param name="activeTab" value="prices"/>
 </jsp:include>
 
-<div class="main-content admin-page">
+<div class="admin-page">
     <div class="container-fluid">
 
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <div>
-                <div class="small fw-semibold text-primary text-uppercase mb-1">Price Management</div>
-                <h1 class="h3 fw-bold mb-1">
-                    <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Edit Product Price
-                </h1>
-                <p class="text-muted mb-0">
-                    Update the list price and current sale price of this variant.
-                </p>
-            </div>
+        <div class="page-header">
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
+                <jsp:param name="title" value="Edit Product Price"/>
+                <jsp:param name="subtitle" value="Update the list price and current sale price of this variant."/>
+            </jsp:include>
 
         </div>
 

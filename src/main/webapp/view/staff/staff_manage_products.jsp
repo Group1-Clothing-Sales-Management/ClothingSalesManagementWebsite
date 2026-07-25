@@ -38,7 +38,7 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="main-content admin-page">
+        <div class="admin-page">
             <div class="container-fluid">
                 <c:if test="${not empty successMessage}">
                     <div class="d-none" data-admin-toast data-admin-toast-type="success"><c:out value="${successMessage}"/></div>
@@ -48,9 +48,11 @@
                 </c:if>
 
                 <div class="page-header">
-                    <h2 class="page-title">
-                        <i class="fa-solid fa-box-open me-2 text-primary"></i>Product Management
-                    </h2>
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-box-open"/>
+                        <jsp:param name="title" value="Product Management"/>
+                        <jsp:param name="subtitle" value="Review product information, variants and availability."/>
+                    </jsp:include>
                 </div>
 
                 <div class="card card-main admin-card p-4">

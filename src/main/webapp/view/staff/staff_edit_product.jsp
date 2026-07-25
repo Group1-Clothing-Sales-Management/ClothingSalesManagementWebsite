@@ -18,7 +18,7 @@
         .page-title { font-size: 1.45rem; font-weight: 700; color: #1a1d23; margin: 0; }
         .page-title .bi { color: #5c6bc0; margin-right: 8px; }
 
-        .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); max-width: 860px; margin: 0 auto; }
+        .card-main { border: none; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
         
         .card-main .card-header {
             background: #212529;
@@ -55,8 +55,12 @@
     <jsp:param name="activeTab" value="products"/>
 </jsp:include>
         <div class="admin-page">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <h1 class="page-title"><i class="bi bi-pencil-square"></i>Edit Product</h1>
+        <div class="page-header">
+            <jsp:include page="/view/admin/common/page_heading.jsp">
+                <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
+                <jsp:param name="title" value="Edit Product"/>
+                <jsp:param name="subtitle" value="Update the product information available to staff."/>
+            </jsp:include>
         </div>
 
         <form action="${pageContext.request.contextPath}/StaffManageProducts" method="POST">

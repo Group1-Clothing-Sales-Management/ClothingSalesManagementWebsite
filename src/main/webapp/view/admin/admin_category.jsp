@@ -174,16 +174,13 @@
     <jsp:param name="activeTab" value="categories" />
 </jsp:include>
 
-<div class="container-fluid admin-page category-page">
+<div class="admin-page category-page">
     <div class="page-header">
-        <div>
-            <h1 class="page-title">
-                <i class="fa-solid fa-tags"></i>Category Management
-            </h1>
-            <p class="page-subtitle">
-                Create, update, deactivate and restore product categories.
-            </p>
-        </div>
+        <jsp:include page="/view/admin/common/page_heading.jsp">
+            <jsp:param name="icon" value="fa-solid fa-tags"/>
+            <jsp:param name="title" value="Category Management"/>
+            <jsp:param name="subtitle" value="Create, update, deactivate and restore product categories."/>
+        </jsp:include>
 
         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                 data-bs-target="#categoryModal" onclick="prepareAddCategory()">

@@ -53,6 +53,8 @@
                 activeTab = "feedback";
             } else if (path.startsWith("/admin/returns") || path.startsWith("/staff/returns")) {
                 activeTab = "returns";
+            } else if (path.startsWith("/staff/reports")) {
+                activeTab = "reports";
             } else if (path.startsWith("/staff/products")) {
                 activeTab = "products";
             } else if (path.startsWith("/admin/staffs")) {
@@ -80,6 +82,7 @@
         top: 0;
         z-index: 20;
         overflow-y: auto;
+        scrollbar-gutter: stable;
         -webkit-overflow-scrolling: touch;
         box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
     }
@@ -192,7 +195,7 @@
     }
 </style>
 
-<div class="sidebar-shell">
+<div class="sidebar-shell" id="adminSidebarNavigation">
     <div class="sidebar-brand">
         <h4 class="sidebar-brand-title mb-0"><i class="fa-solid fa-shirt sidebar-icon"></i>Clothing Sale</h4>
     </div>

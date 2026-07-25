@@ -65,15 +65,13 @@
         </c:forEach>
 
         <div class="admin-page">
-            <div class="container-fluid py-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h2 class="mb-1">Edit Product</h2>
-
-                        <p class="text-muted mb-0">
-                            Update general product information and the main image.
-                        </p>
-                    </div>
+            <div class="container-fluid">
+                <div class="page-header">
+                    <jsp:include page="/view/admin/common/page_heading.jsp">
+                        <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
+                        <jsp:param name="title" value="Edit Product"/>
+                        <jsp:param name="subtitle" value="Update general product information and the main image."/>
+                    </jsp:include>
                 </div>
 
                 <c:choose>

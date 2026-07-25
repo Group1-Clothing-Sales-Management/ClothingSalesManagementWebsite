@@ -67,7 +67,11 @@
 
         <c:if test="${empty pageMode or pageMode eq 'list'}">
             <div class="page-header">
-                <h1 class="page-title"><i class="bi bi-people-fill"></i> Customer Management</h1>
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-users"/>
+                    <jsp:param name="title" value="Customer Management"/>
+                    <jsp:param name="subtitle" value="Search customer accounts and manage their information."/>
+                </jsp:include>
                 <a href="${customersBasePath}?action=add" class="btn btn-primary btn-sm px-3">
                      <i class="bi bi-person-plus-fill me-1"></i>Add Customer
                 </a>
@@ -182,13 +186,14 @@
         <c:if test="${pageMode eq 'add' or pageMode eq 'edit'}">
 
             <div class="page-header">
-                <h1 class="page-title">
-                    <i class="bi ${pageMode eq 'add' ? 'bi-person-plus-fill' : 'bi-pencil-square'}"></i>
-                    ${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer Info'}
-                </h1>
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="${pageMode eq 'add' ? 'fa-solid fa-user-plus' : 'fa-solid fa-user-pen'}"/>
+                    <jsp:param name="title" value="${pageMode eq 'add' ? 'Add New Customer' : 'Edit Customer Info'}"/>
+                    <jsp:param name="subtitle" value="${pageMode eq 'add' ? 'Create a new customer account.' : 'Update customer profile and account information.'}"/>
+                </jsp:include>
             </div>
 
-            <div class="card card-main mx-auto" style="max-width: 720px;">
+            <div class="card card-main">
                 <div class="card-body p-4">
                     <form method="post" action="${customersBasePath}">
                         <input type="hidden" name="action" value="${pageMode eq 'add' ? 'add' : 'update'}"/>

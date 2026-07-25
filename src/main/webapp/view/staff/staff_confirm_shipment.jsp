@@ -4,6 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Shipment Status</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
@@ -44,14 +45,15 @@
                 <div class="d-none" data-admin-toast data-admin-toast-type="error"><c:out value="${errorMsg}"/></div>
             </c:if>
             <div class="page-header">
-                <div>
-                    <h2 class="page-title">Update Shipment Status</h2>
-                    <p class="page-subtitle mb-0">Confirm delivery progress and record the final outcome.</p>
-                </div>
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-truck-ramp-box"/>
+                    <jsp:param name="title" value="Update Shipment Status"/>
+                    <jsp:param name="subtitle" value="Confirm delivery progress and record the final outcome."/>
+                </jsp:include>
             </div>
 
             <div class="d-flex justify-content-center align-items-start">
-            <div class="card card-main admin-card w-100" style="max-width: 750px;">
+            <div class="card card-main admin-card w-100">
                 <div class="card-header bg-dark text-white py-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-truck-ramp-box me-2"></i>Update Shipment Status</h5>
                 </div>

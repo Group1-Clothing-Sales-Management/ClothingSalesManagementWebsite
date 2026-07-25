@@ -84,7 +84,13 @@
 
     <c:choose>
         <c:when test="${pageMode eq 'detail'}">
-            <div class="page-header"><div><h1 class="page-title"><i class="fa-solid fa-rotate-left"></i>Return Request Details</h1><p class="subtext mt-1">Review the request, record returned products, and follow the refund workflow.</p></div></div>
+            <div class="page-header">
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-rotate-left"/>
+                    <jsp:param name="title" value="Return Request Details"/>
+                    <jsp:param name="subtitle" value="Review the request, record returned products, and follow the refund workflow."/>
+                </jsp:include>
+            </div>
             <c:choose><c:when test="${empty returnRequest}"><div class="alert alert-danger">Return request not found.</div></c:when><c:otherwise>
                 <div class="row g-4">
                     <div class="col-lg-8"><div class="card card-main mb-4"><div class="card-body p-4">
@@ -141,7 +147,13 @@
             </c:otherwise></c:choose>
         </c:when>
         <c:otherwise>
-            <div class="page-header"><div><h1 class="page-title"><i class="fa-solid fa-rotate-left"></i>Returns & Refunds</h1><p class="subtext mt-1">Manage customer return requests, refunds, and returned stock.</p></div></div>
+            <div class="page-header">
+                <jsp:include page="/view/admin/common/page_heading.jsp">
+                    <jsp:param name="icon" value="fa-solid fa-rotate-left"/>
+                    <jsp:param name="title" value="Returns and Refunds"/>
+                    <jsp:param name="subtitle" value="Manage customer return requests, refunds, and returned stock."/>
+                </jsp:include>
+            </div>
             <c:if test="${sessionScope.authRoleName eq 'ADMIN'}"><div class="row g-3 mb-4"><c:forEach var="entry" items="${statusCounts}"><div class="col-sm-6 col-xl-2"><div class="card card-main"><div class="card-body"><div class="text-muted small">${entry.key}</div><div class="fs-3 fw-bold">${entry.value}</div></div></div></div></c:forEach><div class="col-sm-6 col-xl-2"><div class="card card-main"><div class="card-body"><div class="text-muted small">REFUNDED VALUE</div><div class="fs-5 fw-bold"><fmt:formatNumber value="${totalRefunded}" pattern="#,##0"/> VND</div></div></div></div></div></c:if>
             <div class="card card-main mb-4"><div class="card-body p-4"><form class="row g-3 align-items-end" method="get" action="${returnsBasePath}"><div class="col-md-5"><label class="form-label fw-semibold">Keyword</label><input name="keyword" class="form-control" value="${param.keyword}" placeholder="Request code, order code, customer..."></div><div class="col-md-4"><label class="form-label fw-semibold">Status</label><select name="status" class="form-select"><c:forEach var="option" items="${statusOptions}"><option value="${option.key}" ${param.status eq option.key ? 'selected' : ''}>${option.value}</option></c:forEach></select></div><div class="col-md-3"><button class="btn btn-primary me-2" type="submit">Search</button><a class="btn btn-outline-secondary" href="${returnsBasePath}">Reset</a></div></form></div></div>
             <div class="card card-main"><div class="card-body p-0"><c:choose><c:when test="${empty returnRequests}"><div class="empty-state">No return requests found.</div></c:when><c:otherwise><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th class="ps-4">Request</th><th>Customer</th><th>Order</th><th>Type / Reason</th><th>Refund</th><th>Status</th><th>Requested</th><th class="text-end pe-4">Action</th></tr></thead><tbody><c:forEach var="item" items="${returnRequests}"><tr><td class="ps-4"><strong>${item.requestCode}</strong></td><td>${item.customerName}<div class="small text-muted">${item.customerEmail}</div></td><td>${item.orderCode}</td><td>${item.requestType}<div class="small text-muted">${item.reason}</div></td><td><fmt:formatNumber value="${item.refundAmount}" pattern="#,##0"/> VND</td><td><span class="return-status return-status--${fn:toLowerCase(fn:replace(item.status, '_', '-'))}">${item.statusLabel}</span></td><td><fmt:formatDate value="${item.requestedAt}" pattern="dd/MM/yyyy HH:mm"/></td><td class="text-end pe-4"><a class="btn btn-sm btn-outline-primary" href="${returnsBasePath}?action=view&amp;id=${item.id}">View</a></td></tr></c:forEach></tbody></table></div></c:otherwise></c:choose></div></div>
