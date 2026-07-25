@@ -16,6 +16,10 @@ public class FeedbackManagementService {
         return feedbackDAO.getAllFeedbacks();
     }
 
+    public List<Feedback> getFeedbacksByProduct(int productId) throws Exception {
+        return feedbackDAO.getFeedbacksByProduct(productId);
+    }
+
     public Feedback getFeedbackById(int id) throws Exception {
         return feedbackDAO.getFeedbackById(id);
     }

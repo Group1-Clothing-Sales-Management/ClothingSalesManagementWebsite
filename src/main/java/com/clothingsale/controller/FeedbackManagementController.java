@@ -1,10 +1,14 @@
 package com.clothingsale.controller;
 
 import com.clothingsale.model.Feedback;
+import com.clothingsale.model.FeedbackProductGroup;
 import com.clothingsale.service.FeedbackManagementService;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -66,20 +70,24 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Show the newest feedback list.
+     * Show products that have received feedback. The list returned by the DAO is
+     * newest-first, so the LinkedHashMap also keeps products with recent activity
+     * at the top of the page.
      */
     private void showList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             List<Feedback> feedbacks = feedbackService.getAllFeedbacks();
-            request.setAttribute("feedbacks", feedbacks);
+            request.setAttribute("productGroups", new ArrayList<>(groupByProduct(feedbacks).values()));
+            request.setAttribute("totalFeedbackCount", feedbacks.size());
             request.setAttribute("pageMode", "list");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
             request.getRequestDispatcher("/view/staff/staff_manage_feedback.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("errorMsg", "System error while loading feedback list.");
-            request.setAttribute("feedbacks", Collections.emptyList());
+            request.setAttribute("productGroups", Collections.emptyList());
+            request.setAttribute("totalFeedbackCount", 0);
             request.setAttribute("pageMode", "list");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
             request.getRequestDispatcher("/view/staff/staff_manage_feedback.jsp").forward(request, response);
@@ -87,28 +95,33 @@ public class FeedbackManagementController extends HttpServlet {
     }
 
     /**
-     * Show a feedback detail page for Staff/Admin.
+     * Show every feedback for one product.
      */
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int feedbackId = parseId(request.getParameter("id"));
+        int productId = parseId(request.getParameter("productId"));
 
         try {
-            Feedback feedback = feedbackService.getFeedbackById(feedbackId);
-            if (feedback == null) {
-                request.getSession().setAttribute("errorMsg", "Feedback not found.");
+            List<Feedback> feedbacks = feedbackService.getFeedbacksByProduct(productId);
+            if (feedbacks.isEmpty()) {
+                HttpSession session = request.getSession();
+                if (session.getAttribute("successMsg") == null) {
+                    session.setAttribute("errorMsg", "No feedback found for this product.");
+                }
                 response.sendRedirect(buildFeedbackBasePath(request));
                 return;
             }
 
-            request.setAttribute("feedback", feedback);
+            request.setAttribute("productGroup", groupByProduct(feedbacks).values().iterator().next());
+            request.setAttribute("feedbacks", feedbacks);
             request.setAttribute("pageMode", "detail");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
             request.getRequestDispatcher("/view/staff/staff_manage_feedback.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("errorMsg", "System error while loading feedback detail.");
-            request.setAttribute("feedbacks", Collections.emptyList());
+            request.setAttribute("productGroups", Collections.emptyList());
+            request.setAttribute("totalFeedbackCount", 0);
             request.setAttribute("pageMode", "list");
             request.setAttribute("feedbackBasePath", buildFeedbackBasePath(request));
             request.getRequestDispatcher("/view/staff/staff_manage_feedback.jsp").forward(request, response);
@@ -133,7 +146,9 @@ public class FeedbackManagementController extends HttpServlet {
             session.setAttribute("errorMsg", result);
         }
 
-        response.sendRedirect(buildFeedbackBasePath(request) + "?action=view&id=" + feedbackId);
+        int productId = parseId(request.getParameter("productId"));
+        String redirect = buildFeedbackBasePath(request) + "?action=view&productId=" + productId;
+        response.sendRedirect(redirect);
     }
 
     /**
@@ -155,7 +170,12 @@ public class FeedbackManagementController extends HttpServlet {
             session.setAttribute("errorMsg", result);
         }
 
-        response.sendRedirect(buildFeedbackBasePath(request));
+        int productId = parseId(request.getParameter("productId"));
+        if (productId > 0) {
+            response.sendRedirect(buildFeedbackBasePath(request) + "?action=view&productId=" + productId);
+        } else {
+            response.sendRedirect(buildFeedbackBasePath(request));
+        }
     }
 
     /**
@@ -240,5 +260,18 @@ public class FeedbackManagementController extends HttpServlet {
             }
         }
         return 0;
+    }
+
+    private Map<Integer, FeedbackProductGroup> groupByProduct(List<Feedback> feedbacks) {
+        Map<Integer, FeedbackProductGroup> groups = new LinkedHashMap<>();
+        for (Feedback feedback : feedbacks) {
+            FeedbackProductGroup group = groups.get(feedback.getProductId());
+            if (group == null) {
+                group = new FeedbackProductGroup(feedback);
+                groups.put(feedback.getProductId(), group);
+            }
+            group.addFeedback(feedback);
+        }
+        return groups;
     }
 }

@@ -43,6 +43,30 @@ public class FeedbackManagementDAO {
     }
 
     /**
+     * Load all feedback belonging to one product, newest first.
+     */
+    public List<Feedback> getFeedbacksByProduct(int productId) throws SQLException {
+        if (productId <= 0) {
+            return new ArrayList<>();
+        }
+
+        String extendedSql = buildExtendedFeedbackSql("WHERE f.product_id = ?");
+        String legacySql = buildLegacyFeedbackSql("WHERE f.product_id = ?");
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return new ArrayList<>();
+            }
+
+            try {
+                return loadFeedbacks(conn, extendedSql, productId);
+            } catch (SQLException extendedError) {
+                return loadFeedbacks(conn, legacySql, productId);
+            }
+        }
+    }
+
+    /**
      * Lấy một feedback theo id để hiển thị màn hình chi tiết.
      */
     public Feedback getFeedbackById(int id) throws SQLException {
@@ -214,6 +238,19 @@ public class FeedbackManagementDAO {
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapFeedbackSafely(rs));
+            }
+        }
+        return list;
+    }
+
+    private List<Feedback> loadFeedbacks(Connection conn, String sql, int productId) throws SQLException {
+        List<Feedback> list = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapFeedbackSafely(rs));
+                }
             }
         }
         return list;
