@@ -22,121 +22,165 @@ import jakarta.servlet.http.HttpSession;
 )
 public class CustomerHomePageController extends HttpServlet {
 
-    private static final int HOME_PRODUCT_LIMIT = 12;
-    private CustomerProductService productService 
+    private static final int FEATURED_PRODUCT_LIMIT = 8;
+    private static final int BEST_SELLER_PRODUCT_LIMIT = 8;
+    private static final int ON_SALE_PRODUCT_LIMIT = 8;
+
+    private final CustomerProductService productService
             = new CustomerProductService();
-    private final WishlistService wishlistService = new WishlistService();
- 
+    private final WishlistService wishlistService
+            = new WishlistService();
+
     @Override
     protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
-
-        // Nhận dữ liệu từ thanh tìm kiếm và filter
-        String keyword = request.getParameter("keyword");
-
-        String categoryStr = request.getParameter("categoryId");
-        String brandStr = request.getParameter("brandId");
-
-        String minPriceStr = request.getParameter("minPrice");
-        String maxPriceStr = request.getParameter("maxPrice");
-        String sort = request.getParameter("sort");
-        
-        Integer categoryId = null;
-        Integer brandId = null;
-        Double minPrice = null;
-        Double maxPrice = null;
+        response.setContentType("text/html;charset=UTF-8");
 
         try {
-            if (categoryStr != null && !categoryStr.isEmpty()) {
-                categoryId = Integer.parseInt(categoryStr);
+            /*
+             * CustomerHeaderFilter normally prepares headerCategories.
+             * This fallback keeps the Homepage usable if the controller is
+             * invoked without passing through the filter.
+             */
+            if (request.getAttribute("headerCategories") == null) {
+                request.setAttribute(
+                        "headerCategories",
+                        productService.getHeaderCategories()
+                );
             }
 
-            if (brandStr != null && !brandStr.isEmpty()) {
-                brandId = Integer.parseInt(brandStr);
-            }
+            List<Product> featuredProducts
+                    = productService.getFeaturedProducts(
+                            FEATURED_PRODUCT_LIMIT
+                    );
 
-            if (minPriceStr != null && !minPriceStr.isEmpty()) {
-                minPrice = Double.parseDouble(minPriceStr);
-            }
+            List<Product> bestSellerProducts
+                    = productService.getBestSellingProducts(
+                            BEST_SELLER_PRODUCT_LIMIT
+                    );
 
-            if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
-                maxPrice = Double.parseDouble(maxPriceStr);
-            }
+            List<Product> onSaleProducts
+                    = productService.getOnSaleProducts(
+                            ON_SALE_PRODUCT_LIMIT
+                    );
 
             request.setAttribute(
-                    "headerCategories",
-                    productService.getHeaderCategories()
+                    "featuredProducts",
+                    featuredProducts
+            );
+            request.setAttribute(
+                    "bestSellerProducts",
+                    bestSellerProducts
+            );
+            request.setAttribute(
+                    "onSaleProducts",
+                    onSaleProducts
             );
 
-            // Lấy danh sách sản phẩm
-            List<Product> loadedProducts = productService.getProducts(
-                    keyword,
-                    categoryId,
-                    brandId,
-                    minPrice,
-                    maxPrice,
-                    sort,
-                    HOME_PRODUCT_LIMIT + 1
-            );
-
-            boolean hasMoreProducts = loadedProducts.size() > HOME_PRODUCT_LIMIT;
-            List<Product> products = hasMoreProducts
-                    ? loadedProducts.subList(0, HOME_PRODUCT_LIMIT)
-                    : loadedProducts;
-
-            request.setAttribute("products", products);
-            request.setAttribute("hasMoreProducts", hasMoreProducts);
             populateWishlistState(request);
 
-            request.getRequestDispatcher(
-                    "/view/customer/customer_home_page.jsp"
-            ).forward(request, response);
-
         } catch (Exception e) {
-
             e.printStackTrace();
 
+            /*
+             * Keep the Homepage renderable even if one data section fails.
+             * The JSP can hide sections whose lists are empty.
+             */
+            request.setAttribute(
+                    "featuredProducts",
+                    Collections.emptyList()
+            );
+            request.setAttribute(
+                    "bestSellerProducts",
+                    Collections.emptyList()
+            );
+            request.setAttribute(
+                    "onSaleProducts",
+                    Collections.emptyList()
+            );
+            request.setAttribute(
+                    "wishlistProductIds",
+                    Collections.emptySet()
+            );
             request.setAttribute(
                     "errorMessage",
-                    "System error while loading products."
+                    "System error while loading the homepage."
             );
-
-            request.getRequestDispatcher(
-                    "/view/customer/customer_home_page.jsp"
-            ).forward(request, response);
         }
-    }
 
+        request.getRequestDispatcher(
+                "/view/customer/customer_home_page.jsp"
+        ).forward(request, response);
+    }
 
     @Override
     protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
-        doGet(request, response);
+        response.sendRedirect(
+                request.getContextPath() + "/home"
+        );
     }
-
 
     @Override
     public String getServletInfo() {
-        return "Customer Home Page Controller";
+        return "Customer Homepage Controller";
     }
 
-    private void populateWishlistState(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        Object userIdObj = session != null ? session.getAttribute("authUserId") : null;
+    private void populateWishlistState(
+            HttpServletRequest request) {
 
-        if (userIdObj instanceof Integer) {
-            int userId = (Integer) userIdObj;
-            Set<Integer> productIds = wishlistService.getWishlistProductIds(userId);
-            request.setAttribute("wishlistProductIds", productIds);
-            session.setAttribute("wishlistCount", productIds.size());
-        } else {
-            request.setAttribute("wishlistProductIds", Collections.emptySet());
+        HttpSession session = request.getSession(false);
+        Object userIdObject = session != null
+                ? session.getAttribute("authUserId")
+                : null;
+
+        if (!(userIdObject instanceof Number)) {
+            request.setAttribute(
+                    "wishlistProductIds",
+                    Collections.emptySet()
+            );
+            return;
+        }
+
+        int userId = ((Number) userIdObject).intValue();
+
+        if (userId <= 0) {
+            request.setAttribute(
+                    "wishlistProductIds",
+                    Collections.emptySet()
+            );
+            return;
+        }
+
+        try {
+            Set<Integer> wishlistProductIds
+                    = wishlistService.getWishlistProductIds(userId);
+
+            if (wishlistProductIds == null) {
+                wishlistProductIds = Collections.emptySet();
+            }
+
+            request.setAttribute(
+                    "wishlistProductIds",
+                    wishlistProductIds
+            );
+            session.setAttribute(
+                    "wishlistCount",
+                    wishlistProductIds.size()
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            request.setAttribute(
+                    "wishlistProductIds",
+                    Collections.emptySet()
+            );
         }
     }
 }

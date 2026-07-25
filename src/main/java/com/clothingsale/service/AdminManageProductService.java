@@ -73,6 +73,77 @@ public class AdminManageProductService {
     }
 
     /**
+     * Lấy vị trí tiếp theo cho Product mới được đưa vào khu vực Featured
+     * Products của Homepage.
+     */
+    public int getNextFeaturedDisplayOrder() {
+        return productDAO.getNextFeaturedDisplayOrder();
+    }
+
+    /**
+     * Dùng để khóa công tắc Featured trên giao diện khi Product chưa đủ điều
+     * kiện hiển thị cho Customer.
+     */
+    public boolean isProductEligibleForFeatured(int productId) {
+        return productId > 0
+                && productDAO.isProductEligibleForFeatured(productId);
+    }
+
+    /**
+     * Bật hoặc tắt Product trong khu vực Featured Products của Homepage.
+     *
+     * Khi bật mà giao diện không truyền displayOrder, hệ thống giữ vị trí cũ
+     * nếu Product đã Featured; nếu chưa có vị trí thì tự đưa xuống cuối danh
+     * sách. Khi tắt, DAO sẽ đặt featured_display_order về NULL.
+     *
+     * @return null khi thành công; ngược lại trả về mã lỗi để Controller hiển
+     * thị thông báo phù hợp.
+     */
+    public String updateFeaturedStatus(
+            int productId,
+            boolean featured,
+            Integer displayOrder) {
+
+        if (productId <= 0) {
+            return "invalid-product-id";
+        }
+
+        Product product = productDAO.getProductById(productId);
+
+        if (product == null
+                || "DELETED".equalsIgnoreCase(product.getStatus())) {
+            return "product-not-found";
+        }
+
+        Integer normalizedDisplayOrder = null;
+
+        if (featured) {
+            if (!productDAO.isProductEligibleForFeatured(productId)) {
+                return "product-not-eligible-for-featured";
+            }
+
+            if (displayOrder != null && displayOrder > 0) {
+                normalizedDisplayOrder = displayOrder;
+            } else if (product.isFeatured()
+                    && product.getFeaturedDisplayOrder() != null
+                    && product.getFeaturedDisplayOrder() > 0) {
+                normalizedDisplayOrder = product.getFeaturedDisplayOrder();
+            } else {
+                normalizedDisplayOrder
+                        = productDAO.getNextFeaturedDisplayOrder();
+            }
+        }
+
+        boolean updated = productDAO.updateFeaturedStatus(
+                productId,
+                featured,
+                normalizedDisplayOrder
+        );
+
+        return updated ? null : "featured-update-failed";
+    }
+
+    /**
      * Validation dữ liệu chung, không kiểm tra trạng thái Category.
      *
      * Lý do: admin vẫn phải sửa được ảnh, tên và mô tả của Product đang thuộc
