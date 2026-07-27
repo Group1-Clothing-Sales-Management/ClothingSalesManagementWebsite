@@ -14,6 +14,8 @@ import java.util.Map;
 
 public class StaffReportDAO {
 
+    private static final BigDecimal SHIPPING_FEE_PER_ORDER = new BigDecimal("30000");
+
     public StaffReport getRevenueReport(String startDate, String endDate, String timePeriod, String categoryId) {
         StaffReport data = new StaffReport();
         data.setTotalRevenue(BigDecimal.ZERO);
@@ -22,26 +24,28 @@ public class StaffReportDAO {
         Map<String, BigDecimal> timeMap = new LinkedHashMap<>();
         Map<String, BigDecimal> catMap = new LinkedHashMap<>();
 
-        StringBuilder baseQuery = new StringBuilder("FROM [Order] o WHERE o.order_status IN ('SUCCESS','RETURNED') ");
+        StringBuilder extraFilters = new StringBuilder();
         List<Object> params = new ArrayList<>();
 
         if (startDate != null && !startDate.trim().isEmpty()) {
-            baseQuery.append("AND o.created_at >= CAST(? AS DATETIME) ");
+            extraFilters.append("AND o.created_at >= CAST(? AS DATETIME) ");
             params.add(startDate.trim() + " 00:00:00");
         }
         if (endDate != null && !endDate.trim().isEmpty()) {
-            baseQuery.append("AND o.created_at <= CAST(? AS DATETIME) ");
+            extraFilters.append("AND o.created_at <= CAST(? AS DATETIME) ");
             params.add(endDate.trim() + " 23:59:59");
         }
         if (categoryId != null && !categoryId.trim().isEmpty() && !"-1".equals(categoryId)) {
-            baseQuery.append("AND o.id IN (SELECT od.order_id FROM Order_Detail od " +
+            extraFilters.append("AND o.id IN (SELECT od.order_id FROM Order_Detail od " +
                     "JOIN Product_Variant pv ON od.variant_id = pv.id " +
                     "JOIN Product p ON pv.product_id = p.id " +
                     "WHERE p.category_id = ?) ");
             params.add(Integer.parseInt(categoryId.trim()));
         }
 
-        String sqlOverview = "SELECT SUM(COALESCE(o.total_payment, 0) - COALESCE(refund.refund_total, 0)) AS TotalRev, COUNT(o.id) AS TotalOrders "
+        // Trừ phí ship (30.000đ/order) khỏi total_payment trước khi trừ tiếp refund
+        String sqlOverview = "SELECT SUM(COALESCE(o.total_payment, 0) - " + SHIPPING_FEE_PER_ORDER
+                + " - COALESCE(refund.refund_total, 0)) AS TotalRev, COUNT(o.id) AS TotalOrders "
                 + "FROM [Order] o "
                 + "LEFT JOIN ("
                 + "SELECT rr.order_id, SUM(COALESCE(rr.refund_amount, 0)) AS refund_total "
@@ -50,7 +54,8 @@ public class StaffReportDAO {
                 + "WHERE rr.status = 'COMPLETED' OR p.payment_status = 'REFUNDED' "
                 + "GROUP BY rr.order_id"
                 + ") refund ON refund.order_id = o.id "
-                + "WHERE o.order_status IN ('SUCCESS','RETURNED') ";
+                + "WHERE o.order_status IN ('SUCCESS','RETURNED') "
+                + extraFilters;
 
         String dateGroupFormat = "FORMAT(o.created_at, 'yyyy-MM-dd')";
         if ("weekly".equalsIgnoreCase(timePeriod)) {
@@ -61,8 +66,10 @@ public class StaffReportDAO {
             dateGroupFormat = "CAST(YEAR(o.created_at) AS VARCHAR)";
         }
 
+        // Trừ phí ship (30.000đ/order) khỏi total_payment trước khi trừ tiếp refund
         String sqlTimeBreakdown = "SELECT " + dateGroupFormat
-                + " AS Period, SUM(COALESCE(o.total_payment, 0) - COALESCE(refund.refund_total, 0)) AS Revenue " +
+                + " AS Period, SUM(COALESCE(o.total_payment, 0) - " + SHIPPING_FEE_PER_ORDER
+                + " - COALESCE(refund.refund_total, 0)) AS Revenue " +
                 "FROM [Order] o " +
                 "LEFT JOIN ("
                 + "SELECT rr.order_id, SUM(COALESCE(rr.refund_amount, 0)) AS refund_total "
@@ -71,11 +78,14 @@ public class StaffReportDAO {
                 + "WHERE rr.status = 'COMPLETED' OR p.payment_status = 'REFUNDED' "
                 + "GROUP BY rr.order_id"
                 + ") refund ON refund.order_id = o.id " +
-                "WHERE o.order_status IN ('SUCCESS','RETURNED') ";
+                "WHERE o.order_status IN ('SUCCESS','RETURNED') "
+                + extraFilters;
 
         StringBuilder sqlTimeBreakdownWithGroup = new StringBuilder(sqlTimeBreakdown);
         sqlTimeBreakdownWithGroup.append(" GROUP BY ").append(dateGroupFormat).append(" ORDER BY Period ASC");
 
+        // Category breakdown tính theo od.price * od.quantity (giá sản phẩm), không
+        // liên quan đến total_payment/phí ship nên KHÔNG trừ 30.000đ ở đây
         StringBuilder sqlCatBreakdown = new StringBuilder(
                 "SELECT c.category_name, SUM(COALESCE((od.price * od.quantity), 0) - COALESCE(refund.refund_value, 0)) AS CatRevenue "
                         +

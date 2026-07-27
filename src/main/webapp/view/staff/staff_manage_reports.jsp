@@ -50,7 +50,7 @@
                             <option value="weekly" ${selectedTimePeriod == 'weekly' ? 'selected' : ''}>Weekly</option>
                             <option value="monthly" ${selectedTimePeriod == 'monthly' ? 'selected' : ''}>Monthly</option>
                             <option value="yearly" ${selectedTimePeriod == 'yearly' ? 'selected' : ''}>Yearly</option>
-                        </select>
+                        </select>   
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold text-muted">Product Category</label>
