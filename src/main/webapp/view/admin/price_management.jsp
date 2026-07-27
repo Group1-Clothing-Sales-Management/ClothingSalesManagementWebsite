@@ -87,7 +87,7 @@
             <jsp:param name="activeTab" value="prices"/>
         </jsp:include>
 
-        <div class="admin-page">
+        <div class="admin-page price-page">
             <div class="container-fluid">
 
                 <c:set var="totalCount" value="0"/>
@@ -185,11 +185,11 @@
                     </div>
                 </div>
 
-                <div class="card filter-card mb-4">
+                <div class="card filter-card price-filter-panel mb-4">
                     <div class="card-body">
                         <form action="${pageContext.request.contextPath}/admin/prices" method="GET">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-lg-7">
+                            <div class="price-filter-grid">
+                                <div class="price-filter-search">
                                     <label for="keyword" class="filter-label mb-1">Search product variant</label>
 
                                     <div class="input-group">
@@ -207,7 +207,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="price-filter-status">
                                     <label for="priceStatus" class="filter-label mb-1">Price status</label>
 
                                     <select id="priceStatus" name="priceStatus" class="form-select">
@@ -219,7 +219,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-lg-2">
+                                <div class="price-filter-actions">
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fa-solid fa-filter me-1"></i>Apply

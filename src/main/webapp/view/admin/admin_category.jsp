@@ -175,6 +175,7 @@
 </jsp:include>
 
 <div class="admin-page category-page">
+    <div class="container-fluid">
     <div class="page-header">
         <jsp:include page="/view/admin/common/page_heading.jsp">
             <jsp:param name="icon" value="fa-solid fa-tags"/>
@@ -298,8 +299,8 @@
         </div>
 
         <div class="category-toolbar">
-            <div class="row g-3">
-                <div class="col-lg-8">
+            <div class="category-filter-grid">
+                <div class="category-filter-search">
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -309,7 +310,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4">
+                <div class="category-filter-status">
                     <select id="categoryStatusFilter" class="form-select">
                         <option value="all">All Statuses</option>
                         <option value="active">Active</option>
@@ -435,6 +436,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />

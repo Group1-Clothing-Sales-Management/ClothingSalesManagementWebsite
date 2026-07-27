@@ -8,7 +8,7 @@
         <title>Edit Product - Admin Panel</title>
 
         <link rel="stylesheet"
-              href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
         <link rel="stylesheet"
               href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -64,7 +64,7 @@
             </c:if>
         </c:forEach>
 
-        <div class="admin-page">
+        <div class="admin-page product-edit-page">
             <div class="container-fluid">
                 <div class="page-header">
                     <jsp:include page="/view/admin/common/page_heading.jsp">
@@ -77,7 +77,7 @@
                 <c:choose>
                     <c:when test="${param.status == 'product-updated'}">
                         <div class="alert alert-success">
-                            <i class="fa-solid fa-circle-check mr-1"></i>
+                            <i class="fa-solid fa-circle-check me-1"></i>
                             Product information was updated successfully.
                         </div>
                     </c:when>
@@ -141,7 +141,7 @@
 
                 <c:if test="${currentCategoryInactive}">
                     <div class="alert alert-warning">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
 
                         The current category is inactive. You can still update the
                         image, name, brand, descriptions, or change the product to
@@ -153,7 +153,7 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">
-                            <i class="fa-solid fa-box mr-2"></i>
+                            <i class="fa-solid fa-box me-2"></i>
                             Product Information
                         </h5>
                     </div>
@@ -175,7 +175,7 @@
                                 <div class="col-lg-8">
                                     <div class="form-group">
                                         <label for="productName"
-                                               class="font-weight-bold">
+                                               class="fw-bold">
 
                                             Product Name
                                             <span class="text-danger">*</span>
@@ -193,13 +193,13 @@
                                     <div class="row">
                                         <div class="form-group col-md-6">
                                             <label for="categoryId"
-                                                   class="font-weight-bold">
+                                                   class="fw-bold">
 
                                                 Category
                                                 <span class="text-danger">*</span>
                                             </label>
 
-                                            <select class="form-control"
+                                            <select class="form-select"
                                                     id="categoryId"
                                                     name="categoryId"
                                                     required>
@@ -243,12 +243,12 @@
 
                                         <div class="form-group col-md-6">
                                             <label for="brandId"
-                                                   class="font-weight-bold">
+                                                   class="fw-bold">
 
                                                 Brand
                                             </label>
 
-                                            <select class="form-control"
+                                            <select class="form-select"
                                                     id="brandId"
                                                     name="brandId">
 
@@ -272,7 +272,7 @@
 
                                     <div class="form-group">
                                         <label for="status"
-                                               class="font-weight-bold">
+                                               class="fw-bold">
 
                                             Product Status
                                             <span class="text-danger">*</span>
@@ -308,7 +308,7 @@
 
                                     <div class="form-group">
                                         <label for="shortDescription"
-                                               class="font-weight-bold">
+                                               class="fw-bold">
 
                                             Short Description
                                         </label>
@@ -323,7 +323,7 @@
 
                                     <div class="form-group mb-0">
                                         <label for="longDescription"
-                                               class="font-weight-bold">
+                                               class="fw-bold">
 
                                             Long Description
                                         </label>
@@ -336,7 +336,7 @@
                                 </div>
 
                                 <div class="col-lg-4 mt-4 mt-lg-0">
-                                    <label class="font-weight-bold d-block">
+                                    <label class="fw-bold d-block">
                                         Main Product Image
                                     </label>
 
@@ -377,7 +377,7 @@
 
                                     <div class="form-group">
                                         <input type="file"
-                                               class="form-control-file"
+                                               class="form-control"
                                                id="productImage"
                                                name="productImage"
                                                accept="image/jpeg,image/png,image/webp">
@@ -394,7 +394,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <a href="${pageContext.request.contextPath}/admin/manage-product?action=view&id=${product.id}"
-                                   class="btn btn-light border mr-2">
+                                   class="btn btn-light border me-2">
 
                                     Cancel
                                 </a>
@@ -402,7 +402,7 @@
                                 <button type="submit"
                                         class="btn btn-primary px-4">
 
-                                    <i class="fa-solid fa-floppy-disk mr-1"></i>
+                                    <i class="fa-solid fa-floppy-disk me-1"></i>
                                     Save Changes
                                 </button>
                             </div>

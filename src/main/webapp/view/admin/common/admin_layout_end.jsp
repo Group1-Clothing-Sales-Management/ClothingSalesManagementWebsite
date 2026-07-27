@@ -1,4 +1,4 @@
-    </div>
+</div>
 </div>
 <div id="adminToastStack" class="admin-toast-stack" aria-live="polite" aria-atomic="true"></div>
 <script>
