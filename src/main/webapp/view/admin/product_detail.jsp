@@ -592,7 +592,7 @@
 
                                                                 <div class="col-lg-3 col-md-8 form-group">
                                                                     <label for="variantImage-${variant.id}">
-                                                                        Replace Color Image
+                                                                        Replace Variant Image
                                                                     </label>
 
                                                                     <input type="file"
@@ -602,7 +602,7 @@
                                                                            accept="image/jpeg,image/png,image/webp">
 
                                                                     <small class="form-text text-muted">
-                                                                        This image is shared by every Size of this Color. JPG, PNG or WEBP only.
+                                                                        This image is used only for this Size and Color variant. JPG, PNG or WEBP only.
                                                                     </small>
                                                                 </div>
                                                             </div>
@@ -829,7 +829,7 @@
                             "image-upload-failed": "The image could not be saved to the upload folder.",
                             "image-required": "Please select an image.",
                             "invalid-image-path": "The generated image path is invalid.",
-                            "image-save-failed": "The Color image could not be saved in the database.",
+                            "image-save-failed": "The Variant image could not be saved in the database.",
                             "variant-update-failed":
                                     "The variant could not be activated. Check that the product is Active and that list price and sale price are greater than 0.",
                             "variant-duplicate":

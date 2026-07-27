@@ -566,9 +566,10 @@ public class AdminManageProductDAO {
                 + "    FROM Product_Image pi "
                 + "    WHERE pi.product_id = pv.product_id "
                 + "      AND pi.is_main = 1 "
-                + "      AND ((pi.color IS NOT NULL AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color)))) "
-                + "           OR (pi.color IS NULL AND pi.variant_id = pv.id)) "
-                + "    ORDER BY CASE WHEN pi.color IS NOT NULL THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
+                + "      AND (pi.variant_id = pv.id "
+                + "           OR (pi.variant_id IS NULL AND pi.color IS NOT NULL "
+                + "               AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color))))) "
+                + "    ORDER BY CASE WHEN pi.variant_id = pv.id THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
                 + "WHERE pv.product_id = ? "
                 + "ORDER BY pv.id DESC";
 
@@ -600,9 +601,10 @@ public class AdminManageProductDAO {
                 + "    FROM Product_Image pi "
                 + "    WHERE pi.product_id = pv.product_id "
                 + "      AND pi.is_main = 1 "
-                + "      AND ((pi.color IS NOT NULL AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color)))) "
-                + "           OR (pi.color IS NULL AND pi.variant_id = pv.id)) "
-                + "    ORDER BY CASE WHEN pi.color IS NOT NULL THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
+                + "      AND (pi.variant_id = pv.id "
+                + "           OR (pi.variant_id IS NULL AND pi.color IS NOT NULL "
+                + "               AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color))))) "
+                + "    ORDER BY CASE WHEN pi.variant_id = pv.id THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
                 + "WHERE pv.product_id = ? "
                 + "AND pv.id = ?";
 
@@ -614,6 +616,36 @@ public class AdminManageProductDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? mapVariant(rs) : null;
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String getVariantMainImageUrl(
+            int productId,
+            int variantId) {
+
+        if (productId <= 0 || variantId <= 0) {
+            return null;
+        }
+
+        String sql = "SELECT TOP 1 image_url "
+                + "FROM Product_Image "
+                + "WHERE product_id = ? "
+                + "AND variant_id = ? "
+                + "AND is_main = 1 "
+                + "ORDER BY sort_order, id";
+
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, productId);
+            ps.setInt(2, variantId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString("image_url") : null;
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -1113,13 +1145,10 @@ public class AdminManageProductDAO {
     public boolean saveVariantMainImage(
             int productId,
             int variantId,
-            String color,
             String imageUrl) {
 
         if (productId <= 0
                 || variantId <= 0
-                || color == null
-                || color.isBlank()
                 || imageUrl == null
                 || imageUrl.isBlank()) {
             return false;
@@ -1127,20 +1156,18 @@ public class AdminManageProductDAO {
 
         String updateSql = "UPDATE Product_Image "
                 + "SET image_url = ?, "
-                + "color = ?, "
-                + "variant_id = NULL, "
+                + "color = NULL, "
                 + "is_main = 1, "
                 + "sort_order = 0, "
                 + "updated_at = SYSDATETIME() "
                 + "WHERE product_id = ? "
-                + "AND ((color IS NOT NULL AND UPPER(LTRIM(RTRIM(color))) = UPPER(LTRIM(RTRIM(?)))) "
-                + "     OR (color IS NULL AND variant_id = ?)) "
+                + "AND variant_id = ? "
                 + "AND is_main = 1";
 
         String insertSql = "INSERT INTO Product_Image "
                 + "(product_id, variant_id, color, image_url, "
                 + "is_main, sort_order, updated_at) "
-                + "SELECT ?, NULL, ?, ?, 1, 0, SYSDATETIME() "
+                + "SELECT ?, ?, NULL, ?, 1, 0, SYSDATETIME() "
                 + "WHERE EXISTS ("
                 + "SELECT 1 FROM Product_Variant "
                 + "WHERE id = ? AND product_id = ?"
@@ -1154,10 +1181,8 @@ public class AdminManageProductDAO {
 
                 try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                     ps.setString(1, imageUrl.trim());
-                    ps.setString(2, color.trim());
-                    ps.setInt(3, productId);
-                    ps.setString(4, color.trim());
-                    ps.setInt(5, variantId);
+                    ps.setInt(2, productId);
+                    ps.setInt(3, variantId);
 
                     affectedRows = ps.executeUpdate();
                 }
@@ -1165,7 +1190,7 @@ public class AdminManageProductDAO {
                 if (affectedRows == 0) {
                     try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                         ps.setInt(1, productId);
-                        ps.setString(2, color.trim());
+                        ps.setInt(2, variantId);
                         ps.setString(3, imageUrl.trim());
                         ps.setInt(4, variantId);
                         ps.setInt(5, productId);
@@ -1205,4 +1230,5 @@ public class AdminManageProductDAO {
             return false;
         }
     }
+
 }

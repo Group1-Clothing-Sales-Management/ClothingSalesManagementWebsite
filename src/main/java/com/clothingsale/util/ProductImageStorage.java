@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.Locale;
+import java.util.UUID;
 
 public final class ProductImageStorage {
 
@@ -298,8 +299,9 @@ public final class ProductImageStorage {
     }
 
     /*
-     * Ví dụ:
-     * p1_v5_m_black.jpg
+     * Mỗi lần cập nhật dùng một tên file mới để database chỉ trỏ sang ảnh
+     * mới sau khi file đã được ghi thành công.
+     * Ví dụ: p1_v5_m_black_a1b2c3d4e5f6.jpg
      */
     public static String buildVariantImageName(
             int productId,
@@ -313,6 +315,10 @@ public final class ProductImageStorage {
 
         String safeSize = normalizeNamePart(size);
         String safeColor = normalizeNamePart(color);
+        String revision = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 12);
 
         return "p"
                 + productId
@@ -322,11 +328,13 @@ public final class ProductImageStorage {
                 + safeSize
                 + "_"
                 + safeColor
+                + "_"
+                + revision
                 + "."
                 + normalizeExtension(extension);
     }
 
-    /** Builds a stable image name shared by every Size of one Color. */
+    /** Legacy color-level naming. New uploads must use buildVariantImageName. */
     public static String buildColorImageName(
             int productId,
             String color,

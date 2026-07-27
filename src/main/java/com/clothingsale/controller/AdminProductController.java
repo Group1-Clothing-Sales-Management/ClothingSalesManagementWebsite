@@ -1,3 +1,5 @@
+
+
 package com.clothingsale.controller;
 
 import com.clothingsale.model.Product;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+
+import com.clothingsale.model.Product;
 
 @WebServlet(
         name = "AdminManageProduct",
@@ -358,9 +362,39 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
+        String oldVariantImageName
+                = productService.getVariantMainImageUrl(
+                        productId,
+                        variantId
+                );
+
         String size = getMultipartParameter(request, "size");
         String color = getMultipartParameter(request, "color");
         String status = getMultipartParameter(request, "status");
+
+        StagedProductImage stagedImage = null;
+
+        try {
+            Part imagePart = request.getPart("variantImage");
+
+            if (hasUploadedFile(imagePart)) {
+                stagedImage = stageProductImage(imagePart);
+            }
+        } catch (IllegalArgumentException e) {
+            redirectToProductDetail(
+                    response,
+                    productId,
+                    "invalid-image"
+            );
+            return;
+        } catch (IOException e) {
+            redirectToProductDetail(
+                    response,
+                    productId,
+                    "image-upload-failed"
+            );
+            return;
+        }
 
         String updateError = productService.updateVariantInfo(
                 productId,
@@ -371,6 +405,8 @@ public class AdminProductController extends HttpServlet {
         );
 
         if (updateError != null) {
+            deleteStagedImage(stagedImage);
+
             redirectToProductDetail(
                     response,
                     productId,
@@ -379,36 +415,100 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
-        Part imagePart = request.getPart("variantImage");
+        if (stagedImage != null) {
+            ProductVariant updatedVariant
+                    = productService.getVariantById(
+                            productId,
+                            variantId
+                    );
 
-        if (hasUploadedFile(imagePart)) {
-            String newImageName;
-
-            try {
-                newImageName = saveVariantImage(
-                        imagePart,
-                        productId,
-                        color
-                );
-            } catch (IllegalArgumentException e) {
+            if (updatedVariant == null) {
                 rollbackVariantInfo(
                         productId,
                         variantId,
                         oldVariant
                 );
+                deleteStagedImage(stagedImage);
 
                 redirectToProductDetail(
                         response,
                         productId,
-                        "invalid-image"
+                        "variant-not-found"
                 );
                 return;
+            }
+
+            String finalImageName
+                    = ProductImageStorage.buildVariantImageName(
+                            productId,
+                            variantId,
+                            updatedVariant.getSize(),
+                            updatedVariant.getColor(),
+                            stagedImage.getExtension()
+                    );
+
+            Path backupFile = null;
+
+            try {
+                backupFile = publishStagedProductImage(
+                        stagedImage,
+                        finalImageName
+                );
+
+                String imageError
+                        = productService.saveVariantMainImage(
+                                productId,
+                                variantId,
+                                finalImageName
+                        );
+
+                if (imageError != null) {
+                    rollbackPublishedProductImage(
+                            finalImageName,
+                            backupFile
+                    );
+                    rollbackVariantInfo(
+                            productId,
+                            variantId,
+                            oldVariant
+                    );
+                    deleteStagedImage(stagedImage);
+
+                    redirectToProductDetail(
+                            response,
+                            productId,
+                            imageError
+                    );
+                    return;
+                }
+
+                deleteStagedImage(stagedImage);
+                deletePathQuietly(backupFile);
+
+                /*
+                 * Chỉ xóa ảnh cũ thuộc chính Variant này. Ảnh Color legacy
+                 * không bị xóa vì có thể vẫn được Variant khác sử dụng.
+                 */
+                if (oldVariantImageName != null
+                        && !oldVariantImageName.isBlank()
+                        && !oldVariantImageName.equals(
+                                finalImageName
+                        )) {
+
+                    deleteProductImage(oldVariantImageName);
+                }
+
             } catch (IOException e) {
+                rollbackPublishedProductImage(
+                        finalImageName,
+                        backupFile
+                );
                 rollbackVariantInfo(
                         productId,
                         variantId,
                         oldVariant
                 );
+                deleteStagedImage(stagedImage);
 
                 redirectToProductDetail(
                         response,
@@ -416,56 +516,6 @@ public class AdminProductController extends HttpServlet {
                         "image-upload-failed"
                 );
                 return;
-            }
-
-            String imageError = productService.saveVariantMainImage(
-                    productId,
-                    variantId,
-                    color,
-                    newImageName
-            );
-
-            if (imageError != null) {
-                rollbackVariantInfo(
-                        productId,
-                        variantId,
-                        oldVariant
-                );
-
-                /*
-             * Không xóa nếu tên mới giống ảnh cũ,
-             * vì database cũ vẫn đang sử dụng file đó.
-                 */
-                if (oldVariant.getImageUrl() == null
-                        || !newImageName.equals(
-                                oldVariant.getImageUrl()
-                        )) {
-
-                    deleteProductImage(newImageName);
-                }
-
-                redirectToProductDetail(
-                        response,
-                        productId,
-                        imageError
-                );
-                return;
-            }
-
-            /*
-         * Chỉ xóa ảnh cũ sau khi:
-         * 1. File mới đã lưu thành công.
-         * 2. Database đã cập nhật thành công.
-             */
-            if (oldVariant.getImageUrl() != null
-                    && !oldVariant.getImageUrl().isBlank()
-                    && oldVariant.getColor() != null
-                    && oldVariant.getColor().equalsIgnoreCase(color)
-                    && !oldVariant.getImageUrl().equals(
-                            newImageName
-                    )) {
-
-                deleteProductImage(oldVariant.getImageUrl());
             }
         }
 
@@ -1498,85 +1548,6 @@ public class AdminProductController extends HttpServlet {
                     request.getContextPath()
                     + "/admin/manage-product?status=invalid-request"
             );
-        }
-    }
-
-    private String saveVariantImage(
-            Part filePart,
-            int productId,
-            String color) throws IOException {
-
-        if (!hasUploadedFile(filePart)) {
-            return null;
-        }
-
-        String originalName = Paths.get(
-                filePart.getSubmittedFileName()
-        ).getFileName().toString();
-
-        String extension = ProductImageStorage.normalizeExtension(
-                getFileExtension(originalName)
-        );
-
-        String contentType = filePart.getContentType();
-
-        boolean validContentType = contentType != null
-                && ("image/jpeg".equals(contentType)
-                || "image/png".equals(contentType)
-                || "image/webp".equals(contentType));
-
-        if (!validContentType) {
-            throw new IllegalArgumentException(
-                    "Unsupported image format"
-            );
-        }
-
-        String savedName
-                = ProductImageStorage.buildColorImageName(
-                        productId,
-                        color,
-                        extension
-                );
-
-        Path targetFile
-                = ProductImageStorage.resolveFile(savedName);
-
-        Path temporaryFile = Files.createTempFile(
-                ProductImageStorage.getUploadDirectory(),
-                "variant-upload-",
-                ".tmp"
-        );
-
-        try {
-            try (InputStream inputStream
-                    = filePart.getInputStream()) {
-
-                Files.copy(
-                        inputStream,
-                        temporaryFile,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-            }
-
-            try {
-                Files.move(
-                        temporaryFile,
-                        targetFile,
-                        StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE
-                );
-            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
-                Files.move(
-                        temporaryFile,
-                        targetFile,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-            }
-
-            return savedName;
-
-        } finally {
-            Files.deleteIfExists(temporaryFile);
         }
     }
 }

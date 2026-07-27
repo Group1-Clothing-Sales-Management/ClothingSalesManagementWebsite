@@ -2115,7 +2115,7 @@
                                         </div>
                                     </c:if>
 
-                                    <div class="feedback-actions"><i class="fa-regular fa-thumbs-up me-1"></i> Helpful</div>
+                                    
                                 </article>
                             </c:forEach>
                         </div>

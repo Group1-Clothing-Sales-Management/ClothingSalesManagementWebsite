@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -333,6 +334,22 @@ public class CustomerOrderController extends HttpServlet {
                 .add(SHIPPING_FEE)
                 .max(BigDecimal.ZERO);
 
+        List<Voucher> customerVouchers
+                = service.getVouchersForUser(userId);
+
+        Map<Integer, BigDecimal> voucherApplicableSubtotals
+                = new LinkedHashMap<>();
+
+        for (Voucher customerVoucher : customerVouchers) {
+            voucherApplicableSubtotals.put(
+                    customerVoucher.getId(),
+                    service.calculateApplicableSubtotal(
+                            cartItems,
+                            customerVoucher
+                    )
+            );
+        }
+
         request.setAttribute("addresses", service.getAddressesByUserId(userId));
         request.setAttribute("cartItems", cartItems);
         request.setAttribute("cartTotal", cartTotal);
@@ -340,8 +357,15 @@ public class CustomerOrderController extends HttpServlet {
         request.setAttribute("discountAmount", discount);
         request.setAttribute("totalPayment", totalPayment);
         request.setAttribute("voucherCode", voucher != null ? voucher.getCode() : null);
-        request.setAttribute("customerVouchers", service.getVouchersForUser(userId));
-        request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, cartItems));
+        request.setAttribute("customerVouchers", customerVouchers);
+        request.setAttribute(
+                "voucherApplicableSubtotals",
+                voucherApplicableSubtotals
+        );
+        request.setAttribute(
+                "suggestedVouchers",
+                service.getEligibleVouchers(userId, cartItems)
+        );
 
         request.setAttribute("selectedAddressId", selectedAddressId);
         request.setAttribute(

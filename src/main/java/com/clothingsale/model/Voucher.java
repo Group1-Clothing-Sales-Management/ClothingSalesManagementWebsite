@@ -18,19 +18,34 @@ public class Voucher {
 
     private Timestamp startDate;
     private Timestamp endDate;
-
     private int usageLimit;
     private int usedCount;
-    private int limitPerUser;       // Giới hạn lượt dùng/mỗi User
-    private String terminateReason; // Lý do dừng sớm campaigns
+    private int limitPerUser;
+    private String terminateReason;
     private Integer categoryId;
+    private String categoryName;
     private int userUsedCount;
     private BigDecimal applicableDiscount = BigDecimal.ZERO;
 
     public Voucher() {
     }
 
-    public Voucher(int id, String code, String title, String discountType, BigDecimal discountValue, BigDecimal maxDiscountAmount, BigDecimal minOrderValue, Timestamp startDate, Timestamp endDate, int usageLimit, int usedCount, int limitPerUser, String terminateReason, Integer categoryId) {
+    public Voucher(
+            int id,
+            String code,
+            String title,
+            String discountType,
+            BigDecimal discountValue,
+            BigDecimal maxDiscountAmount,
+            BigDecimal minOrderValue,
+            Timestamp startDate,
+            Timestamp endDate,
+            int usageLimit,
+            int usedCount,
+            int limitPerUser,
+            String terminateReason,
+            Integer categoryId) {
+
         this.id = id;
         this.code = code;
         this.title = title;
@@ -136,7 +151,6 @@ public class Voucher {
     }
 
     public boolean isAvailable() {
-
         return usedCount < usageLimit;
     }
 
@@ -164,25 +178,64 @@ public class Voucher {
         this.categoryId = categoryId;
     }
 
-    public int getUserUsedCount() { return userUsedCount; }
-    public void setUserUsedCount(int userUsedCount) { this.userUsedCount = userUsedCount; }
-    public BigDecimal getApplicableDiscount() { return applicableDiscount; }
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public int getUserUsedCount() {
+        return userUsedCount;
+    }
+
+    public void setUserUsedCount(int userUsedCount) {
+        this.userUsedCount = userUsedCount;
+    }
+
+    public BigDecimal getApplicableDiscount() {
+        return applicableDiscount;
+    }
+
     public void setApplicableDiscount(BigDecimal applicableDiscount) {
-        this.applicableDiscount = applicableDiscount == null ? BigDecimal.ZERO : applicableDiscount;
+        this.applicableDiscount = applicableDiscount == null
+                ? BigDecimal.ZERO
+                : applicableDiscount;
     }
 
     public String getCustomerStatus() {
         long now = System.currentTimeMillis();
-        if (userUsedCount > 0) return "USED";
-        if (startDate == null || startDate.getTime() > now || endDate == null
-                || endDate.getTime() < now || usedCount >= usageLimit) return "EXPIRED";
+
+        if (userUsedCount > 0) {
+            return "USED";
+        }
+
+        if (startDate == null
+                || startDate.getTime() > now
+                || endDate == null
+                || endDate.getTime() < now
+                || usedCount >= usageLimit) {
+
+            return "EXPIRED";
+        }
+
         return "AVAILABLE";
     }
 
     public long getDaysRemaining() {
-        if (endDate == null) return 0;
+        if (endDate == null) {
+            return 0;
+        }
+
         long remaining = endDate.getTime() - System.currentTimeMillis();
-        return Math.max(0, (long) Math.ceil(remaining / (double) TimeUnit.DAYS.toMillis(1)));
+
+        return Math.max(
+                0,
+                (long) Math.ceil(
+                        remaining
+                        / (double) TimeUnit.DAYS.toMillis(1)
+                )
+        );
     }
-    
 }

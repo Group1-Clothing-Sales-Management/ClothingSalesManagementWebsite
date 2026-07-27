@@ -35,6 +35,7 @@ public class CustomerFeedbackDAO {
                 + "LEFT JOIN Product_Image img "
                 + "ON p.id = img.product_id "
                 + "AND img.is_main = 1 "
+                + "AND img.variant_id IS NULL "
                 + "AND img.color IS NULL "
                 + "LEFT JOIN [Order] o "
                 + "ON f.order_id = o.id "

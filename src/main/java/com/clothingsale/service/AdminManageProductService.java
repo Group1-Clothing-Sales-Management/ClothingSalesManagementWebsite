@@ -645,10 +645,23 @@ public class AdminManageProductService {
         return saved ? null : "image-save-failed";
     }
 
+    public String getVariantMainImageUrl(
+            int productId,
+            int variantId) {
+
+        if (productId <= 0 || variantId <= 0) {
+            return null;
+        }
+
+        return productDAO.getVariantMainImageUrl(
+                productId,
+                variantId
+        );
+    }
+
     public String saveVariantMainImage(
             int productId,
             int variantId,
-            String color,
             String imageUrl) {
 
         if (productId <= 0 || variantId <= 0) {
@@ -657,10 +670,6 @@ public class AdminManageProductService {
 
         if (isBlank(imageUrl)) {
             return "image-required";
-        }
-
-        if (isBlank(color)) {
-            return "color-required";
         }
 
         ProductVariant variant = productDAO.getVariantById(
@@ -677,8 +686,8 @@ public class AdminManageProductService {
                 .replace("\\", "/");
 
         /*
-     * Database chỉ được lưu đường dẫn tương đối.
-     * Không chấp nhận đường dẫn ổ đĩa hoặc path traversal.
+         * Database chỉ lưu tên file hoặc đường dẫn tương đối.
+         * Không chấp nhận đường dẫn ổ đĩa hoặc path traversal.
          */
         if (normalizedImageUrl.startsWith("/")
                 || normalizedImageUrl.contains("..")
@@ -690,7 +699,6 @@ public class AdminManageProductService {
         boolean saved = productDAO.saveVariantMainImage(
                 productId,
                 variantId,
-                color.trim(),
                 normalizedImageUrl
         );
 
