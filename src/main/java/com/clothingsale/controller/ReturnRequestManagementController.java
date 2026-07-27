@@ -64,6 +64,12 @@ public class ReturnRequestManagementController extends HttpServlet {
 
         // Staff dùng các action này để kiểm tra hồ sơ và xác nhận hàng đã về kho.
         if ("review".equalsIgnoreCase(action)) result = service.review(requestId, userId, request.getParameter("status"), note);
+        else if ("inspectItem".equalsIgnoreCase(action)) {
+            // Checkbox gửi giá trị checked để Staff có thể lưu từng dòng hàng độc lập.
+            int itemId = parseId(request.getParameter("itemId"));
+            boolean inspected = "true".equalsIgnoreCase(request.getParameter("inspected"));
+            result = service.inspectItem(requestId, itemId, userId, inspected);
+        }
         else if ("receive".equalsIgnoreCase(action)) result = service.receive(requestId, userId, note);
         else if ("requestRefund".equalsIgnoreCase(action)) result = service.requestRefund(requestId, userId, note);
         else if ("confirmRefund".equalsIgnoreCase(action)) {

@@ -78,20 +78,28 @@ public class ReturnRequestService {
     public String createRequest(int userId, int orderId, String type, String reason, String note,
             String bankId, String accountName, String accountNumber, Map<Integer, Integer> quantities) {
         if (getEligibleOrder(userId, orderId) == null) return "This order is not eligible for a return request.";
-        if (!Arrays.asList("RETURN", "EXCHANGE").contains(normalize(type))) return "Please select a valid request type.";
+        String normalizedType = normalize(type);
+        if (!Arrays.asList("RETURN", "EXCHANGE").contains(normalizedType)) return "Please select a valid request type.";
         if (reason == null || reason.trim().isEmpty()) return "Please select a reason.";
-        RefundBank bank = findBank(bankId);
-        if (bank == null) return "Please select a supported bank.";
-        if (accountName == null || accountName.trim().length() < 2 || accountName.trim().length() > 120) {
-            return "Please enter a valid account holder name.";
-        }
-        if (accountNumber == null || !accountNumber.trim().matches("[0-9]{4,25}")) {
-            return "Please enter a valid bank account number.";
+        RefundBank bank = null;
+        if ("RETURN".equals(normalizedType)) {
+            // Chỉ yêu cầu thông tin ngân hàng khi khách muốn nhận lại tiền.
+            bank = findBank(bankId);
+            if (bank == null) return "Please select a supported bank.";
+            if (accountName == null || accountName.trim().length() < 2 || accountName.trim().length() > 120) {
+                return "Please enter a valid account holder name.";
+            }
+            if (accountNumber == null || !accountNumber.trim().matches("[0-9]{4,25}")) {
+                return "Please enter a valid bank account number.";
+            }
         }
         try {
             String code = "RET-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            dao.createRequest(code, userId, orderId, normalize(type), reason.trim(), trim(note),
-                    bank.getBankId(), bank.getBankName(), accountName.trim(), accountNumber.trim(),
+            dao.createRequest(code, userId, orderId, normalizedType, reason.trim(), trim(note),
+                    bank == null ? null : bank.getBankId(),
+                    bank == null ? null : bank.getBankName(),
+                    bank == null ? null : accountName.trim(),
+                    bank == null ? null : accountNumber.trim(),
                     quantities == null ? Collections.emptyMap() : quantities);
             return "SUCCESS";
         } catch (SQLException e) {
@@ -131,9 +139,15 @@ public class ReturnRequestService {
         if ("APPROVED".equals(normalizedStatus)) {
             ReturnRequest request = dao.getById(id);
             if (request == null) return "Return request not found.";
-            if (request.getRefundBankId() == null || request.getRefundAccountNumber() == null
-                    || request.getRefundAccountName() == null || request.getRefundAccountName().trim().isEmpty()) {
+            if ("RETURN".equals(request.getRequestType())
+                    && (request.getRefundBankId() == null || request.getRefundAccountNumber() == null
+                    || request.getRefundAccountName() == null || request.getRefundAccountName().trim().isEmpty())) {
                 return "The customer has not provided refund bank details.";
+            }
+            // Exchange không có khoản hoàn tiền nên không tạo QR chuyển khoản.
+            if (!"RETURN".equals(request.getRequestType())) {
+                return execute(() -> dao.review(id, userId, normalizedStatus, trim(note)),
+                        "The exchange request was approved successfully.");
             }
             String transferDescription = "REFUND " + request.getOrderCode();
             String qrUrl = buildRefundQrUrl(request);
@@ -148,6 +162,10 @@ public class ReturnRequestService {
         return execute(() -> dao.receive(id, userId, trim(note)), "The returned products were received and added to inventory.");
     }
     public String requestRefund(int id, int userId, String note) { return execute(() -> dao.requestRefund(id, userId, trim(note)), "The refund was submitted for Admin approval."); }
+    public String inspectItem(int requestId, int itemId, int userId, boolean inspected) {
+        return execute(() -> dao.inspectItem(requestId, itemId, userId, inspected),
+                inspected ? "Product inspection saved." : "Product marked as not inspected.");
+    }
     public String approveRefund(int id, int userId, String note) { return execute(() -> dao.approveRefund(id, userId, trim(note)), "The refund was approved and completed."); }
     public String rejectRefund(int id, int userId, String note) { return execute(() -> dao.rejectRefund(id, userId, trim(note)), "The refund request was rejected."); }
     public String confirmRefund(int id, int userId, String note, String proofPath) {

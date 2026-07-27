@@ -15,6 +15,10 @@ public class ReturnRequestItem {
     private int quantity;
     private BigDecimal unitPrice = BigDecimal.ZERO;
     private int currentStock;
+    // Đánh dấu nhân viên đã kiểm tra thực tế dòng hàng này hay chưa.
+    private boolean inspected;
+    private Integer inspectedBy;
+    private java.sql.Timestamp inspectedAt;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -36,5 +40,11 @@ public class ReturnRequestItem {
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice == null ? BigDecimal.ZERO : unitPrice; }
     public int getCurrentStock() { return currentStock; }
     public void setCurrentStock(int currentStock) { this.currentStock = currentStock; }
+    public boolean isInspected() { return inspected; }
+    public void setInspected(boolean inspected) { this.inspected = inspected; }
+    public Integer getInspectedBy() { return inspectedBy; }
+    public void setInspectedBy(Integer inspectedBy) { this.inspectedBy = inspectedBy; }
+    public java.sql.Timestamp getInspectedAt() { return inspectedAt; }
+    public void setInspectedAt(java.sql.Timestamp inspectedAt) { this.inspectedAt = inspectedAt; }
     public BigDecimal getLineTotal() { return unitPrice.multiply(BigDecimal.valueOf(quantity)); }
 }

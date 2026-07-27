@@ -102,10 +102,10 @@ public class ReturnRequest {
         switch (status) {
             case "PENDING": return "Pending review";
             case "INFO_REQUIRED": return "Information required";
-            case "APPROVED": return "Approved - awaiting transfer";
+            case "APPROVED": return "Approved - awaiting package";
             case "RECEIVED": return "Products received";
             case "REFUND_PENDING": return "Refund pending approval";
-            case "COMPLETED": return "Refund completed";
+            case "COMPLETED": return "Completed";
             case "REJECTED": return "Rejected";
             case "CANCELLED": return "Cancelled - package not received";
             default: return status;
@@ -113,4 +113,18 @@ public class ReturnRequest {
     }
     public List<ReturnRequestItem> getItems() { return items; }
     public void setItems(List<ReturnRequestItem> items) { this.items = items == null ? new ArrayList<>() : items; }
+
+    /** Trả về số dòng hàng đã được kiểm tra để JSP hiển thị tiến độ. */
+    public int getInspectedItemCount() {
+        int count = 0;
+        for (ReturnRequestItem item : items) {
+            if (item.isInspected()) count++;
+        }
+        return count;
+    }
+
+    /** Chỉ cho phép nhận hàng khi tất cả các dòng hàng đã được kiểm tra. */
+    public boolean isInspectionComplete() {
+        return !items.isEmpty() && getInspectedItemCount() == items.size();
+    }
 }

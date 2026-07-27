@@ -204,6 +204,10 @@ CREATE TABLE dbo.Product (
     category_id INT NULL,
     short_description NVARCHAR(500) NULL,
     long_description NVARCHAR(MAX) NULL,
+    -- Đánh dấu sản phẩm nổi bật và thứ tự hiển thị ở khu vực Featured Products.
+    is_featured BIT NOT NULL
+        CONSTRAINT DF_Product_IsFeatured DEFAULT (0),
+    featured_display_order INT NULL,
     status VARCHAR(30) NOT NULL
         CONSTRAINT DF_Product_Status DEFAULT ('DRAFT'),
     created_at DATETIME NOT NULL
@@ -212,6 +216,13 @@ CREATE TABLE dbo.Product (
         CONSTRAINT DF_Product_UpdatedAt DEFAULT (GETDATE()),
     CONSTRAINT PK_Product PRIMARY KEY (id),
     CONSTRAINT UQ_Product_Slug UNIQUE (slug),
+    CONSTRAINT CK_Product_FeaturedDisplayOrder CHECK (
+        (is_featured = 0 AND featured_display_order IS NULL)
+        OR
+        (is_featured = 1
+         AND featured_display_order IS NOT NULL
+         AND featured_display_order >= 1)
+    ),
     CONSTRAINT FK_Product_Brand FOREIGN KEY (brand_id)
         REFERENCES dbo.Brand(id),
     CONSTRAINT FK_Product_Category FOREIGN KEY (category_id)
@@ -699,13 +710,18 @@ CREATE TABLE dbo.Return_Request_Item (
     variant_attributes_snapshot NVARCHAR(255) NULL,
     quantity INT NOT NULL,
     unit_price DECIMAL(18,2) NOT NULL,
+    -- Chỉ sau khi đã kiểm tra thì số lượng mới được cộng vào Product_Variant.
+    inspection_completed BIT NOT NULL CONSTRAINT DF_ReturnRequestItem_InspectionCompleted DEFAULT (0),
+    inspected_by INT NULL,
+    inspected_at DATETIME NULL,
     CONSTRAINT PK_ReturnRequestItem PRIMARY KEY (id),
     CONSTRAINT UQ_ReturnRequestItem_Detail UNIQUE (return_request_id, order_detail_id),
     CONSTRAINT CK_ReturnRequestItem_Quantity CHECK (quantity > 0),
     CONSTRAINT CK_ReturnRequestItem_Price CHECK (unit_price >= 0),
     CONSTRAINT FK_ReturnRequestItem_Request FOREIGN KEY (return_request_id) REFERENCES dbo.Return_Request(id) ON DELETE CASCADE,
     CONSTRAINT FK_ReturnRequestItem_OrderDetail FOREIGN KEY (order_detail_id) REFERENCES dbo.Order_Detail(id),
-    CONSTRAINT FK_ReturnRequestItem_Variant FOREIGN KEY (variant_id) REFERENCES dbo.Product_Variant(id) ON DELETE SET NULL
+    CONSTRAINT FK_ReturnRequestItem_Variant FOREIGN KEY (variant_id) REFERENCES dbo.Product_Variant(id) ON DELETE SET NULL,
+    CONSTRAINT FK_ReturnRequestItem_InspectedBy FOREIGN KEY (inspected_by) REFERENCES dbo.[User](id)
 );
 
 CREATE TABLE dbo.Return_Request_History (
@@ -792,6 +808,9 @@ CREATE INDEX IX_User_Address_User_Active
 CREATE INDEX IX_Category_ParentStatus ON dbo.Category(parent_id, status);
 CREATE INDEX IX_Product_CategoryStatus ON dbo.Product(category_id, status);
 CREATE INDEX IX_Product_BrandStatus ON dbo.Product(brand_id, status);
+CREATE NONCLUSTERED INDEX IX_Product_Featured
+    ON dbo.Product(is_featured, featured_display_order, id)
+    INCLUDE (product_name, category_id, status);
 CREATE INDEX IX_ProductImage_Main ON dbo.Product_Image(product_id, is_main);
 CREATE UNIQUE INDEX UX_ProductImage_ProductMain
     ON dbo.Product_Image(product_id)

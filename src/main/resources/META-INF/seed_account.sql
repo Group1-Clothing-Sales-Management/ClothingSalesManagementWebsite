@@ -1743,6 +1743,13 @@ VALUES
  (SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-RAIN-BLU-S'),
  N'Packable Rain Jacket', N'Color: Blue, Size: S', 1, 849000);
 
+-- Dữ liệu mẫu đã hoàn tất thì xem như đã được kiểm tra trước khi nhập kho.
+UPDATE ri
+SET inspection_completed = 1, inspected_by = rr.received_by, inspected_at = rr.received_at
+FROM dbo.Return_Request_Item ri
+INNER JOIN dbo.Return_Request rr ON rr.id = ri.return_request_id
+WHERE rr.status IN ('RECEIVED', 'COMPLETED');
+
 INSERT INTO dbo.Return_Request_History
     (return_request_id, old_status, new_status, note, changed_by, changed_at)
 VALUES

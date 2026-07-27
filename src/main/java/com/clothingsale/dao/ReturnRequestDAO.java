@@ -97,6 +97,8 @@ public class ReturnRequestDAO {
             con.setAutoCommit(false);
             try {
                 BigDecimal refund = BigDecimal.ZERO;
+                int selectedItemCount = 0;
+                boolean isRefundRequest = "RETURN".equalsIgnoreCase(type);
                 int requestId = 0;
                 try (PreparedStatement ps = con.prepareStatement(orderSql)) {
                     ps.setInt(1, orderId);
@@ -112,11 +114,15 @@ public class ReturnRequestDAO {
                             if (requested > ordered) {
                                 throw new SQLException("The returned quantity cannot exceed the ordered quantity.");
                             }
-                            refund = refund.add(rs.getBigDecimal("price").multiply(BigDecimal.valueOf(requested)));
+                            selectedItemCount++;
+                            // Đổi hàng không phát sinh hoàn tiền nên không cần lưu số tiền hoàn.
+                            if (isRefundRequest) {
+                                refund = refund.add(rs.getBigDecimal("price").multiply(BigDecimal.valueOf(requested)));
+                            }
                         }
                     }
                 }
-                if (refund.compareTo(BigDecimal.ZERO) <= 0) {
+                if (selectedItemCount == 0) {
                     throw new SQLException("Please select at least one product to return.");
                 }
 
@@ -133,7 +139,7 @@ public class ReturnRequestDAO {
                     ps.setString(10, accountName);
                     ps.setString(11, accountNumber);
                     // Nội dung chuyển khoản cố định theo yêu cầu: mã đơn hàng kèm chữ trả hàng.
-                    ps.setString(12, "REFUND " + getOrderCode(con, orderId));
+                    ps.setString(12, isRefundRequest ? "REFUND " + getOrderCode(con, orderId) : null);
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
                         if (!keys.next()) {
@@ -367,6 +373,42 @@ public class ReturnRequestDAO {
     }
 
     /** Staff đổi trạng thái kiểm tra, yêu cầu bổ sung hoặc từ chối. */
+    /**
+     * Lưu việc Staff đã kiểm tra một dòng hàng.
+     * Chỉ hồ sơ đang APPROVED mới được thay đổi trạng thái kiểm tra.
+     */
+    /** Đọc danh sách item bằng connection đang giữ transaction nhận hàng. */
+    private List<ReturnRequestItem> getItems(Connection con, int requestId) throws SQLException {
+        List<ReturnRequestItem> result = new ArrayList<>();
+        String sql = "SELECT ri.*, ISNULL(pv.stock_quantity, 0) AS current_stock FROM Return_Request_Item ri "
+                + "LEFT JOIN Product_Variant pv ON pv.id = ri.variant_id WHERE ri.return_request_id = ? ORDER BY ri.id";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, requestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(mapReturnItem(rs));
+            }
+        }
+        return result;
+    }
+
+    public boolean inspectItem(int requestId, int itemId, int staffId, boolean inspected) throws SQLException {
+        String sql = "UPDATE Return_Request_Item SET inspection_completed=?, "
+                + "inspected_by=CASE WHEN ?=1 THEN ? ELSE NULL END, "
+                + "inspected_at=CASE WHEN ?=1 THEN GETDATE() ELSE NULL END "
+                + "WHERE id=? AND return_request_id=? "
+                + "AND EXISTS (SELECT 1 FROM Return_Request WHERE id=? AND status='APPROVED')";
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setBoolean(1, inspected);
+            ps.setBoolean(2, inspected);
+            ps.setInt(3, staffId);
+            ps.setBoolean(4, inspected);
+            ps.setInt(5, itemId);
+            ps.setInt(6, requestId);
+            ps.setInt(7, requestId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
     public boolean review(int requestId, int staffId, String status, String note) throws SQLException {
         return changeStatus(requestId, staffId, status, note, null, null);
     }
@@ -382,10 +424,16 @@ public class ReturnRequestDAO {
         try (Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
+                // Không được nhập kho nếu còn ít nhất một dòng hàng chưa được tick kiểm tra.
+                if (!areAllItemsInspected(con, requestId)) {
+                    throw new SQLException("Please inspect every returned product before confirming receipt.");
+                }
+                String nextStatus = "EXCHANGE".equalsIgnoreCase(getRequestType(con, requestId))
+                        ? "COMPLETED" : "RECEIVED";
                 // Đổi trạng thái trước trong cùng transaction để hai nhân viên bấm đồng thời
                 // không thể cùng cộng tồn kho cho một yêu cầu.
                 try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE Return_Request SET status='RECEIVED', received_by=?, received_at=GETDATE(), staff_note=? WHERE id=? AND status='APPROVED'")) {
+                        "UPDATE Return_Request SET status=CASE WHEN request_type='EXCHANGE' THEN 'COMPLETED' ELSE 'RECEIVED' END, received_by=?, received_at=GETDATE(), staff_note=? WHERE id=? AND status='APPROVED'")) {
                     ps.setInt(1, staffId);
                     ps.setString(2, note);
                     ps.setInt(3, requestId);
@@ -394,7 +442,7 @@ public class ReturnRequestDAO {
                         return false;
                     }
                 }
-                List<ReturnRequestItem> items = getItems(requestId);
+                List<ReturnRequestItem> items = getItems(con, requestId);
                 for (ReturnRequestItem item : items) {
                     if (item.getVariantId() <= 0)
                         continue;
@@ -417,7 +465,7 @@ public class ReturnRequestDAO {
                         ps.executeUpdate();
                     }
                 }
-                addHistory(con, requestId, "APPROVED", "RECEIVED", note, staffId);
+                addHistory(con, requestId, "APPROVED", nextStatus, note, staffId);
                 con.commit();
                 return true;
             } catch (SQLException e) {
@@ -425,6 +473,28 @@ public class ReturnRequestDAO {
                 throw e;
             } finally {
                 con.setAutoCommit(true);
+            }
+        }
+    }
+
+    /** Kiểm tra lại ở server để nút trên giao diện không phải là lớp bảo vệ duy nhất. */
+    private boolean areAllItemsInspected(Connection con, int requestId) throws SQLException {
+        String sql = "SELECT COUNT(*) total, SUM(CASE WHEN inspection_completed=1 THEN 1 ELSE 0 END) inspected "
+                + "FROM Return_Request_Item WITH (UPDLOCK, ROWLOCK) WHERE return_request_id=?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, requestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt("total") > 0 && rs.getInt("total") == rs.getInt("inspected");
+            }
+        }
+    }
+
+    private String getRequestType(Connection con, int requestId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT request_type FROM Return_Request WHERE id=?")) {
+            ps.setInt(1, requestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString(1) : "RETURN";
             }
         }
     }
@@ -751,6 +821,10 @@ public class ReturnRequestDAO {
         item.setQuantity(rs.getInt("quantity"));
         item.setUnitPrice(rs.getBigDecimal("unit_price"));
         item.setCurrentStock(rs.getInt("current_stock"));
+        item.setInspected(rs.getBoolean("inspection_completed"));
+        int inspectedBy = rs.getInt("inspected_by");
+        item.setInspectedBy(rs.wasNull() ? null : inspectedBy);
+        item.setInspectedAt(rs.getTimestamp("inspected_at"));
         return item;
     }
 }

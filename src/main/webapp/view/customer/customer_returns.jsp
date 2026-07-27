@@ -279,12 +279,13 @@
                                 </div>
                                 <div id="returnSelectionError" class="alert alert-warning d-none py-2 mb-4"><i class="fa-solid fa-circle-info me-2"></i>Select at least one product and enter a return quantity.</div>
 
-                                <div class="bank-panel">
+                                <div class="bank-panel" id="refundBankPanel">
                                     <h3 class="form-section-title"><i class="fa-solid fa-building-columns"></i><span>Where should we send your refund?</span></h3>
+                                    <p id="refundBankHint" class="bank-panel__note mt-0">Bank details are required for a return and refund. They are optional for an exchange.</p>
                                     <div class="row g-3">
-                                        <div class="col-md-4"><label class="form-label" for="accountName">Account holder name</label><input id="accountName" type="text" name="accountName" class="form-control" maxlength="120" required placeholder="As shown by your bank"></div>
-                                        <div class="col-md-4"><label class="form-label" for="accountNumber">Account number</label><input id="accountNumber" type="text" name="accountNumber" class="form-control" inputmode="numeric" pattern="[0-9]{4,25}" maxlength="25" required placeholder="Your bank account number"></div>
-                                        <div class="col-md-4"><label class="form-label" for="bankId">Bank</label><select id="bankId" name="bankId" class="form-select" required><option value="">Select a bank</option><c:forEach var="bank" items="${refundBanks}"><option value="${bank.bankId}">${bank.bankName}</option></c:forEach></select></div>
+                                        <div class="col-md-4"><label class="form-label" for="accountName">Account holder name</label><input id="accountName" type="text" name="accountName" class="form-control js-bank-field" maxlength="120" placeholder="As shown by your bank"></div>
+                                        <div class="col-md-4"><label class="form-label" for="accountNumber">Account number</label><input id="accountNumber" type="text" name="accountNumber" class="form-control js-bank-field" inputmode="numeric" pattern="[0-9]{4,25}" maxlength="25" placeholder="Your bank account number"></div>
+                                        <div class="col-md-4"><label class="form-label" for="bankId">Bank</label><select id="bankId" name="bankId" class="form-select js-bank-field"><option value="">Select a bank</option><c:forEach var="bank" items="${refundBanks}"><option value="${bank.bankId}">${bank.bankName}</option></c:forEach></select></div>
                                     </div>
                                     <p class="bank-panel__note mb-0"><i class="fa-solid fa-lock me-1"></i>Your bank details are used only to process the approved refund.</p>
                                 </div>
@@ -334,6 +335,24 @@
             var form = document.getElementById('returnRequestForm');
             if (!form) return;
             var error = document.getElementById('returnSelectionError');
+            var requestType = document.getElementById('requestType');
+            var bankPanel = document.getElementById('refundBankPanel');
+            var bankFields = form.querySelectorAll('.js-bank-field');
+
+            // Đổi loại yêu cầu thì cập nhật ngay việc hiển thị và bắt buộc của thông tin ngân hàng.
+            function updateBankFields() {
+                var isRefund = requestType && requestType.value === 'RETURN';
+                if (bankPanel) bankPanel.classList.toggle('d-none', !isRefund);
+                bankFields.forEach(function (field) {
+                    field.required = isRefund;
+                    field.disabled = !isRefund;
+                    if (!isRefund) field.value = '';
+                });
+            }
+            if (requestType) {
+                requestType.addEventListener('change', updateBankFields);
+                updateBankFields();
+            }
             form.querySelectorAll('.js-return-item').forEach(function (checkbox) {
                 var input = form.querySelector('input[name="' + checkbox.dataset.quantityInput + '"]');
                 if (!input) return;
