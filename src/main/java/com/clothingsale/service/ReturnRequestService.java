@@ -78,6 +78,9 @@ public class ReturnRequestService {
     public String createRequest(int userId, int orderId, String type, String reason, String note,
             String bankId, String accountName, String accountNumber, Map<Integer, Integer> quantities) {
         if (getEligibleOrder(userId, orderId) == null) return "This order is not eligible for a return request.";
+        if (quantities == null || quantities.values().stream().noneMatch(quantity -> quantity != null && quantity > 0)) {
+            return "Please select at least one product and enter a return quantity.";
+        }
         String normalizedType = normalize(type);
         if (!"RETURN".equals(normalizedType)) return "Only return and refund requests are supported.";
         if (reason == null || reason.trim().isEmpty()) return "Please select a reason.";

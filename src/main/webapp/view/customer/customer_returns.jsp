@@ -274,7 +274,7 @@
                                             <div><div class="return-product__name">${item.productNameSnapshot}</div><div class="return-product__variant">${item.variantAttributesSnapshot}</div></div>
                                             <div class="return-product__ordered">${item.orderedQuantity} item(s)</div>
                                             <input type="hidden" name="detailId" value="${item.orderDetailId}">
-                                            <input type="number" name="quantity_${item.orderDetailId}" class="form-control return-product__quantity js-return-quantity" min="0" max="${item.orderedQuantity}" value="0" aria-label="Return quantity for ${item.productNameSnapshot}">
+                                            <input type="number" name="quantity_${item.orderDetailId}" class="form-control return-product__quantity js-return-quantity" min="1" max="${item.orderedQuantity}" step="1" value="" disabled aria-label="Return quantity for ${item.productNameSnapshot}">
                                         </div>
                                     </c:forEach>
                                 </div>
@@ -343,23 +343,42 @@
                 var input = form.querySelector('input[name="' + checkbox.dataset.quantityInput + '"]');
                 if (!input) return;
                 checkbox.addEventListener('change', function () {
-                    if (!checkbox.checked) input.value = '0';
+                    input.disabled = !checkbox.checked;
+                    if (!checkbox.checked) input.value = '';
                     if (error) error.classList.add('d-none');
                 });
                 input.addEventListener('input', function () {
-                    checkbox.checked = parseInt(input.value || '0', 10) > 0;
+                    if (input.value.trim() !== '') {
+                        checkbox.checked = true;
+                        input.disabled = false;
+                    }
                     if (error) error.classList.add('d-none');
                 });
             });
             form.addEventListener('submit', function (event) {
                 var selected = false;
+                var invalidSelection = false;
                 form.querySelectorAll('.js-return-item').forEach(function (checkbox) {
                     var input = form.querySelector('input[name="' + checkbox.dataset.quantityInput + '"]');
-                    var quantity = input ? parseInt(input.value || '0', 10) : 0;
-                    if (checkbox.checked && quantity <= 0 && input) { input.value = '1'; quantity = 1; }
-                    if (quantity > 0) { checkbox.checked = true; selected = true; }
+                    if (!input) return;
+                    var quantity = input.value.trim() === '' ? NaN : Number(input.value);
+                    var validQuantity = Number.isInteger(quantity)
+                            && quantity >= 1
+                            && quantity <= Number(input.max);
+                    if (checkbox.checked) {
+                        input.disabled = false;
+                        if (!validQuantity) invalidSelection = true;
+                        else selected = true;
+                    } else if (validQuantity) {
+                        checkbox.checked = true;
+                        input.disabled = false;
+                        selected = true;
+                    }
                 });
-                if (!selected) { event.preventDefault(); if (error) error.classList.remove('d-none'); }
+                if (!selected || invalidSelection) {
+                    event.preventDefault();
+                    if (error) error.classList.remove('d-none');
+                }
             });
         })();
     </script>
