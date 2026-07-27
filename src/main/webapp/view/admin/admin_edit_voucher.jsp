@@ -132,16 +132,38 @@
 
                                 <div class="form-group col-md-3">
                                     <label for="categoryId" class="fw-bold">Applicable Scope</label>
+
+                                    <c:choose>
+                                        <c:when test="${empty voucher.categoryId}">
+                                            <c:set var="applicableScopeLabel" value="Entire Store (Global)"/>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="applicableScopeLabel" value="Category ID: ${voucher.categoryId}"/>
+                                            <c:forEach var="cat" items="${categoryList}">
+                                                <c:if test="${voucher.categoryId == cat.id}">
+                                                    <c:set var="applicableScopeLabel" value="Category: ${cat.categoryName}"/>
+                                                </c:if>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+
                                     <c:choose>
                                         <c:when test="${isActive || isExpired}">
-                                            <input type="hidden" name="categoryId" value="${voucher.categoryId}">
-                                            <input type="text" class="form-control bg-light" value="${voucher.categoryId == null ? 'Entire Store (Global)' : 'Restricted Category Scope'}" disabled>
+                                            <input type="hidden" name="categoryId"
+                                                   value="${empty voucher.categoryId ? 'ALL' : voucher.categoryId}">
+                                            <input type="text" class="form-control bg-light"
+                                                   value="${applicableScopeLabel}" disabled>
                                         </c:when>
                                         <c:otherwise>
                                             <select class="form-select" id="categoryId" name="categoryId">
-                                                <option value="ALL">Entire Store (Global Scope)</option>
+                                                <option value="ALL" ${empty voucher.categoryId ? 'selected' : ''}>
+                                                    Entire Store (Global Scope)
+                                                </option>
                                                 <c:forEach var="cat" items="${categoryList}">
-                                                    <option value="${cat.id}" ${voucher.categoryId == cat.id ? 'selected' : ''}>Category: ${cat.categoryName}</option>
+                                                    <option value="${cat.id}"
+                                                            ${voucher.categoryId == cat.id ? 'selected' : ''}>
+                                                        Category: ${cat.categoryName}
+                                                    </option>
                                                 </c:forEach>
                                             </select>
                                         </c:otherwise>

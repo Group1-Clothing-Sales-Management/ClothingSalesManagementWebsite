@@ -473,6 +473,7 @@ public class CustomerProductDAO {
                 = "SELECT "
                 + "pv.id AS variant_id, "
                 + "pv.product_id, "
+                + "p.category_id, "
                 + "pv.sale_price, "
                 + "pv.stock_quantity, "
                 + "pv.color, "
@@ -572,6 +573,10 @@ public class CustomerProductDAO {
 
                 item.setProductId(
                         rs.getInt("product_id")
+                );
+
+                item.setCategoryId(
+                        rs.getInt("category_id")
                 );
 
                 item.setProductName(

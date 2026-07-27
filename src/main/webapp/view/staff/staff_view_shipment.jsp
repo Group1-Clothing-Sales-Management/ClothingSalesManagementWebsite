@@ -141,6 +141,16 @@
         <c:when test="${s.shippingStatus == 'SUCCESS' || s.shippingStatus == 'SUCCESSFUL' || s.shippingStatus == 'Success' || s.shippingStatus == 'FAILURE' || s.shippingStatus == 'Failure' || s.shippingStatus == 'FAILED'}">
             <button class="btn btn-sm btn-secondary" disabled>Completed</button>
         </c:when>
+        <c:when test="${s.shippingStatus == 'PENDING_PICKUP'}">
+            <%-- Pending Pickup only ever transitions to Shipping, so update it right away
+                 without navigating to the confirm JSP page. --%>
+            <form action="${pageContext.request.contextPath}/staff/shipments" method="POST" class="d-inline">
+                <input type="hidden" name="action" value="confirmDelivery">
+                <input type="hidden" name="id" value="${s.shipmentId}">
+                <input type="hidden" name="outcome" value="SHIPPING">
+                <button type="submit" class="btn btn-sm btn-success">Update Status</button>
+            </form>
+        </c:when>
         <c:otherwise>
             <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${s.shipmentId}" class="btn btn-sm btn-success">Update Status</a>
         </c:otherwise>
