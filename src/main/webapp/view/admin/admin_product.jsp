@@ -277,7 +277,7 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="admin-page">
+        <div class="admin-page product-page">
             <div class="container-fluid">
 
                 <div class="page-header">
@@ -299,30 +299,25 @@
                     </div>
 
                     <div class="product-filter-panel mb-3">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-xl-4 col-lg-12">
+                        <div class="product-filter-grid">
+
+                            <!-- Search is wider so the placeholder and entered text remain readable. -->
+                            <div class="product-filter-field product-filter-search">
                                 <label for="productSearchInput" class="product-filter-label">
                                     Search products
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                    </span>
+                                <div class="input-group"> 
                                     <input type="search"
                                            id="productSearchInput"
                                            class="form-control"
                                            placeholder="Search by product name, category or brand..."
                                            autocomplete="off">
-                                    <button type="button"
-                                            class="btn btn-outline-secondary"
-                                            id="productSearchClear"
-                                            title="Clear search">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
+                                    <span class="input-group-text">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
                                 </div>
                             </div>
-
-                            <div class="col-xl-2 col-md-4">
+                            <div class="product-filter-field">
                                 <label for="productCategoryFilter" class="product-filter-label">
                                     Category
                                 </label>
@@ -333,8 +328,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-
-                            <div class="col-xl-2 col-md-4">
+                            <div class="product-filter-field">
                                 <label for="productBrandFilter" class="product-filter-label">
                                     Brand
                                 </label>
@@ -345,8 +339,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-
-                            <div class="col-xl-2 col-md-4">
+                            <div class="product-filter-field">
                                 <label for="productStatusFilter" class="product-filter-label">
                                     Status
                                 </label>
@@ -356,8 +349,7 @@
                                     <option value="INACTIVE">Inactive</option>
                                 </select>
                             </div>
-
-                            <div class="col-xl-2 col-md-12">
+                            <div class="product-filter-actions">
                                 <button type="button"
                                         id="resetProductFilters"
                                         class="btn btn-outline-secondary w-100">
@@ -365,15 +357,7 @@
                                     Reset filters
                                 </button>
                             </div>
-                        </div>
 
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-                            <span id="productResultSummary" class="product-result-summary">
-                                Showing 0 of 0 products
-                            </span>
-                            <small class="text-muted">
-                                Filters are applied instantly.
-                            </small>
                         </div>
                     </div>
 
@@ -718,381 +702,381 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <script>
-                                                document.addEventListener("DOMContentLoaded", function () {
-                                                    const searchInput = document.getElementById("productSearchInput");
-                                                    const clearSearchButton = document.getElementById("productSearchClear");
-                                                    const categoryFilter = document.getElementById("productCategoryFilter");
-                                                    const brandFilter = document.getElementById("productBrandFilter");
-                                                    const statusFilter = document.getElementById("productStatusFilter");
-                                                    const resetFiltersButton = document.getElementById("resetProductFilters");
-                                                    const resultSummary = document.getElementById("productResultSummary");
-                                                    const noResultsRow = document.getElementById("productNoResultsRow");
-                                                    const productRows = Array.from(
-                                                            document.querySelectorAll("#productTableBody .product-row")
-                                                    );
+                                                            document.addEventListener("DOMContentLoaded", function () {
+                                                                const searchInput = document.getElementById("productSearchInput");
+                                                                const clearSearchButton = document.getElementById("productSearchClear");
+                                                                const categoryFilter = document.getElementById("productCategoryFilter");
+                                                                const brandFilter = document.getElementById("productBrandFilter");
+                                                                const statusFilter = document.getElementById("productStatusFilter");
+                                                                const resetFiltersButton = document.getElementById("resetProductFilters");
+                                                                const resultSummary = document.getElementById("productResultSummary");
+                                                                const noResultsRow = document.getElementById("productNoResultsRow");
+                                                                const productRows = Array.from(
+                                                                        document.querySelectorAll("#productTableBody .product-row")
+                                                                        );
 
-                                                    function normalizeSearchValue(value) {
-                                                        return String(value == null ? "" : value)
-                                                                .normalize("NFD")
-                                                                .replace(/[\u0300-\u036f]/g, "")
-                                                                .replace(/đ/g, "d")
-                                                                .replace(/Đ/g, "D")
-                                                                .toLowerCase()
-                                                                .replace(/\s+/g, " ")
-                                                                .trim();
-                                                    }
+                                                                function normalizeSearchValue(value) {
+                                                                    return String(value == null ? "" : value)
+                                                                            .normalize("NFD")
+                                                                            .replace(/[\u0300-\u036f]/g, "")
+                                                                            .replace(/đ/g, "d")
+                                                                            .replace(/Đ/g, "D")
+                                                                            .toLowerCase()
+                                                                            .replace(/\s+/g, " ")
+                                                                            .trim();
+                                                                }
 
-                                                    function getOptionLabel(select, value) {
-                                                        if (!select || !value) {
-                                                            return "";
-                                                        }
+                                                                function getOptionLabel(select, value) {
+                                                                    if (!select || !value) {
+                                                                        return "";
+                                                                    }
 
-                                                        const option = Array.from(select.options).find(function (item) {
-                                                            return item.value === String(value);
-                                                        });
+                                                                    const option = Array.from(select.options).find(function (item) {
+                                                                        return item.value === String(value);
+                                                                    });
 
-                                                        return option ? option.textContent : "";
-                                                    }
+                                                                    return option ? option.textContent : "";
+                                                                }
 
-                                                    function applyProductFilters() {
-                                                        const keyword = normalizeSearchValue(searchInput.value);
-                                                        const selectedCategory = categoryFilter.value;
-                                                        const selectedBrand = brandFilter.value;
-                                                        const selectedStatus = statusFilter.value.toUpperCase();
-                                                        let visibleCount = 0;
+                                                                function applyProductFilters() {
+                                                                    const keyword = normalizeSearchValue(searchInput.value);
+                                                                    const selectedCategory = categoryFilter.value;
+                                                                    const selectedBrand = brandFilter.value;
+                                                                    const selectedStatus = statusFilter.value.toUpperCase();
+                                                                    let visibleCount = 0;
 
-                                                        productRows.forEach(function (row) {
-                                                            const productId = row.dataset.productId || "";
-                                                            const categoryId = row.dataset.categoryId || "";
-                                                            const brandId = row.dataset.brandId || "";
-                                                            const status = (row.dataset.status || "").toUpperCase();
-                                                            const productNameCell = row.querySelector(".product-name-cell");
-                                                            const productName = productNameCell
-                                                                    ? productNameCell.textContent
-                                                                    : "";
-                                                            const categoryName = getOptionLabel(categoryFilter, categoryId);
-                                                            const brandName = getOptionLabel(brandFilter, brandId);
+                                                                    productRows.forEach(function (row) {
+                                                                        const productId = row.dataset.productId || "";
+                                                                        const categoryId = row.dataset.categoryId || "";
+                                                                        const brandId = row.dataset.brandId || "";
+                                                                        const status = (row.dataset.status || "").toUpperCase();
+                                                                        const productNameCell = row.querySelector(".product-name-cell");
+                                                                        const productName = productNameCell
+                                                                                ? productNameCell.textContent
+                                                                                : "";
+                                                                        const categoryName = getOptionLabel(categoryFilter, categoryId);
+                                                                        const brandName = getOptionLabel(brandFilter, brandId);
 
-                                                            const searchableText = normalizeSearchValue([
-                                                                productId,
-                                                                "#PROD-" + productId,
-                                                                productName,
-                                                                categoryId,
-                                                                categoryName,
-                                                                brandId,
-                                                                brandName,
-                                                                status
-                                                            ].join(" "));
+                                                                        const searchableText = normalizeSearchValue([
+                                                                            productId,
+                                                                            "#PROD-" + productId,
+                                                                            productName,
+                                                                            categoryId,
+                                                                            categoryName,
+                                                                            brandId,
+                                                                            brandName,
+                                                                            status
+                                                                        ].join(" "));
 
-                                                            const matchesKeyword = !keyword
-                                                                    || searchableText.includes(keyword);
-                                                            const matchesCategory = !selectedCategory
-                                                                    || categoryId === selectedCategory;
-                                                            const matchesBrand = !selectedBrand
-                                                                    || brandId === selectedBrand;
-                                                            const matchesStatus = !selectedStatus
-                                                                    || status === selectedStatus;
-                                                            const visible = matchesKeyword
-                                                                    && matchesCategory
-                                                                    && matchesBrand
-                                                                    && matchesStatus;
+                                                                        const matchesKeyword = !keyword
+                                                                                || searchableText.includes(keyword);
+                                                                        const matchesCategory = !selectedCategory
+                                                                                || categoryId === selectedCategory;
+                                                                        const matchesBrand = !selectedBrand
+                                                                                || brandId === selectedBrand;
+                                                                        const matchesStatus = !selectedStatus
+                                                                                || status === selectedStatus;
+                                                                        const visible = matchesKeyword
+                                                                                && matchesCategory
+                                                                                && matchesBrand
+                                                                                && matchesStatus;
 
-                                                            row.classList.toggle("d-none", !visible);
+                                                                        row.classList.toggle("d-none", !visible);
 
-                                                            if (visible) {
-                                                                visibleCount++;
-                                                            }
-                                                        });
+                                                                        if (visible) {
+                                                                            visibleCount++;
+                                                                        }
+                                                                    });
 
-                                                        resultSummary.textContent = "Showing "
-                                                                + visibleCount
-                                                                + " of "
-                                                                + productRows.length
-                                                                + (productRows.length === 1
-                                                                        ? " product"
-                                                                        : " products");
+                                                                    resultSummary.textContent = "Showing "
+                                                                            + visibleCount
+                                                                            + " of "
+                                                                            + productRows.length
+                                                                            + (productRows.length === 1
+                                                                                    ? " product"
+                                                                                    : " products");
 
-                                                        if (noResultsRow) {
-                                                            noResultsRow.classList.toggle(
-                                                                    "d-none",
-                                                                    visibleCount > 0 || productRows.length === 0
-                                                            );
-                                                        }
+                                                                    if (noResultsRow) {
+                                                                        noResultsRow.classList.toggle(
+                                                                                "d-none",
+                                                                                visibleCount > 0 || productRows.length === 0
+                                                                                );
+                                                                    }
 
-                                                        clearSearchButton.disabled = searchInput.value.length === 0;
-                                                    }
+                                                                    clearSearchButton.disabled = searchInput.value.length === 0;
+                                                                }
 
-                                                    function resetProductFilters() {
-                                                        searchInput.value = "";
-                                                        categoryFilter.value = "";
-                                                        brandFilter.value = "";
-                                                        statusFilter.value = "";
-                                                        applyProductFilters();
-                                                        searchInput.focus();
-                                                    }
+                                                                function resetProductFilters() {
+                                                                    searchInput.value = "";
+                                                                    categoryFilter.value = "";
+                                                                    brandFilter.value = "";
+                                                                    statusFilter.value = "";
+                                                                    applyProductFilters();
+                                                                    searchInput.focus();
+                                                                }
 
-                                                    searchInput.addEventListener("input", applyProductFilters);
-                                                    categoryFilter.addEventListener("change", applyProductFilters);
-                                                    brandFilter.addEventListener("change", applyProductFilters);
-                                                    statusFilter.addEventListener("change", applyProductFilters);
+                                                                searchInput.addEventListener("input", applyProductFilters);
+                                                                categoryFilter.addEventListener("change", applyProductFilters);
+                                                                brandFilter.addEventListener("change", applyProductFilters);
+                                                                statusFilter.addEventListener("change", applyProductFilters);
 
-                                                    clearSearchButton.addEventListener("click", function () {
-                                                        searchInput.value = "";
-                                                        applyProductFilters();
-                                                        searchInput.focus();
-                                                    });
+                                                                clearSearchButton.addEventListener("click", function () {
+                                                                    searchInput.value = "";
+                                                                    applyProductFilters();
+                                                                    searchInput.focus();
+                                                                });
 
-                                                    resetFiltersButton.addEventListener("click", resetProductFilters);
+                                                                resetFiltersButton.addEventListener("click", resetProductFilters);
 
-                                                    applyProductFilters();
-                                                });
+                                                                applyProductFilters();
+                                                            });
 
-                                                document.addEventListener("DOMContentLoaded", function () {
-                                                    const form = document.getElementById("createProductForm");
-                                                    const productNameInput = document.getElementById("adminProductName");
-                                                    const sizeInput = document.getElementById("adminVariantSize");
-                                                    const colorInput = document.getElementById("adminVariantColor");
-                                                    const addButton = document.getElementById("adminAddVariantButton");
-                                                    const tableBody = document.getElementById("adminVariantListBody");
-                                                    const countLabel = document.getElementById("adminVariantCount");
-                                                    const createModal = document.getElementById("createProductModal");
-                                                    const variants = [];
+                                                            document.addEventListener("DOMContentLoaded", function () {
+                                                                const form = document.getElementById("createProductForm");
+                                                                const productNameInput = document.getElementById("adminProductName");
+                                                                const sizeInput = document.getElementById("adminVariantSize");
+                                                                const colorInput = document.getElementById("adminVariantColor");
+                                                                const addButton = document.getElementById("adminAddVariantButton");
+                                                                const tableBody = document.getElementById("adminVariantListBody");
+                                                                const countLabel = document.getElementById("adminVariantCount");
+                                                                const createModal = document.getElementById("createProductModal");
+                                                                const variants = [];
 
-                                                    function cleanText(value) {
-                                                        return value == null ? "" : value.trim().replace(/\s+/g, " ");
-                                                    }
+                                                                function cleanText(value) {
+                                                                    return value == null ? "" : value.trim().replace(/\s+/g, " ");
+                                                                }
 
-                                                    function removeVietnameseTones(value) {
-                                                        return value
-                                                                .normalize("NFD")
-                                                                .replace(/[\u0300-\u036f]/g, "")
-                                                                .replace(/đ/g, "d")
-                                                                .replace(/Đ/g, "D");
-                                                    }
+                                                                function removeVietnameseTones(value) {
+                                                                    return value
+                                                                            .normalize("NFD")
+                                                                            .replace(/[\u0300-\u036f]/g, "")
+                                                                            .replace(/đ/g, "d")
+                                                                            .replace(/Đ/g, "D");
+                                                                }
 
-                                                    function normalizeSku(value) {
-                                                        const normalized = removeVietnameseTones(cleanText(value))
-                                                                .toLowerCase()
-                                                                .replace(/[^a-z0-9]+/g, "-")
-                                                                .replace(/^-+|-+$/g, "");
-                                                        return normalized || "na";
-                                                    }
+                                                                function normalizeSku(value) {
+                                                                    const normalized = removeVietnameseTones(cleanText(value))
+                                                                            .toLowerCase()
+                                                                            .replace(/[^a-z0-9]+/g, "-")
+                                                                            .replace(/^-+|-+$/g, "");
+                                                                    return normalized || "na";
+                                                                }
 
-                                                    function normalizeCombinationValue(value) {
-                                                        return removeVietnameseTones(cleanText(value))
-                                                                .toLowerCase();
-                                                    }
+                                                                function normalizeCombinationValue(value) {
+                                                                    return removeVietnameseTones(cleanText(value))
+                                                                            .toLowerCase();
+                                                                }
 
-                                                    function getCombinationKey(size, color) {
-                                                        return normalizeCombinationValue(size) + "|" + normalizeCombinationValue(color);
-                                                    }
+                                                                function getCombinationKey(size, color) {
+                                                                    return normalizeCombinationValue(size) + "|" + normalizeCombinationValue(color);
+                                                                }
 
-                                                    function getVariantSku(variant) {
-                                                        return normalizeSku(productNameInput.value)
-                                                                + "-" + normalizeSku(variant.size)
-                                                                + "-" + normalizeSku(variant.color);
-                                                    }
+                                                                function getVariantSku(variant) {
+                                                                    return normalizeSku(productNameInput.value)
+                                                                            + "-" + normalizeSku(variant.size)
+                                                                            + "-" + normalizeSku(variant.color);
+                                                                }
 
-                                                    function escapeHtml(value) {
-                                                        return String(value)
-                                                                .replace(/&/g, "&amp;")
-                                                                .replace(/</g, "&lt;")
-                                                                .replace(/>/g, "&gt;")
-                                                                .replace(/"/g, "&quot;")
-                                                                .replace(/'/g, "&#039;");
-                                                    }
+                                                                function escapeHtml(value) {
+                                                                    return String(value)
+                                                                            .replace(/&/g, "&amp;")
+                                                                            .replace(/</g, "&lt;")
+                                                                            .replace(/>/g, "&gt;")
+                                                                            .replace(/"/g, "&quot;")
+                                                                            .replace(/'/g, "&#039;");
+                                                                }
 
-                                                    function renderVariants() {
-                                                        countLabel.textContent = variants.length
-                                                                + (variants.length === 1 ? " variant" : " variants");
+                                                                function renderVariants() {
+                                                                    countLabel.textContent = variants.length
+                                                                            + (variants.length === 1 ? " variant" : " variants");
 
-                                                        if (variants.length === 0) {
-                                                            tableBody.innerHTML = `
+                                                                    if (variants.length === 0) {
+                                                                        tableBody.innerHTML = `
                             <tr>
                                 <td colspan="3" class="text-center py-4 text-muted">
                                     <i class="fa-solid fa-circle-info me-1"></i>No variants added yet.
                                 </td>
                             </tr>`;
-                                                            return;
-                                                        }
+                                                                        return;
+                                                                    }
 
-                                                        let rows = "";
-                                                        variants.forEach(function (variant, index) {
-                                                            rows += "<tr>"
-                                                                    + "<td>"
-                                                                    + "<span class='badge bg-dark me-1'>Size: " + escapeHtml(variant.size) + "</span> "
-                                                                    + "<span class='badge bg-primary'>Color: " + escapeHtml(variant.color) + "</span>"
-                                                                    + "<input type='hidden' name='variants[" + index + "].size' value='" + escapeHtml(variant.size) + "'>"
-                                                                    + "<input type='hidden' name='variants[" + index + "].color' value='" + escapeHtml(variant.color) + "'>"
-                                                                    + "</td>"
-                                                                    + "<td>"
-                                                                    + "<input type='text' class='form-control form-control-sm bg-light fw-semibold' value='" + escapeHtml(getVariantSku(variant)) + "' readonly>"
-                                                                    + "</td>"
-                                                                    + "<td class='text-center'>"
-                                                                    + "<button type='button' class='btn btn-sm btn-outline-danger' data-remove-index='" + index + "' title='Remove variant'>"
-                                                                    + "<i class='fa-solid fa-trash'></i>"
-                                                                    + "</button>"
-                                                                    + "</td>"
-                                                                    + "</tr>";
-                                                        });
-                                                        tableBody.innerHTML = rows;
-                                                    }
+                                                                    let rows = "";
+                                                                    variants.forEach(function (variant, index) {
+                                                                        rows += "<tr>"
+                                                                                + "<td>"
+                                                                                + "<span class='badge bg-dark me-1'>Size: " + escapeHtml(variant.size) + "</span> "
+                                                                                + "<span class='badge bg-primary'>Color: " + escapeHtml(variant.color) + "</span>"
+                                                                                + "<input type='hidden' name='variants[" + index + "].size' value='" + escapeHtml(variant.size) + "'>"
+                                                                                + "<input type='hidden' name='variants[" + index + "].color' value='" + escapeHtml(variant.color) + "'>"
+                                                                                + "</td>"
+                                                                                + "<td>"
+                                                                                + "<input type='text' class='form-control form-control-sm bg-light fw-semibold' value='" + escapeHtml(getVariantSku(variant)) + "' readonly>"
+                                                                                + "</td>"
+                                                                                + "<td class='text-center'>"
+                                                                                + "<button type='button' class='btn btn-sm btn-outline-danger' data-remove-index='" + index + "' title='Remove variant'>"
+                                                                                + "<i class='fa-solid fa-trash'></i>"
+                                                                                + "</button>"
+                                                                                + "</td>"
+                                                                                + "</tr>";
+                                                                    });
+                                                                    tableBody.innerHTML = rows;
+                                                                }
 
-                                                    function addVariant() {
-                                                        const productName = cleanText(productNameInput.value);
-                                                        const size = cleanText(sizeInput.value);
-                                                        const color = cleanText(colorInput.value);
+                                                                function addVariant() {
+                                                                    const productName = cleanText(productNameInput.value);
+                                                                    const size = cleanText(sizeInput.value);
+                                                                    const color = cleanText(colorInput.value);
 
-                                                        if (!productName) {
-                                                            Swal.fire("Product Name Required", "Please enter the product name before adding variants.", "warning");
-                                                            productNameInput.focus();
-                                                            return;
-                                                        }
+                                                                    if (!productName) {
+                                                                        Swal.fire("Product Name Required", "Please enter the product name before adding variants.", "warning");
+                                                                        productNameInput.focus();
+                                                                        return;
+                                                                    }
 
-                                                        if (!size || !color) {
-                                                            Swal.fire("Incomplete Variant", "Please select a size and enter a color.", "warning");
-                                                            return;
-                                                        }
+                                                                    if (!size || !color) {
+                                                                        Swal.fire("Incomplete Variant", "Please select a size and enter a color.", "warning");
+                                                                        return;
+                                                                    }
 
-                                                        const combinationKey = getCombinationKey(size, color);
-                                                        const duplicated = variants.some(function (variant) {
-                                                            return getCombinationKey(variant.size, variant.color) === combinationKey;
-                                                        });
+                                                                    const combinationKey = getCombinationKey(size, color);
+                                                                    const duplicated = variants.some(function (variant) {
+                                                                        return getCombinationKey(variant.size, variant.color) === combinationKey;
+                                                                    });
 
-                                                        if (duplicated) {
-                                                            Swal.fire("Duplicate Variant", "This size and color combination is already in the list.", "warning");
-                                                            return;
-                                                        }
+                                                                    if (duplicated) {
+                                                                        Swal.fire("Duplicate Variant", "This size and color combination is already in the list.", "warning");
+                                                                        return;
+                                                                    }
 
-                                                        variants.push({size: size, color: color});
-                                                        sizeInput.value = "";
-                                                        colorInput.value = "";
-                                                        colorInput.focus();
-                                                        renderVariants();
-                                                    }
+                                                                    variants.push({size: size, color: color});
+                                                                    sizeInput.value = "";
+                                                                    colorInput.value = "";
+                                                                    colorInput.focus();
+                                                                    renderVariants();
+                                                                }
 
-                                                    addButton.addEventListener("click", addVariant);
+                                                                addButton.addEventListener("click", addVariant);
 
-                                                    colorInput.addEventListener("keydown", function (event) {
-                                                        if (event.key === "Enter") {
-                                                            event.preventDefault();
-                                                            addVariant();
-                                                        }
-                                                    });
+                                                                colorInput.addEventListener("keydown", function (event) {
+                                                                    if (event.key === "Enter") {
+                                                                        event.preventDefault();
+                                                                        addVariant();
+                                                                    }
+                                                                });
 
-                                                    productNameInput.addEventListener("input", renderVariants);
+                                                                productNameInput.addEventListener("input", renderVariants);
 
-                                                    tableBody.addEventListener("click", function (event) {
-                                                        const removeButton = event.target.closest("[data-remove-index]");
-                                                        if (!removeButton) {
-                                                            return;
-                                                        }
-                                                        variants.splice(Number(removeButton.dataset.removeIndex), 1);
-                                                        renderVariants();
-                                                    });
+                                                                tableBody.addEventListener("click", function (event) {
+                                                                    const removeButton = event.target.closest("[data-remove-index]");
+                                                                    if (!removeButton) {
+                                                                        return;
+                                                                    }
+                                                                    variants.splice(Number(removeButton.dataset.removeIndex), 1);
+                                                                    renderVariants();
+                                                                });
 
-                                                    form.addEventListener("submit", function (event) {
-                                                        event.preventDefault();
+                                                                form.addEventListener("submit", function (event) {
+                                                                    event.preventDefault();
 
-                                                        if (variants.length === 0) {
-                                                            Swal.fire("Variant Required", "Please add at least one size-color variant.", "warning");
-                                                            return;
-                                                        }
+                                                                    if (variants.length === 0) {
+                                                                        Swal.fire("Variant Required", "Please add at least one size-color variant.", "warning");
+                                                                        return;
+                                                                    }
 
-                                                        Swal.fire({
-                                                            title: "Are you sure?",
-                                                            text: "Do you want to save this new product information?",
-                                                            icon: "question",
-                                                            showCancelButton: true,
-                                                            confirmButtonColor: "#3085d6",
-                                                            cancelButtonColor: "#6c757d",
-                                                            confirmButtonText: "Yes, save product!"
-                                                        }).then(function (result) {
-                                                            if (!result.isConfirmed) {
-                                                                return;
-                                                            }
+                                                                    Swal.fire({
+                                                                        title: "Are you sure?",
+                                                                        text: "Do you want to save this new product information?",
+                                                                        icon: "question",
+                                                                        showCancelButton: true,
+                                                                        confirmButtonColor: "#3085d6",
+                                                                        cancelButtonColor: "#6c757d",
+                                                                        confirmButtonText: "Yes, save product!"
+                                                                    }).then(function (result) {
+                                                                        if (!result.isConfirmed) {
+                                                                            return;
+                                                                        }
 
-                                                            Swal.fire({
-                                                                title: "Processing...",
-                                                                text: "Saving product and variants.",
-                                                                allowOutsideClick: false,
-                                                                didOpen: function () {
-                                                                    Swal.showLoading();
+                                                                        Swal.fire({
+                                                                            title: "Processing...",
+                                                                            text: "Saving product and variants.",
+                                                                            allowOutsideClick: false,
+                                                                            didOpen: function () {
+                                                                                Swal.showLoading();
+                                                                            }
+                                                                        });
+
+                                                                        form.submit();
+                                                                    });
+                                                                });
+
+                                                                createModal.addEventListener("hidden.bs.modal", function () {
+                                                                    form.reset();
+                                                                    variants.splice(0, variants.length);
+                                                                    renderVariants();
+                                                                });
+
+                                                                renderVariants();
+                                                            });
+
+                                                            document.addEventListener("DOMContentLoaded", function () {
+                                                                const featuredForms = document.querySelectorAll(".featured-control-form");
+
+                                                                featuredForms.forEach(function (form) {
+                                                                    const toggle = form.querySelector(".featured-toggle");
+                                                                    const hiddenValue = form.querySelector(".featured-hidden-value");
+                                                                    const switchWrap = form.querySelector(".featured-switch-wrap");
+                                                                    const toggleText = form.querySelector(".featured-toggle-text");
+
+                                                                    if (!toggle || !hiddenValue || !switchWrap || !toggleText) {
+                                                                        return;
+                                                                    }
+
+                                                                    toggle.addEventListener("change", function () {
+                                                                        const enabled = toggle.checked;
+
+                                                                        hiddenValue.value = enabled ? "true" : "false";
+                                                                        toggle.disabled = true;
+                                                                        switchWrap.classList.toggle("is-active", enabled);
+                                                                        switchWrap.classList.add("is-saving");
+                                                                        toggleText.textContent = "Saving...";
+
+                                                                        form.submit();
+                                                                    });
+                                                                });
+
+                                                                const status = new URLSearchParams(window.location.search).get("status");
+                                                                const messages = {
+                                                                    "featured-enabled": ["Featured enabled", "The product is now displayed in Featured Products.", "success"],
+                                                                    "featured-disabled": ["Featured disabled", "The product was removed from Featured Products.", "success"],
+                                                                    "invalid-featured-order": ["Invalid order", "Display order must be a positive number.", "warning"],
+                                                                    "product-not-eligible-for-featured": ["Cannot feature product", "The product must be active and have at least one active variant with a valid price.", "warning"],
+                                                                    "featured-update-failed": ["Update failed", "The Featured Products setting could not be saved.", "error"],
+                                                                    "product-not-found": ["Product not found", "The selected product no longer exists.", "error"],
+                                                                    "invalid-product-id": ["Invalid product", "The selected product ID is invalid.", "warning"],
+                                                                    "invalid-request": ["Invalid request", "The Featured Products request is invalid.", "warning"]
+                                                                };
+
+                                                                if (status && messages[status]) {
+                                                                    Swal.fire(messages[status][0], messages[status][1], messages[status][2]);
                                                                 }
                                                             });
 
-                                                            form.submit();
-                                                        });
-                                                    });
-
-                                                    createModal.addEventListener("hidden.bs.modal", function () {
-                                                        form.reset();
-                                                        variants.splice(0, variants.length);
-                                                        renderVariants();
-                                                    });
-
-                                                    renderVariants();
-                                                });
-
-                                                document.addEventListener("DOMContentLoaded", function () {
-                                                    const featuredForms = document.querySelectorAll(".featured-control-form");
-
-                                                    featuredForms.forEach(function (form) {
-                                                        const toggle = form.querySelector(".featured-toggle");
-                                                        const hiddenValue = form.querySelector(".featured-hidden-value");
-                                                        const switchWrap = form.querySelector(".featured-switch-wrap");
-                                                        const toggleText = form.querySelector(".featured-toggle-text");
-
-                                                        if (!toggle || !hiddenValue || !switchWrap || !toggleText) {
-                                                            return;
-                                                        }
-
-                                                        toggle.addEventListener("change", function () {
-                                                            const enabled = toggle.checked;
-
-                                                            hiddenValue.value = enabled ? "true" : "false";
-                                                            toggle.disabled = true;
-                                                            switchWrap.classList.toggle("is-active", enabled);
-                                                            switchWrap.classList.add("is-saving");
-                                                            toggleText.textContent = "Saving...";
-
-                                                            form.submit();
-                                                        });
-                                                    });
-
-                                                    const status = new URLSearchParams(window.location.search).get("status");
-                                                    const messages = {
-                                                        "featured-enabled": ["Featured enabled", "The product is now displayed in Featured Products.", "success"],
-                                                        "featured-disabled": ["Featured disabled", "The product was removed from Featured Products.", "success"],
-                                                        "invalid-featured-order": ["Invalid order", "Display order must be a positive number.", "warning"],
-                                                        "product-not-eligible-for-featured": ["Cannot feature product", "The product must be active and have at least one active variant with a valid price.", "warning"],
-                                                        "featured-update-failed": ["Update failed", "The Featured Products setting could not be saved.", "error"],
-                                                        "product-not-found": ["Product not found", "The selected product no longer exists.", "error"],
-                                                        "invalid-product-id": ["Invalid product", "The selected product ID is invalid.", "warning"],
-                                                        "invalid-request": ["Invalid request", "The Featured Products request is invalid.", "warning"]
-                                                    };
-
-                                                    if (status && messages[status]) {
-                                                        Swal.fire(messages[status][0], messages[status][1], messages[status][2]);
-                                                    }
-                                                });
-
-                                                function deleteProduct(id) {
-                                                    Swal.fire({
-                                                        title: "Delete this product?",
-                                                        text: "The product will be soft-deleted and its variants will become inactive.",
-                                                        icon: "warning",
-                                                        showCancelButton: true,
-                                                        confirmButtonColor: "#dc3545",
-                                                        cancelButtonColor: "#6c757d",
-                                                        confirmButtonText: "Yes, delete it!"
-                                                    }).then(function (result) {
-                                                        if (result.isConfirmed) {
-                                                            document.getElementById("hiddenDeleteProductId").value = id;
-                                                            document.getElementById("hiddenDeleteForm").submit();
-                                                        }
-                                                    });
-                                                }
+                                                            function deleteProduct(id) {
+                                                                Swal.fire({
+                                                                    title: "Delete this product?",
+                                                                    text: "The product will be soft-deleted and its variants will become inactive.",
+                                                                    icon: "warning",
+                                                                    showCancelButton: true,
+                                                                    confirmButtonColor: "#dc3545",
+                                                                    cancelButtonColor: "#6c757d",
+                                                                    confirmButtonText: "Yes, delete it!"
+                                                                }).then(function (result) {
+                                                                    if (result.isConfirmed) {
+                                                                        document.getElementById("hiddenDeleteProductId").value = id;
+                                                                        document.getElementById("hiddenDeleteForm").submit();
+                                                                    }
+                                                                });
+                                                            }
         </script>
     </body>
 </html>

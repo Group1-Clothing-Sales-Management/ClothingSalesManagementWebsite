@@ -71,7 +71,7 @@
     <jsp:param name="activeTab" value="inventory"/>
 </jsp:include>
 
-<div class="admin-page">
+<div class="admin-page inventory-page">
     <div class="container-fluid">
 
         <div class="page-header">
@@ -111,9 +111,9 @@
                                 <th>Receipt Code</th>
                                 <th>Supplier</th>
                                 <th>Created By</th>
-                                <th class="text-center">Items</th>
+                                <th class="text-center">Variants</th>
                                 <th class="text-center">
-                                    Total Qty
+                                    Total Quantity
                                 </th>
                                 <th class="text-end">
                                     Total Cost
