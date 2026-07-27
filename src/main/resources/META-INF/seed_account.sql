@@ -1807,7 +1807,167 @@ VALUES
 GO
 
 /* =========================================================================
-   XIX. VALIDATION
+   XIX. HIGH-VOLUME ACCOUNT DEMO DATA
+   Adds deterministic accounts for pagination, search, status filters,
+   address selection and authentication screens.
+   ========================================================================= */
+
+-- 50 more customer accounts: customer09 ... customer58.
+-- All generated accounts use the shared demo password: 123456.
+;WITH CustomerNumbers AS (
+    SELECT 9 AS account_no
+    UNION ALL
+    SELECT account_no + 1
+    FROM CustomerNumbers
+    WHERE account_no < 58
+)
+INSERT INTO dbo.[User]
+    (username, password, full_name, email, phone, status, role_id)
+SELECT
+    CONCAT('customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO',
+    CONCAT(N'Demo Customer ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CONCAT('demo.customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2), '@example.com'),
+    CONCAT('0987', RIGHT('000000' + CONVERT(VARCHAR(6), n.account_no), 6)),
+    CASE
+        WHEN n.account_no % 17 = 0 THEN 'LOCKED'
+        WHEN n.account_no % 11 = 0 THEN 'INACTIVE'
+        ELSE 'ACTIVE'
+    END,
+    r.id
+FROM CustomerNumbers n
+CROSS JOIN dbo.[Role] r
+WHERE r.role_name = 'CUSTOMER'
+OPTION (MAXRECURSION 0);
+
+-- Additional staff accounts for inventory and order-management screens.
+;WITH StaffNumbers AS (
+    SELECT 4 AS account_no
+    UNION ALL
+    SELECT account_no + 1
+    FROM StaffNumbers
+    WHERE account_no < 10
+)
+INSERT INTO dbo.[User]
+    (username, password, full_name, email, phone, status, role_id)
+SELECT
+    CONCAT('staff', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO',
+    CONCAT(N'Demo Staff ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CONCAT('demo.staff', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2), '@clothesshop.com'),
+    CONCAT('0978', RIGHT('000000' + CONVERT(VARCHAR(6), n.account_no), 6)),
+    CASE WHEN n.account_no = 10 THEN 'INACTIVE' ELSE 'ACTIVE' END,
+    r.id
+FROM StaffNumbers n
+CROSS JOIN dbo.[Role] r
+WHERE r.role_name = 'STAFF'
+OPTION (MAXRECURSION 0);
+
+-- A few more administrators make role-based account listings more realistic.
+;WITH AdminNumbers AS (
+    SELECT 3 AS account_no
+    UNION ALL
+    SELECT account_no + 1
+    FROM AdminNumbers
+    WHERE account_no < 5
+)
+INSERT INTO dbo.[User]
+    (username, password, full_name, email, phone, status, role_id)
+SELECT
+    CONCAT('admin', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO',
+    CONCAT(N'Demo Administrator ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CONCAT('demo.admin', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2), '@clothesshop.com'),
+    CONCAT('0966', RIGHT('000000' + CONVERT(VARCHAR(6), n.account_no), 6)),
+    'ACTIVE',
+    r.id
+FROM AdminNumbers n
+CROSS JOIN dbo.[Role] r
+WHERE r.role_name = 'ADMIN'
+OPTION (MAXRECURSION 0);
+
+-- Two addresses per generated customer (one default and one secondary).
+;WITH CustomerNumbers AS (
+    SELECT 9 AS account_no
+    UNION ALL
+    SELECT account_no + 1
+    FROM CustomerNumbers
+    WHERE account_no < 58
+)
+INSERT INTO dbo.User_Address
+    (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default)
+SELECT
+    u.id,
+    u.full_name,
+    u.phone,
+    CASE n.account_no % 8
+        WHEN 0 THEN '00001'
+        WHEN 1 THEN '00010'
+        WHEN 2 THEN '26734'
+        WHEN 3 THEN '26743'
+        WHEN 4 THEN '31147'
+        WHEN 5 THEN '31162'
+        WHEN 6 THEN '20194'
+        ELSE '20200'
+    END,
+    CONCAT(N'Demo customer apartment ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    1
+FROM CustomerNumbers n
+INNER JOIN dbo.[User] u
+    ON u.username = CONCAT('customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2));
+
+;WITH CustomerNumbers AS (
+    SELECT 9 AS account_no
+    UNION ALL
+    SELECT account_no + 1
+    FROM CustomerNumbers
+    WHERE account_no < 58
+)
+INSERT INTO dbo.User_Address
+    (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default)
+SELECT
+    u.id,
+    u.full_name,
+    u.phone,
+    CASE n.account_no % 8
+        WHEN 0 THEN '26734'
+        WHEN 1 THEN '26743'
+        WHEN 2 THEN '31147'
+        WHEN 3 THEN '31162'
+        WHEN 4 THEN '20194'
+        WHEN 5 THEN '20200'
+        WHEN 6 THEN '00001'
+        ELSE '00010'
+    END,
+    CONCAT(N'Demo customer office ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    0
+FROM CustomerNumbers n
+INNER JOIN dbo.[User] u
+    ON u.username = CONCAT('customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2));
+
+-- Authentication samples: verified, unused verification and reset tokens.
+;WITH CustomerNumbers AS (
+    SELECT 9 AS account_no
+    UNION ALL
+    SELECT account_no + 1
+    FROM CustomerNumbers
+    WHERE account_no < 58
+)
+INSERT INTO dbo.Security_Token
+    (user_id, token_type, token_value, expiry_date, is_used)
+SELECT
+    u.id,
+    CASE WHEN n.account_no % 2 = 0 THEN 'EMAIL_VERIFY' ELSE 'PASSWORD_RESET' END,
+    CONCAT('seed-token-demo-customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    DATEADD(DAY, n.account_no, CAST('2026-08-01T00:00:00' AS DATETIME)),
+    CASE WHEN n.account_no % 3 = 0 THEN 1 ELSE 0 END
+FROM CustomerNumbers n
+INNER JOIN dbo.[User] u
+    ON u.username = CONCAT('customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2));
+GO
+
+/* =========================================================================
+   XX. VALIDATION
    ========================================================================= */
 
 IF EXISTS (
@@ -1872,6 +2032,20 @@ BEGIN
         1;
 END;
 
+IF (SELECT COUNT(*) FROM dbo.[User] WHERE email LIKE 'demo.customer%@example.com') <> 50
+BEGIN
+    THROW 51006,
+        'Seed validation failed: generated customer accounts are incomplete.',
+        1;
+END;
+
+IF (SELECT COUNT(*) FROM dbo.User_Address WHERE address_detail LIKE N'Demo customer%') <> 100
+BEGIN
+    THROW 51007,
+        'Seed validation failed: generated customer addresses are incomplete.',
+        1;
+END;
+
 PRINT 'ClothesShopDB was created successfully.';
 PRINT 'Demo password for all seeded accounts: 123456';
 PRINT 'Admin account: admin01 / 123456';
@@ -1880,6 +2054,8 @@ PRINT 'Staff account: staff01 / 123456';
 GO
 
 SELECT
+    (SELECT COUNT(*) FROM dbo.[User]) AS user_count,
+    (SELECT COUNT(*) FROM dbo.User_Address) AS user_address_count,
     (SELECT COUNT(*) FROM dbo.Product) AS product_count,
     (SELECT COUNT(*) FROM dbo.Product_Variant) AS variant_count,
     (SELECT COUNT(*) FROM dbo.Supplier) AS supplier_count,

@@ -266,6 +266,10 @@ CREATE TABLE dbo.Product_Variant (
         CONSTRAINT DF_ProductVariant_Sale DEFAULT (0),
     stock_quantity INT NOT NULL
         CONSTRAINT DF_ProductVariant_Stock DEFAULT (0),
+    reserved_quantity INT NOT NULL
+        CONSTRAINT DF_ProductVariant_Reserved DEFAULT (0),
+    available_quantity AS
+        (stock_quantity - reserved_quantity) PERSISTED,
     status VARCHAR(30) NOT NULL
         CONSTRAINT DF_ProductVariant_Status DEFAULT ('ACTIVE'),
     color NVARCHAR(100) NULL,
@@ -278,6 +282,10 @@ CREATE TABLE dbo.Product_Variant (
     CONSTRAINT CK_ProductVariant_ListPrice CHECK (list_price IS NULL OR list_price >= 0),
     CONSTRAINT CK_ProductVariant_SalePrice CHECK (sale_price >= 0),
     CONSTRAINT CK_ProductVariant_Stock CHECK (stock_quantity >= 0),
+    CONSTRAINT CK_ProductVariant_Reserved CHECK (
+        reserved_quantity >= 0
+        AND reserved_quantity <= stock_quantity
+    ),
     CONSTRAINT FK_ProductVariant_Product FOREIGN KEY (product_id)
         REFERENCES dbo.Product(id) ON DELETE CASCADE,
     CONSTRAINT FK_ProductVariant_PriceUser FOREIGN KEY (price_updated_by)
@@ -595,6 +603,8 @@ CREATE TABLE dbo.[Order] (
     total_payment DECIMAL(18,2) NOT NULL,
     order_status VARCHAR(50) NOT NULL
         CONSTRAINT DF_Order_Status DEFAULT ('PENDING'),
+    inventory_status VARCHAR(30) NOT NULL
+        CONSTRAINT DF_Order_InventoryStatus DEFAULT ('NONE'),
     note NVARCHAR(500) NULL,
     created_at DATETIME NOT NULL
         CONSTRAINT DF_Order_CreatedAt DEFAULT (GETDATE()),
@@ -606,6 +616,15 @@ CREATE TABLE dbo.[Order] (
     CONSTRAINT CK_Order_Discount CHECK (discount_amount >= 0),
     CONSTRAINT CK_Order_ShippingFee CHECK (shipping_fee >= 0),
     CONSTRAINT CK_Order_TotalPayment CHECK (total_payment >= 0),
+    CONSTRAINT CK_Order_InventoryStatus CHECK (
+        inventory_status IN (
+            'NONE',
+            'RESERVED',
+            'LEGACY_DEDUCTED',
+            'DEDUCTED',
+            'RELEASED'
+        )
+    ),
     CONSTRAINT FK_Order_User FOREIGN KEY (user_id)
         REFERENCES dbo.[User](id) ON DELETE SET NULL,
     CONSTRAINT FK_Order_Voucher FOREIGN KEY (voucher_id)
@@ -822,6 +841,17 @@ CREATE UNIQUE INDEX UX_ProductImage_VariantMain
       AND is_main = 1;
 CREATE INDEX IX_ProductVariant_ProductStatus ON dbo.Product_Variant(product_id, status);
 CREATE INDEX IX_ProductVariant_Stock ON dbo.Product_Variant(stock_quantity, status);
+CREATE INDEX IX_ProductVariant_AvailableStock
+    ON dbo.Product_Variant(product_id, status)
+    INCLUDE (
+        stock_quantity,
+        reserved_quantity,
+        available_quantity,
+        sale_price,
+        list_price,
+        color,
+        size
+    );
 CREATE INDEX IX_PriceHistory_VariantDate
     ON dbo.Product_Variant_Price_History(variant_id, changed_at DESC);
 CREATE INDEX IX_ImportReceipt_StatusDate
@@ -852,6 +882,14 @@ CREATE INDEX IX_Voucher_ActiveWindow
     ON dbo.Voucher(start_date, end_date, used_count, usage_limit);
 CREATE INDEX IX_Order_UserDate ON dbo.[Order](user_id, created_at DESC);
 CREATE INDEX IX_Order_StatusDate ON dbo.[Order](order_status, created_at DESC);
+CREATE INDEX IX_Order_Status_InventoryStatus
+    ON dbo.[Order](order_status, inventory_status)
+    INCLUDE (
+        user_id,
+        voucher_id,
+        shipment_id,
+        updated_at
+    );
 CREATE INDEX IX_OrderDetail_Variant ON dbo.Order_Detail(variant_id);
 CREATE INDEX IX_Feedback_ProductStatus ON dbo.Feedback(product_id, status, created_at DESC);
 GO
