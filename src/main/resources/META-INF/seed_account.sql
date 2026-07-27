@@ -703,7 +703,7 @@ INSERT INTO dbo.Voucher (
     limit_per_user, terminate_reason, category_id
 )
 VALUES
-('WELCOME50', N'50,000 VND welcome discount', 'FIXED_AMOUNT',
+('WELCOME50', N'50.000 ₫ welcome discount', 'FIXED_AMOUNT',
  50000, 50000, 150000,
  '2026-01-01', '2026-12-31 23:59:59', 1000, 1, 1, NULL, NULL),
 
@@ -1454,7 +1454,7 @@ INSERT INTO dbo.Voucher (
     limit_per_user, terminate_reason, category_id
 )
 VALUES
-('NEWCUSTOMER', N'New customer 70,000 VND off', 'FIXED_AMOUNT', 70000, 70000, 300000,
+('NEWCUSTOMER', N'New customer 70.000 ₫ off', 'FIXED_AMOUNT', 70000, 70000, 300000,
  '2026-07-01', '2026-12-31 23:59:59', 500, 1, 1, NULL, NULL),
 ('WOMEN20', N'20% womens collection', 'PERCENTAGE', 20, 100000, 400000,
  '2026-07-01', '2026-10-31 23:59:59', 300, 1, 1, NULL,
@@ -1462,11 +1462,11 @@ VALUES
 ('SPORT10', N'10% sportswear discount', 'PERCENTAGE', 10, 50000, 250000,
  '2026-07-01', '2026-09-30 23:59:59', 400, 1, 1, NULL,
  (SELECT id FROM dbo.Category WHERE slug = 'do-the-thao')),
-('FLASH100', N'100,000 VND flash sale', 'FIXED_AMOUNT', 100000, 100000, 600000,
+('FLASH100', N'100.000 ₫ flash sale', 'FIXED_AMOUNT', 100000, 100000, 600000,
  '2026-07-15', '2026-07-31 23:59:59', 100, 1, 1, NULL, NULL),
 ('VIP15', N'15% VIP member discount', 'PERCENTAGE', 15, 150000, 700000,
  '2026-01-01', '2026-12-31 23:59:59', 1000, 1, 1, NULL, NULL),
-('ACCESSORY50', N'50,000 VND accessory offer', 'FIXED_AMOUNT', 50000, 50000, 200000,
+('ACCESSORY50', N'50.000 ₫ accessory offer', 'FIXED_AMOUNT', 50000, 50000, 200000,
  '2026-06-01', '2026-12-31 23:59:59', 300, 1, 1, NULL,
  (SELECT id FROM dbo.Category WHERE slug = 'phu-kien'));
 GO

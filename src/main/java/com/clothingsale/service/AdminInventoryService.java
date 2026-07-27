@@ -18,7 +18,7 @@ public class AdminInventoryService {
     private static final int MAX_LINE_QUANTITY = 1_000_000;
 
     private static final BigDecimal MAX_UNIT_COST =
-            new BigDecimal("9999999999.99");
+            new BigDecimal("9999999999");
 
     private final AdminInventoryDAO inventoryDAO;
 
@@ -96,15 +96,21 @@ public class AdminInventoryService {
                 );
             }
 
+            if (detail.getUnitCost().stripTrailingZeros().scale() > 0) {
+                throw new IllegalArgumentException(
+                        "Unit cost must be a whole ₫ amount."
+                );
+            }
+
             BigDecimal normalizedUnitCost =
                     detail.getUnitCost().setScale(
-                            2,
-                            RoundingMode.HALF_UP
+                            0,
+                            RoundingMode.UNNECESSARY
                     );
 
             BigDecimal lineTotal = normalizedUnitCost
                     .multiply(BigDecimal.valueOf(detail.getQuantity()))
-                    .setScale(2, RoundingMode.HALF_UP);
+                    .setScale(0, RoundingMode.UNNECESSARY);
 
             detail.setUnitCost(normalizedUnitCost);
             detail.setLineTotal(lineTotal);

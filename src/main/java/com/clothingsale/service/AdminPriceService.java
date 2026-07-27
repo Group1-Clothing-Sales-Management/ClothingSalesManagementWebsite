@@ -9,7 +9,7 @@ import java.util.List;
 
 public class AdminPriceService {
 
-    private static final BigDecimal MAX_PRICE = new BigDecimal("9999999999999999.99");
+    private static final BigDecimal MAX_PRICE = new BigDecimal("999999999999999999");
     private final AdminPriceDAO priceDAO = new AdminPriceDAO();
 
     public List<PriceManagementItem> searchPrices(String keyword, String priceStatus) {
@@ -86,7 +86,11 @@ public class AdminPriceService {
             throw new IllegalArgumentException(fieldName + " is required.");
         }
 
-        BigDecimal normalizedPrice = price.setScale(2, RoundingMode.HALF_UP);
+        if (price.stripTrailingZeros().scale() > 0) {
+            throw new IllegalArgumentException(fieldName + " must be a whole ₫ amount.");
+        }
+
+        BigDecimal normalizedPrice = price.setScale(0, RoundingMode.UNNECESSARY);
 
         if (normalizedPrice.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(fieldName + " must be greater than zero.");

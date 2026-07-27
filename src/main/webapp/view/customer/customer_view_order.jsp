@@ -1019,23 +1019,23 @@
                                                             test="${not empty d.currentPrice and d.currentPrice ne d.price}">
                                                             <span class="old-price">
                                                                 <fmt:formatNumber value="${d.currentPrice}"
-                                                                    pattern="#,##0" /> &#8363;
+                                                                    pattern="#,##0" /> ₫
                                                             </span>
                                                             <span class="unit-price">
                                                                 <fmt:formatNumber value="${d.price}" pattern="#,##0" />
-                                                                &#8363;
+                                                                ₫
                                                             </span>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <span class="unit-price">
                                                                 <fmt:formatNumber value="${d.price}" pattern="#,##0" />
-                                                                &#8363;
+                                                                ₫
                                                             </span>
                                                         </c:otherwise>
                                                     </c:choose>
                                                     <span class="line-total">Line total:
                                                         <fmt:formatNumber value="${d.lineTotal}" pattern="#,##0" />
-                                                        &#8363;
+                                                        ₫
                                                     </span>
                                                 </div>
                                             </div>
@@ -1062,7 +1062,7 @@
                                                 <span class="order-used-voucher-discount">
                                                     -
                                                     <fmt:formatNumber value="${o.discountAmount}" pattern="#,##0" />
-                                                    &#8363;
+                                                    ₫
                                                 </span>
                                             </div>
                                         </c:if>
@@ -1070,7 +1070,7 @@
                                         <div class="order-total-row">
                                             <span class="order-total-label">Order Total:</span>
                                             <span class="order-total-value">
-                                                <fmt:formatNumber value="${o.totalPayment}" pattern="#,##0" /> &#8363;
+                                                <fmt:formatNumber value="${o.totalPayment}" pattern="#,##0" /> ₫
                                             </span>
                                         </div>
 

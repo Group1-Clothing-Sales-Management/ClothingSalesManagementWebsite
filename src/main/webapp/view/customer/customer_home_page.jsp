@@ -1232,14 +1232,14 @@
                                                     <span class="home-current-price">
                                                         <fmt:formatNumber value="${displayVariant.salePrice}"
                                                                           pattern="#,##0"/>
-                                                        &#8363;
+                                                        ₫
                                                     </span>
 
                                                     <c:if test="${displayVariant.listPrice > displayVariant.salePrice}">
                                                         <span class="home-list-price">
                                                             <fmt:formatNumber value="${displayVariant.listPrice}"
                                                                               pattern="#,##0"/>
-                                                            &#8363;
+                                                            ₫
                                                         </span>
                                                         <span class="home-discount">
                                                             -<fmt:formatNumber
@@ -1369,14 +1369,14 @@
                                                 <span class="home-current-price">
                                                     <fmt:formatNumber value="${displayVariant.salePrice}"
                                                                       pattern="#,##0"/>
-                                                    &#8363;
+                                                    ₫
                                                 </span>
 
                                                 <c:if test="${displayVariant.listPrice > displayVariant.salePrice}">
                                                     <span class="home-list-price">
                                                         <fmt:formatNumber value="${displayVariant.listPrice}"
                                                                           pattern="#,##0"/>
-                                                        &#8363;
+                                                        ₫
                                                     </span>
                                                     <span class="home-discount">
                                                         -<fmt:formatNumber
@@ -1520,12 +1520,12 @@
                                                 <span class="home-current-price">
                                                     <fmt:formatNumber value="${displayVariant.salePrice}"
                                                                       pattern="#,##0"/>
-                                                    &#8363;
+                                                    ₫
                                                 </span>
                                                 <span class="home-list-price">
                                                     <fmt:formatNumber value="${displayVariant.listPrice}"
                                                                       pattern="#,##0"/>
-                                                    &#8363;
+                                                    ₫
                                                 </span>
                                                 <span class="home-discount">
                                                     -<fmt:formatNumber

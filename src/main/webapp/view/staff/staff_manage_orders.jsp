@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -146,7 +146,7 @@
                                     </div>
                                     <div class="text-end">
                                         <div class="detail-label">Total payment</div>
-                                        <div class="fs-3 fw-bold text-dark"><fmt:formatNumber value="${order.totalPayment}" pattern="#,##0"/> VND</div>
+                                        <div class="fs-3 fw-bold text-dark"><fmt:formatNumber value="${order.totalPayment}" pattern="#,##0"/> ₫</div>
                                     </div>
                                 </div>
 
@@ -263,8 +263,8 @@
                                                             </c:choose>
                                                         </td>
                                                         <td class="text-center fw-semibold">${item.quantity}</td>
-                                                        <td class="text-end"><fmt:formatNumber value="${item.price}" pattern="#,##0"/> VND</td>
-                                                        <td class="text-end pe-4 fw-bold"><fmt:formatNumber value="${item.lineTotal}" pattern="#,##0"/> VND</td>
+                                                        <td class="text-end"><fmt:formatNumber value="${item.price}" pattern="#,##0"/> ₫</td>
+                                                        <td class="text-end pe-4 fw-bold"><fmt:formatNumber value="${item.lineTotal}" pattern="#,##0"/> ₫</td>
                                                     </tr>
                                                 </c:forEach>
                                                 </tbody>
@@ -435,7 +435,7 @@
                                                     <div class="fw-semibold">${o.recipientName}</div>
                                                     <div class="subtext">${o.recipientPhone}</div>
                                                 </td>
-                                                <td class="text-end fw-bold"><fmt:formatNumber value="${o.totalPayment}" pattern="#,##0"/> VND</td>
+                                                <td class="text-end fw-bold"><fmt:formatNumber value="${o.totalPayment}" pattern="#,##0"/> ₫</td>
                                                 <td>
                                                     <div class="fw-semibold">${not empty o.paymentMethod ? o.paymentMethod : 'N/A'}</div>
                                                     <c:choose>
@@ -529,7 +529,7 @@
                                     <div class="subtext mb-1">Recipient: ${order.recipientName} - ${order.recipientPhone}</div>
                                     <div class="subtext mb-3">
                                         Amount to transfer:
-                                        <strong><fmt:formatNumber value="${vnpayTransferAmount}" pattern="#,##0"/> VND</strong>
+                                        <strong><fmt:formatNumber value="${vnpayTransferAmount}" pattern="#,##0"/> ₫</strong>
                                     </div>
 
                                     <div class="detail-label">Transfer content</div>

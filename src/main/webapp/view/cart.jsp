@@ -4,7 +4,9 @@
     java.util.Collection items = (java.util.Collection) request.getAttribute("items");
     java.util.Map variantsByProductId = (java.util.Map) request.getAttribute("variantsByProductId");
     String ctx = request.getContextPath();
-    java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
+    java.text.NumberFormat currencyFormat = java.text.NumberFormat.getNumberInstance(new java.util.Locale("vi", "VN"));
+    currencyFormat.setMinimumFractionDigits(0);
+    currencyFormat.setMaximumFractionDigits(0);
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -1363,7 +1365,7 @@
                         </div>
 
                         <div class="price-col">
-                            <div class="item-price"><%= currencyFormat.format(price) %></div>
+                            <div class="item-price"><%= currencyFormat.format(price) %> ₫</div>
                         </div>
 
                         <form action="<%= ctx %>/cart/update" method="post" class="cart-update-form">
@@ -1456,7 +1458,7 @@
                         </form>
 
                         <div class="amount-col">
-                            <%= currencyFormat.format(itemTotal) %>
+                            <%= currencyFormat.format(itemTotal) %> ₫
                         </div>
 
                         <div class="action-col">
@@ -1488,7 +1490,7 @@
                     <div class="selected-summary">
                         <div class="selected-summary-main">
                             <span>Total (<span id="selectedQuantity"><%= totalQuantity %></span> item(s)):</span>
-                            <strong id="selectedTotal"><%= currencyFormat.format(total) %></strong>
+                            <strong id="selectedTotal"><%= currencyFormat.format(total) %> ₫</strong>
                         </div>
                         <div class="saving-line">
                             Shipping and payment are handled at checkout.
@@ -1918,9 +1920,9 @@
         function formatVnd(value) {
             try {
                 return new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND'
-                }).format(value);
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value) + ' \u20ab';
             } catch (error) {
                 return value.toLocaleString('vi-VN') + ' \u20ab';
             }

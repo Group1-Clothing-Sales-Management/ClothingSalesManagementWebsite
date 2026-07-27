@@ -1,5 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,7 +77,7 @@
                 <span class="admin-stat-icon"><i class="fa-solid fa-coins"></i></span>
                 <div>
                     <div class="admin-stat-label">Total Revenue</div>
-                    <p class="admin-stat-value">${reportData.totalRevenue} VND</p>
+                    <p class="admin-stat-value"><fmt:formatNumber value="${reportData.totalRevenue}" pattern="#,##0"/> ₫</p>
                 </div>
             </div>
         </div>
@@ -148,7 +149,7 @@
         data: {
             labels: timeLabels,
             datasets: [{
-                label: 'Revenue (VND)',
+                label: 'Revenue (₫)',
                 data: timeData,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',

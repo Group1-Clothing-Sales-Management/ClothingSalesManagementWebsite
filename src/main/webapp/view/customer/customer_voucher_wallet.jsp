@@ -382,7 +382,7 @@
                                 <fmt:formatNumber value="${v.discountValue}" pattern="#0"/>% off
                             </c:when>
                             <c:otherwise>
-                                <fmt:formatNumber value="${v.discountValue}" pattern="#,##0"/>đ off
+                                <fmt:formatNumber value="${v.discountValue}" pattern="#,##0"/> ₫ off
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -393,12 +393,12 @@
                     <h2><c:out value="${v.title}"/></h2>
                     <p class="condition">
                         <i class="bi bi-bag-check"></i>
-                        Minimum order <fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/>đ
+                        Minimum order <fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/> ₫
                     </p>
                     <c:if test="${v.discountType eq 'PERCENTAGE' && v.maxDiscountAmount != null}">
                         <p class="condition">
                             <i class="bi bi-arrow-down-circle"></i>
-                            Max discount <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/>đ
+                            Max discount <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/> ₫
                         </p>
                     </c:if>
                     <p class="expiry">

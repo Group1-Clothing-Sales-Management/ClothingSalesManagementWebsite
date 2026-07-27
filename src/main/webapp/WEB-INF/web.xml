@@ -3,6 +3,10 @@
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
    version="6.0">
+    <context-param>
+        <param-name>jakarta.servlet.jsp.jstl.fmt.locale</param-name>
+        <param-value>vi_VN</param-value>
+    </context-param>
     <servlet>
         <servlet-name>WishlistController</servlet-name>
         <servlet-class>com.clothingsale.controller.WishlistController</servlet-class>

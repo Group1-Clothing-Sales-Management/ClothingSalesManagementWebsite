@@ -74,7 +74,7 @@
                         <div class="info-box h-100">
                             <div class="info-label">Cost Price</div>
                             <div class="info-value money">
-                                <fmt:formatNumber value="${priceItem.costPrice}" pattern="#,##0.00"/> VND
+                                <fmt:formatNumber value="${priceItem.costPrice}" pattern="#,##0"/> ₫
                             </div>
                             <div class="small text-muted mt-1">Updated by Inventory</div>
                         </div>
@@ -84,7 +84,7 @@
                         <div class="info-box h-100">
                             <div class="info-label">Current List Price</div>
                             <div class="info-value money">
-                                <fmt:formatNumber value="${priceItem.listPrice}" pattern="#,##0.00"/> VND
+                                <fmt:formatNumber value="${priceItem.listPrice}" pattern="#,##0"/> ₫
                             </div>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
                         <div class="info-box h-100">
                             <div class="info-label">Current Sale Price</div>
                             <div class="info-value money">
-                                <fmt:formatNumber value="${priceItem.salePrice}" pattern="#,##0.00"/> VND
+                                <fmt:formatNumber value="${priceItem.salePrice}" pattern="#,##0"/> ₫
                             </div>
                         </div>
                     </div>
@@ -140,8 +140,8 @@
                                     <label for="listPrice" class="form-label fw-semibold">List Price</label>
                                     <div class="input-group">
                                         <input type="number" id="listPrice" name="listPrice" class="form-control"
-                                               value="${priceItem.listPrice}" min="0.01" step="0.01" required>
-                                        <span class="input-group-text">VND</span>
+                                               value="${priceItem.listPrice}" min="1" step="1" required>
+                                        <span class="input-group-text">₫</span>
                                     </div>
                                     <div class="form-text">Original price displayed before discount.</div>
                                 </div>
@@ -150,8 +150,8 @@
                                     <label for="salePrice" class="form-label fw-semibold">Sale Price</label>
                                     <div class="input-group">
                                         <input type="number" id="salePrice" name="salePrice" class="form-control"
-                                               value="${priceItem.salePrice}" min="0.01" step="0.01" required>
-                                        <span class="input-group-text">VND</span>
+                                               value="${priceItem.salePrice}" min="1" step="1" required>
+                                        <span class="input-group-text">₫</span>
                                     </div>
                                     <div class="form-text">Current price charged to customers.</div>
                                 </div>
@@ -197,7 +197,7 @@
                         <div class="price-preview">
                             <div class="d-flex justify-content-between mb-3">
                                 <span class="text-muted">Estimated profit</span>
-                                <strong id="profitPreview">0 VND</strong>
+                                <strong id="profitPreview">0 ₫</strong>
                             </div>
 
                             <div class="d-flex justify-content-between mb-3">
@@ -262,27 +262,27 @@
                                 <td class="text-end money">
                                     <c:choose>
                                         <c:when test="${not empty history.oldListPrice}">
-                                            <fmt:formatNumber value="${history.oldListPrice}" pattern="#,##0.00"/>
+                                            <fmt:formatNumber value="${history.oldListPrice}" pattern="#,##0"/> ₫
                                         </c:when>
                                         <c:otherwise>—</c:otherwise>
                                     </c:choose>
                                 </td>
 
                                 <td class="text-end money">
-                                    <fmt:formatNumber value="${history.newListPrice}" pattern="#,##0.00"/>
+                                    <fmt:formatNumber value="${history.newListPrice}" pattern="#,##0"/> ₫
                                 </td>
 
                                 <td class="text-end money">
                                     <c:choose>
                                         <c:when test="${not empty history.oldSalePrice}">
-                                            <fmt:formatNumber value="${history.oldSalePrice}" pattern="#,##0.00"/>
+                                            <fmt:formatNumber value="${history.oldSalePrice}" pattern="#,##0"/> ₫
                                         </c:when>
                                         <c:otherwise>—</c:otherwise>
                                     </c:choose>
                                 </td>
 
                                 <td class="text-end money">
-                                    <fmt:formatNumber value="${history.newSalePrice}" pattern="#,##0.00"/>
+                                    <fmt:formatNumber value="${history.newSalePrice}" pattern="#,##0"/> ₫
                                 </td>
 
                                 <td style="min-width: 190px;">
@@ -357,8 +357,9 @@
 
     function formatMoney(value) {
         return new Intl.NumberFormat("vi-VN", {
-            maximumFractionDigits: 2
-        }).format(value) + " VND";
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value) + " ₫";
     }
 
     function showPriceError(message, inputElement) {

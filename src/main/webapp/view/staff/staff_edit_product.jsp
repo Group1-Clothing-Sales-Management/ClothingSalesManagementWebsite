@@ -49,6 +49,9 @@
     List<StaffProductModel> productVariants = (List<StaffProductModel>) request.getAttribute("productVariants");
     if (product == null) { response.sendRedirect(request.getContextPath() + "/StaffManageProducts"); return; }
     String statusClass = "ACTIVE".equals(product.getStatus()) ? "badge-active" : "badge-inactive";
+    java.text.NumberFormat vndFormat = java.text.NumberFormat.getNumberInstance(new java.util.Locale("vi", "VN"));
+    vndFormat.setMinimumFractionDigits(0);
+    vndFormat.setMaximumFractionDigits(0);
 %>
 
 <jsp:include page="/view/admin/common/admin_layout_start.jsp">
@@ -117,11 +120,11 @@
                         </div>
                         <div class="col-md-6">
                             <div class="field-label">Purchase Cost</div>
-                            <div class="field-readonly"><%= (long)product.getCostPrice().doubleValue() %> VND</div>
+                            <div class="field-readonly"><%= vndFormat.format(product.getCostPrice()) %> ₫</div>
                         </div>
                         <div class="col-md-6">
                             <div class="field-label">Sale Price</div>
-                            <div class="field-readonly"><%= (long)product.getSalePrice().doubleValue() %> VND</div>
+                            <div class="field-readonly"><%= vndFormat.format(product.getSalePrice()) %> ₫</div>
                         </div>
                         <div class="col-md-6">
                             <div class="field-label">Brand</div>

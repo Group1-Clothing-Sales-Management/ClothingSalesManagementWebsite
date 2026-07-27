@@ -171,8 +171,8 @@ public class AdminPriceController extends HttpServlet {
     private BigDecimal parseMoney(String rawValue, String fieldName) {
         String value = rawValue == null ? "" : rawValue.trim();
 
-        if (!value.matches("\\d+(\\.\\d{1,2})?")) {
-            throw new IllegalArgumentException(fieldName + " is invalid.");
+        if (!value.matches("\\d+")) {
+            throw new IllegalArgumentException(fieldName + " must be a whole ₫ amount.");
         }
 
         try {

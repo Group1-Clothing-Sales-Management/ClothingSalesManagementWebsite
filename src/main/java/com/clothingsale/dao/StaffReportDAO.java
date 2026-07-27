@@ -43,7 +43,7 @@ public class StaffReportDAO {
             params.add(Integer.parseInt(categoryId.trim()));
         }
 
-        // Trừ phí ship (30.000đ/order) khỏi total_payment trước khi trừ tiếp refund
+        // Trừ phí ship (30.000 ₫/order) khỏi total_payment trước khi trừ tiếp refund
         String sqlOverview = "SELECT SUM(COALESCE(o.total_payment, 0) - " + SHIPPING_FEE_PER_ORDER
                 + " - COALESCE(refund.refund_total, 0)) AS TotalRev, COUNT(o.id) AS TotalOrders "
                 + "FROM [Order] o "
@@ -66,7 +66,7 @@ public class StaffReportDAO {
             dateGroupFormat = "CAST(YEAR(o.created_at) AS VARCHAR)";
         }
 
-        // Trừ phí ship (30.000đ/order) khỏi total_payment trước khi trừ tiếp refund
+        // Trừ phí ship (30.000 ₫/order) khỏi total_payment trước khi trừ tiếp refund
         String sqlTimeBreakdown = "SELECT " + dateGroupFormat
                 + " AS Period, SUM(COALESCE(o.total_payment, 0) - " + SHIPPING_FEE_PER_ORDER
                 + " - COALESCE(refund.refund_total, 0)) AS Revenue " +
@@ -85,7 +85,7 @@ public class StaffReportDAO {
         sqlTimeBreakdownWithGroup.append(" GROUP BY ").append(dateGroupFormat).append(" ORDER BY Period ASC");
 
         // Category breakdown tính theo od.price * od.quantity (giá sản phẩm), không
-        // liên quan đến total_payment/phí ship nên KHÔNG trừ 30.000đ ở đây
+        // liên quan đến total_payment/phí ship nên KHÔNG trừ 30.000 ₫ ở đây
         StringBuilder sqlCatBreakdown = new StringBuilder(
                 "SELECT c.category_name, SUM(COALESCE((od.price * od.quantity), 0) - COALESCE(refund.refund_value, 0)) AS CatRevenue "
                         +

@@ -54,7 +54,7 @@
                     <div class="col-md-2"><div class="label">Total Quantity</div><div><c:out value="${receipt.totalQuantity}"/> pcs</div></div>
                     <div class="col-md-4"><div class="label">Created at</div><div><fmt:formatDate value="${receipt.createdAt}" pattern="yyyy-MM-dd HH:mm"/></div></div>
                     <div class="col-md-4"><div class="label">Vendor reference</div><div><c:out value="${receipt.vendorReference}" default="—"/></div></div>
-                    <div class="col-md-4"><div class="label">Total Import Cost</div><div class="fw-bold"><fmt:formatNumber value="${receipt.totalAmount}" pattern="#,##0.00"/> VND</div></div>
+                    <div class="col-md-4"><div class="label">Total Import Cost</div><div class="fw-bold"><fmt:formatNumber value="${receipt.totalAmount}" pattern="#,##0"/> ₫</div></div>
                 </div>
 
                 <c:if test="${not empty receipt.note}">
@@ -100,8 +100,8 @@
                                 <td><c:out value="${detail.sku}"/></td>
                                 <td><c:out value="${detail.attributeDetails}"/></td>
                                 <td class="text-end"><c:out value="${detail.quantity}"/></td>
-                                <td class="text-end"><fmt:formatNumber value="${detail.unitCost}" pattern="#,##0.00"/> VND</td>
-                                <td class="text-end fw-semibold"><fmt:formatNumber value="${detail.lineTotal}" pattern="#,##0.00"/> VND</td>
+                                <td class="text-end"><fmt:formatNumber value="${detail.unitCost}" pattern="#,##0"/> ₫</td>
+                                <td class="text-end fw-semibold"><fmt:formatNumber value="${detail.lineTotal}" pattern="#,##0"/> ₫</td>
                             </tr>
                         </c:forEach>
                         <c:if test="${empty receiptDetails}">

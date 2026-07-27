@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -86,12 +86,12 @@
                                     <c:choose>
                                         <c:when test="${isActive || isExpired}">
                                             <input type="hidden" name="discountType" value="${voucher.discountType}">
-                                            <input type="text" class="form-control bg-light" value="${voucher.discountType == 'PERCENTAGE' ? 'Percentage (%)' : 'Fixed Amount (đ)'}" disabled>
+                                            <input type="text" class="form-control bg-light" value="${voucher.discountType == 'PERCENTAGE' ? 'Percentage (%)' : 'Fixed Amount (₫)'}" disabled>
                                         </c:when>
                                         <c:otherwise>
                                             <select class="form-select" id="discountType" name="discountType" onchange="toggleDiscountFields()">
                                                 <option value="PERCENTAGE" ${voucher.discountType == 'PERCENTAGE' ? 'selected' : ''}>Percentage (%)</option>
-                                                <option value="FIXED_AMOUNT" ${voucher.discountType == 'FIXED_AMOUNT' ? 'selected' : ''}>Fixed Amount (đ)</option>
+                                                <option value="FIXED_AMOUNT" ${voucher.discountType == 'FIXED_AMOUNT' ? 'selected' : ''}>Fixed Amount (₫)</option>
                                             </select>
                                         </c:otherwise>
                                     </c:choose>
@@ -104,16 +104,16 @@
                                 </div>
 
                                 <div class="form-group col-md-4" id="maxDiscountGroup">
-                                    <label for="maxDiscountAmount" class="fw-bold">Max Discount Limit (đ)</label>
-                                    <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" min="0" 
+                                    <label for="maxDiscountAmount" class="fw-bold">Max Discount Limit (₫)</label>
+                                    <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" min="0" step="1"
                                            value="${voucher.maxDiscountAmount}" ${(isActive || isExpired) ? 'readonly style="background-color: #e9ecef;"' : ''}>
                                 </div>
                             </div>
 
                             <div class="row g-3 mt-0">
                                 <div class="form-group col-md-3">
-                                    <label for="minOrderValue" class="fw-bold">Min Order Value (đ)</label>
-                                    <input type="number" class="form-control" id="minOrderValue" name="minOrderValue" min="0" 
+                                    <label for="minOrderValue" class="fw-bold">Min Order Value (₫)</label>
+                                    <input type="number" class="form-control" id="minOrderValue" name="minOrderValue" min="0" step="1"
                                            value="${voucher.minOrderValue}" ${(isActive || isExpired) ? 'readonly style="background-color: #e9ecef;"' : ''}>
                                 </div>
 
@@ -217,6 +217,8 @@
 
                 var maxDiscountGroup = document.getElementById("maxDiscountGroup");
                 var maxDiscountInput = document.getElementById("maxDiscountAmount");
+                var discountInput = document.getElementById("discountValue");
+                discountInput.step = type.value === "FIXED_AMOUNT" ? "1" : "0.01";
 
                 if (type.value === "FIXED_AMOUNT") {
                     maxDiscountGroup.style.display = "none";

@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -153,14 +153,14 @@
                                                         <c:choose>
                                                             <c:when test="${v.discountType == 'PERCENTAGE'}">
                                                                 <span class="text-success fw-bold">${v.discountValue}% Off</span>
-                                                                <div class="small text-muted">Max: <fmt:formatNumber value="${v.maxDiscountAmount}" type="currency" currencySymbol="đ"/></div>
+                                                                <div class="small text-muted">Max: <fmt:formatNumber value="${v.maxDiscountAmount}" pattern="#,##0"/> ₫</div>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <span class="text-success fw-bold"><fmt:formatNumber value="${v.discountValue}" type="currency" currencySymbol="đ"/> Off</span>
+                                                                <span class="text-success fw-bold"><fmt:formatNumber value="${v.discountValue}" pattern="#,##0"/> ₫ Off</span>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </td>
-                                                    <td><fmt:formatNumber value="${v.minOrderValue}" type="currency" currencySymbol="đ"/></td>
+                                                    <td><fmt:formatNumber value="${v.minOrderValue}" pattern="#,##0"/> ₫</td>
                                                     <td>
                                                         <div class="fw-bold">${v.usedCount} / ${v.usageLimit} Used</div>
                                                         <div class="small text-muted">Max per User: <strong>${v.limitPerUser}</strong></div>

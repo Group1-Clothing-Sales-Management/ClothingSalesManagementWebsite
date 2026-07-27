@@ -527,12 +527,18 @@ public class AdminInventoryController extends HttpServlet {
             String rawValue,
             String fieldName
     ) {
-        try {
-            return new BigDecimal(
-                    rawValue == null
-                            ? ""
-                            : rawValue.trim()
+        String value = rawValue == null
+                ? ""
+                : rawValue.trim();
+
+        if (!value.matches("\\d+")) {
+            throw new IllegalArgumentException(
+                    fieldName + " must be a whole ₫ amount."
             );
+        }
+
+        try {
+            return new BigDecimal(value);
 
         } catch (NumberFormatException exception) {
             throw new IllegalArgumentException(

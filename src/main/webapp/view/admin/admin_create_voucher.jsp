@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -81,7 +81,7 @@
                                     <label for="discountType" class="fw-bold">Discount Type <span class="text-danger">*</span></label>
                                     <select class="form-select" id="discountType" name="discountType" onchange="toggleDiscountFields()">
                                         <option value="PERCENTAGE" ${oldVoucher.discountType == 'PERCENTAGE' ? 'selected' : ''}>Percentage (%)</option>
-                                        <option value="FIXED_AMOUNT" ${oldVoucher.discountType == 'FIXED_AMOUNT' ? 'selected' : ''}>Fixed Amount (đ)</option>
+                                        <option value="FIXED_AMOUNT" ${oldVoucher.discountType == 'FIXED_AMOUNT' ? 'selected' : ''}>Fixed Amount (₫)</option>
                                     </select>
                                 </div>
 
@@ -92,17 +92,17 @@
                                 </div>
 
                                 <div class="form-group col-md-4" id="maxDiscountGroup">
-                                    <label for="maxDiscountAmount" class="fw-bold">Max Discount Limit (đ) <span class="text-danger">*</span></label>
+                                    <label for="maxDiscountAmount" class="fw-bold">Max Discount Limit (₫) <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" 
-                                           min="0" placeholder="Caps the maximum reward deduction" value="${oldVoucher.maxDiscountAmount}">
+                                           min="0" step="1" placeholder="Caps the maximum reward deduction" value="${oldVoucher.maxDiscountAmount}">
                                 </div>
                             </div>
 
                             <div class="row g-3 mt-0">
                                 <div class="form-group col-md-3">
-                                    <label for="minOrderValue" class="fw-bold">Min Order Value (đ)</label>
+                                    <label for="minOrderValue" class="fw-bold">Min Order Value (₫)</label>
                                     <input type="number" class="form-control" id="minOrderValue" name="minOrderValue" 
-                                           min="0" placeholder="Minimum required basket cost" 
+                                           min="0" step="1" placeholder="Minimum required basket cost"
                                            value="${oldVoucher.minOrderValue != null ? oldVoucher.minOrderValue : 0}">
                                 </div>
 
@@ -168,8 +168,10 @@
         <script>
             function toggleDiscountFields() {
                 var type = document.getElementById("discountType").value;
+                var discountInput = document.getElementById("discountValue");
                 var maxDiscountGroup = document.getElementById("maxDiscountGroup");
                 var maxDiscountInput = document.getElementById("maxDiscountAmount");
+                discountInput.step = type === "FIXED_AMOUNT" ? "1" : "0.01";
 
                 if (type === "FIXED_AMOUNT") {
                     maxDiscountGroup.style.display = "none";
@@ -196,8 +198,10 @@
             });
             function toggleDiscountFields() {
                 var type = document.getElementById("discountType").value;
+                var discountInput = document.getElementById("discountValue");
                 var maxDiscountGroup = document.getElementById("maxDiscountGroup");
                 var maxDiscountInput = document.getElementById("maxDiscountAmount");
+                discountInput.step = type === "FIXED_AMOUNT" ? "1" : "0.01";
 
                 if (type === "FIXED_AMOUNT") {
                     maxDiscountGroup.style.display = "none";

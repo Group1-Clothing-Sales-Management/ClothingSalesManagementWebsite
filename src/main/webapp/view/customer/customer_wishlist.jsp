@@ -398,7 +398,7 @@
                                     <div class="wishlist-price mb-1">
                                         <c:choose>
                                             <c:when test="${not empty item.salePrice}">
-                                                <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> &#8363;
+                                                <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> ₫
                                             </c:when>
                                             <c:otherwise>
                                                 Contact

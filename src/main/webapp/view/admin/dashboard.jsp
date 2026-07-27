@@ -946,11 +946,14 @@
 
                 const revenueTrend = ${revenueTrendJson};
                 const orderStatusData = ${orderStatusJson};
-                const moneyFormatter = new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'VND',
+                const moneyFormatter = new Intl.NumberFormat('vi-VN', {
+                    minimumFractionDigits: 0,
                     maximumFractionDigits: 0
                 });
+
+                function formatVnd(value) {
+                    return moneyFormatter.format(Number(value || 0)) + ' ₫';
+                }
 
                 const revenueCanvas = document.getElementById('revenueChart');
                 if (revenueCanvas) {
@@ -1004,9 +1007,9 @@
                                     callbacks: {
                                         label: function (context) {
                                             if (context.dataset.label === 'Revenue') {
-                                                return ' Revenue: ' + moneyFormatter.format(context.parsed.y || 0);
+                                                return ' Revenue: ' + formatVnd(context.parsed.y || 0);
                                             }
-                                            return ' Completed Sales: ' + (context.parsed.y || 0).toLocaleString('en-US');
+                                            return ' Completed Sales: ' + (context.parsed.y || 0).toLocaleString('vi-VN');
                                         }
                                     }
                                 }
@@ -1022,11 +1025,7 @@
                                     grid: {color: '#eef2f7'},
                                     ticks: {
                                         callback: function (value) {
-                                            if (value >= 1000000)
-                                                return (value / 1000000) + 'M ₫';
-                                            if (value >= 1000)
-                                                return (value / 1000) + 'K ₫';
-                                            return value + ' ₫';
+                                            return formatVnd(value);
                                         }
                                     }
                                 },
@@ -1076,7 +1075,7 @@
                                 tooltip: {
                                     callbacks: {
                                         label: function (context) {
-                                            return ' ' + context.label + ': ' + context.parsed.toLocaleString('en-US');
+                                            return ' ' + context.label + ': ' + context.parsed.toLocaleString('vi-VN');
                                         }
                                     }
                                 }

@@ -520,7 +520,7 @@
 
                                                     <strong id="currentCost"
                                                             class="money">
-                                                        0 VND
+                                                        0 ₫
                                                     </strong>
                                                 </div>
 
@@ -531,7 +531,7 @@
 
                                                     <strong id="currentSale"
                                                             class="money text-primary">
-                                                        0 VND
+                                                        0 ₫
                                                     </strong>
                                                 </div>
 
@@ -562,13 +562,13 @@
 
                                     <label for="unitCost"
                                            class="form-label fw-semibold required">
-                                        Unit Cost per Item (VND)
+                                        Unit Cost per Item (₫)
                                     </label>
 
                                     <input id="unitCost"
                                            type="number"
-                                           min="0.01"
-                                           step="0.01"
+                                           min="1"
+                                           step="1"
                                            class="form-control"
                                            placeholder="Enter cost for one item">
                                 </div>
@@ -674,7 +674,7 @@
 
                                 <div id="grandTotal"
                                      class="fs-3 fw-bold money">
-                                    0 VND
+                                    0 ₫
                                 </div>
                             </div>
 
@@ -780,17 +780,17 @@
                 let selectedVariant = null;
 
                 const numberFormatter = new Intl.NumberFormat(
-                        'en-US',
+                        'vi-VN',
                         {
                             minimumFractionDigits: 0,
-                            maximumFractionDigits: 2
+                            maximumFractionDigits: 0
                         }
                 );
 
                 function formatVnd(value) {
                     const numberValue = Number(value || 0);
 
-                    return numberFormatter.format(numberValue) + ' VND';
+                    return numberFormatter.format(numberValue) + ' ₫';
                 }
 
                 function escapeHtml(value) {
@@ -911,7 +911,7 @@
                      */
                     unitCostInput.value =
                             selectedVariant.cost > 0
-                            ? selectedVariant.cost.toFixed(2)
+                            ? selectedVariant.cost.toFixed(0)
                             : '';
                 }
 
@@ -1097,7 +1097,7 @@
                                 + '<input type="hidden" '
                                 + 'name="unitCost[]" '
                                 + 'value="'
-                                + item.unitCost.toFixed(2)
+                                + item.unitCost.toFixed(0)
                                 + '">'
 
                                 + '</td>';

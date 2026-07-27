@@ -289,13 +289,13 @@
                                         </td>
 
                                         <td class="text-end money">
-                                            <fmt:formatNumber value="${item.costPrice}" pattern="#,##0.00"/>VND
+                                            <fmt:formatNumber value="${item.costPrice}" pattern="#,##0"/> ₫
                                         </td>
 
                                         <td class="text-end money">
                                             <c:choose>
                                                 <c:when test="${item.listPrice gt 0}">
-                                                    $<fmt:formatNumber value="${item.listPrice}" pattern="#,##0.00"/>
+                                                    <fmt:formatNumber value="${item.listPrice}" pattern="#,##0"/> ₫
                                                 </c:when>
 
                                                 <c:otherwise>
@@ -307,7 +307,7 @@
                                         <td class="text-end money">
                                             <c:choose>
                                                 <c:when test="${item.salePrice gt 0}">
-                                                    $<fmt:formatNumber value="${item.salePrice}" pattern="#,##0.00"/>
+                                                    <fmt:formatNumber value="${item.salePrice}" pattern="#,##0"/> ₫
                                                 </c:when>
 
                                                 <c:otherwise>

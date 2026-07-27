@@ -749,7 +749,7 @@
                                 <c:if test="${not empty p.variants}">
 
                                     <div class="price mb-2">
-                                        <fmt:formatNumber value="${p.variants[0].salePrice}" pattern="#,##0"/> &#8363;
+                                        <fmt:formatNumber value="${p.variants[0].salePrice}" pattern="#,##0"/> ₫
                                     </div>
 
                                     <form action="${pageContext.request.contextPath}/wishlist/toggle"
@@ -796,7 +796,7 @@
                                                         data-cart-quantity="${not empty sessionScope.cart[v.id] ? sessionScope.cart[v.id].quantity : 0}"
                                                         data-attributes="${v.attributeDetails}">
 
-                                                    ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> &#8363;
+                                                    ${v.attributeDetails} - <fmt:formatNumber value="${v.salePrice}" pattern="#,##0"/> ₫
 
                                                 </option>
 

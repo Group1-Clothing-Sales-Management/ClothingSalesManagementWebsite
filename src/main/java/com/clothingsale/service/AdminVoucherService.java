@@ -31,6 +31,11 @@ public class AdminVoucherService {
             return "Per-customer limit must be at least 1!";
         }
 
+        String moneyValidationError = validateVndAmounts(voucher);
+        if (moneyValidationError != null) {
+            return moneyValidationError;
+        }
+
         if ("PERCENTAGE".equals(voucher.getDiscountType())) {
             if (voucher.getDiscountValue().compareTo(BigDecimal.ZERO) <= 0
                     || voucher.getDiscountValue().compareTo(new BigDecimal("100")) > 0) {
@@ -71,6 +76,11 @@ public class AdminVoucherService {
 
         if (voucher.getLimitPerUser() <= 0) {
             return "Per-customer limit must be at least 1!";
+        }
+
+        String moneyValidationError = validateVndAmounts(voucher);
+        if (moneyValidationError != null) {
+            return moneyValidationError;
         }
 
         java.util.Date now = new java.util.Date();
@@ -139,5 +149,29 @@ public class AdminVoucherService {
 
         boolean isSuccess = voucherDAO.terminateVoucherEarly(id, newEndDate, reason.trim());
         return isSuccess ? "SUCCESS" : "System error occurred while scheduling early termination.";
+    }
+
+    private String validateVndAmounts(Voucher voucher) {
+        if (!isWholeVnd(voucher.getMinOrderValue())
+                || voucher.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
+            return "Minimum order value must be a non-negative whole ₫ amount!";
+        }
+
+        if (voucher.getMaxDiscountAmount() != null
+                && (!isWholeVnd(voucher.getMaxDiscountAmount())
+                || voucher.getMaxDiscountAmount().compareTo(BigDecimal.ZERO) < 0)) {
+            return "Maximum discount must be a non-negative whole ₫ amount!";
+        }
+
+        if ("FIXED_AMOUNT".equals(voucher.getDiscountType())
+                && !isWholeVnd(voucher.getDiscountValue())) {
+            return "Fixed discount must be a whole ₫ amount!";
+        }
+
+        return null;
+    }
+
+    private boolean isWholeVnd(BigDecimal value) {
+        return value != null && value.stripTrailingZeros().scale() <= 0;
     }
 }

@@ -168,8 +168,8 @@
                                 <td class="text-end fw-bold money">
                                     <fmt:formatNumber
                                         value="${receipt.totalAmount}"
-                                        pattern="#,##0.00"/>
-                                    VND
+                                        pattern="#,##0"/>
+                                    ₫
                                 </td>
 
                                 <td class="text-muted">

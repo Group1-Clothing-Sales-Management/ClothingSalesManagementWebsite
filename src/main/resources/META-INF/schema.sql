@@ -259,10 +259,10 @@ CREATE TABLE dbo.Product_Variant (
     id INT IDENTITY(1,1) NOT NULL,
     product_id INT NOT NULL,
     sku VARCHAR(50) NOT NULL,
-    cost_price DECIMAL(18,2) NOT NULL
+    cost_price DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_ProductVariant_Cost DEFAULT (0),
-    list_price DECIMAL(18,2) NULL,
-    sale_price DECIMAL(18,2) NOT NULL
+    list_price DECIMAL(18,0) NULL,
+    sale_price DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_ProductVariant_Sale DEFAULT (0),
     stock_quantity INT NOT NULL
         CONSTRAINT DF_ProductVariant_Stock DEFAULT (0),
@@ -318,11 +318,11 @@ CREATE TABLE dbo.Product_Variant_Price_History (
     sku_snapshot VARCHAR(50) NOT NULL,
     color_snapshot NVARCHAR(100) NULL,
     size_snapshot NVARCHAR(100) NULL,
-    old_list_price DECIMAL(18,2) NULL,
-    new_list_price DECIMAL(18,2) NOT NULL,
-    old_sale_price DECIMAL(18,2) NULL,
-    new_sale_price DECIMAL(18,2) NOT NULL,
-    cost_price_snapshot DECIMAL(18,2) NOT NULL,
+    old_list_price DECIMAL(18,0) NULL,
+    new_list_price DECIMAL(18,0) NOT NULL,
+    old_sale_price DECIMAL(18,0) NULL,
+    new_sale_price DECIMAL(18,0) NOT NULL,
+    cost_price_snapshot DECIMAL(18,0) NOT NULL,
     change_type VARCHAR(50) NOT NULL,
     change_reason NVARCHAR(500) NULL,
     changed_by INT NULL,
@@ -362,7 +362,7 @@ CREATE TABLE dbo.Import_Receipt (
     receipt_code VARCHAR(60) NOT NULL,
     supplier_id INT NOT NULL,
     user_id INT NOT NULL,
-    total_amount DECIMAL(18,2) NOT NULL
+    total_amount DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_ImportReceipt_Total DEFAULT (0),
     created_at DATETIME NOT NULL
         CONSTRAINT DF_ImportReceipt_CreatedAt DEFAULT (GETDATE()),
@@ -388,8 +388,8 @@ CREATE TABLE dbo.Import_Receipt_Detail (
     import_receipt_id INT NOT NULL,
     variant_id INT NOT NULL,
     quantity INT NOT NULL,
-    unit_cost DECIMAL(18,2) NOT NULL,
-    line_total DECIMAL(18,2) NOT NULL,
+    unit_cost DECIMAL(18,0) NOT NULL,
+    line_total DECIMAL(18,0) NOT NULL,
     CONSTRAINT PK_Import_Receipt_Detail PRIMARY KEY (id),
     CONSTRAINT CK_ImportDetail_Quantity CHECK (quantity > 0),
     CONSTRAINT CK_ImportDetail_UnitCost CHECK (unit_cost >= 0),
@@ -405,7 +405,7 @@ CREATE TABLE dbo.Product_Batch (
     id INT IDENTITY(1,1) NOT NULL,
     variant_id INT NOT NULL,
     batch_code VARCHAR(80) NOT NULL,
-    cost_price DECIMAL(18,2) NOT NULL,
+    cost_price DECIMAL(18,0) NOT NULL,
     initial_quantity INT NOT NULL,
     current_quantity INT NOT NULL,
     import_receipt_id INT NULL,
@@ -537,9 +537,11 @@ CREATE TABLE dbo.Voucher (
     code VARCHAR(50) NOT NULL,
     title NVARCHAR(200) NOT NULL,
     discount_type VARCHAR(20) NOT NULL,
+    -- PERCENTAGE vouchers may use fractional percentages; FIXED_AMOUNT values
+    -- are still displayed as whole ₫ amounts by the application.
     discount_value DECIMAL(18,2) NOT NULL,
-    max_discount_amount DECIMAL(18,2) NULL,
-    min_order_value DECIMAL(18,2) NOT NULL
+    max_discount_amount DECIMAL(18,0) NULL,
+    min_order_value DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_Voucher_MinOrder DEFAULT (0),
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
@@ -552,7 +554,13 @@ CREATE TABLE dbo.Voucher (
     category_id INT NULL,
     CONSTRAINT PK_Voucher PRIMARY KEY (id),
     CONSTRAINT UQ_Voucher_Code UNIQUE (code),
-    CONSTRAINT CK_Voucher_DiscountValue CHECK (discount_value > 0),
+    CONSTRAINT CK_Voucher_DiscountValue CHECK (
+        discount_value > 0
+        AND (
+            discount_type <> 'FIXED_AMOUNT'
+            OR discount_value = FLOOR(discount_value)
+        )
+    ),
     CONSTRAINT CK_Voucher_MaxDiscount CHECK (
         max_discount_amount IS NULL OR max_discount_amount >= 0
     ),
@@ -571,7 +579,7 @@ CREATE TABLE dbo.Shipment (
     carrier_name NVARCHAR(100) NOT NULL,
     shipping_status VARCHAR(50) NOT NULL,
     tracking_code VARCHAR(100) NULL,
-    shipping_cost DECIMAL(18,2) NOT NULL
+    shipping_cost DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_Shipment_Cost DEFAULT (0),
     estimated_delivery_time DATETIME NULL,
     CONSTRAINT PK_Shipment PRIMARY KEY (id),
@@ -595,12 +603,12 @@ CREATE TABLE dbo.[Order] (
     shipping_ward_code VARCHAR(20) NULL,
     shipping_ward_name NVARCHAR(150) NULL,
     shipping_address_detail NVARCHAR(255) NULL,
-    total_items_price DECIMAL(18,2) NOT NULL,
-    discount_amount DECIMAL(18,2) NOT NULL
+    total_items_price DECIMAL(18,0) NOT NULL,
+    discount_amount DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_Order_Discount DEFAULT (0),
-    shipping_fee DECIMAL(18,2) NOT NULL
+    shipping_fee DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_Order_Shipping DEFAULT (0),
-    total_payment DECIMAL(18,2) NOT NULL,
+    total_payment DECIMAL(18,0) NOT NULL,
     order_status VARCHAR(50) NOT NULL
         CONSTRAINT DF_Order_Status DEFAULT ('PENDING'),
     inventory_status VARCHAR(30) NOT NULL
@@ -642,7 +650,7 @@ CREATE TABLE dbo.Order_Detail (
     product_name_snapshot NVARCHAR(200) NOT NULL,
     variant_attributes_snapshot NVARCHAR(255) NULL,
     quantity INT NOT NULL,
-    price DECIMAL(18,2) NOT NULL,
+    price DECIMAL(18,0) NOT NULL,
     CONSTRAINT PK_Order_Detail PRIMARY KEY (id),
     CONSTRAINT CK_OrderDetail_Quantity CHECK (quantity > 0),
     CONSTRAINT CK_OrderDetail_Price CHECK (price >= 0),
@@ -658,7 +666,7 @@ CREATE TABLE dbo.Payment (
     payment_method VARCHAR(50) NOT NULL,
     payment_status VARCHAR(50) NOT NULL
         CONSTRAINT DF_Payment_Status DEFAULT ('UNPAID'),
-    amount DECIMAL(18,2) NOT NULL,
+    amount DECIMAL(18,0) NOT NULL,
     transaction_reference VARCHAR(100) NULL,
     payment_date DATETIME NULL,
     CONSTRAINT PK_Payment PRIMARY KEY (id),
@@ -684,7 +692,7 @@ CREATE TABLE dbo.Return_Request (
     reason VARCHAR(50) NOT NULL,
     customer_note NVARCHAR(1000) NULL,
     staff_note NVARCHAR(1000) NULL,
-    refund_amount DECIMAL(18,2) NOT NULL CONSTRAINT DF_ReturnRequest_Refund DEFAULT (0),
+    refund_amount DECIMAL(18,0) NOT NULL CONSTRAINT DF_ReturnRequest_Refund DEFAULT (0),
     status VARCHAR(40) NOT NULL CONSTRAINT DF_ReturnRequest_Status DEFAULT ('PENDING'),
     requested_at DATETIME NOT NULL CONSTRAINT DF_ReturnRequest_RequestedAt DEFAULT (GETDATE()),
     reviewed_by INT NULL,
@@ -728,7 +736,7 @@ CREATE TABLE dbo.Return_Request_Item (
     product_name_snapshot NVARCHAR(200) NOT NULL,
     variant_attributes_snapshot NVARCHAR(255) NULL,
     quantity INT NOT NULL,
-    unit_price DECIMAL(18,2) NOT NULL,
+    unit_price DECIMAL(18,0) NOT NULL,
     -- Chỉ sau khi đã kiểm tra thì số lượng mới được cộng vào Product_Variant.
     inspection_completed BIT NOT NULL CONSTRAINT DF_ReturnRequestItem_InspectionCompleted DEFAULT (0),
     inspected_by INT NULL,
@@ -762,7 +770,7 @@ CREATE TABLE dbo.Voucher_Usage (
     voucher_id INT NOT NULL,
     user_id INT NULL,
     order_id INT NOT NULL,
-    discount_amount DECIMAL(18,2) NOT NULL,
+    discount_amount DECIMAL(18,0) NOT NULL,
     used_at DATETIME NOT NULL
         CONSTRAINT DF_VoucherUsage_UsedAt DEFAULT (GETDATE()),
     CONSTRAINT PK_Voucher_Usage PRIMARY KEY (id),
