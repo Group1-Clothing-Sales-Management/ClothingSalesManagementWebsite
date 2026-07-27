@@ -21,11 +21,8 @@ public class ProductUploadDirectoryListener
             );
         } catch (IOException e) {
             event.getServletContext().log(
-                    "Could not create the product image upload directory.",
-                    e
-            );
-            throw new IllegalStateException(
-                    "Product image upload directory is unavailable.",
+                    "Could not create the external product image upload "
+                    + "directory. Bundled product images will still be used.",
                     e
             );
         }

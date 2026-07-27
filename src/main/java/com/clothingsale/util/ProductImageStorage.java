@@ -25,6 +25,14 @@ public final class ProductImageStorage {
     }
 
     public static Path getUploadDirectory() throws IOException {
+        Path productUploadDirectory = resolveUploadDirectory();
+
+        Files.createDirectories(productUploadDirectory);
+
+        return productUploadDirectory;
+    }
+
+    private static Path resolveUploadDirectory() {
         String configuredDirectory
                 = System.getProperty(DIRECTORY_PROPERTY);
 
@@ -73,14 +81,9 @@ public final class ProductImageStorage {
                     .resolve(PRODUCT_DIRECTORY_NAME);
         }
 
-        productUploadDirectory
-                = productUploadDirectory
-                        .toAbsolutePath()
-                        .normalize();
-
-        Files.createDirectories(productUploadDirectory);
-
-        return productUploadDirectory;
+        return productUploadDirectory
+                .toAbsolutePath()
+                .normalize();
     }
 
     private static Path findProjectRoot() {
@@ -152,17 +155,7 @@ public final class ProductImageStorage {
     public static Path resolveFile(String fileName)
             throws IOException {
 
-        if (fileName == null || fileName.trim().isEmpty()) {
-            throw new IOException("Image file name is empty");
-        }
-
-        String safeFileName = Paths.get(fileName)
-                .getFileName()
-                .toString();
-
-        if (safeFileName.isBlank()) {
-            throw new IOException("Invalid image file name");
-        }
+        String safeFileName = extractSafeFileName(fileName);
 
         Path uploadDirectory = getUploadDirectory();
 
@@ -175,6 +168,103 @@ public final class ProductImageStorage {
         }
 
         return targetFile;
+    }
+
+    /**
+     * Finds an existing runtime image without creating directories. Besides
+     * the current upload/product layout, this also supports images written to
+     * the legacy upload directory by older deployments.
+     */
+    public static Path findExistingFile(String fileName)
+            throws IOException {
+
+        String safeFileName = extractSafeFileName(fileName);
+        Path productDirectory = resolveUploadDirectory();
+
+        Path currentFile = resolveInside(
+                productDirectory,
+                safeFileName
+        );
+
+        if (Files.isRegularFile(currentFile)) {
+            return currentFile;
+        }
+
+        Path directoryName = productDirectory.getFileName();
+        if (directoryName != null
+                && PRODUCT_DIRECTORY_NAME.equalsIgnoreCase(
+                        directoryName.toString()
+                )) {
+
+            Path legacyDirectory = productDirectory.getParent();
+            if (legacyDirectory != null) {
+                Path legacyFile = resolveInside(
+                        legacyDirectory,
+                        safeFileName
+                );
+
+                if (Files.isRegularFile(legacyFile)) {
+                    return legacyFile;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static Path resolveInside(
+            Path directory,
+            String safeFileName
+    ) throws IOException {
+
+        Path normalizedDirectory = directory
+                .toAbsolutePath()
+                .normalize();
+
+        Path targetFile = normalizedDirectory
+                .resolve(safeFileName)
+                .normalize();
+
+        if (!targetFile.startsWith(normalizedDirectory)) {
+            throw new IOException("Invalid image file path");
+        }
+
+        return targetFile;
+    }
+
+    private static String extractSafeFileName(String fileName)
+            throws IOException {
+
+        if (fileName == null || fileName.trim().isEmpty()) {
+            throw new IOException("Image file name is empty");
+        }
+
+        String normalizedName = fileName
+                .trim()
+                .replace('\\', '/');
+
+        int queryIndex = normalizedName.indexOf('?');
+        if (queryIndex >= 0) {
+            normalizedName = normalizedName.substring(0, queryIndex);
+        }
+
+        int fragmentIndex = normalizedName.indexOf('#');
+        if (fragmentIndex >= 0) {
+            normalizedName = normalizedName.substring(0, fragmentIndex);
+        }
+
+        String safeFileName = Paths.get(normalizedName)
+                .getFileName()
+                .toString();
+
+        if (safeFileName.isBlank()
+                || ".".equals(safeFileName)
+                || "..".equals(safeFileName)) {
+
+            throw new IOException("Invalid image file name");
+        }
+
+        return safeFileName;
     }
 
     /*

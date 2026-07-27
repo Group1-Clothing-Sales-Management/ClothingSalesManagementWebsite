@@ -41,20 +41,25 @@ public class ProductImageServlet extends HttpServlet {
             return;
         }
 
-        Path imageFile;
+        Path imageFile = null;
 
         try {
-            imageFile = ProductImageStorage.resolveFile(
+            imageFile = ProductImageStorage.findExistingFile(
                     fileName
             );
         } catch (IOException exception) {
-            response.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST
+            /*
+             * Runtime storage can be unavailable or read-only on a deployed
+             * server. Bundled seed images must remain accessible in that case.
+             */
+            getServletContext().log(
+                    "Could not inspect runtime product image storage.",
+                    exception
             );
-            return;
         }
 
-        if (Files.isRegularFile(imageFile)) {
+        if (imageFile != null
+                && Files.isRegularFile(imageFile)) {
             streamExternalFile(
                     request,
                     response,
@@ -68,8 +73,19 @@ public class ProductImageServlet extends HttpServlet {
          * Ảnh mới do Admin upload sẽ được đọc từ:
          * <project-root>/upload/product/
          */
-        try (InputStream inputStream
-                = openBundledImage(fileName)) {
+        InputStream bundledImage = openBundledImage(fileName);
+        String responseFileName = fileName;
+
+        if (bundledImage == null
+                && !"placeholder.svg".equalsIgnoreCase(fileName)) {
+
+            bundledImage = openBundledImage(
+                    "placeholder.svg"
+            );
+            responseFileName = "placeholder.svg";
+        }
+
+        try (InputStream inputStream = bundledImage) {
 
             if (inputStream == null) {
                 response.sendError(
@@ -80,7 +96,7 @@ public class ProductImageServlet extends HttpServlet {
 
             prepareImageResponse(
                     response,
-                    fileName
+                    responseFileName
             );
 
             copy(

@@ -404,29 +404,27 @@ GO
 -- 8. PRODUCT IMAGES
 -- =========================================================================
 INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
-(1, 'ao_thun_den_front.png',  1, 0),
-(1, 'ao_thun_den_back.png',   0, 1),
-(1, 'ao_thun_trang_front.png',0, 2),
-(2, 'quan_jean_xanh_front.png',1, 0),
-(3, 'prod3-main.jpg',  1, 0), (3, 'prod3-detail1.jpg',  0, 1),
+(1, 'p1_main_00.webp', 1, 0),
+(2, 'p2_main_00.webp', 1, 0),
+(3, 'prod3-main.jpg',  1, 0),
 (4, 'prod4-main.jpg',  1, 0),
-(5, 'prod5-main.jpg',  1, 0), (5, 'prod5-detail1.jpg',  0, 1),
+(5, 'prod5-main.jpg',  1, 0),
 (6, 'prod6-main.jpg',  1, 0),
-(7, 'prod7-main.jpg',  1, 0), (7, 'prod7-detail1.jpg',  0, 1),
+(7, 'p7_main_00.jpg',  1, 0),
 (8, 'prod8-main.jpg',  1, 0),
-(9, 'prod9-main.jpg',  1, 0), (9, 'prod9-detail1.jpg',  0, 1),
+(9, 'prod9-main.jpg',  1, 0),
 (10,'prod10-main.jpg', 1, 0),
-(11,'prod11-main.jpg', 1, 0), (11,'prod11-detail1.jpg', 0, 1),
+(11,'p11_main_00.webp', 1, 0),
 (12,'prod12-main.jpg', 1, 0),
-(13,'prod13-main.jpg', 1, 0), (13,'prod13-detail1.jpg', 0, 1),
+(13,'prod13-main.jpg', 1, 0),
 (14,'prod14-main.jpg', 1, 0),
-(15,'prod15-main.jpg', 1, 0), (15,'prod15-detail1.jpg', 0, 1),
+(15,'p15_main_00.webp', 1, 0),
 (16,'prod16-main.jpg', 1, 0),
-(17,'prod17-main.jpg', 1, 0), (17,'prod17-detail1.jpg', 0, 1),
+(17,'prod17-main.jpg', 1, 0),
 (18,'prod18-main.jpg', 1, 0),
-(19,'prod19-main.jpg', 1, 0), (19,'prod19-detail1.jpg', 0, 1),
+(19,'prod19-main.jpg', 1, 0),
 (20,'prod20-main.jpg', 1, 0),
-(21,'prod21-main.jpg', 1, 0), (21,'prod21-detail1.jpg', 0, 1),
+(21,'prod21-main.jpg', 1, 0),
 (22,'prod22-main.jpg', 1, 0);
 
 /* =========================================================================
@@ -1265,14 +1263,26 @@ WHERE pv.sku LIKE 'EXP-%'
         AND existing.attribute_id = a.id
   );
 
-INSERT INTO dbo.Product_Image (product_id, image_url, is_main, sort_order)
-SELECT p.id, CONCAT(p.slug, '-main.jpg'), 1, 0
-FROM dbo.Product p
-WHERE p.brand_id >= (SELECT MIN(id) FROM dbo.Brand WHERE slug = 'lacoste')
-UNION ALL
-SELECT p.id, CONCAT(p.slug, '-detail.jpg'), 0, 1
-FROM dbo.Product p
-WHERE p.brand_id >= (SELECT MIN(id) FROM dbo.Brand WHERE slug = 'lacoste');
+INSERT INTO dbo.Product_Image (
+    product_id, image_url, is_main, sort_order
+)
+SELECT p.id, image_asset.image_url, 1, 0
+FROM (VALUES
+    ('ao-thun-nu-cotton-co-ban', 'p23_main_00.webp'),
+    ('ao-so-mi-nu-co-pleat',     'p24_main_00.webp'),
+    ('chan-vay-midi-xep-ly',     'p25_main_00.webp'),
+    ('quan-dai-nu-ong-rong',     'p26_main_00.webp'),
+    ('quan-legging-the-thao-nu', 'p27_main_00.webp'),
+    ('quan-short-chay-bo-nu',    'p28_main_00.webp'),
+    ('ao-cardigan-len-gan',      'p29_main_00.webp'),
+    ('ao-khoac-denim-nu-co-dien','p30_main_00.webp'),
+    ('mu-luoi-trai-basic',       'p31_main_00.webp'),
+    ('tui-vai-canvas-tu-nhien',  'p32_main_00.webp'),
+    ('ao-polo-nu-pique',         'p33_main_00.webp'),
+    ('ao-mua-nhe-gap-gon',       'p34_main_00.webp')
+) AS image_asset(slug, image_url)
+INNER JOIN dbo.Product p
+    ON p.slug = image_asset.slug;
 
 UPDATE pv
 SET pv.color = color_value.attribute_value,
