@@ -1626,11 +1626,6 @@
             </section>
         </main>
 
-        <div class="home-toast" id="homeWishlistToast" role="status" aria-live="polite">
-            <i class="fa-solid fa-heart"></i>
-            <span id="homeWishlistToastText"></span>
-        </div>
-
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
             (function () {
@@ -1726,23 +1721,14 @@
                     syncVariant();
                 });
 
-                var toast = document.getElementById("homeWishlistToast");
-                var toastText = document.getElementById("homeWishlistToastText");
                 var params = new URLSearchParams(window.location.search);
 
                 function showToast(message, isError) {
-                    if (!toast || !toastText) {
-                        return;
+                    if (window.showAppToast) {
+                        window.showAppToast(message, isError ? "error" : "success", {
+                            title: isError ? "Wishlist update failed" : "Wishlist updated"
+                        });
                     }
-
-                    toast.classList.toggle("is-error", Boolean(isError));
-                    toastText.textContent = message;
-                    toast.classList.add("show");
-
-                    clearTimeout(toast.hideTimer);
-                    toast.hideTimer = setTimeout(function () {
-                        toast.classList.remove("show");
-                    }, 2600);
                 }
 
                 if (params.has("wishlistAdded")

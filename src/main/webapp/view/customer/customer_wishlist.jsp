@@ -328,14 +328,9 @@
             </div>
 
             <c:if test="${not empty wishlistMessage}">
-                <div id="wishlistFlashMessage"
-                     class="wishlist-toast ${wishlistMessageType eq 'danger' ? 'is-danger' : ''}"
-                     role="status" aria-live="polite">
-                    <i class="fa-solid ${wishlistMessageType eq 'danger' ? 'fa-exclamation' : 'fa-check'}"></i>
-                    <span class="wishlist-toast-message"><c:out value="${wishlistMessage}"/></span>
-                    <button type="button" class="wishlist-toast-close" aria-label="Close notification">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                <div class="d-none" data-app-toast
+                     data-app-toast-type="${wishlistMessageType eq 'danger' ? 'error' : 'success'}">
+                    <c:out value="${wishlistMessage}"/>
                 </div>
             </c:if>
 
@@ -419,23 +414,6 @@
         </main>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            (function () {
-                var toast = document.getElementById('wishlistFlashMessage');
-                if (!toast) return;
-
-                var timer;
-                function closeToast() {
-                    clearTimeout(timer);
-                    toast.classList.add('is-hiding');
-                    setTimeout(function () { toast.remove(); }, 220);
-                }
-
-                toast.querySelector('.wishlist-toast-close').addEventListener('click', closeToast);
-                timer = setTimeout(closeToast, 3000);
-            }());
-        </script>
-
         <jsp:include page="/view/customer/common/footer.jsp"/>
     </body>
 </html>

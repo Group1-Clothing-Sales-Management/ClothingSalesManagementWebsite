@@ -42,15 +42,8 @@
             </div>
 
             <c:if test="${not empty sessionScope.successMsg}">
-                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
-                    <div id="successToast" class="toast align-items-center text-white bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body d-flex align-items-center gap-2">
-                                <i class="bi bi-check-circle-fill"></i> ${sessionScope.successMsg}
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                        </div>
-                    </div>
+                <div class="d-none" data-app-toast data-app-toast-type="success">
+                    <c:out value="${sessionScope.successMsg}"/>
                 </div>
                 <% session.removeAttribute("successMsg"); %>
             </c:if>
@@ -177,12 +170,6 @@
 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const successToastEl = document.getElementById('successToast');
-    if (successToastEl) {
-        const toast = new bootstrap.Toast(successToastEl, { delay: 3000 });
-        toast.show();
-    }
-
     const ROWS_PER_PAGE = 10;
     let currentPage = 1;
 

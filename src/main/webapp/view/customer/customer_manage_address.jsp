@@ -299,9 +299,10 @@
 
                                         <a href="${deleteAddressUrl}"
                                            class="btn btn-outline-danger btn-sm"
-                                           onclick="return confirm(
-                                                   'Are you sure you want to remove this address?'
-                                                   );">
+                                           data-confirm="Are you sure you want to remove this address?"
+                                           data-confirm-title="Remove address"
+                                           data-confirm-label="Remove address"
+                                           data-confirm-danger="true">
 
                                             <i class="fa-solid fa-trash me-1"></i>
                                             Delete

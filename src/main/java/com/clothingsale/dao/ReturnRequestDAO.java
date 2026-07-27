@@ -459,7 +459,7 @@ public class ReturnRequestDAO {
                         ps.executeUpdate();
                     }
                 }
-                addHistory(con, requestId, "APPROVED", nextStatus, note, staffId);
+                addHistory(con, requestId, "APPROVED", "RECEIVED", note, staffId);
                 con.commit();
                 return true;
             } catch (SQLException e) {

@@ -2,6 +2,9 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/notification-ui.css">
+<script src="${pageContext.request.contextPath}/assets/notification-ui.js"></script>
+
 <c:set var="loggedIn" value="${not empty sessionScope.authUserId}"/>
 <c:set var="requestUri" value="${pageContext.request.requestURI}"/>
 
@@ -1213,7 +1216,16 @@
                 return;
             }
 
-            if (window.confirm("Sign out of your customer account?")) {
+            if (window.confirmAppAction) {
+                window.confirmAppAction("Sign out of your customer account?", {
+                    title: "Sign out",
+                    confirmLabel: "Sign out"
+                }).then(function (confirmed) {
+                    if (confirmed) {
+                        window.location.href = confirmLogoutButton.href;
+                    }
+                });
+            } else {
                 window.location.href = confirmLogoutButton.href;
             }
         });

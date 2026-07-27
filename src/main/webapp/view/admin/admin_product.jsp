@@ -8,7 +8,6 @@
         <title>Product Management</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
         <style>
             body {
                 background-color: #f3f4f6;
@@ -699,7 +698,6 @@
 
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <script>
                                                             document.addEventListener("DOMContentLoaded", function () {
@@ -928,13 +926,13 @@
                                                                     const color = cleanText(colorInput.value);
 
                                                                     if (!productName) {
-                                                                        Swal.fire("Product Name Required", "Please enter the product name before adding variants.", "warning");
+                                                                        window.showAppToast("Please enter the product name before adding variants.", "warning", {title: "Product name required"});
                                                                         productNameInput.focus();
                                                                         return;
                                                                     }
 
                                                                     if (!size || !color) {
-                                                                        Swal.fire("Incomplete Variant", "Please select a size and enter a color.", "warning");
+                                                                        window.showAppToast("Please select a size and enter a color.", "warning", {title: "Incomplete variant"});
                                                                         return;
                                                                     }
 
@@ -944,7 +942,7 @@
                                                                     });
 
                                                                     if (duplicated) {
-                                                                        Swal.fire("Duplicate Variant", "This size and color combination is already in the list.", "warning");
+                                                                        window.showAppToast("This size and color combination is already in the list.", "warning", {title: "Duplicate variant"});
                                                                         return;
                                                                     }
 
@@ -979,31 +977,17 @@
                                                                     event.preventDefault();
 
                                                                     if (variants.length === 0) {
-                                                                        Swal.fire("Variant Required", "Please add at least one size-color variant.", "warning");
+                                                                        window.showAppToast("Please add at least one size-color variant.", "warning", {title: "Variant required"});
                                                                         return;
                                                                     }
 
-                                                                    Swal.fire({
-                                                                        title: "Are you sure?",
-                                                                        text: "Do you want to save this new product information?",
-                                                                        icon: "question",
-                                                                        showCancelButton: true,
-                                                                        confirmButtonColor: "#3085d6",
-                                                                        cancelButtonColor: "#6c757d",
-                                                                        confirmButtonText: "Yes, save product!"
-                                                                    }).then(function (result) {
-                                                                        if (!result.isConfirmed) {
+                                                                    window.confirmAppAction("Do you want to save this new product information?", {
+                                                                        title: "Save product",
+                                                                        confirmLabel: "Save product"
+                                                                    }).then(function (confirmed) {
+                                                                        if (!confirmed) {
                                                                             return;
                                                                         }
-
-                                                                        Swal.fire({
-                                                                            title: "Processing...",
-                                                                            text: "Saving product and variants.",
-                                                                            allowOutsideClick: false,
-                                                                            didOpen: function () {
-                                                                                Swal.showLoading();
-                                                                            }
-                                                                        });
 
                                                                         form.submit();
                                                                     });
@@ -1057,21 +1041,17 @@
                                                                 };
 
                                                                 if (status && messages[status]) {
-                                                                    Swal.fire(messages[status][0], messages[status][1], messages[status][2]);
+                                                                    window.showAppToast(messages[status][1], messages[status][2], {title: messages[status][0]});
                                                                 }
                                                             });
 
                                                             function deleteProduct(id) {
-                                                                Swal.fire({
+                                                                window.confirmAppAction("The product will be soft-deleted and its variants will become inactive.", {
                                                                     title: "Delete this product?",
-                                                                    text: "The product will be soft-deleted and its variants will become inactive.",
-                                                                    icon: "warning",
-                                                                    showCancelButton: true,
-                                                                    confirmButtonColor: "#dc3545",
-                                                                    cancelButtonColor: "#6c757d",
-                                                                    confirmButtonText: "Yes, delete it!"
-                                                                }).then(function (result) {
-                                                                    if (result.isConfirmed) {
+                                                                    confirmLabel: "Delete product",
+                                                                    danger: true
+                                                                }).then(function (confirmed) {
+                                                                    if (confirmed) {
                                                                         document.getElementById("hiddenDeleteProductId").value = id;
                                                                         document.getElementById("hiddenDeleteForm").submit();
                                                                     }

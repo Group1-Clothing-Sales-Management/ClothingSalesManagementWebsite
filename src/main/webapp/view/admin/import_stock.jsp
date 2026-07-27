@@ -23,7 +23,6 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
             rel="stylesheet">
 
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <style>
             body {
@@ -1221,11 +1220,7 @@
                         function () {
 
                             if (!selectedVariant) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Select a product variant',
-                                    text: 'Click a product variant from the search results.'
-                                });
+                                window.showAppToast('Click a product variant from the search results.', 'warning', {title: 'Select a product variant'});
 
                                 return;
                             }
@@ -1239,22 +1234,14 @@
                             if (!Number.isInteger(quantity)
                                     || quantity <= 0) {
 
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Invalid quantity',
-                                    text: 'Quantity must be a positive whole number.'
-                                });
+                                window.showAppToast('Quantity must be a positive whole number.', 'warning', {title: 'Invalid quantity'});
 
                                 quantityInput.focus();
                                 return;
                             }
 
                             if (quantity > 1000000) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Quantity is too large',
-                                    text: 'Quantity must not exceed 1,000,000.'
-                                });
+                                window.showAppToast('Quantity must not exceed 1,000,000.', 'warning', {title: 'Quantity is too large'});
 
                                 quantityInput.focus();
                                 return;
@@ -1263,11 +1250,7 @@
                             if (!Number.isFinite(unitCost)
                                     || unitCost <= 0) {
 
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Invalid unit cost',
-                                    text: 'Unit cost must be greater than zero.'
-                                });
+                                window.showAppToast('Unit cost must be greater than zero.', 'warning', {title: 'Invalid unit cost'});
 
                                 unitCostInput.focus();
                                 return;
@@ -1277,11 +1260,7 @@
                                     String(selectedVariant.id);
 
                             if (items.has(itemKey)) {
-                                Swal.fire({
-                                    icon: 'info',
-                                    title: 'Variant already added',
-                                    text: 'Each product variant can appear only once in a receipt.'
-                                });
+                                window.showAppToast('Each product variant can appear only once in a receipt.', 'info', {title: 'Variant already added'});
 
                                 return;
                             }
@@ -1383,36 +1362,23 @@
                             if (!supplierSelect
                                     || !supplierSelect.value) {
 
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Supplier required',
-                                    text: 'Select an active supplier.'
-                                });
+                                window.showAppToast('Select an active supplier.', 'warning', {title: 'Supplier required'});
 
                                 return;
                             }
 
                             if (items.size === 0) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'No receipt items',
-                                    text: 'Add at least one product variant.'
-                                });
+                                window.showAppToast('Add at least one product variant.', 'warning', {title: 'No receipt items'});
 
                                 return;
                             }
 
-                            Swal.fire({
+                            window.confirmAppAction('Inventory and sale prices will not change yet.', {
                                 title: 'Save this receipt as a draft?',
-                                text: 'Inventory and sale prices will not change yet.',
-                                icon: 'question',
-                                showCancelButton: true,
-                                confirmButtonText: 'Save Draft',
-                                cancelButtonText: 'Continue Editing',
-                                confirmButtonColor: '#198754'
-                            }).then(function (result) {
+                                confirmLabel: 'Save draft'
+                            }).then(function (confirmed) {
 
-                                if (!result.isConfirmed) {
+                                if (!confirmed) {
                                     return;
                                 }
 

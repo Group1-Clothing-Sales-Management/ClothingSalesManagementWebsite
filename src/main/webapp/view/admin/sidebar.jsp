@@ -278,7 +278,12 @@
                     <%= displayRole%>
                 </div>
             </div>
-            <a href="${pageContext.request.contextPath}/admin/logout" class="sidebar-logout" onclick="return confirm('Are you sure you want to sign out?');" title="Sign out">
+            <a href="${pageContext.request.contextPath}/admin/logout"
+               class="sidebar-logout"
+               data-confirm="Are you sure you want to sign out?"
+               data-confirm-title="Sign out"
+               data-confirm-label="Sign out"
+               title="Sign out">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>

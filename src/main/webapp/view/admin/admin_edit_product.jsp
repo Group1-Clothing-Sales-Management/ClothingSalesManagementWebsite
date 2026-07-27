@@ -446,8 +446,10 @@
                             = 10 * 1024 * 1024;
 
                     if (!allowedTypes.includes(file.type)) {
-                        alert(
-                            'Only JPG, JPEG, PNG, and WEBP images are supported.'
+                        window.showAppToast(
+                            'Only JPG, JPEG, PNG, and WEBP images are supported.',
+                            'error',
+                            {title: 'Invalid image'}
                         );
 
                         this.value = '';
@@ -455,8 +457,10 @@
                     }
 
                     if (file.size > maximumSize) {
-                        alert(
-                            'The selected image must not exceed 10 MB.'
+                        window.showAppToast(
+                            'The selected image must not exceed 10 MB.',
+                            'error',
+                            {title: 'Invalid image'}
                         );
 
                         this.value = '';

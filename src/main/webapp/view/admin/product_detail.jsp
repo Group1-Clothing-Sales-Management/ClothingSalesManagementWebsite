@@ -14,8 +14,6 @@
         <link rel="stylesheet"
               href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-        <link rel="stylesheet"
-              href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
         <style>
             #variantCard,
@@ -736,7 +734,6 @@
 
                 <jsp:include page="/view/admin/common/admin_layout_end.jsp" />
 
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <script>
                     function toggleVariantEdit(variantId) {
@@ -773,50 +770,24 @@
                         const isActivating = nextStatus === "ACTIVE";
 
                         if (isActivating && productStatus !== "ACTIVE") {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Cannot activate variant",
-                                text: "The product must be Active before any variant can be activated.",
-                                confirmButtonColor: "#dc3545"
-                            });
+                            window.showAppToast("The product must be Active before any variant can be activated.", "error", {title: "Cannot activate variant"});
                             return;
                         }
 
                         if (isActivating && !isPriced) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Invalid variant price",
-                                text: "Please configure a list price and sale price greater than 0 in Manage Price before activating this variant.",
-                                confirmButtonColor: "#dc3545"
-                            });
+                            window.showAppToast("Please configure a list price and sale price greater than 0 in Manage Price before activating this variant.", "error", {title: "Invalid variant price"});
                             return;
                         }
 
                         const actionText = isActivating ? "activate" : "deactivate";
 
-                        Swal.fire({
-                            title: isActivating
-                                    ? "Activate Variant?"
-                                    : "Deactivate Variant?",
-
-                            text: "Are you sure you want to "
-                                    + actionText
-                                    + " this variant?",
-
-                            icon: "question",
-                            showCancelButton: true,
-                            confirmButtonColor: isActivating
-                                    ? "#198754"
-                                    : "#dc3545",
-
-                            cancelButtonColor: "#6c757d",
-                            confirmButtonText: isActivating
-                                    ? "Yes, activate"
-                                    : "Yes, deactivate",
-
-                            cancelButtonText: "Cancel"
-                        }).then(function (result) {
-                            if (!result.isConfirmed) {
+                        window.confirmAppAction("Are you sure you want to "
+                                + actionText + " this variant?", {
+                            title: isActivating ? "Activate variant?" : "Deactivate variant?",
+                            confirmLabel: isActivating ? "Activate" : "Deactivate",
+                            danger: !isActivating
+                        }).then(function (confirmed) {
+                            if (!confirmed) {
                                 return;
                             }
 
@@ -869,24 +840,11 @@
                         };
 
                         if (successMessages[status]) {
-                            Swal.fire({
-                                toast: true,
-                                position: "top-end",
-                                icon: "success",
-                                title: successMessages[status],
-                                showConfirmButton: false,
-                                timer: 2500,
-                                timerProgressBar: true
-                            });
+                            window.showAppToast(successMessages[status], "success", {title: "Variant updated"});
                         }
 
                         if (errorMessages[status]) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Action failed",
-                                text: errorMessages[status],
-                                confirmButtonColor: "#dc3545"
-                            });
+                            window.showAppToast(errorMessages[status], "error", {title: "Action failed"});
                         }
 
                         if (status) {

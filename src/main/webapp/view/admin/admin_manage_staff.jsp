@@ -252,7 +252,10 @@
                                                         <button type="submit"
                                                                 class="btn btn-sm btn-outline-danger"
                                                                 title="Delete staff"
-                                                                onclick="return confirm('Delete this staff account? This will lock the account.');">
+                                                                data-confirm="Delete this staff account? This will lock the account."
+                                                                data-confirm-title="Lock staff account"
+                                                                data-confirm-label="Lock account"
+                                                                data-confirm-danger="true">
                                                             <i class="bi bi-trash3-fill"></i>
                                                         </button>
                                                     </form>

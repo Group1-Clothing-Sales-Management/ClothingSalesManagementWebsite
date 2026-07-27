@@ -1,0 +1,185 @@
+:root {
+    --notify-text: #172033;
+    --notify-muted: #667085;
+    --notify-blue: #5276c7;
+    --notify-blue-dark: #385cae;
+    --notify-surface: #ffffff;
+    --notify-border: #e7ebf3;
+    --notify-shadow: 0 18px 55px rgba(24, 39, 75, .18);
+}
+
+.app-toast-stack {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1090;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(390px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.app-toast {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 15px;
+    overflow: hidden;
+    border: 1px solid var(--notify-border);
+    border-radius: 16px;
+    background: var(--notify-surface);
+    color: var(--notify-text);
+    box-shadow: var(--notify-shadow);
+    pointer-events: auto;
+    animation: app-toast-in .22s ease-out both;
+}
+
+.app-toast::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: var(--toast-accent, var(--notify-blue));
+}
+
+.app-toast--success { --toast-accent: #16a36a; }
+.app-toast--error { --toast-accent: #dc5362; }
+.app-toast--warning { --toast-accent: #e59a32; }
+.app-toast--info { --toast-accent: #5276c7; }
+
+.app-toast__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 11px;
+    color: var(--toast-accent, var(--notify-blue));
+    background: #f0f4ff;
+    background: color-mix(in srgb, var(--toast-accent, var(--notify-blue)) 13%, white);
+    font-size: .95rem;
+}
+
+.app-toast__content { min-width: 0; flex: 1; }
+.app-toast__title {
+    margin: 0;
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .01em;
+}
+.app-toast__message {
+    margin-top: 3px;
+    color: var(--notify-muted);
+    font-size: .88rem;
+    line-height: 1.45;
+    word-break: break-word;
+}
+.app-toast__close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    color: #98a2b3;
+    background: transparent;
+    cursor: pointer;
+}
+.app-toast__close:hover,
+.app-toast__close:focus-visible { color: var(--notify-text); background: #f4f6fa; }
+
+.app-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .46);
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+.app-confirm-backdrop.is-open { opacity: 1; }
+.app-confirm-dialog {
+    width: min(460px, 100%);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.65);
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 28px 90px rgba(15, 23, 42, .26);
+    transform: translateY(10px) scale(.98);
+    transition: transform .18s ease;
+}
+.app-confirm-backdrop.is-open .app-confirm-dialog { transform: translateY(0) scale(1); }
+.app-confirm-body { padding: 28px 28px 22px; }
+.app-confirm-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 15px;
+    color: var(--notify-blue-dark);
+    background: #edf3ff;
+    font-size: 1.1rem;
+}
+.app-confirm-title { margin: 1px 0 6px; color: var(--notify-text); font-size: 1.1rem; font-weight: 800; }
+.app-confirm-message { margin: 0; color: var(--notify-muted); font-size: .9rem; line-height: 1.55; }
+.app-confirm-close {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    color: #98a2b3;
+    background: transparent;
+    cursor: pointer;
+}
+.app-confirm-close:hover,
+.app-confirm-close:focus-visible { color: var(--notify-text); background: #f4f6fa; }
+.app-confirm-close::before { content: "×"; font-size: 1.35rem; line-height: 1; }
+.app-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 28px 24px;
+}
+.app-confirm-actions button {
+    min-width: 104px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font: inherit;
+    font-size: .86rem;
+    font-weight: 750;
+    cursor: pointer;
+}
+.app-confirm-cancel { border: 1px solid #d9dee9; color: #475467; background: #fff; }
+.app-confirm-cancel:hover { background: #f8fafc; }
+.app-confirm-submit { border: 1px solid var(--notify-blue-dark); color: #fff; background: var(--notify-blue-dark); }
+.app-confirm-submit:hover { background: #2f4f9b; }
+.app-confirm-submit.is-danger { border-color: #c84253; background: #c84253; }
+.app-confirm-submit.is-danger:hover { background: #a93343; }
+
+body.app-confirm-open { overflow: hidden; }
+
+@keyframes app-toast-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes app-toast-out {
+    to { opacity: 0; transform: translateY(-6px); }
+}
+
+@media (max-width: 575.98px) {
+    .app-toast-stack { top: 12px; right: 12px; width: calc(100vw - 24px); }
+    .app-confirm-body { padding: 24px 22px 18px; }
+    .app-confirm-actions { padding: 14px 22px 20px; }
+    .app-confirm-actions button { flex: 1; }
+}

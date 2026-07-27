@@ -252,14 +252,14 @@
 
                 // Logic 1: Ngày kết thúc phải sau ngày bắt đầu
                 if (end <= start) {
-                    alert("Validation Error: Campaign End Date & Time must occur after the Start Date & Time.");
+                    window.showAppToast("Campaign end date and time must occur after the start date and time.", "error", {title: "Validation error"});
                     event.preventDefault();
                     return;
                 }
 
                 // Logic 2: Nếu admin có đổi ngày, phải cách hiện tại ít nhất 48 tiếng
                 if (end.getTime() !== originalEnd.getTime() && end < minEnd) {
-                    alert("Customer Protection Policy: The new End Date must be at least 48 hours from the current time.");
+                    window.showAppToast("The new end date must be at least 48 hours from the current time.", "error", {title: "Validation error"});
                     event.preventDefault();
                 }
             });

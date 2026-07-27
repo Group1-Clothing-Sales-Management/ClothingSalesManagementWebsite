@@ -228,7 +228,11 @@
 
                     <c:if test="${sessionScope.authRoleName eq 'ADMIN'}">
                         <div class="d-flex justify-content-end mt-3">
-                            <form action="${feedbackBasePath}" method="post" onsubmit="return confirm('Remove this feedback from the selected customer permanently?');">
+                            <form action="${feedbackBasePath}" method="post"
+                                  data-confirm="Remove this feedback from the selected customer permanently?"
+                                  data-confirm-title="Remove feedback"
+                                  data-confirm-label="Remove feedback"
+                                  data-confirm-danger="true">
                                 <input type="hidden" name="action" value="delete"/>
                                 <input type="hidden" name="id" value="${fb.id}"/>
                                 <input type="hidden" name="productId" value="${productGroup.productId}"/>

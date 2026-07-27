@@ -849,11 +849,6 @@
 
         </div>
 
-        <div class="wishlist-toast" id="wishlistToast">
-            <i class="fa-solid fa-heart me-2"></i>
-            <span id="wishlistToastText"></span>
-        </div>
-
         <script>
             document.querySelectorAll('.variant-select').forEach(function (select) {
                 function syncVariant() {
@@ -893,21 +888,12 @@
             });
 
             var wishlistParams = new URLSearchParams(window.location.search);
-            var wishlistToast = document.getElementById('wishlistToast');
-            var wishlistToastText = document.getElementById('wishlistToastText');
-
             function showWishlistToast(message, isError) {
-                if (!wishlistToast || !wishlistToastText) {
-                    return;
+                if (window.showAppToast) {
+                    window.showAppToast(message, isError ? 'error' : 'success', {
+                        title: isError ? 'Wishlist update failed' : 'Wishlist updated'
+                    });
                 }
-
-                wishlistToast.classList.toggle('is-error', !!isError);
-                wishlistToastText.textContent = message;
-                wishlistToast.classList.add('show');
-                clearTimeout(wishlistToast.hideTimer);
-                wishlistToast.hideTimer = setTimeout(function () {
-                    wishlistToast.classList.remove('show');
-                }, 2600);
             }
 
             if (wishlistParams.has('wishlistAdded')

@@ -2236,7 +2236,9 @@
                             const modalElement = document.getElementById('cartMessageModal');
 
                             if (!modalElement || !window.bootstrap) {
-                                alert(text);
+                                if (window.showAppToast) {
+                                    window.showAppToast(text, isError ? 'error' : 'success', {title: title});
+                                }
                                 return;
                             }
 

@@ -1203,12 +1203,8 @@
         </div>
 
         <% if (request.getAttribute("cartMessage") != null) { %>
-            <div id="cartFlashMessage" class="cart-toast" role="status" aria-live="polite">
-                <i class="fa-solid fa-check"></i>
-                <span class="cart-toast-message"><c:out value="${cartMessage}"/></span>
-                <button type="button" class="cart-toast-close" aria-label="Close notification">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+            <div class="d-none" data-app-toast data-app-toast-type="success">
+                <c:out value="${cartMessage}"/>
             </div>
         <% } %>
 
@@ -1911,21 +1907,6 @@
                 submitCartForm(form);
             });
         });
-
-        var cartFlashMessage = document.getElementById('cartFlashMessage');
-        if (cartFlashMessage) {
-            var cartFlashTimer;
-            function closeCartFlashMessage() {
-                clearTimeout(cartFlashTimer);
-                cartFlashMessage.classList.add('is-hiding');
-                setTimeout(function() {
-                    cartFlashMessage.remove();
-                }, 220);
-            }
-            cartFlashMessage.querySelector('.cart-toast-close')
-                    .addEventListener('click', closeCartFlashMessage);
-            cartFlashTimer = setTimeout(closeCartFlashMessage, 3000);
-        }
 
         var cartSelectInputs = document.querySelectorAll('.cart-select-input');
         var selectAllInputs = document.querySelectorAll('#cartSelectAllTop, #cartSelectAllShop, #cartSelectAllBottom');

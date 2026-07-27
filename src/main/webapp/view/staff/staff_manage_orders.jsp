@@ -288,7 +288,10 @@
                                                 <input type="hidden" name="action" value="confirm">
                                                 <input type="hidden" name="id" value="${order.id}">
                                                 <input type="hidden" name="returnMode" value="detail">
-                                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirm this order?');">
+                                                <button type="submit" class="btn btn-success btn-sm"
+                                                        data-confirm="Confirm this order?"
+                                                        data-confirm-title="Confirm order"
+                                                        data-confirm-label="Confirm order">
                                                     <i class="bi bi-check2-circle me-1"></i>Confirm
                                                 </button>
                                             </form>
@@ -296,7 +299,11 @@
                                                 <input type="hidden" name="action" value="cancel">
                                                 <input type="hidden" name="id" value="${order.id}">
                                                 <input type="hidden" name="returnMode" value="detail">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel this order?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                        data-confirm="Cancel this order?"
+                                                        data-confirm-title="Cancel order"
+                                                        data-confirm-label="Cancel order"
+                                                        data-confirm-danger="true">
                                                     <i class="bi bi-x-circle me-1"></i>Cancel
                                                 </button>
                                             </form>
@@ -465,7 +472,10 @@
                                                             <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="confirm">
                                                                 <input type="hidden" name="id" value="${o.id}">
-                                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Confirm order ${o.orderCode}?');">
+                                                                <button type="submit" class="btn btn-sm btn-success"
+                                                                        data-confirm="Confirm order ${o.orderCode}?"
+                                                                        data-confirm-title="Confirm order"
+                                                                        data-confirm-label="Confirm order">
                                                                     <i class="bi bi-check2-circle me-1"></i>Confirm
                                                                 </button>
                                                             </form>
@@ -474,7 +484,11 @@
                                                             <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="cancel">
                                                                 <input type="hidden" name="id" value="${o.id}">
-                                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel order ${o.orderCode}?');">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                        data-confirm="Cancel order ${o.orderCode}?"
+                                                                        data-confirm-title="Cancel order"
+                                                                        data-confirm-label="Cancel order"
+                                                                        data-confirm-danger="true">
                                                                     <i class="bi bi-x-circle me-1"></i>Cancel
                                                                 </button>
                                                             </form>
@@ -568,7 +582,9 @@
                             <input type="hidden" name="returnMode" value="detail">
                             <button type="submit"
                                     class="btn btn-success"
-                                    onclick="return confirm('Confirm that this VNPay order has been paid?');">
+                                    data-confirm="Confirm that this VNPay order has been paid?"
+                                    data-confirm-title="Mark payment as paid"
+                                    data-confirm-label="Confirm paid">
                                 <i class="bi bi-check2-circle me-1"></i>Confirm paid
                             </button>
                         </form>

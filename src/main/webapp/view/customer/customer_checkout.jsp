@@ -1223,8 +1223,10 @@
                                     event.preventDefault();
                                     event.stopPropagation();
 
-                                    alert(
-                                            "Please select a delivery address."
+                                    window.showAppToast(
+                                            "Please select a delivery address.",
+                                            "warning",
+                                            {title: "Delivery address required"}
                                             );
 
                                     return;
