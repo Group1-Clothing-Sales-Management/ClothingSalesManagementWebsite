@@ -6,8 +6,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Create New Voucher - Admin Panel</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <style>
             .wrapper {
                 display: flex;
@@ -34,7 +34,7 @@
             <jsp:param name="activeTab" value="discounts" />
         </jsp:include>
 
-        <div class="admin-page">
+        <div class="admin-page voucher-form-page">
             <div class="container-fluid">
 
                 <div class="page-header">
@@ -57,72 +57,70 @@
                         <form action="${pageContext.request.contextPath}/admin/voucher" method="POST" id="voucherForm">
                             <input type="hidden" name="action" value="create">
 
-                            <div class="row">
+                            <div class="row g-3">
                                 <div class="form-group col-md-6">
-                                    <label for="code" class="font-weight-bold">Voucher Code <span class="text-danger">*</span></label>
+                                    <label for="code" class="fw-bold">Voucher Code <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fas fa-tag text-muted"></i></span>
-                                        </div>
-                                        <input type="text" class="form-control text-uppercase font-weight-bold" id="code" name="code" 
+                                        <span class="input-group-text"><i class="fa-solid fa-tag text-muted"></i></span>
+                                        <input type="text" class="form-control text-uppercase fw-bold" id="code" name="code" 
                                                required placeholder="e.g., SUMMER2026" value="${oldVoucher.code}">
                                     </div>
                                     <small class="text-muted">No spaces or special characters allowed. Automatically capitalized.</small>
                                 </div>
 
                                 <div class="form-group col-md-6">
-                                    <label for="title" class="font-weight-bold">Campaign Title <span class="text-danger">*</span></label>
+                                    <label for="title" class="fw-bold">Campaign Title <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="title" name="title" 
                                            required placeholder="e.g., Summer Beach Flash Sale 2026" value="${oldVoucher.title}">
                                     <small class="text-muted">Public campaign name displayed transparently to customers.</small>
                                 </div>
                             </div>
 
-                            <div class="row mt-3">
+                            <div class="row g-3 mt-0">
                                 <div class="form-group col-md-4">
-                                    <label for="discountType" class="font-weight-bold">Discount Type <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="discountType" name="discountType" onchange="toggleDiscountFields()">
+                                    <label for="discountType" class="fw-bold">Discount Type <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="discountType" name="discountType" onchange="toggleDiscountFields()">
                                         <option value="PERCENTAGE" ${oldVoucher.discountType == 'PERCENTAGE' ? 'selected' : ''}>Percentage (%)</option>
                                         <option value="FIXED_AMOUNT" ${oldVoucher.discountType == 'FIXED_AMOUNT' ? 'selected' : ''}>Fixed Amount (đ)</option>
                                     </select>
                                 </div>
 
                                 <div class="form-group col-md-4">
-                                    <label for="discountValue" class="font-weight-bold">Discount Value <span class="text-danger">*</span></label>
+                                    <label for="discountValue" class="fw-bold">Discount Value <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="discountValue" name="discountValue" 
                                            required min="1" step="any" placeholder="Enter value..." value="${oldVoucher.discountValue}">
                                 </div>
 
                                 <div class="form-group col-md-4" id="maxDiscountGroup">
-                                    <label for="maxDiscountAmount" class="font-weight-bold">Max Discount Limit (đ) <span class="text-danger">*</span></label>
+                                    <label for="maxDiscountAmount" class="fw-bold">Max Discount Limit (đ) <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" 
                                            min="0" placeholder="Caps the maximum reward deduction" value="${oldVoucher.maxDiscountAmount}">
                                 </div>
                             </div>
 
-                            <div class="row mt-3">
+                            <div class="row g-3 mt-0">
                                 <div class="form-group col-md-3">
-                                    <label for="minOrderValue" class="font-weight-bold">Min Order Value (đ)</label>
+                                    <label for="minOrderValue" class="fw-bold">Min Order Value (đ)</label>
                                     <input type="number" class="form-control" id="minOrderValue" name="minOrderValue" 
                                            min="0" placeholder="Minimum required basket cost" 
                                            value="${oldVoucher.minOrderValue != null ? oldVoucher.minOrderValue : 0}">
                                 </div>
 
                                 <div class="form-group col-md-3">
-                                    <label for="usageLimit" class="font-weight-bold">Total Supply Limit <span class="text-danger">*</span></label>
+                                    <label for="usageLimit" class="fw-bold">Total Supply Limit <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="usageLimit" name="usageLimit" 
                                            required min="1" placeholder="Total vouchers pool size" value="${oldVoucher.usageLimit}">
                                 </div>
 
                                 <div class="form-group col-md-3">
-                                    <label for="limitPerUser" class="font-weight-bold">Limit Per Customer <span class="text-danger">*</span></label>
+                                    <label for="limitPerUser" class="fw-bold">Limit Per Customer <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="limitPerUser" name="limitPerUser" 
                                            required min="1" placeholder="Max usage per account" value="${oldVoucher.limitPerUser != null ? oldVoucher.limitPerUser : 1}">
                                 </div>
 
                                 <div class="form-group col-md-3">
-                                    <label for="categoryId" class="font-weight-bold">Applicable Scope</label>
-                                    <select class="form-control" id="categoryId" name="categoryId">
+                                    <label for="categoryId" class="fw-bold">Applicable Scope</label>
+                                    <select class="form-select" id="categoryId" name="categoryId">
                                         <option value="ALL">Entire Store (Global Scope)</option>
                                         <c:forEach var="cat" items="${categoryList}">
                                             <option value="${cat.id}" ${oldVoucher.categoryId == cat.id ? 'selected' : ''}>Category: ${cat.categoryName}</option>
@@ -131,23 +129,19 @@
                                 </div>
                             </div>
 
-                            <div class="row mt-3">
+                            <div class="row g-3 mt-0">
                                 <div class="form-group col-md-6">
-                                    <label for="startDate" class="font-weight-bold">Start Date & Time <span class="text-danger">*</span></label>
+                                    <label for="startDate" class="fw-bold">Start Date & Time <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="far fa-calendar-alt text-muted"></i></span>
-                                        </div>
+                                        <span class="input-group-text"><i class="fa-regular fa-calendar-alt text-muted"></i></span>
                                         <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
                                     </div>
                                 </div>
 
                                 <div class="form-group col-md-6">
-                                    <label for="endDate" class="font-weight-bold">End Date & Time <span class="text-danger">*</span></label>
+                                    <label for="endDate" class="fw-bold">End Date & Time <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="far fa-calendar-times text-muted"></i></span>
-                                        </div>
+                                        <span class="input-group-text"><i class="fa-regular fa-calendar-times text-muted"></i></span>
                                         <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
                                     </div>
                                 </div>
@@ -155,12 +149,12 @@
 
                             <hr class="my-4">
 
-                            <div class="d-flex justify-content-end">
-                                <button type="reset" class="btn btn-light border font-weight-bold px-4 mr-2" onclick="setTimeout(toggleDiscountFields, 50)">
+                            <div class="admin-form-actions">
+                                <button type="reset" class="btn btn-light border fw-bold px-4 me-2" onclick="setTimeout(toggleDiscountFields, 50)">
                                     Reset Form
                                 </button>
-                                <button type="submit" class="btn btn-primary font-weight-bold px-5">
-                                    <i class="fas fa-save mr-2"></i> Save Campaign
+                                <button type="submit" class="btn btn-primary fw-bold px-5">
+                                    <i class="fa-solid fa-save me-2"></i> Save Campaign
                                 </button>
                             </div>
                         </form>
@@ -219,7 +213,6 @@
                 toggleDiscountFields();
             };
         </script>
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

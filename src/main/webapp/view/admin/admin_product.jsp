@@ -277,7 +277,7 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="admin-page">
+        <div class="admin-page product-page">
             <div class="container-fluid">
 
                 <div class="page-header">
@@ -299,14 +299,13 @@
                     </div>
 
                     <div class="product-filter-panel mb-3">
-                        <div class="row g-3 align-items-end">
+                        <div class="product-filter-grid">
 
-                            <!-- Cột Search chiếm 4/12 trên màn lớn -->
-                            <div class="col-lg-4 col-md-12">
+                            <!-- Search is wider so the placeholder and entered text remain readable. -->
+                            <div class="product-filter-field product-filter-search">
                                 <label for="productSearchInput" class="product-filter-label">
                                     Search products
                                 </label>
-                                <!-- Đã xóa class row-sm-6 ở đây -->
                                 <div class="input-group"> 
                                     <input type="search"
                                            id="productSearchInput"
@@ -318,9 +317,7 @@
                                     </span>
                                 </div>
                             </div>
-
-                            <!-- Cột Category chiếm 2/12 trên màn lớn -->
-                            <div class="col-lg-2 col-md-3 col-sm-6">
+                            <div class="product-filter-field">
                                 <label for="productCategoryFilter" class="product-filter-label">
                                     Category
                                 </label>
@@ -331,9 +328,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-
-                            <!-- Cột Brand chiếm 2/12 trên màn lớn -->
-                            <div class="col-lg-2 col-md-3 col-sm-6">
+                            <div class="product-filter-field">
                                 <label for="productBrandFilter" class="product-filter-label">
                                     Brand
                                 </label>
@@ -344,9 +339,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-
-                            <!-- Cột Status chiếm 2/12 trên màn lớn -->
-                            <div class="col-lg-2 col-md-3 col-sm-6">
+                            <div class="product-filter-field">
                                 <label for="productStatusFilter" class="product-filter-label">
                                     Status
                                 </label>
@@ -356,9 +349,7 @@
                                     <option value="INACTIVE">Inactive</option>
                                 </select>
                             </div>
-
-                            <!-- Cột Button Reset chiếm 2/12 trên màn lớn -->
-                            <div class="col-lg-2 col-md-12">
+                            <div class="product-filter-actions">
                                 <button type="button"
                                         id="resetProductFilters"
                                         class="btn btn-outline-secondary w-100">

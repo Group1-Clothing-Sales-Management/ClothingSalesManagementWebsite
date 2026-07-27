@@ -14,6 +14,11 @@
         --admin-radius: 16px;
         --admin-control-radius: 10px;
         --admin-sidebar-width: 260px;
+        --admin-page-padding-top: 28px;
+        --admin-page-padding-x: 32px;
+        --admin-page-padding-bottom: 36px;
+        --admin-section-gap: 24px;
+        --admin-control-height: 42px;
     }
 
     html {
@@ -59,7 +64,7 @@
     .main-content,
     .content-area {
         min-width: 0;
-        padding: 28px 32px 36px;
+        padding: var(--admin-page-padding-top) var(--admin-page-padding-x) var(--admin-page-padding-bottom);
     }
 
     .admin-shell-content > .admin-page,
@@ -69,7 +74,7 @@
         max-width: none;
         min-height: 100%;
         margin: 0 !important;
-        padding: 28px 32px 36px !important;
+        padding: var(--admin-page-padding-top) var(--admin-page-padding-x) var(--admin-page-padding-bottom) !important;
         box-sizing: border-box;
     }
 
@@ -816,6 +821,242 @@
             padding-right: 12px;
         }
     }
+
+    /* =========================================================
+       Unified Admin UI
+       All modules start from the same top and left coordinates.
+       ========================================================= */
+    body {
+        overflow-x: hidden;
+    }
+
+    .admin-shell-content > .admin-page {
+        display: block;
+    }
+
+    .admin-page > .container-fluid,
+    .admin-page > .container {
+        min-height: 100%;
+    }
+
+    .admin-page .page-header {
+        width: 100%;
+    }
+
+    .admin-page .page-header > .btn,
+    .admin-page .page-header > a.btn,
+    .admin-page .page-header > form,
+    .admin-page .page-header > .page-header-actions {
+        flex: 0 0 auto;
+    }
+
+    .admin-page .page-header > form {
+        margin: 0;
+    }
+
+    .admin-page .page-header .btn {
+        white-space: nowrap;
+    }
+
+    .admin-page .card + .card,
+    .admin-page .card + .row,
+    .admin-page .row + .card {
+        margin-top: var(--admin-section-gap);
+    }
+
+    .admin-page .table-responsive {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-gutter: stable;
+    }
+
+    .admin-page .form-group {
+        margin-bottom: 0;
+    }
+
+    .modal .form-group {
+        margin-bottom: 16px;
+    }
+
+    .modal .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .admin-page .form-label,
+    .admin-page .form-group > label,
+    .admin-page .filter-label,
+    .admin-page .product-filter-label {
+        display: block;
+        min-height: 20px;
+        margin-bottom: 7px !important;
+        color: #475569;
+        font-size: .84rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .admin-page .form-control,
+    .admin-page .form-select,
+    .admin-page .input-group-text {
+        min-height: var(--admin-control-height);
+    }
+
+    .admin-page .input-group {
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+
+    .admin-page .input-group > .form-control,
+    .admin-page .input-group > .form-select {
+        min-width: 0;
+    }
+
+    .admin-page .admin-filter-surface,
+    .admin-page .product-filter-panel,
+    .admin-page .category-toolbar,
+    .admin-page .voucher-filter-panel,
+    .admin-page .price-filter-panel {
+        width: 100%;
+        padding: 18px 20px;
+        border: 1px solid var(--admin-border);
+        border-radius: 14px;
+        background: #f8fafc;
+    }
+
+    /* Product filters: the search field is intentionally wider. */
+    .product-filter-grid {
+        display: grid;
+        grid-template-columns: minmax(320px, 2.2fr) repeat(3, minmax(145px, 1fr)) minmax(150px, .9fr);
+        gap: 16px;
+        align-items: end;
+    }
+
+    .product-filter-field,
+    .product-filter-actions,
+    .category-filter-search,
+    .category-filter-status,
+    .voucher-filter-field,
+    .price-filter-search,
+    .price-filter-status,
+    .price-filter-actions {
+        min-width: 0;
+    }
+
+    .product-filter-actions .btn,
+    .voucher-filter-actions .btn,
+    .price-filter-actions .btn {
+        width: 100%;
+    }
+
+    /* Category: balanced search and status widths. */
+    .category-filter-grid {
+        display: grid;
+        grid-template-columns: minmax(320px, 2fr) minmax(220px, 1fr);
+        gap: 16px;
+        align-items: end;
+    }
+
+    /* Voucher: search wider than lifecycle status, compact action. */
+    .voucher-filter-grid {
+        display: grid;
+        grid-template-columns: minmax(340px, 1.65fr) minmax(250px, 1fr) minmax(160px, .55fr);
+        gap: 16px;
+        align-items: end;
+    }
+
+    /* Price: avoid an excessively long search field on wide screens. */
+    .price-filter-grid {
+        display: grid;
+        grid-template-columns: minmax(340px, 1.55fr) minmax(260px, 1fr) minmax(140px, .45fr);
+        gap: 16px;
+        align-items: end;
+    }
+
+    .variant-search-input-group {
+        width: 100%;
+        max-width: 760px;
+    }
+
+    .admin-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Bootstrap 4 compatibility names retained by a few legacy fragments. */
+    .admin-page .fw-bold {
+        font-weight: 700 !important;
+    }
+
+    @media (max-width: 1399.98px) {
+        .product-filter-grid {
+            grid-template-columns: minmax(300px, 2fr) repeat(2, minmax(150px, 1fr));
+        }
+
+        .product-filter-actions {
+            grid-column: auto;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .page-header {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .page-header > .btn,
+        .page-header > a.btn,
+        .page-header > .page-header-actions {
+            margin-left: 54px;
+        }
+
+        .product-filter-grid,
+        .category-filter-grid,
+        .voucher-filter-grid,
+        .price-filter-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .product-filter-search,
+        .category-filter-search,
+        .voucher-filter-search,
+        .price-filter-search {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .page-header > .btn,
+        .page-header > a.btn,
+        .page-header > .page-header-actions {
+            width: 100%;
+            margin-left: 0;
+        }
+
+        .page-header > .btn,
+        .page-header > a.btn {
+            justify-content: center;
+        }
+
+        .product-filter-grid,
+        .category-filter-grid,
+        .voucher-filter-grid,
+        .price-filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .product-filter-search,
+        .category-filter-search,
+        .voucher-filter-search,
+        .price-filter-search {
+            grid-column: auto;
+        }
+    }
+
 </style>
 <div class="admin-shell" id="adminShell">
     <div class="admin-shell-sidebar">

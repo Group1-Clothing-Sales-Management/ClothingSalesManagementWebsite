@@ -71,7 +71,7 @@
     <jsp:param name="activeTab" value="inventory"/>
 </jsp:include>
 
-<div class="admin-page">
+<div class="admin-page inventory-page">
     <div class="container-fluid">
 
         <div class="page-header">

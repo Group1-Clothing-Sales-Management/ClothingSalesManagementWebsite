@@ -226,7 +226,7 @@
             <jsp:param name="activeTab" value="inventory"/>
         </jsp:include>
 
-        <div class="admin-page">
+        <div class="admin-page inventory-import-page">
             <div class="container-fluid">
 
                 <div class="page-header">
@@ -369,7 +369,7 @@
                                         Search Product Variant
                                     </label>
 
-                                    <div class="input-group mb-2">
+                                    <div class="input-group mb-2 variant-search-input-group">
                                         <span class="input-group-text bg-white">
                                             <i class="fa-solid
                                                fa-magnifying-glass

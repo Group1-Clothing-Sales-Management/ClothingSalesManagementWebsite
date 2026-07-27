@@ -32,7 +32,7 @@
     <jsp:param name="activeTab" value="prices"/>
 </jsp:include>
 
-<div class="admin-page">
+<div class="admin-page price-edit-page">
     <div class="container-fluid">
 
         <div class="page-header">

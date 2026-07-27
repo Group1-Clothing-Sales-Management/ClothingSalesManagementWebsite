@@ -9,7 +9,10 @@
         <title>Product Details - Admin Panel</title>
 
         <link rel="stylesheet"
-              href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
         <link rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -222,7 +225,7 @@
             <jsp:param name="activeTab" value="products" />
         </jsp:include>
 
-        <div class="admin-page">
+        <div class="admin-page product-detail-page">
             <div class="page-header">
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-box"/>
@@ -232,7 +235,7 @@
 
                 <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${product.id}"
                    class="btn btn-primary">
-                    <i class="fa-solid fa-pen-to-square mr-1"></i>Edit Product Info
+                    <i class="fa-solid fa-pen-to-square me-1"></i>Edit Product Info
                 </a>
             </div>
 
@@ -272,7 +275,7 @@
                         <div class="col-md-9">
                             <h3>
                                 <c:out value="${product.productName}" />
-                                <span class="badge badge-secondary"
+                                <span class="badge text-bg-secondary"
                                       style="font-size: 14px;">
                                     ID: #${product.id}
                                 </span>
@@ -287,8 +290,8 @@
                                     <strong>Status:</strong>
 
                                     <span class="badge ${product.status == 'ACTIVE'
-                                                         ? 'badge-success'
-                                                         : 'badge-warning'}">
+                                                         ? 'text-bg-success'
+                                                         : 'text-bg-warning'}">
                                               ${product.status}
                                           </span>
                                     </div>
@@ -313,7 +316,7 @@
 
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">
-                            <i class="fa-solid fa-layer-group mr-2"></i>
+                            <i class="fa-solid fa-layer-group me-2"></i>
                             Current Product Variants
                         </h5>
                     </div>
@@ -404,8 +407,8 @@
 
                                             <td class="align-middle">
                                                 <span class="badge ${variant.stockQuantity > 0
-                                                                     ? 'badge-success'
-                                                                     : 'badge-secondary'}">
+                                                                     ? 'text-bg-success'
+                                                                     : 'text-bg-secondary'}">
                                                           ${variant.stockQuantity} Available
                                                       </span>
                                                 </td>
@@ -458,7 +461,7 @@
                                                     <button type="button"
                                                             class="btn btn-sm btn-primary"
                                                             onclick="toggleVariantEdit(${variant.id})">
-                                                        <i class="fa-solid fa-pen-to-square mr-1"></i>
+                                                        <i class="fa-solid fa-pen-to-square me-1"></i>
                                                         Edit
                                                     </button>
                                                 </td>
@@ -481,7 +484,7 @@
                                                             <button type="button"
                                                                     class="btn btn-sm btn-outline-secondary"
                                                                     onclick="toggleVariantEdit(${variant.id})">
-                                                                <i class="fa-solid fa-xmark mr-1"></i>Close
+                                                                <i class="fa-solid fa-xmark me-1"></i>Close
                                                             </button>
                                                         </div>
 
@@ -597,7 +600,7 @@
                                                                     <input type="file"
                                                                            id="variantImage-${variant.id}"
                                                                            name="variantImage"
-                                                                           class="form-control-file"
+                                                                           class="form-control"
                                                                            accept="image/jpeg,image/png,image/webp">
 
                                                                     <small class="form-text text-muted">
@@ -615,7 +618,7 @@
 
                                                                 <button type="submit"
                                                                         class="btn btn-primary">
-                                                                    <i class="fa-solid fa-floppy-disk mr-1"></i>
+                                                                    <i class="fa-solid fa-floppy-disk me-1"></i>
                                                                     Save Variant
                                                                 </button>
                                                             </div>
@@ -698,8 +701,8 @@
 
                                     <div class="col-md-3 form-group d-flex align-items-end">
                                         <button type="submit"
-                                                class="btn btn-success btn-block">
-                                            <i class="fa-solid fa-plus mr-1"></i>
+                                                class="btn btn-success w-100">
+                                            <i class="fa-solid fa-plus me-1"></i>
                                             Add Variant
                                         </button>
                                     </div>
