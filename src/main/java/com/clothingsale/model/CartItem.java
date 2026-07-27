@@ -6,6 +6,7 @@ public class CartItem {
 
     private int variantId;
     private int productId;
+    private int categoryId;
     private String productName;
     private String attributes; // e.g. "Size: M, Color: Blue"
     private BigDecimal price;
@@ -31,6 +32,14 @@ public class CartItem {
 
     public void setProductId(int productId) {
         this.productId = productId;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     public String getProductName() {

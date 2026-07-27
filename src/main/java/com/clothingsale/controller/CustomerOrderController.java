@@ -177,7 +177,7 @@ public class CustomerOrderController extends HttpServlet {
         }
 
         String voucherCode = trimToNull(request.getParameter("voucherCode"));
-        String voucherError = validateVoucher(userId, voucherCode, cartTotal);
+        String voucherError = validateVoucher(userId, voucherCode, cartItems);
 
         if (voucherError != null) {
             request.setAttribute("voucherError", voucherError);
@@ -277,7 +277,10 @@ public class CustomerOrderController extends HttpServlet {
         Voucher voucher = null;
 
         if (voucherCode != null) {
-            voucher = service.getAvailableVoucherForUser(userId, voucherCode);
+            voucher = service.getAvailableVoucherForUser(
+                    userId,
+                    voucherCode
+            );
 
             if (voucher == null) {
                 if (request.getAttribute("voucherError") == null) {
@@ -286,17 +289,42 @@ public class CustomerOrderController extends HttpServlet {
                             "Voucher does not exist, has expired, reached its limit, or has already been used."
                     );
                 }
-            } else if (cartTotal.compareTo(safeMoney(voucher.getMinOrderValue())) < 0) {
-                if (request.getAttribute("voucherError") == null) {
+            } else {
+                BigDecimal applicableSubtotal
+                        = service.calculateApplicableSubtotal(
+                                cartItems,
+                                voucher
+                        );
+
+                if (applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0) {
+                    if (request.getAttribute("voucherError") == null) {
+                        request.setAttribute(
+                                "voucherError",
+                                "This voucher does not apply to any product in your checkout."
+                        );
+                    }
+                    voucher = null;
+                } else if (applicableSubtotal.compareTo(
+                        safeMoney(voucher.getMinOrderValue())) < 0) {
+
+                    if (request.getAttribute("voucherError") == null) {
+                        request.setAttribute(
+                                "voucherError",
+                                "The eligible product value does not meet this voucher's minimum spending requirement."
+                        );
+                    }
+                    voucher = null;
+                } else {
+                    discount = service.calculateDiscount(
+                            applicableSubtotal,
+                            voucher
+                    );
+                    request.setAttribute("voucher", voucher);
                     request.setAttribute(
-                            "voucherError",
-                            "The order value does not meet this voucher's minimum spending requirement."
+                            "voucherApplicableSubtotal",
+                            applicableSubtotal
                     );
                 }
-                voucher = null;
-            } else {
-                discount = service.calculateDiscount(cartTotal, voucher);
-                request.setAttribute("voucher", voucher);
             }
         }
 
@@ -313,7 +341,7 @@ public class CustomerOrderController extends HttpServlet {
         request.setAttribute("totalPayment", totalPayment);
         request.setAttribute("voucherCode", voucher != null ? voucher.getCode() : null);
         request.setAttribute("customerVouchers", service.getVouchersForUser(userId));
-        request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, cartTotal));
+        request.setAttribute("suggestedVouchers", service.getEligibleVouchers(userId, cartItems));
 
         request.setAttribute("selectedAddressId", selectedAddressId);
         request.setAttribute(
@@ -333,18 +361,38 @@ public class CustomerOrderController extends HttpServlet {
         request.getRequestDispatcher(CHECKOUT_VIEW).forward(request, response);
     }
 
-    private String validateVoucher(int userId, String voucherCode, BigDecimal cartTotal) {
+    private String validateVoucher(
+            int userId,
+            String voucherCode,
+            List<CartItem> cartItems) {
+
         if (voucherCode == null) {
             return null;
         }
 
-        Voucher voucher = service.getAvailableVoucherForUser(userId, voucherCode);
+        Voucher voucher = service.getAvailableVoucherForUser(
+                userId,
+                voucherCode
+        );
+
         if (voucher == null) {
             return "The selected voucher is no longer available. Please choose another voucher.";
         }
 
-        if (cartTotal.compareTo(safeMoney(voucher.getMinOrderValue())) < 0) {
-            return "The order value does not meet this voucher's minimum spending requirement.";
+        BigDecimal applicableSubtotal
+                = service.calculateApplicableSubtotal(
+                        cartItems,
+                        voucher
+                );
+
+        if (applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0) {
+            return "This voucher does not apply to any product in your checkout.";
+        }
+
+        if (applicableSubtotal.compareTo(
+                safeMoney(voucher.getMinOrderValue())) < 0) {
+
+            return "The eligible product value does not meet this voucher's minimum spending requirement.";
         }
 
         return null;

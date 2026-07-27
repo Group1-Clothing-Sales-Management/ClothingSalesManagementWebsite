@@ -74,12 +74,7 @@ public class AdminInventoryDAO {
                         resultSet.getString("size")
                 );
 
-                /*
-     * Fallback cho dữ liệu cũ:
-     * RT-BLZR-GRY-L
-     * Phần cuối = Size
-     * Phần kế cuối = Color
-                 */
+               
                 if (sku != null && !sku.trim().isEmpty()) {
                     String[] skuParts = sku.trim().split("-");
 

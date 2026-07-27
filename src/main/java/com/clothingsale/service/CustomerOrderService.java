@@ -105,19 +105,45 @@ public class CustomerOrderService {
         return dao.getVouchersForUser(userId);
     }
 
-    public List<Voucher> getEligibleVouchers(int userId, BigDecimal subtotal) {
+    public List<Voucher> getEligibleVouchers(
+            int userId,
+            List<CartItem> cartItems) {
+
         List<Voucher> eligible = new ArrayList<>();
         Timestamp now = new Timestamp(System.currentTimeMillis());
+
         for (Voucher voucher : dao.getVouchersForUser(userId)) {
-            boolean active = voucher.getStartDate() != null && voucher.getEndDate() != null
-                    && !now.before(voucher.getStartDate()) && !now.after(voucher.getEndDate());
-            if (active && voucher.isAvailable() && voucher.getUserUsedCount() == 0
-                    && subtotal.compareTo(voucher.getMinOrderValue()) >= 0) {
-                voucher.setApplicableDiscount(calculateDiscount(subtotal, voucher));
+            boolean active = voucher.getStartDate() != null
+                    && voucher.getEndDate() != null
+                    && !now.before(voucher.getStartDate())
+                    && !now.after(voucher.getEndDate());
+
+            BigDecimal applicableSubtotal
+                    = calculateApplicableSubtotal(cartItems, voucher);
+
+            if (active
+                    && voucher.isAvailable()
+                    && voucher.getUserUsedCount() == 0
+                    && voucher.getMinOrderValue() != null
+                    && applicableSubtotal.compareTo(BigDecimal.ZERO) > 0
+                    && applicableSubtotal.compareTo(
+                            voucher.getMinOrderValue()) >= 0) {
+
+                voucher.setApplicableDiscount(
+                        calculateDiscount(
+                                applicableSubtotal,
+                                voucher
+                        )
+                );
                 eligible.add(voucher);
             }
         }
-        eligible.sort((a, b) -> b.getApplicableDiscount().compareTo(a.getApplicableDiscount()));
+
+        eligible.sort(
+                (a, b) -> b.getApplicableDiscount()
+                        .compareTo(a.getApplicableDiscount())
+        );
+
         return eligible;
     }
 
@@ -165,36 +191,91 @@ public class CustomerOrderService {
         return dao.cancelOrder(orderId, userId);
     }
 
-    public BigDecimal calculateDiscount(BigDecimal subtotal, Voucher voucher) {
+    public BigDecimal calculateApplicableSubtotal(
+            List<CartItem> cartItems,
+            Voucher voucher) {
 
-        if (voucher == null) {
+        if (cartItems == null || cartItems.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        if (subtotal.compareTo(voucher.getMinOrderValue()) < 0) {
+        Integer voucherCategoryId = voucher != null
+                ? voucher.getCategoryId()
+                : null;
+
+        BigDecimal applicableSubtotal = BigDecimal.ZERO;
+
+        for (CartItem item : cartItems) {
+            if (item == null
+                    || item.getPrice() == null
+                    || item.getQuantity() <= 0) {
+
+                continue;
+            }
+
+            if (voucherCategoryId != null
+                    && item.getCategoryId() != voucherCategoryId) {
+
+                continue;
+            }
+
+            applicableSubtotal = applicableSubtotal.add(
+                    item.getPrice().multiply(
+                            BigDecimal.valueOf(item.getQuantity())
+                    )
+            );
+        }
+
+        return applicableSubtotal;
+    }
+
+    public BigDecimal calculateDiscount(
+            BigDecimal applicableSubtotal,
+            Voucher voucher) {
+
+        if (voucher == null
+                || applicableSubtotal == null
+                || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
+                || voucher.getMinOrderValue() == null
+                || applicableSubtotal.compareTo(
+                        voucher.getMinOrderValue()) < 0) {
+
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discountValue = voucher.getDiscountValue();
+        if (discountValue == null
+                || discountValue.compareTo(BigDecimal.ZERO) <= 0) {
+
             return BigDecimal.ZERO;
         }
 
         BigDecimal discount;
 
         if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())) {
-
-            discount = subtotal
-                    .multiply(voucher.getDiscountValue())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            discount = applicableSubtotal
+                    .multiply(discountValue)
+                    .divide(
+                            BigDecimal.valueOf(100),
+                            2,
+                            RoundingMode.HALF_UP
+                    );
 
             if (voucher.getMaxDiscountAmount() != null
-                    && discount.compareTo(voucher.getMaxDiscountAmount()) > 0) {
+                    && voucher.getMaxDiscountAmount()
+                            .compareTo(BigDecimal.ZERO) > 0
+                    && discount.compareTo(
+                            voucher.getMaxDiscountAmount()) > 0) {
 
                 discount = voucher.getMaxDiscountAmount();
             }
-
         } else {
-
-            discount = voucher.getDiscountValue();
+            discount = discountValue;
         }
 
-        return discount.min(subtotal).max(BigDecimal.ZERO);
+        return discount
+                .min(applicableSubtotal)
+                .max(BigDecimal.ZERO);
     }
 
     public List<Order> getOrdersByUserId(int userId) {

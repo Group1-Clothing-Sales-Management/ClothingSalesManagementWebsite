@@ -18,7 +18,7 @@ public class CartDAO {
 
     private static final String SELECT_CART_SQL =
             "SELECT c.variant_id, c.quantity, "
-            + "pv.product_id, pv.sale_price, "
+            + "pv.product_id, p.category_id, pv.sale_price, "
             + "p.product_name, "
             + "COALESCE(variant_img.image_url, product_img.image_url) AS main_image, "
             + "pv.color, pv.size "
@@ -59,7 +59,7 @@ public class CartDAO {
 
     private static final String SELECT_ACTIVE_VARIANT_FOR_CART_SQL =
             "SELECT pv.id AS variant_id, "
-            + "pv.product_id, pv.sale_price, pv.stock_quantity, "
+            + "pv.product_id, p.category_id, pv.sale_price, pv.stock_quantity, "
             + "p.product_name, "
             + "COALESCE(variant_img.image_url, product_img.image_url) AS main_image, "
             + "pv.color, pv.size "
@@ -106,6 +106,7 @@ public class CartDAO {
                         int variantId = rs.getInt("variant_id");
                         int quantity = rs.getInt("quantity");
                         int productId = rs.getInt("product_id");
+                        int categoryId = rs.getInt("category_id");
 
                         BigDecimal price = rs.getBigDecimal("sale_price");
                         String productName = rs.getString("product_name");
@@ -127,6 +128,7 @@ public class CartDAO {
 
                         item.setVariantId(variantId);
                         item.setProductId(productId);
+                        item.setCategoryId(categoryId);
                         item.setProductName(
                                 productName != null ? productName : "");
                         item.setPrice(
@@ -345,6 +347,7 @@ public class CartDAO {
 
                         item.setVariantId(rs.getInt("variant_id"));
                         item.setProductId(rs.getInt("product_id"));
+                        item.setCategoryId(rs.getInt("category_id"));
                         item.setProductName(rs.getString("product_name"));
                         item.setPrice(
                                 rs.getBigDecimal("sale_price") != null

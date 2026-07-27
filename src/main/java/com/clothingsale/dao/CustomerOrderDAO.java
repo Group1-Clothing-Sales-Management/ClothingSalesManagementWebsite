@@ -466,33 +466,84 @@ public class CustomerOrderDAO {
         throw new SQLException("Create order failed");
     }
 
-    private BigDecimal calculateDiscount(Voucher voucher, BigDecimal subtotal) {
+    private BigDecimal calculateDiscount(
+            Voucher voucher,
+            BigDecimal applicableSubtotal) {
 
-        if (voucher == null) {
+        if (voucher == null
+                || applicableSubtotal == null
+                || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
+                || voucher.getMinOrderValue() == null
+                || applicableSubtotal.compareTo(voucher.getMinOrderValue()) < 0) {
+
             return BigDecimal.ZERO;
         }
 
-        if (subtotal.compareTo(voucher.getMinOrderValue()) < 0) {
+        BigDecimal discountValue = voucher.getDiscountValue();
+        if (discountValue == null
+                || discountValue.compareTo(BigDecimal.ZERO) <= 0) {
+
             return BigDecimal.ZERO;
         }
 
         BigDecimal discount;
 
         if ("PERCENTAGE".equalsIgnoreCase(voucher.getDiscountType())) {
-
-            discount = subtotal.multiply(voucher.getDiscountValue())
+            discount = applicableSubtotal
+                    .multiply(discountValue)
                     .divide(BigDecimal.valueOf(100));
 
             if (voucher.getMaxDiscountAmount() != null
+                    && voucher.getMaxDiscountAmount().compareTo(BigDecimal.ZERO) > 0
                     && discount.compareTo(voucher.getMaxDiscountAmount()) > 0) {
+
                 discount = voucher.getMaxDiscountAmount();
             }
-
         } else {
-            discount = voucher.getDiscountValue();
+            discount = discountValue;
         }
 
-        return discount.min(subtotal).max(BigDecimal.ZERO);
+        return discount
+                .min(applicableSubtotal)
+                .max(BigDecimal.ZERO);
+    }
+
+    private BigDecimal calculateApplicableSubtotal(
+            List<CartItem> cartItems,
+            Voucher voucher) {
+
+        if (cartItems == null || cartItems.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        Integer voucherCategoryId = voucher != null
+                ? voucher.getCategoryId()
+                : null;
+
+        BigDecimal applicableSubtotal = BigDecimal.ZERO;
+
+        for (CartItem item : cartItems) {
+            if (item == null
+                    || item.getPrice() == null
+                    || item.getQuantity() <= 0) {
+
+                continue;
+            }
+
+            if (voucherCategoryId != null
+                    && item.getCategoryId() != voucherCategoryId) {
+
+                continue;
+            }
+
+            applicableSubtotal = applicableSubtotal.add(
+                    item.getPrice().multiply(
+                            BigDecimal.valueOf(item.getQuantity())
+                    )
+            );
+        }
+
+        return applicableSubtotal;
     }
 
     public boolean placeOrder(
@@ -535,17 +586,24 @@ public class CustomerOrderDAO {
                     ? getVoucherByCode(voucherCode)
                     : null;
 
+            BigDecimal applicableSubtotal
+                    = calculateApplicableSubtotal(cartItems, voucher);
+
             if (voucherRequested
                     && (voucher == null
                     || hasUserUsedVoucher(userId, voucher.getId())
                     || voucher.getMinOrderValue() == null
-                    || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+                    || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
+                    || applicableSubtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
 
                 con.rollback();
                 return false;
             }
 
-            BigDecimal discount = calculateDiscount(voucher, subtotal);
+            BigDecimal discount = calculateDiscount(
+                    voucher,
+                    applicableSubtotal
+            );
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
             BigDecimal totalPayment = subtotal
                     .subtract(discount)
@@ -658,17 +716,24 @@ public class CustomerOrderDAO {
                     ? getVoucherByCode(voucherCode)
                     : null;
 
+            BigDecimal applicableSubtotal
+                    = calculateApplicableSubtotal(cartItems, voucher);
+
             if (voucherRequested
                     && (voucher == null
                     || hasUserUsedVoucher(userId, voucher.getId())
                     || voucher.getMinOrderValue() == null
-                    || subtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
+                    || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
+                    || applicableSubtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
 
                 con.rollback();
                 return false;
             }
 
-            BigDecimal discount = calculateDiscount(voucher, subtotal);
+            BigDecimal discount = calculateDiscount(
+                    voucher,
+                    applicableSubtotal
+            );
             BigDecimal shippingFee = BigDecimal.valueOf(30000);
             BigDecimal totalPayment = subtotal
                     .subtract(discount)
@@ -815,6 +880,10 @@ public class CustomerOrderDAO {
                 v.setEndDate(rs.getTimestamp("end_date"));
                 v.setUsageLimit(rs.getInt("usage_limit"));
                 v.setUsedCount(rs.getInt("used_count"));
+                v.setLimitPerUser(rs.getInt("limit_per_user"));
+
+                int categoryId = rs.getInt("category_id");
+                v.setCategoryId(rs.wasNull() ? null : categoryId);
 
                 return v;
             }
@@ -847,6 +916,11 @@ public class CustomerOrderDAO {
                     v.setEndDate(rs.getTimestamp("end_date"));
                     v.setUsageLimit(rs.getInt("usage_limit"));
                     v.setUsedCount(rs.getInt("used_count"));
+                    v.setLimitPerUser(rs.getInt("limit_per_user"));
+
+                    int categoryId = rs.getInt("category_id");
+                    v.setCategoryId(rs.wasNull() ? null : categoryId);
+
                     v.setUserUsedCount(rs.getInt("user_used_count"));
                     vouchers.add(v);
                 }
