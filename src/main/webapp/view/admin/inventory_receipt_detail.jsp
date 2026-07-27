@@ -50,11 +50,11 @@
                     <div class="col-md-3"><div class="label">Supplier</div><div><c:out value="${receipt.supplierName}"/></div></div>
                     <div class="col-md-3"><div class="label">Created by</div><div><c:out value="${receipt.createdByName}"/></div></div>
                     <div class="col-md-2"><div class="label">Status</div><div><span class="badge text-bg-secondary"><c:out value="${receipt.status}"/></span></div></div>
-                    <div class="col-md-2"><div class="label">Items</div><div><c:out value="${receipt.itemCount}"/></div></div>
-                    <div class="col-md-2"><div class="label">Total quantity</div><div><c:out value="${receipt.totalQuantity}"/></div></div>
+                    <div class="col-md-2"><div class="label">Variants</div><div><c:out value="${receipt.itemCount}"/></div></div>
+                    <div class="col-md-2"><div class="label">Total Quantity</div><div><c:out value="${receipt.totalQuantity}"/> pcs</div></div>
                     <div class="col-md-4"><div class="label">Created at</div><div><fmt:formatDate value="${receipt.createdAt}" pattern="yyyy-MM-dd HH:mm"/></div></div>
                     <div class="col-md-4"><div class="label">Vendor reference</div><div><c:out value="${receipt.vendorReference}" default="—"/></div></div>
-                    <div class="col-md-4"><div class="label">Total cost</div><div class="fw-bold"><fmt:formatNumber value="${receipt.totalAmount}" pattern="#,##0.00"/> VND</div></div>
+                    <div class="col-md-4"><div class="label">Total Import Cost</div><div class="fw-bold"><fmt:formatNumber value="${receipt.totalAmount}" pattern="#,##0.00"/> VND</div></div>
                 </div>
 
                 <c:if test="${not empty receipt.note}">
@@ -80,7 +80,7 @@
         </div>
 
         <div class="card content-card">
-            <div class="card-header fw-semibold">Receipt items</div>
+            <div class="card-header fw-semibold">Receipt Variants</div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -88,9 +88,9 @@
                             <th>Product</th>
                             <th>SKU</th>
                             <th>Attributes</th>
-                            <th class="text-end">Quantity</th>
-                            <th class="text-end">Unit cost</th>
-                            <th class="text-end">Line total</th>
+                            <th class="text-end">Quantity (pcs)</th>
+                            <th class="text-end">Unit Cost / Item</th>
+                            <th class="text-end">Subtotal</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -105,7 +105,7 @@
                             </tr>
                         </c:forEach>
                         <c:if test="${empty receiptDetails}">
-                            <tr><td colspan="6" class="text-center text-muted py-4">No receipt items found.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted py-4">No receipt variants found.</td></tr>
                         </c:if>
                     </tbody>
                 </table>

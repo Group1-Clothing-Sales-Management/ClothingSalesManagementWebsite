@@ -68,6 +68,10 @@
                 border-radius: 10px;
             }
 
+            .receipt-table {
+                min-width: 1120px;
+            }
+
             .receipt-table th {
                 color: #4b5563;
                 font-size: .82rem;
@@ -76,6 +80,18 @@
 
             .receipt-table td {
                 vertical-align: middle;
+            }
+
+            .product-name-cell {
+                min-width: 210px;
+                color: #111827;
+                font-weight: 700;
+            }
+
+            .variant-cell {
+                min-width: 145px;
+                color: #374151;
+                font-weight: 650;
             }
 
             .money {
@@ -325,7 +341,7 @@
                         </div>
                     </div>
 
-                    <!-- Add receipt item -->
+                    <!-- Add receipt variant -->
                     <div class="card content-card mb-4">
                         <div class="card-body p-4">
 
@@ -334,11 +350,11 @@
                                     <i class="fa-solid
                                        fa-boxes-stacked
                                        me-2 text-success"></i>
-                                    Add Receipt Item
+                                    Add Receipt Variant
                                 </div>
 
                                 <div class="helper-text">
-                                    Select a product variant and enter its import cost.
+                                    Select a product variant, enter the import quantity, and specify the unit cost for one item.
                                     The current sale price will not be changed.
                                 </div>
                             </div>
@@ -426,7 +442,7 @@
                                 <div class="col-xl-5">
 
                                     <label class="form-label fw-semibold">
-                                        Selected Product
+                                        Selected Variant
                                     </label>
 
                                     <div class="selected-variant-card">
@@ -454,7 +470,7 @@
                                                  text-uppercase
                                                  text-muted
                                                  fw-semibold mb-2">
-                                                Selected Product
+                                                Selected Variant
                                             </div>
 
                                             <div id="selectedVariantName"
@@ -530,7 +546,7 @@
 
                                     <label for="quantity"
                                            class="form-label fw-semibold required">
-                                        Quantity
+                                        Import Quantity (pcs)
                                     </label>
 
                                     <input id="quantity"
@@ -547,7 +563,7 @@
 
                                     <label for="unitCost"
                                            class="form-label fw-semibold required">
-                                        Unit Cost (VND)
+                                        Unit Cost per Item (VND)
                                     </label>
 
                                     <input id="unitCost"
@@ -555,7 +571,7 @@
                                            min="0.01"
                                            step="0.01"
                                            class="form-control"
-                                           placeholder="Enter import cost">
+                                           placeholder="Enter cost for one item">
                                 </div>
 
                                 <!-- Add button -->
@@ -567,7 +583,7 @@
                                             w-100 px-4">
 
                                         <i class="fa-solid fa-plus me-2"></i>
-                                        Add Item
+                                        Add Variant
                                     </button>
                                 </div>
 
@@ -575,7 +591,7 @@
                         </div>
                     </div>
 
-                    <!-- Draft items -->
+                    <!-- Draft variants -->
                     <div class="card content-card mb-4">
                         <div class="card-body p-0">
 
@@ -585,17 +601,17 @@
 
                                 <div>
                                     <div class="section-heading">
-                                        Draft Items
+                                        Draft Variants
                                     </div>
 
                                     <div class="helper-text">
-                                        Review items before saving.
+                                        Review selected variants before saving.
                                     </div>
                                 </div>
 
-                                <span class="badge text-bg-primary">
-                                    <span id="itemCount">0</span>
-                                    item(s)
+                                <span id="itemCount"
+                                      class="badge text-bg-primary">
+                                    0 variants
                                 </span>
                             </div>
 
@@ -606,16 +622,17 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="text-center">#</th>
-                                            <th>Product Variant</th>
+                                            <th>Product Name</th>
+                                            <th>Variant</th>
                                             <th>SKU</th>
                                             <th class="text-center">
-                                                Quantity
+                                                Quantity (pcs)
                                             </th>
                                             <th class="text-end">
-                                                Unit Cost
+                                                Unit Cost / Item
                                             </th>
                                             <th class="text-end">
-                                                Line Total
+                                                Subtotal
                                             </th>
                                             <th class="text-center">
                                                 Action
@@ -626,7 +643,7 @@
                                     <tbody id="receiptItemsBody">
 
                                         <tr id="emptyItemsRow">
-                                            <td colspan="7"
+                                            <td colspan="8"
                                                 class="text-center
                                                 text-muted py-5">
 
@@ -800,6 +817,60 @@
                             .trim();
                 }
 
+                /*
+                 * attributeDetails hiện có dạng:
+                 * Product Name - Size - Color.
+                 * Tách Size và Color khỏi chuỗi để tên sản phẩm không bị lặp
+                 * khi hiển thị ở cột Variant.
+                 */
+                function getProductName(fullName, size, color) {
+                    const parts = String(fullName || '')
+                            .split(/\s+-\s+/)
+                            .map(function (part) {
+                                return part.trim();
+                            })
+                            .filter(function (part) {
+                                return part !== '';
+                            });
+
+                    const normalizedSize = normalizeText(size);
+                    const normalizedColor = normalizeText(color);
+
+                    if (parts.length > 0
+                            && normalizedColor
+                            && normalizeText(parts[parts.length - 1])
+                            === normalizedColor) {
+                        parts.pop();
+                    }
+
+                    if (parts.length > 0
+                            && normalizedSize
+                            && normalizeText(parts[parts.length - 1])
+                            === normalizedSize) {
+                        parts.pop();
+                    }
+
+                    const productName = parts.join(' - ').trim();
+
+                    return productName || String(fullName || '').trim();
+                }
+
+                function getVariantDisplay(size, color) {
+                    const values = [];
+
+                    if (String(size || '').trim()) {
+                        values.push(String(size).trim());
+                    }
+
+                    if (String(color || '').trim()) {
+                        values.push(String(color).trim());
+                    }
+
+                    return values.length > 0
+                            ? values.join(' / ')
+                            : 'N/A';
+                }
+
                 function showSelectedVariant() {
                     if (!selectedVariant) {
                         selectedVariantEmpty.classList.remove('d-none');
@@ -811,7 +882,11 @@
                     selectedVariantDetails.classList.remove('d-none');
 
                     selectedVariantName.textContent =
-                            selectedVariant.name;
+                            getProductName(
+                                    selectedVariant.name,
+                                    selectedVariant.size,
+                                    selectedVariant.color
+                                    );
 
                     selectedSku.textContent =
                             selectedVariant.sku || 'N/A';
@@ -946,6 +1021,17 @@
                         const lineTotal =
                                 item.quantity * item.unitCost;
 
+                        const productName = getProductName(
+                                item.name,
+                                item.size,
+                                item.color
+                                );
+
+                        const variantDisplay = getVariantDisplay(
+                                item.size,
+                                item.color
+                                );
+
                         totalAmount += lineTotal;
 
                         const row =
@@ -958,17 +1044,12 @@
                                 + rowNumber++
                                 + '</td>'
 
-                                + '<td>'
-                                + '<div class="fw-semibold">'
-                                + escapeHtml(item.name)
-                                + '</div>'
+                                + '<td class="product-name-cell">'
+                                + escapeHtml(productName)
+                                + '</td>'
 
-                                + '<div class="small text-muted mt-1">'
-                                + 'Size: '
-                                + escapeHtml(item.size || 'N/A')
-                                + ' | Color: '
-                                + escapeHtml(item.color || 'N/A')
-                                + '</div>'
+                                + '<td class="variant-cell">'
+                                + escapeHtml(variantDisplay)
                                 + '</td>'
 
                                 + '<td>'
@@ -996,7 +1077,7 @@
                                 + 'data-remove-id="'
                                 + item.variantId
                                 + '" '
-                                + 'title="Remove item">'
+                                + 'title="Remove variant">'
 
                                 + '<i class="fa-solid fa-trash"></i>'
 
@@ -1025,7 +1106,11 @@
                         tableBody.appendChild(row);
                     });
 
-                    itemCount.textContent = items.size;
+                    itemCount.textContent =
+                            items.size
+                            + (items.size === 1
+                                ? ' variant'
+                                : ' variants');
 
                     grandTotal.textContent =
                             formatVnd(totalAmount);

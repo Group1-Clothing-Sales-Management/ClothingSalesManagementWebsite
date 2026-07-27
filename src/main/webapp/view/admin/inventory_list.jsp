@@ -111,9 +111,9 @@
                                 <th>Receipt Code</th>
                                 <th>Supplier</th>
                                 <th>Created By</th>
-                                <th class="text-center">Items</th>
+                                <th class="text-center">Variants</th>
                                 <th class="text-center">
-                                    Total Qty
+                                    Total Quantity
                                 </th>
                                 <th class="text-end">
                                     Total Cost
