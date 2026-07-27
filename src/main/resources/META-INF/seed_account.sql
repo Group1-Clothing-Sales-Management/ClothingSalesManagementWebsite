@@ -1075,7 +1075,7 @@ INSERT INTO dbo.Permission
 VALUES
 ('USER_MANAGE',      N'Manage users',       N'View and update customer accounts'),
 ('SUPPLIER_MANAGE',  N'Manage suppliers',   N'Maintain supplier information'),
-('RETURN_MANAGE',    N'Manage returns',     N'Review returns and exchange requests'),
+('RETURN_MANAGE',    N'Manage returns',     N'Review return and refund requests'),
 ('REPORT_EXPORT',    N'Export reports',     N'Export operational and sales reports'),
 ('AUDIT_VIEW',       N'View audit log',    N'View security and activity history');
 
@@ -1685,7 +1685,7 @@ VALUES
  (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260720-021'), 100000, '2026-07-20 12:00:00');
 GO
 
--- Four return/exchange cases cover pending, approved, completed and rejected.
+-- Four return/refund cases cover pending, approved, completed and rejected.
 INSERT INTO dbo.Return_Request (
     request_code, order_id, customer_id, request_type, reason,
     customer_note, staff_note, refund_amount, status, requested_at,
@@ -1703,8 +1703,8 @@ VALUES
 ('RET-20260718-002',
  (SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260405-004'),
  (SELECT id FROM dbo.[User] WHERE username = 'khachhang02'),
- 'EXCHANGE', 'DEFECTIVE', N'Button is loose on arrival.',
- N'Awaiting returned item from customer.', 0, 'APPROVED',
+ 'RETURN', 'DEFECTIVE', N'Button is loose on arrival.',
+ N'Awaiting returned item from customer.', 680000, 'APPROVED',
  '2026-07-18 13:00:00', 2, '2026-07-18 14:00:00', NULL, NULL,
  NULL, NULL, NULL, NULL),
 ('RET-20260720-003',
@@ -1720,6 +1720,14 @@ VALUES
  N'Not eligible because the order was cancelled.', 0, 'REJECTED',
  '2026-07-20 15:00:00', 2, '2026-07-20 15:20:00', NULL, NULL,
  NULL, NULL, NULL, NULL);
+
+UPDATE dbo.Return_Request
+SET refund_bank_id = 'VCB',
+    refund_bank_name = N'Vietcombank',
+    refund_account_name = N'Nguyen Van A',
+    refund_account_number = '0123456789',
+    refund_transfer_description = N'REFUND ORD-20260405-004'
+WHERE request_code = 'RET-20260718-002';
 
 INSERT INTO dbo.Return_Request_Item (
     return_request_id, order_detail_id, variant_id, product_name_snapshot,
@@ -1762,9 +1770,9 @@ VALUES
 ((SELECT id FROM dbo.Return_Request WHERE request_code = 'RET-20260712-001'),
  'RECEIVED', 'COMPLETED', N'Refund completed through bank transfer', 1, '2026-07-12 10:30:00'),
 ((SELECT id FROM dbo.Return_Request WHERE request_code = 'RET-20260718-002'),
- NULL, 'PENDING', N'Exchange request submitted', 5, '2026-07-18 13:00:00'),
+ NULL, 'PENDING', N'Return request submitted', 5, '2026-07-18 13:00:00'),
 ((SELECT id FROM dbo.Return_Request WHERE request_code = 'RET-20260718-002'),
- 'PENDING', 'APPROVED', N'Exchange approved by staff', 2, '2026-07-18 14:00:00'),
+ 'PENDING', 'APPROVED', N'Return approved by staff', 2, '2026-07-18 14:00:00'),
 ((SELECT id FROM dbo.Return_Request WHERE request_code = 'RET-20260720-003'),
  NULL, 'PENDING', N'Return request is waiting for staff review', 10, '2026-07-20 17:00:00'),
 ((SELECT id FROM dbo.Return_Request WHERE request_code = 'RET-20260720-004'),
@@ -1802,7 +1810,7 @@ VALUES
 ((SELECT id FROM dbo.[User] WHERE username = 'staff03'), 'IMPORT_RECEIPT_CREATE', N'Created draft receipt IR-20260719-005', '10.0.0.13', '2026-07-19 13:40:00'),
 ((SELECT id FROM dbo.[User] WHERE username = 'staff02'), 'STOCK_ADJUSTMENT_APPROVE', N'Approved adjustment ADJ-20260718-002', '10.0.0.12', '2026-07-18 15:20:00'),
 ((SELECT id FROM dbo.[User] WHERE username = 'staff03'), 'ORDER_CONFIRM', N'Confirmed order ORD-20260719-014', '10.0.0.13', '2026-07-19 10:00:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'admin01'), 'RETURN_APPROVE', N'Approved exchange request RET-20260718-002', '127.0.0.1', '2026-07-18 14:00:00'),
+((SELECT id FROM dbo.[User] WHERE username = 'admin01'), 'RETURN_APPROVE', N'Approved return request RET-20260718-002', '127.0.0.1', '2026-07-18 14:00:00'),
 ((SELECT id FROM dbo.[User] WHERE username = 'admin01'), 'REPORT_EXPORT', N'Exported July sales report', '127.0.0.1', '2026-07-20 18:00:00');
 GO
 

@@ -122,6 +122,7 @@
         .return-step.is-active .return-step__number { color: #fff; background: var(--return-blue); box-shadow: 0 5px 12px rgba(95,132,214,.28); }
 
         .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 25px; }
+        .field-grid--single { grid-template-columns: 1fr; }
         .returns-form-card .form-label { margin-bottom: 7px; color: var(--return-ink); font-size: 13px; font-weight: 800; }
         .returns-form-card .form-control,
         .returns-form-card .form-select { min-height: 46px; border-color: #dbe2ef; border-radius: 10px; }
@@ -245,7 +246,7 @@
                             <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
                                 <div class="d-flex align-items-center">
                                     <span class="return-title-icon"><i class="fa-solid fa-box-open"></i></span>
-                                    <div><p class="section-eyebrow">New request</p><h2>Start a return or exchange</h2></div>
+                                    <div><p class="section-eyebrow">New request</p><h2>Start a return and refund</h2></div>
                                 </div>
                                 <span class="window-badge"><i class="fa-regular fa-clock"></i> 14-day return window</span>
                             </div>
@@ -259,8 +260,8 @@
                             </div>
                             <form id="returnRequestForm" method="post" action="${pageContext.request.contextPath}/customer/returns">
                                 <input type="hidden" name="orderId" value="${selectedOrder.id}">
-                                <div class="field-grid">
-                                    <div><label class="form-label" for="requestType">What would you like to do?</label><select id="requestType" name="type" class="form-select" required><option value="RETURN">Return &amp; refund</option><option value="EXCHANGE">Exchange product</option></select></div>
+                                <input type="hidden" name="type" value="RETURN">
+                                <div class="field-grid field-grid--single">
                                     <div><label class="form-label" for="returnReason">Why are you returning it?</label><select id="returnReason" name="reason" class="form-select" required><option value="">Select a reason</option><option value="WRONG_ITEM">Wrong item received</option><option value="DAMAGED">Product is damaged</option><option value="WRONG_SIZE">Wrong size or fit</option><option value="NOT_AS_DESCRIBED">Not as described</option><option value="CHANGE_OF_MIND">Changed my mind</option></select></div>
                                 </div>
 
@@ -281,7 +282,7 @@
 
                                 <div class="bank-panel" id="refundBankPanel">
                                     <h3 class="form-section-title"><i class="fa-solid fa-building-columns"></i><span>Where should we send your refund?</span></h3>
-                                    <p id="refundBankHint" class="bank-panel__note mt-0">Bank details are required for a return and refund. They are optional for an exchange.</p>
+                                    <p id="refundBankHint" class="bank-panel__note mt-0">Bank details are required so we can send your refund after the returned package is approved.</p>
                                     <div class="row g-3">
                                         <div class="col-md-4"><label class="form-label" for="accountName">Account holder name</label><input id="accountName" type="text" name="accountName" class="form-control js-bank-field" maxlength="120" placeholder="As shown by your bank"></div>
                                         <div class="col-md-4"><label class="form-label" for="accountNumber">Account number</label><input id="accountNumber" type="text" name="accountNumber" class="form-control js-bank-field" inputmode="numeric" pattern="[0-9]{4,25}" maxlength="25" placeholder="Your bank account number"></div>
@@ -311,7 +312,7 @@
                             <c:forEach var="item" items="${returnRequests}">
                                 <article class="request-card">
                                     <div class="request-card__top"><div><h3 class="request-code">${item.requestCode}</h3><div class="request-order"><i class="fa-solid fa-receipt me-1"></i> Order ${item.orderCode}</div></div><span class="status status-${item.status}">${item.statusLabel}</span></div>
-                                    <div class="request-meta"><div><span class="request-meta__label">Request type</span><span class="request-meta__value">${item.requestType}</span></div><div><span class="request-meta__label">Reason</span><span class="request-meta__value">${item.reason}</span></div><div><span class="request-meta__label">Refund amount</span><span class="request-meta__value amount"><fmt:formatNumber value="${item.refundAmount}" pattern="#,##0"/> VND</span></div></div>
+                                    <div class="request-meta"><div><span class="request-meta__label">Request type</span><span class="request-meta__value">Return &amp; refund</span></div><div><span class="request-meta__label">Reason</span><span class="request-meta__value">${item.reason}</span></div><div><span class="request-meta__label">Refund amount</span><span class="request-meta__value amount"><fmt:formatNumber value="${item.refundAmount}" pattern="#,##0"/> VND</span></div></div>
                                     <c:if test="${not empty item.customerNote}"><p class="request-note"><i class="fa-regular fa-message me-1"></i>${item.customerNote}</p></c:if>
                                     <c:if test="${item.status eq 'INFO_REQUIRED'}"><form method="post" action="${pageContext.request.contextPath}/customer/returns" class="supplement-form"><input type="hidden" name="action" value="supplement"><input type="hidden" name="requestId" value="${item.id}"><label class="supplement-form__label" for="additionalNote_${item.id}"><i class="fa-solid fa-circle-question me-1"></i>We need a little more information</label><div class="input-group"><input id="additionalNote_${item.id}" name="additionalNote" class="form-control" placeholder="Add requested information" required><button class="btn btn-outline-primary" type="submit">Send</button></div></form></c:if>
                                     <div class="request-card__bottom"><span class="request-date"><i class="fa-regular fa-calendar me-1"></i><fmt:formatDate value="${item.requestedAt}" pattern="dd/MM/yyyy HH:mm"/></span><a class="btn btn-sm btn-outline-primary" href="${pageContext.request.contextPath}/customer/returns?action=view&amp;id=${item.id}">View details <i class="fa-solid fa-arrow-right ms-1"></i></a></div>
@@ -335,24 +336,9 @@
             var form = document.getElementById('returnRequestForm');
             if (!form) return;
             var error = document.getElementById('returnSelectionError');
-            var requestType = document.getElementById('requestType');
-            var bankPanel = document.getElementById('refundBankPanel');
             var bankFields = form.querySelectorAll('.js-bank-field');
 
-            // Đổi loại yêu cầu thì cập nhật ngay việc hiển thị và bắt buộc của thông tin ngân hàng.
-            function updateBankFields() {
-                var isRefund = requestType && requestType.value === 'RETURN';
-                if (bankPanel) bankPanel.classList.toggle('d-none', !isRefund);
-                bankFields.forEach(function (field) {
-                    field.required = isRefund;
-                    field.disabled = !isRefund;
-                    if (!isRefund) field.value = '';
-                });
-            }
-            if (requestType) {
-                requestType.addEventListener('change', updateBankFields);
-                updateBankFields();
-            }
+            bankFields.forEach(function (field) { field.required = true; });
             form.querySelectorAll('.js-return-item').forEach(function (checkbox) {
                 var input = form.querySelector('input[name="' + checkbox.dataset.quantityInput + '"]');
                 if (!input) return;

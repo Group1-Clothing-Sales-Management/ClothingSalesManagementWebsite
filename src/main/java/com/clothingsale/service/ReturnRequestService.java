@@ -79,7 +79,7 @@ public class ReturnRequestService {
             String bankId, String accountName, String accountNumber, Map<Integer, Integer> quantities) {
         if (getEligibleOrder(userId, orderId) == null) return "This order is not eligible for a return request.";
         String normalizedType = normalize(type);
-        if (!Arrays.asList("RETURN", "EXCHANGE").contains(normalizedType)) return "Please select a valid request type.";
+        if (!"RETURN".equals(normalizedType)) return "Only return and refund requests are supported.";
         if (reason == null || reason.trim().isEmpty()) return "Please select a reason.";
         RefundBank bank = null;
         if ("RETURN".equals(normalizedType)) {
@@ -143,11 +143,6 @@ public class ReturnRequestService {
                     && (request.getRefundBankId() == null || request.getRefundAccountNumber() == null
                     || request.getRefundAccountName() == null || request.getRefundAccountName().trim().isEmpty())) {
                 return "The customer has not provided refund bank details.";
-            }
-            // Exchange không có khoản hoàn tiền nên không tạo QR chuyển khoản.
-            if (!"RETURN".equals(request.getRequestType())) {
-                return execute(() -> dao.review(id, userId, normalizedStatus, trim(note)),
-                        "The exchange request was approved successfully.");
             }
             String transferDescription = "REFUND " + request.getOrderCode();
             String qrUrl = buildRefundQrUrl(request);

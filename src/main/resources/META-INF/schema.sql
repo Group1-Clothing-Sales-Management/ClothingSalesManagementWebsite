@@ -669,7 +669,7 @@ CREATE TABLE dbo.Payment (
 );
 
 /* =========================================================================
-   V. RETURN, EXCHANGE AND REFUND MANAGEMENT
+   V. RETURN AND REFUND MANAGEMENT
    Return_Request lưu một yêu cầu đổi trả; các bảng con lưu sản phẩm và lịch sử.
    Thiết kế tách riêng giúp Staff và Admin nhìn được đầy đủ từng bước xử lý,
    đồng thời không làm mất dữ liệu đơn hàng gốc.
@@ -709,7 +709,7 @@ CREATE TABLE dbo.Return_Request (
     CONSTRAINT PK_Return_Request PRIMARY KEY (id),
     CONSTRAINT UQ_ReturnRequest_Code UNIQUE (request_code),
     CONSTRAINT CK_ReturnRequest_Amount CHECK (refund_amount >= 0),
-    CONSTRAINT CK_ReturnRequest_Type CHECK (request_type IN ('RETURN', 'EXCHANGE')),
+    CONSTRAINT CK_ReturnRequest_Type CHECK (request_type = 'RETURN'),
     CONSTRAINT CK_ReturnRequest_Status CHECK (status IN ('PENDING', 'INFO_REQUIRED', 'APPROVED', 'REJECTED', 'RECEIVED', 'REFUND_PENDING', 'COMPLETED', 'CANCELLED')),
     CONSTRAINT FK_ReturnRequest_Order FOREIGN KEY (order_id) REFERENCES dbo.[Order](id),
     CONSTRAINT FK_ReturnRequest_Customer FOREIGN KEY (customer_id) REFERENCES dbo.[User](id) ON DELETE SET NULL,

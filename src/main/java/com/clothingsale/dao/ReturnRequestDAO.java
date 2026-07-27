@@ -98,7 +98,6 @@ public class ReturnRequestDAO {
             try {
                 BigDecimal refund = BigDecimal.ZERO;
                 int selectedItemCount = 0;
-                boolean isRefundRequest = "RETURN".equalsIgnoreCase(type);
                 int requestId = 0;
                 try (PreparedStatement ps = con.prepareStatement(orderSql)) {
                     ps.setInt(1, orderId);
@@ -115,10 +114,7 @@ public class ReturnRequestDAO {
                                 throw new SQLException("The returned quantity cannot exceed the ordered quantity.");
                             }
                             selectedItemCount++;
-                            // Đổi hàng không phát sinh hoàn tiền nên không cần lưu số tiền hoàn.
-                            if (isRefundRequest) {
-                                refund = refund.add(rs.getBigDecimal("price").multiply(BigDecimal.valueOf(requested)));
-                            }
+                            refund = refund.add(rs.getBigDecimal("price").multiply(BigDecimal.valueOf(requested)));
                         }
                     }
                 }
@@ -139,7 +135,7 @@ public class ReturnRequestDAO {
                     ps.setString(10, accountName);
                     ps.setString(11, accountNumber);
                     // Nội dung chuyển khoản cố định theo yêu cầu: mã đơn hàng kèm chữ trả hàng.
-                    ps.setString(12, isRefundRequest ? "REFUND " + getOrderCode(con, orderId) : null);
+                    ps.setString(12, "REFUND " + getOrderCode(con, orderId));
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
                         if (!keys.next()) {
@@ -428,12 +424,10 @@ public class ReturnRequestDAO {
                 if (!areAllItemsInspected(con, requestId)) {
                     throw new SQLException("Please inspect every returned product before confirming receipt.");
                 }
-                String nextStatus = "EXCHANGE".equalsIgnoreCase(getRequestType(con, requestId))
-                        ? "COMPLETED" : "RECEIVED";
                 // Đổi trạng thái trước trong cùng transaction để hai nhân viên bấm đồng thời
                 // không thể cùng cộng tồn kho cho một yêu cầu.
                 try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE Return_Request SET status=CASE WHEN request_type='EXCHANGE' THEN 'COMPLETED' ELSE 'RECEIVED' END, received_by=?, received_at=GETDATE(), staff_note=? WHERE id=? AND status='APPROVED'")) {
+                        "UPDATE Return_Request SET status='RECEIVED', received_by=?, received_at=GETDATE(), staff_note=? WHERE id=? AND status='APPROVED'")) {
                     ps.setInt(1, staffId);
                     ps.setString(2, note);
                     ps.setInt(3, requestId);
@@ -485,16 +479,6 @@ public class ReturnRequestDAO {
             ps.setInt(1, requestId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() && rs.getInt("total") > 0 && rs.getInt("total") == rs.getInt("inspected");
-            }
-        }
-    }
-
-    private String getRequestType(Connection con, int requestId) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(
-                "SELECT request_type FROM Return_Request WHERE id=?")) {
-            ps.setInt(1, requestId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getString(1) : "RETURN";
             }
         }
     }
