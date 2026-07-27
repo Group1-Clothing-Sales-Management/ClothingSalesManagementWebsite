@@ -381,7 +381,7 @@
                                                     </c:choose>
                                                 </div>
                                                 <span class="variant-image-source">
-                                                    ${not empty variant.imageUrl ? 'Variant image' : 'Product fallback'}
+                                                    ${not empty variant.imageUrl ? 'Color image' : 'Product fallback'}
                                                 </span>
                                             </td>
 
@@ -592,7 +592,7 @@
 
                                                                 <div class="col-lg-3 col-md-8 form-group">
                                                                     <label for="variantImage-${variant.id}">
-                                                                        Replace Variant Image
+                                                                        Replace Color Image
                                                                     </label>
 
                                                                     <input type="file"
@@ -602,7 +602,7 @@
                                                                            accept="image/jpeg,image/png,image/webp">
 
                                                                     <small class="form-text text-muted">
-                                                                        Leave empty to keep the current image. JPG, PNG or WEBP only.
+                                                                        This image is shared by every Size of this Color. JPG, PNG or WEBP only.
                                                                     </small>
                                                                 </div>
                                                             </div>
@@ -818,6 +818,7 @@
                             "invalid-id": "The Product ID or Variant ID is invalid.",
                             "variant-not-found": "The selected variant could not be found.",
                             "size-required": "Variant size is required.",
+                            "size-invalid": "Size must be a textual value such as S, M, L, XL or Free Size.",
                             "color-required": "Variant color is required.",
                             "invalid-status": "The selected variant status is invalid.",
                             "product-not-found": "The product could not be found.",
@@ -828,7 +829,7 @@
                             "image-upload-failed": "The image could not be saved to the upload folder.",
                             "image-required": "Please select an image.",
                             "invalid-image-path": "The generated image path is invalid.",
-                            "image-save-failed": "The variant image could not be saved in the database.",
+                            "image-save-failed": "The Color image could not be saved in the database.",
                             "variant-update-failed":
                                     "The variant could not be activated. Check that the product is Active and that list price and sale price are greater than 0.",
                             "variant-duplicate":

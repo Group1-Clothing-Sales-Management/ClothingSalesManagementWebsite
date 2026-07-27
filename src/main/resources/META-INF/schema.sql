@@ -233,6 +233,9 @@ CREATE TABLE dbo.Product_Image (
     id INT IDENTITY(1,1) NOT NULL,
     product_id INT NOT NULL,
     variant_id INT NULL,
+    -- Variant images belong to a Color and are shared by all Sizes of that Color.
+    -- variant_id remains nullable for backward compatibility with old data.
+    color NVARCHAR(100) NULL,
     image_url VARCHAR(255) NOT NULL,
     is_main BIT NOT NULL
         CONSTRAINT DF_ProductImage_Main DEFAULT (0),

@@ -28,6 +28,7 @@ public class AdminManageProductDAO {
                 + "LEFT JOIN Product_Image img "
                 + "ON img.product_id = p.id "
                 + "AND img.variant_id IS NULL "
+                + "AND img.color IS NULL "
                 + "AND img.is_main = 1 "
                 + "WHERE p.status <> 'DELETED' "
                 + "ORDER BY p.id DESC";
@@ -53,6 +54,7 @@ public class AdminManageProductDAO {
                 + "LEFT JOIN Product_Image img "
                 + "ON img.product_id = p.id "
                 + "AND img.variant_id IS NULL "
+                + "AND img.color IS NULL "
                 + "AND img.is_main = 1 "
                 + "WHERE p.id = ? AND p.status <> 'DELETED'";
 
@@ -157,12 +159,14 @@ public class AdminManageProductDAO {
         String findImageSql = "SELECT TOP 1 id FROM Product_Image "
                 + "WHERE product_id = ? "
                 + "AND variant_id IS NULL "
+                + "AND color IS NULL "
                 + "AND is_main = 1 "
                 + "ORDER BY id";
         String updateImageSql = "UPDATE Product_Image "
                 + "SET image_url = ?, updated_at = GETDATE() "
                 + "WHERE product_id = ? "
                 + "AND variant_id IS NULL "
+                + "AND color IS NULL "
                 + "AND is_main = 1";
         String insertImageSql = "INSERT INTO Product_Image "
                 + "(product_id, variant_id, image_url, is_main, "
@@ -558,10 +562,13 @@ public class AdminManageProductDAO {
                 + "img.image_url AS variant_image_url, "
                 + "img.updated_at AS image_updated_at "
                 + "FROM Product_Variant pv "
-                + "LEFT JOIN Product_Image img "
-                + "ON img.variant_id = pv.id "
-                + "AND img.product_id = pv.product_id "
-                + "AND img.is_main = 1 "
+                + "OUTER APPLY (SELECT TOP 1 pi.image_url, pi.updated_at "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = pv.product_id "
+                + "      AND pi.is_main = 1 "
+                + "      AND ((pi.color IS NOT NULL AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color)))) "
+                + "           OR (pi.color IS NULL AND pi.variant_id = pv.id)) "
+                + "    ORDER BY CASE WHEN pi.color IS NOT NULL THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
                 + "WHERE pv.product_id = ? "
                 + "ORDER BY pv.id DESC";
 
@@ -589,10 +596,13 @@ public class AdminManageProductDAO {
                 + "img.image_url AS variant_image_url, "
                 + "img.updated_at AS image_updated_at "
                 + "FROM Product_Variant pv "
-                + "LEFT JOIN Product_Image img "
-                + "ON img.variant_id = pv.id "
-                + "AND img.product_id = pv.product_id "
-                + "AND img.is_main = 1 "
+                + "OUTER APPLY (SELECT TOP 1 pi.image_url, pi.updated_at "
+                + "    FROM Product_Image pi "
+                + "    WHERE pi.product_id = pv.product_id "
+                + "      AND pi.is_main = 1 "
+                + "      AND ((pi.color IS NOT NULL AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color)))) "
+                + "           OR (pi.color IS NULL AND pi.variant_id = pv.id)) "
+                + "    ORDER BY CASE WHEN pi.color IS NOT NULL THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
                 + "WHERE pv.product_id = ? "
                 + "AND pv.id = ?";
 
@@ -1006,6 +1016,7 @@ public class AdminManageProductDAO {
                 + "FROM Product_Image "
                 + "WHERE product_id = ? "
                 + "AND variant_id IS NULL "
+                + "AND color IS NULL "
                 + "ORDER BY is_main DESC, sort_order, id";
 
         String clearMainSql
@@ -1013,6 +1024,7 @@ public class AdminManageProductDAO {
                 + "SET is_main = 0 "
                 + "WHERE product_id = ? "
                 + "AND variant_id IS NULL "
+                + "AND color IS NULL "
                 + "AND is_main = 1";
 
         String updateImageSql
@@ -1101,10 +1113,13 @@ public class AdminManageProductDAO {
     public boolean saveVariantMainImage(
             int productId,
             int variantId,
+            String color,
             String imageUrl) {
 
         if (productId <= 0
                 || variantId <= 0
+                || color == null
+                || color.isBlank()
                 || imageUrl == null
                 || imageUrl.isBlank()) {
             return false;
@@ -1112,17 +1127,20 @@ public class AdminManageProductDAO {
 
         String updateSql = "UPDATE Product_Image "
                 + "SET image_url = ?, "
+                + "color = ?, "
+                + "variant_id = NULL, "
                 + "is_main = 1, "
                 + "sort_order = 0, "
                 + "updated_at = SYSDATETIME() "
                 + "WHERE product_id = ? "
-                + "AND variant_id = ? "
+                + "AND ((color IS NOT NULL AND UPPER(LTRIM(RTRIM(color))) = UPPER(LTRIM(RTRIM(?)))) "
+                + "     OR (color IS NULL AND variant_id = ?)) "
                 + "AND is_main = 1";
 
         String insertSql = "INSERT INTO Product_Image "
-                + "(product_id, variant_id, image_url, "
+                + "(product_id, variant_id, color, image_url, "
                 + "is_main, sort_order, updated_at) "
-                + "SELECT ?, ?, ?, 1, 0, SYSDATETIME() "
+                + "SELECT ?, NULL, ?, ?, 1, 0, SYSDATETIME() "
                 + "WHERE EXISTS ("
                 + "SELECT 1 FROM Product_Variant "
                 + "WHERE id = ? AND product_id = ?"
@@ -1136,8 +1154,10 @@ public class AdminManageProductDAO {
 
                 try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                     ps.setString(1, imageUrl.trim());
-                    ps.setInt(2, productId);
-                    ps.setInt(3, variantId);
+                    ps.setString(2, color.trim());
+                    ps.setInt(3, productId);
+                    ps.setString(4, color.trim());
+                    ps.setInt(5, variantId);
 
                     affectedRows = ps.executeUpdate();
                 }
@@ -1145,7 +1165,7 @@ public class AdminManageProductDAO {
                 if (affectedRows == 0) {
                     try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                         ps.setInt(1, productId);
-                        ps.setInt(2, variantId);
+                        ps.setString(2, color.trim());
                         ps.setString(3, imageUrl.trim());
                         ps.setInt(4, variantId);
                         ps.setInt(5, productId);

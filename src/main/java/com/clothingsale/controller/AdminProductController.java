@@ -388,8 +388,6 @@ public class AdminProductController extends HttpServlet {
                 newImageName = saveVariantImage(
                         imagePart,
                         productId,
-                        variantId,
-                        size,
                         color
                 );
             } catch (IllegalArgumentException e) {
@@ -423,6 +421,7 @@ public class AdminProductController extends HttpServlet {
             String imageError = productService.saveVariantMainImage(
                     productId,
                     variantId,
+                    color,
                     newImageName
             );
 
@@ -460,6 +459,8 @@ public class AdminProductController extends HttpServlet {
              */
             if (oldVariant.getImageUrl() != null
                     && !oldVariant.getImageUrl().isBlank()
+                    && oldVariant.getColor() != null
+                    && oldVariant.getColor().equalsIgnoreCase(color)
                     && !oldVariant.getImageUrl().equals(
                             newImageName
                     )) {
@@ -1503,8 +1504,6 @@ public class AdminProductController extends HttpServlet {
     private String saveVariantImage(
             Part filePart,
             int productId,
-            int variantId,
-            String size,
             String color) throws IOException {
 
         if (!hasUploadedFile(filePart)) {
@@ -1533,10 +1532,8 @@ public class AdminProductController extends HttpServlet {
         }
 
         String savedName
-                = ProductImageStorage.buildVariantImageName(
+                = ProductImageStorage.buildColorImageName(
                         productId,
-                        variantId,
-                        size,
                         color,
                         extension
                 );

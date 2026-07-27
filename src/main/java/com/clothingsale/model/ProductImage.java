@@ -7,6 +7,7 @@ public class ProductImage {
     private int id;
     private int productId;
     private Integer variantId;
+    private String color;
     private String imageUrl;
     private boolean main;
     private int sortOrder;
@@ -18,9 +19,16 @@ public class ProductImage {
     public ProductImage(int id, int productId, Integer variantId,
             String imageUrl, boolean main, int sortOrder,
             Timestamp updatedAt) {
+        this(id, productId, variantId, null, imageUrl, main, sortOrder, updatedAt);
+    }
+
+    public ProductImage(int id, int productId, Integer variantId,
+            String color, String imageUrl, boolean main, int sortOrder,
+            Timestamp updatedAt) {
         this.id = id;
         this.productId = productId;
         this.variantId = variantId;
+        this.color = color;
         this.imageUrl = imageUrl;
         this.main = main;
         this.sortOrder = sortOrder;
@@ -28,11 +36,11 @@ public class ProductImage {
     }
 
     public boolean isProductImage() {
-        return variantId == null;
+        return variantId == null && (color == null || color.trim().isEmpty());
     }
 
     public boolean isVariantImage() {
-        return variantId != null;
+        return (color != null && !color.trim().isEmpty()) || variantId != null;
     }
 
     public int getId() {
@@ -57,6 +65,14 @@ public class ProductImage {
 
     public void setVariantId(Integer variantId) {
         this.variantId = variantId;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public String getImageUrl() {

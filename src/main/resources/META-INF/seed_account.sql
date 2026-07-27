@@ -1984,6 +1984,45 @@ INNER JOIN dbo.[User] u
     ON u.username = CONCAT('customer', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2));
 GO
 
+/* Preserve old variant-linked images while making them available by Color. */
+UPDATE pi
+SET pi.color = pv.color
+FROM dbo.Product_Image pi
+INNER JOIN dbo.Product_Variant pv
+    ON pv.id = pi.variant_id
+   AND pv.product_id = pi.product_id
+WHERE pi.color IS NULL
+  AND pi.variant_id IS NOT NULL
+  AND pv.color IS NOT NULL;
+GO
+
+/* Normalize legacy numeric apparel sizes to the textual size system. */
+UPDATE dbo.Product_Variant
+SET size = CASE size
+    WHEN N'28' THEN N'S'
+    WHEN N'30' THEN N'M'
+    WHEN N'32' THEN N'L'
+    WHEN N'34' THEN N'XL'
+    WHEN N'36' THEN N'XXL'
+    ELSE size
+END
+WHERE size IN (N'28', N'30', N'32', N'34', N'36');
+
+UPDATE vav
+SET vav.attribute_value = CASE vav.attribute_value
+    WHEN N'28' THEN N'S'
+    WHEN N'30' THEN N'M'
+    WHEN N'32' THEN N'L'
+    WHEN N'34' THEN N'XL'
+    WHEN N'36' THEN N'XXL'
+    ELSE vav.attribute_value
+END
+FROM dbo.Variant_Attribute_Value vav
+INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
+WHERE a.attribute_name = N'Size'
+  AND vav.attribute_value IN (N'28', N'30', N'32', N'34', N'36');
+GO
+
 /* =========================================================================
    XX. VALIDATION
    ========================================================================= */

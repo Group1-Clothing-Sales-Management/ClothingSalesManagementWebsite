@@ -26,6 +26,11 @@ public class StaffProductService {
             return "Invalid input data. Size is required.";
         }
 
+        String normalizedSize = normalizeSize(size);
+        if (normalizedSize == null) {
+            return "Invalid input data. Size must be a textual value such as S, M, L, XL or Free Size.";
+        }
+
         try {
             String currentSku = sku.trim();
             StaffProductModel currentProduct = findProduct(variantId, currentSku);
@@ -36,7 +41,7 @@ public class StaffProductService {
             String updatedSku = buildSkuWithNewSize(
                     currentSku,
                     currentProduct.getSize(),
-                    size);
+                    normalizedSize);
 
             if (updatedSku == null) {
                 return "Cannot update SKU because the current size is not part of the SKU.";
@@ -46,7 +51,7 @@ public class StaffProductService {
                     currentSku,
                     updatedSku,
                     color,
-                    size);
+                    normalizedSize);
 
             if (isUpdated) {
                 String actionLog = "Staff updated product variant -> SKU: " + currentSku
@@ -132,5 +137,20 @@ public class StaffProductService {
                 .replaceAll("^-+|-+$", "");
 
         return normalized;
+    }
+
+    private String normalizeSize(String value) {
+        String normalized = value.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+        switch (normalized) {
+            case "28": return "S";
+            case "30": return "M";
+            case "32": return "L";
+            case "34": return "XL";
+            case "36": return "XXL";
+            case "XS": case "S": case "M": case "L": case "XL":
+            case "XXL": case "XXXL": case "3XL": case "4XL": case "FREE SIZE":
+                return normalized;
+            default: return null;
+        }
     }
 }

@@ -14,6 +14,9 @@ import java.util.Set;
 
 public class AdminManageProductService {
 
+    private static final Set<String> TEXTUAL_SIZES = Set.of(
+            "XS", "S", "M", "L", "XL", "XXL", "XXXL", "3XL", "4XL", "FREE SIZE");
+
     private final AdminManageProductDAO productDAO
             = new AdminManageProductDAO();
 
@@ -418,8 +421,13 @@ public class AdminManageProductService {
                 return false;
             }
 
+            String normalizedSize = normalizeSize(variant.getSize());
+            if (normalizedSize == null) {
+                return false;
+            }
+
             String combinationKey
-                    = normalizeVariantValue(variant.getSize())
+                    = normalizeVariantValue(normalizedSize)
                     + "|"
                     + normalizeVariantValue(variant.getColor());
 
@@ -432,7 +440,7 @@ public class AdminManageProductService {
                 return false;
             }
 
-            variant.setSize(variant.getSize().trim());
+            variant.setSize(normalizedSize);
             variant.setColor(variant.getColor().trim());
             variant.setSku(variant.getSku().trim());
         }
@@ -534,7 +542,10 @@ public class AdminManageProductService {
             return "color-required";
         }
 
-        size = size.trim();
+        size = normalizeSize(size);
+        if (size == null) {
+            return "size-invalid";
+        }
         color = color.trim();
         status = normalizeStatus(status);
 
@@ -637,6 +648,7 @@ public class AdminManageProductService {
     public String saveVariantMainImage(
             int productId,
             int variantId,
+            String color,
             String imageUrl) {
 
         if (productId <= 0 || variantId <= 0) {
@@ -645,6 +657,10 @@ public class AdminManageProductService {
 
         if (isBlank(imageUrl)) {
             return "image-required";
+        }
+
+        if (isBlank(color)) {
+            return "color-required";
         }
 
         ProductVariant variant = productDAO.getVariantById(
@@ -674,9 +690,28 @@ public class AdminManageProductService {
         boolean saved = productDAO.saveVariantMainImage(
                 productId,
                 variantId,
+                color.trim(),
                 normalizedImageUrl
         );
 
         return saved ? null : "image-save-failed";
+    }
+
+    private String normalizeSize(String value) {
+        if (isBlank(value)) {
+            return null;
+        }
+
+        String normalized = value.trim().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+        // Normalize legacy numeric apparel sizes when old records are edited.
+        switch (normalized) {
+            case "28": return "S";
+            case "30": return "M";
+            case "32": return "L";
+            case "34": return "XL";
+            case "36": return "XXL";
+            default: break;
+        }
+        return TEXTUAL_SIZES.contains(normalized) ? normalized : null;
     }
 }

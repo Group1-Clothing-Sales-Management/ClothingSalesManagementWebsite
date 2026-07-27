@@ -326,6 +326,22 @@ public final class ProductImageStorage {
                 + normalizeExtension(extension);
     }
 
+    /** Builds a stable image name shared by every Size of one Color. */
+    public static String buildColorImageName(
+            int productId,
+            String color,
+            String extension) {
+
+        validateId(productId, "Product ID");
+
+        return "p"
+                + productId
+                + "_color_"
+                + normalizeNamePart(color)
+                + "."
+                + normalizeExtension(extension);
+    }
+
     public static String normalizeExtension(String extension) {
         if (extension == null || extension.isBlank()) {
             throw new IllegalArgumentException(

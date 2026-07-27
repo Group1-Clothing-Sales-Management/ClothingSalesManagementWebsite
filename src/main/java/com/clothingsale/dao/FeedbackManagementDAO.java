@@ -186,7 +186,7 @@ public class FeedbackManagementDAO {
                 + "FROM Feedback f "
                 + "LEFT JOIN [User] u ON f.user_id = u.id "
                 + "LEFT JOIN Product p ON f.product_id = p.id "
-                + "LEFT JOIN Product_Image img ON p.id = img.product_id AND img.is_main = 1 "
+                + "LEFT JOIN Product_Image img ON p.id = img.product_id AND img.is_main = 1 AND img.color IS NULL "
                 + "LEFT JOIN [Order] o ON f.order_id = o.id "
                 + "LEFT JOIN [User] responder ON f.response_by = responder.id ";
         if (whereClause != null && !whereClause.trim().isEmpty()) {
@@ -220,7 +220,7 @@ public class FeedbackManagementDAO {
                 + "FROM Feedback f "
                 + "LEFT JOIN [User] u ON f.user_id = u.id "
                 + "LEFT JOIN Product p ON f.product_id = p.id "
-                + "LEFT JOIN Product_Image img ON p.id = img.product_id AND img.is_main = 1 "
+                + "LEFT JOIN Product_Image img ON p.id = img.product_id AND img.is_main = 1 AND img.color IS NULL "
                 + "LEFT JOIN [Order] o ON f.order_id = o.id ";
         if (whereClause != null && !whereClause.trim().isEmpty()) {
             sql += whereClause + " ";
