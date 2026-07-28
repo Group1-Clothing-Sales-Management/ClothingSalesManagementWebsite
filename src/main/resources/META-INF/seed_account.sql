@@ -1,3 +1,10 @@
+USE [ClothesShopDB];
+GO
+
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+GO
+
 /* =========================================================================
    SEEDED MASTER DATA AND PRODUCTS FROM THE CURRENT PROJECT
    ========================================================================= */
@@ -28,10 +35,10 @@ INSERT INTO Ward (id, ward_name, type, district_id) VALUES
 -- =========================================================================
 -- 2. ROLES & USERS
 -- =========================================================================
-INSERT INTO Role (role_name, description) VALUES
-('ADMIN',    N'Quản trị viên toàn quyền hệ thống'),
-('STAFF',    N'Nhân viên quản lý kho và đơn hàng'),
-('CUSTOMER', N'Khách hàng mua sắm trực tuyến');
+INSERT INTO Role (role_name) VALUES
+('ADMIN'),
+('STAFF'),
+('CUSTOMER');
 
 -- Shared bcrypt password for all demo accounts: 123456
 INSERT INTO [User] (username, password, full_name, email, phone, status, role_id) VALUES
@@ -49,10 +56,10 @@ INSERT INTO User_Address (user_id, recipient_name, recipient_phone, ward_id, add
 -- =========================================================================
 -- 3. BRANDS & CATEGORIES
 -- =========================================================================
-INSERT INTO Brand (brand_name, slug, description, logo_url) VALUES
-('Coolmate', 'coolmate', N'Minimalist menswear brand',                       'coolmate_logo.png'),
-('Routine',  'routine',  N'Everyday fashion for men and women',              'routine_logo.png'),
-('Uniqlo',   'uniqlo',   N'International retail fashion from Japan',         'uniqlo_logo.png');
+INSERT INTO Brand (brand_name, slug) VALUES
+('Coolmate', 'coolmate'),
+('Routine',  'routine'),
+('Uniqlo',   'uniqlo');
 
 INSERT INTO Category (category_name, slug, parent_id, description, status) VALUES
 (N'Mens Tops',  'ao-nam',  NULL, N'Tops and shirts for men', 1),
@@ -64,14 +71,7 @@ INSERT INTO Category (category_name, slug, parent_id, description, status) VALUE
 (N'Mens Jeans','quan-jean-nam',  2, N'Full-length denim jeans for men', 1);
 
 -- =========================================================================
--- 4. ATTRIBUTES
--- =========================================================================
-INSERT INTO Attribute (attribute_name) VALUES
-(N'Color'),
-(N'Size');
-
--- =========================================================================
--- 5. PRODUCTS (ID 1-22)
+-- 4. PRODUCTS (ID 1-22)
 -- =========================================================================
 INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status, created_at, updated_at) VALUES
 (N'Compact Cotton Mens T-Shirt',    'ao-thun-nam-cotton-compact',    1, 3, N'Cool 100% cotton T-shirt',             N'Durable compact cotton is twice as strong as regular cotton and offers excellent moisture absorption for everyday wear.', 'ACTIVE', GETDATE(), GETDATE()),
@@ -99,7 +99,7 @@ INSERT INTO Product (product_name, slug, brand_id, category_id, short_descriptio
 GO
 
 -- =========================================================================
--- 6. PRODUCT VARIANTS (SKU) — ID 1-80
+-- 5. PRODUCT VARIANTS (SKU) — ID 1-80
 -- =========================================================================
 
 -- Product 1: Áo Thun Nam Cotton Compact (variant_id 1-4)
@@ -250,158 +250,100 @@ INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quan
 GO
 
 -- =========================================================================
--- 7. VARIANT ATTRIBUTE VALUES (variant_id 1-80)
+-- 6. VARIANT COLOR AND SIZE (variant_id 1-80)
 -- =========================================================================
-
--- Product 1 (variant_id 1-4)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(1, 1, N'Black'),      (1, 2, 'M'),
-(2, 1, N'Black'),      (2, 2, 'L'),
-(3, 1, N'White'),      (3, 2, 'M'),
-(4, 1, N'White'),      (4, 2, 'L');
-
--- Product 2 (variant_id 5-6)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(5, 1, N'Smoke Gray'),  (5, 2, '30'),
-(6, 1, N'Smoke Gray'),  (6, 2, '31');
-
--- Product 3 (variant_id 7-10)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(7,  1, 'Black'), (7,  2, 'M'),
-(8,  1, 'Black'), (8,  2, 'L'),
-(9,  1, 'Navy'),  (9,  2, 'M'),
-(10, 1, 'Navy'),  (10, 2, 'L');
-
--- Product 4 (variant_id 11-14)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(11, 1, 'White'), (11, 2, 'S'),
-(12, 1, 'White'), (12, 2, 'M'),
-(13, 1, 'Gray'),  (13, 2, 'M'),
-(14, 1, 'Gray'),  (14, 2, 'L');
-
--- Product 5 (variant_id 15-18)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(15, 1, 'White'), (15, 2, 'M'),
-(16, 1, 'White'), (16, 2, 'L'),
-(17, 1, 'Navy'),  (17, 2, 'M'),
-(18, 1, 'Navy'),  (18, 2, 'XL');
-
--- Product 6 (variant_id 19-22)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(19, 1, 'Black'), (19, 2, 'L'),
-(20, 1, 'Black'), (20, 2, 'XL'),
-(21, 1, 'Beige'), (21, 2, 'L'),
-(22, 1, 'Beige'), (22, 2, 'XL');
-
--- Product 7 (variant_id 23-26)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(23, 1, 'Beige'), (23, 2, 'M'),
-(24, 1, 'Beige'), (24, 2, 'L'),
-(25, 1, 'Brown'), (25, 2, 'M'),
-(26, 1, 'Brown'), (26, 2, 'L');
-
--- Product 8 (variant_id 27-29)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(27, 1, 'White'), (27, 2, 'M'),
-(28, 1, 'White'), (28, 2, 'L'),
-(29, 1, 'White'), (29, 2, 'XL');
-
--- Product 9 (variant_id 30-33)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(30, 1, 'Blue Stripe'), (30, 2, 'M'),
-(31, 1, 'Blue Stripe'), (31, 2, 'L'),
-(32, 1, 'Gray Stripe'), (32, 2, 'M'),
-(33, 1, 'Gray Stripe'), (33, 2, 'L');
-
--- Product 10 (variant_id 34-36)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(34, 1, 'Denim Blue'), (34, 2, 'M'),
-(35, 1, 'Denim Blue'), (35, 2, 'L'),
-(36, 1, 'Denim Blue'), (36, 2, 'XL');
-
--- Product 11 (variant_id 37-39)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(37, 1, 'Black'), (37, 2, '28'),
-(38, 1, 'Black'), (38, 2, '30'),
-(39, 1, 'Black'), (39, 2, '32');
-
--- Product 12 (variant_id 40-42)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(40, 1, 'Blue'), (40, 2, '28'),
-(41, 1, 'Blue'), (41, 2, '30'),
-(42, 1, 'Blue'), (42, 2, '32');
-
--- Product 13 (variant_id 43-45)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(43, 1, 'Smoke Gray'), (43, 2, '28'),
-(44, 1, 'Smoke Gray'), (44, 2, '30'),
-(45, 1, 'Smoke Gray'), (45, 2, '32');
-
--- Product 14 (variant_id 46-48)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(46, 1, 'Dark Blue'), (46, 2, '30'),
-(47, 1, 'Dark Blue'), (47, 2, '32'),
-(48, 1, 'Dark Blue'), (48, 2, '34');
-
--- Product 15 (variant_id 49-52)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(49, 1, 'Black'), (49, 2, 'M'),
-(50, 1, 'Black'), (50, 2, 'L'),
-(51, 1, 'Olive'), (51, 2, 'M'),
-(52, 1, 'Olive'), (52, 2, 'L');
-
--- Product 16 (variant_id 53-56)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(53, 1, 'Gray'),  (53, 2, 'M'),
-(54, 1, 'Gray'),  (54, 2, 'L'),
-(55, 1, 'Black'), (55, 2, 'M'),
-(56, 1, 'Black'), (56, 2, 'XL');
-
--- Product 17 (variant_id 57-60)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(57, 1, 'Beige'), (57, 2, 'M'),
-(58, 1, 'Beige'), (58, 2, 'L'),
-(59, 1, 'Olive'), (59, 2, 'M'),
-(60, 1, 'Olive'), (60, 2, 'L');
-
--- Product 18 (variant_id 61-64)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(61, 1, 'Black'), (61, 2, 'M'),
-(62, 1, 'Black'), (62, 2, 'L'),
-(63, 1, 'White'), (63, 2, 'M'),
-(64, 1, 'White'), (64, 2, 'L');
-
--- Product 19 (variant_id 65-68)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(65, 1, 'Black'), (65, 2, '30'),
-(66, 1, 'Black'), (66, 2, '32'),
-(67, 1, 'Navy'),  (67, 2, '30'),
-(68, 1, 'Navy'),  (68, 2, '32');
-
--- Product 20 (variant_id 69-72)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(69, 1, 'Black'), (69, 2, 'M'),
-(70, 1, 'Black'), (70, 2, 'L'),
-(71, 1, 'Gray'),  (71, 2, 'M'),
-(72, 1, 'Gray'),  (72, 2, 'L');
-
--- Product 21 (variant_id 73-76)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(73, 1, 'Cream'), (73, 2, 'M'),
-(74, 1, 'Cream'), (74, 2, 'L'),
-(75, 1, 'Black'), (75, 2, 'M'),
-(76, 1, 'Black'), (76, 2, 'L');
-
--- Product 22 (variant_id 77-80)
-INSERT INTO Variant_Attribute_Value (variant_id, attribute_id, attribute_value) VALUES
-(77, 1, 'Black'), (77, 2, 'M'),
-(78, 1, 'Black'), (78, 2, 'L'),
-(79, 1, 'Gray'),  (79, 2, 'M'),
-(80, 1, 'Gray'),  (80, 2, 'XL');
+UPDATE pv
+SET pv.color = variant_data.color,
+    pv.size = variant_data.size,
+    pv.list_price = COALESCE(pv.list_price, pv.sale_price)
+FROM dbo.Product_Variant pv
+INNER JOIN (VALUES
+    (1, N'Black', N'M'),
+    (2, N'Black', N'L'),
+    (3, N'White', N'M'),
+    (4, N'White', N'L'),
+    (5, N'Smoke Gray', N'M'),
+    (6, N'Smoke Gray', N'31'),
+    (7, N'Black', N'M'),
+    (8, N'Black', N'L'),
+    (9, N'Navy', N'M'),
+    (10, N'Navy', N'L'),
+    (11, N'White', N'S'),
+    (12, N'White', N'M'),
+    (13, N'Gray', N'M'),
+    (14, N'Gray', N'L'),
+    (15, N'White', N'M'),
+    (16, N'White', N'L'),
+    (17, N'Navy', N'M'),
+    (18, N'Navy', N'XL'),
+    (19, N'Black', N'L'),
+    (20, N'Black', N'XL'),
+    (21, N'Beige', N'L'),
+    (22, N'Beige', N'XL'),
+    (23, N'Beige', N'M'),
+    (24, N'Beige', N'L'),
+    (25, N'Brown', N'M'),
+    (26, N'Brown', N'L'),
+    (27, N'White', N'M'),
+    (28, N'White', N'L'),
+    (29, N'White', N'XL'),
+    (30, N'Blue Stripe', N'M'),
+    (31, N'Blue Stripe', N'L'),
+    (32, N'Gray Stripe', N'M'),
+    (33, N'Gray Stripe', N'L'),
+    (34, N'Denim Blue', N'M'),
+    (35, N'Denim Blue', N'L'),
+    (36, N'Denim Blue', N'XL'),
+    (37, N'Black', N'S'),
+    (38, N'Black', N'M'),
+    (39, N'Black', N'L'),
+    (40, N'Blue', N'S'),
+    (41, N'Blue', N'M'),
+    (42, N'Blue', N'L'),
+    (43, N'Smoke Gray', N'S'),
+    (44, N'Smoke Gray', N'M'),
+    (45, N'Smoke Gray', N'L'),
+    (46, N'Dark Blue', N'M'),
+    (47, N'Dark Blue', N'L'),
+    (48, N'Dark Blue', N'XL'),
+    (49, N'Black', N'M'),
+    (50, N'Black', N'L'),
+    (51, N'Olive', N'M'),
+    (52, N'Olive', N'L'),
+    (53, N'Gray', N'M'),
+    (54, N'Gray', N'L'),
+    (55, N'Black', N'M'),
+    (56, N'Black', N'XL'),
+    (57, N'Beige', N'M'),
+    (58, N'Beige', N'L'),
+    (59, N'Olive', N'M'),
+    (60, N'Olive', N'L'),
+    (61, N'Black', N'M'),
+    (62, N'Black', N'L'),
+    (63, N'White', N'M'),
+    (64, N'White', N'L'),
+    (65, N'Black', N'M'),
+    (66, N'Black', N'L'),
+    (67, N'Navy', N'M'),
+    (68, N'Navy', N'L'),
+    (69, N'Black', N'M'),
+    (70, N'Black', N'L'),
+    (71, N'Gray', N'M'),
+    (72, N'Gray', N'L'),
+    (73, N'Cream', N'M'),
+    (74, N'Cream', N'L'),
+    (75, N'Black', N'M'),
+    (76, N'Black', N'L'),
+    (77, N'Black', N'M'),
+    (78, N'Black', N'L'),
+    (79, N'Gray', N'M'),
+    (80, N'Gray', N'XL')
+) AS variant_data(variant_id, color, size)
+    ON variant_data.variant_id = pv.id;
 GO
 
 -- =========================================================================
--- 8. PRODUCT IMAGES
+-- 7. PRODUCT IMAGES
 -- =========================================================================
 INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
 (1, 'p1_main_00.webp', 1, 0),
@@ -428,71 +370,7 @@ INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
 (22,'prod22-main.jpg', 1, 0);
 
 /* =========================================================================
-   VIII. SYNCHRONIZE DIRECT SIZE/COLOR FIELDS
-   ========================================================================= */
-
-UPDATE pv
-SET
-    pv.color = color_value.attribute_value,
-    pv.size = size_value.attribute_value,
-    pv.list_price = COALESCE(pv.list_price, pv.sale_price)
-FROM dbo.Product_Variant pv
-OUTER APPLY (
-    SELECT TOP 1 vav.attribute_value
-    FROM dbo.Variant_Attribute_Value vav
-    INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
-    WHERE vav.variant_id = pv.id
-      AND a.attribute_name = N'Color'
-) color_value
-OUTER APPLY (
-    SELECT TOP 1 vav.attribute_value
-    FROM dbo.Variant_Attribute_Value vav
-    INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
-    WHERE vav.variant_id = pv.id
-      AND a.attribute_name = N'Size'
-) size_value;
-GO
-
-/* =========================================================================
-   IX. PERMISSIONS
-   These rows define the intended access matrix. Current controllers/filters
-   still need to enforce these permissions at application level.
-   ========================================================================= */
-
-INSERT INTO dbo.Permission
-    (permission_code, permission_name, description)
-VALUES
-('DASHBOARD_VIEW',   N'View dashboard',           N'View administrative statistics and reports'),
-('PRODUCT_VIEW',     N'View products',            N'View the administrative product list and details'),
-('PRODUCT_MANAGE',   N'Manage products',          N'Create, update and change product status'),
-('CATEGORY_MANAGE',  N'Manage categories',        N'Create, update and change category status'),
-('PRICE_MANAGE',     N'Manage prices',            N'Update list price, sale price and price history'),
-('VOUCHER_MANAGE',   N'Manage vouchers',          N'Create, update and terminate vouchers'),
-('INVENTORY_VIEW',   N'View inventory',           N'View stock balances and inventory history'),
-('INVENTORY_IMPORT', N'Import stock',              N'Create and confirm import receipts'),
-('INVENTORY_ADJUST', N'Adjust stock',              N'Create and approve stock adjustments'),
-('ORDER_MANAGE',     N'Manage orders',             N'Approve, cancel and update order workflow'),
-('FEEDBACK_MANAGE',  N'Manage feedback',           N'Hide, show and respond to feedback');
-
-INSERT INTO dbo.Role_Permission (role_id, permission_id)
-SELECT 1, id
-FROM dbo.Permission;
-
-INSERT INTO dbo.Role_Permission (role_id, permission_id)
-SELECT 2, id
-FROM dbo.Permission
-WHERE permission_code IN (
-    'DASHBOARD_VIEW',
-    'PRODUCT_VIEW',
-    'INVENTORY_VIEW',
-    'INVENTORY_IMPORT',
-    'ORDER_MANAGE',
-    'FEEDBACK_MANAGE'
-);
-GO
-
-/* =========================================================================
-   X. PRICE HISTORY SAMPLE
+   VIII. PRICE HISTORY SAMPLE
    ========================================================================= */
 
 UPDATE dbo.Product_Variant
@@ -529,18 +407,15 @@ VALUES
 GO
 
 /* =========================================================================
-   XI. INVENTORY: SUPPLIERS, RECEIPTS, BATCHES AND ADJUSTMENT
+   IX. INVENTORY: SUPPLIERS, RECEIPTS AND BATCHES
    ========================================================================= */
 
 INSERT INTO dbo.Supplier
-    (supplier_name, contact_name, phone, email, address, status)
+    (supplier_name, phone, address, status)
 VALUES
-(N'Việt Tín Textile', N'Nguyễn Thành Tín', '0901000001',
- 'sales@viettin.example', N'Ho Chi Minh City', 1),
-(N'Minh Anh Garment', N'Trần Minh Anh', '0901000002',
- 'contact@minhanh.example', N'Bình Dương', 1),
-(N'Global Fashion Supply', N'Lê Gia Huy', '0901000003',
- 'support@globalfashion.example', N'Đồng Nai', 1);
+(N'Việt Tín Textile', '0901000001', N'Ho Chi Minh City', 1),
+(N'Minh Anh Garment', '0901000002', N'Bình Dương', 1),
+(N'Global Fashion Supply', '0901000003', N'Đồng Nai', 1);
 
 INSERT INTO dbo.Import_Receipt (
     receipt_code, supplier_id, user_id, total_amount, created_at,
@@ -565,7 +440,7 @@ VALUES
 (2, 15, 5, 120000,  600000);
 
 -- Opening batches. Variants 1 and 5 receive the remaining quantity from the
--- confirmed receipt below. Variant 12 started at 47 and lost 2 damaged units.
+-- confirmed receipt below.
 INSERT INTO dbo.Product_Batch (
     variant_id, batch_code, cost_price,
     initial_quantity, current_quantity,
@@ -579,13 +454,11 @@ SELECT
     CASE
         WHEN pv.id = 1 THEN 30
         WHEN pv.id = 5 THEN 10
-        WHEN pv.id = 12 THEN 47
         ELSE pv.stock_quantity
     END,
     CASE
         WHEN pv.id = 1 THEN 30
         WHEN pv.id = 5 THEN 10
-        WHEN pv.id = 12 THEN 45
         ELSE pv.stock_quantity
     END,
     NULL,
@@ -597,7 +470,6 @@ WHERE
     CASE
         WHEN pv.id = 1 THEN 30
         WHEN pv.id = 5 THEN 10
-        WHEN pv.id = 12 THEN 47
         ELSE pv.stock_quantity
     END > 0;
 
@@ -625,13 +497,11 @@ SELECT
     CASE
         WHEN pv.id = 1 THEN 30
         WHEN pv.id = 5 THEN 10
-        WHEN pv.id = 12 THEN 47
         ELSE pv.stock_quantity
     END,
     CASE
         WHEN pv.id = 1 THEN 30
         WHEN pv.id = 5 THEN 10
-        WHEN pv.id = 12 THEN 47
         ELSE pv.stock_quantity
     END,
     'OPENING_BALANCE',
@@ -645,7 +515,6 @@ WHERE
     CASE
         WHEN pv.id = 1 THEN 30
         WHEN pv.id = 5 THEN 10
-        WHEN pv.id = 12 THEN 47
         ELSE pv.stock_quantity
     END > 0;
 
@@ -661,37 +530,10 @@ VALUES
 (5, 1, N'Slim-Fit Mens Jeans', 'RT-JEAN-BLU-30',
  10, 10, 20, 'IMPORT', 'IMPORT_RECEIPT', 1,
  N'Posted from receipt IR-20260701-001', '2026-07-01 09:00:00');
-
-INSERT INTO dbo.Stock_Adjustment (
-    adjustment_code, adjustment_type, status, reason,
-    created_by, approved_by, created_at, approved_at
-)
-VALUES
-('ADJ-20260710-001', 'DAMAGED', 'APPROVED',
- N'Two units were damaged during physical stock inspection',
- 2, 1, '2026-07-10 10:00:00', '2026-07-10 10:20:00');
-
-INSERT INTO dbo.Stock_Adjustment_Detail (
-    adjustment_id, variant_id, quantity_before,
-    change_quantity, quantity_after, note
-)
-VALUES
-(1, 12, 47, -2, 45, N'Damaged units removed from available stock');
-
-INSERT INTO dbo.Inventory_Log (
-    variant_id, user_id, product_name_snapshot, sku_snapshot,
-    quantity_before, change_quantity, quantity_after,
-    transaction_type, reference_type, reference_id, note, created_at
-)
-VALUES
-(12, 1, N'Classic Cotton Crew-Neck T-Shirt', 'CM-CTSHIRT-WHT-M',
- 47, -2, 45, 'ADJUST_DECREASE', 'STOCK_ADJUSTMENT', 1,
- N'Two damaged units removed after stock inspection',
- '2026-07-10 10:20:00');
 GO
 
 /* =========================================================================
-   XII. VOUCHERS
+   X. VOUCHERS
    ========================================================================= */
 
 INSERT INTO dbo.Voucher (
@@ -719,7 +561,7 @@ VALUES
 GO
 
 /* =========================================================================
-   XIII. CART AND WISHLIST
+   XI. CART AND WISHLIST
    ========================================================================= */
 
 INSERT INTO dbo.Cart (user_id, variant_id, quantity)
@@ -735,7 +577,7 @@ VALUES
 GO
 
 /* =========================================================================
-   XIV. SHIPMENTS, ORDERS, DETAILS AND PAYMENTS
+   XII. SHIPMENTS, ORDERS, DETAILS AND PAYMENTS
    ========================================================================= */
 
 INSERT INTO dbo.Shipment (
@@ -904,7 +746,7 @@ VALUES
 GO
 
 /* =========================================================================
-   XV. FEEDBACK AND ACTIVITY LOG
+   XIII. FEEDBACK
    ========================================================================= */
 
 INSERT INTO dbo.Feedback (
@@ -934,22 +776,12 @@ VALUES
  2, N'The material was good, but the size did not fit.', 0,
  N'The return was accepted and the payment was refunded.',
  2, '2026-07-12 11:00:00', '2026-07-12 10:45:00');
-
-INSERT INTO dbo.Activity_Log (
-    user_id, action_type, description, ip_address, created_at
-)
-VALUES
-(1, 'LOGIN', N'Administrator signed in', '127.0.0.1', '2026-07-16 08:00:00'),
-(2, 'IMPORT_RECEIPT_CREATE', N'Created import receipt IR-20260715-002',
- '127.0.0.1', '2026-07-15 14:20:00'),
-(2, 'PRICE_UPDATE', N'Updated prices for variants 1 and 5',
- '127.0.0.1', '2026-07-02 09:10:00');
 GO
 
 /* =========================================================================
-   XVI. EXTENDED DEMO DATA
+   XIV. EXTENDED DEMO DATA
    This section intentionally adds a broader dataset for search, filtering,
-   inventory, promotion, order, return and permission screens.
+   inventory, promotion, order and return screens.
    ========================================================================= */
 
 -- Additional locations
@@ -1035,12 +867,12 @@ INNER JOIN (VALUES
     ('staff03', 'SESSION', 'seed-token-staff03-session', '2026-08-31 23:59:59', 0)
 ) v(username, token_type, token_value, expiry_date, is_used) ON v.username = u.username;
 
--- More brands, categories and attributes
-INSERT INTO dbo.Brand (brand_name, slug, description, logo_url) VALUES
-(N'Lacoste', 'lacoste', N'Classic premium casualwear', 'lacoste_logo.png'),
-(N'Nike', 'nike', N'Sportswear and performance essentials', 'nike_logo.png'),
-(N'Adidas', 'adidas', N'Active lifestyle apparel', 'adidas_logo.png'),
-(N'Zara', 'zara', N'Modern seasonal fashion', 'zara_logo.png');
+-- More brands and categories
+INSERT INTO dbo.Brand (brand_name, slug) VALUES
+(N'Lacoste', 'lacoste'),
+(N'Nike', 'nike'),
+(N'Adidas', 'adidas'),
+(N'Zara', 'zara');
 
 INSERT INTO dbo.Category
     (category_name, slug, parent_id, description, status)
@@ -1063,33 +895,6 @@ FROM (VALUES
     (N'Gym Wear', 'do-gym', 'do-the-thao', N'Flexible clothing for gym sessions')
 ) v(category_name, slug, parent_slug, description)
 INNER JOIN dbo.Category c ON c.slug = v.parent_slug;
-
-INSERT INTO dbo.Attribute (attribute_name) VALUES
-(N'Material'),
-(N'Fit');
-
-INSERT INTO dbo.Permission
-    (permission_code, permission_name, description)
-VALUES
-('USER_MANAGE',      N'Manage users',       N'View and update customer accounts'),
-('SUPPLIER_MANAGE',  N'Manage suppliers',   N'Maintain supplier information'),
-('RETURN_MANAGE',    N'Manage returns',     N'Review return and refund requests'),
-('REPORT_EXPORT',    N'Export reports',     N'Export operational and sales reports'),
-('AUDIT_VIEW',       N'View audit log',    N'View security and activity history');
-
-INSERT INTO dbo.Role_Permission (role_id, permission_id)
-SELECT r.id, p.id
-FROM dbo.[Role] r
-INNER JOIN dbo.Permission p ON
-    (r.role_name = 'ADMIN')
-    OR (r.role_name = 'STAFF' AND p.permission_code IN
-        ('USER_MANAGE', 'SUPPLIER_MANAGE', 'RETURN_MANAGE', 'REPORT_EXPORT', 'AUDIT_VIEW'))
-    OR (r.role_name = 'CUSTOMER' AND p.permission_code IN ('PRODUCT_VIEW'))
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM dbo.Role_Permission rp
-    WHERE rp.role_id = r.id AND rp.permission_id = p.id
-);
 GO
 
 -- Twelve more products
@@ -1171,8 +976,7 @@ VALUES
  '2026-06-03', '2026-07-12');
 GO
 
--- Forty-eight additional variants. Direct color/size values are supplied so
--- both the product listing projection and attribute-value screens have data.
+-- Forty-eight additional variants with direct color and size values.
 INSERT INTO dbo.Product_Variant
     (product_id, sku, cost_price, list_price, sale_price, stock_quantity,
      status, color, size, price_updated_at, price_updated_by)
@@ -1226,43 +1030,6 @@ VALUES
 ((SELECT id FROM dbo.Product WHERE slug = 'ao-mua-nhe-gap-gon'), 'EXP-RAIN-BLK-S', 310000, 849000, 849000, 11, 'ACTIVE', N'Black', N'S', '2026-07-12', 2),
 ((SELECT id FROM dbo.Product WHERE slug = 'ao-mua-nhe-gap-gon'), 'EXP-RAIN-BLK-M', 310000, 849000, 849000, 8, 'ACTIVE', N'Black', N'M', '2026-07-12', 2);
 GO
-
-INSERT INTO dbo.Variant_Attribute_Value (variant_id, attribute_id, attribute_value)
-SELECT pv.id, a.id,
-       CASE a.attribute_name
-           WHEN N'Color' THEN pv.color
-           WHEN N'Size' THEN pv.size
-           WHEN N'Material' THEN
-               CASE
-                   WHEN p.slug LIKE 'ao-thun%' OR p.slug LIKE 'ao-polo%' THEN N'Cotton'
-                   WHEN p.slug LIKE 'ao-so-mi%' THEN N'Polyester Blend'
-                   WHEN p.slug LIKE 'chan-vay%' OR p.slug LIKE 'quan-dai%' THEN N'Polyester'
-                   WHEN p.slug LIKE 'quan-%' THEN N'Quick Dry'
-                   WHEN p.slug LIKE 'ao-cardigan%' THEN N'Knit'
-                   WHEN p.slug LIKE 'ao-khoac-denim%' THEN N'Denim'
-                   WHEN p.slug LIKE 'mu-%' THEN N'Cotton Twill'
-                   WHEN p.slug LIKE 'tui-%' THEN N'Canvas'
-                   ELSE N'Nylon'
-               END
-           WHEN N'Fit' THEN
-               CASE
-                   WHEN p.slug LIKE 'quan-legging%' OR p.slug LIKE 'quan-short-chay%' THEN N'Slim Fit'
-                   WHEN p.slug LIKE 'quan-dai%' OR p.slug LIKE 'chan-vay%' THEN N'Regular Fit'
-                   ELSE N'Relaxed Fit'
-               END
-       END
-FROM dbo.Product_Variant pv
-INNER JOIN dbo.Product p ON p.id = pv.product_id
-CROSS JOIN dbo.Attribute a
-WHERE pv.sku LIKE 'EXP-%'
-  AND a.attribute_name IN (N'Color', N'Size', N'Material', N'Fit')
-  AND NOT EXISTS (
-      SELECT 1
-      FROM dbo.Variant_Attribute_Value existing
-      WHERE existing.variant_id = pv.id
-        AND existing.attribute_id = a.id
-  );
-
 INSERT INTO dbo.Product_Image (
     product_id, image_url, is_main, sort_order
 )
@@ -1283,29 +1050,160 @@ FROM (VALUES
 ) AS image_asset(slug, image_url)
 INNER JOIN dbo.Product p
     ON p.slug = image_asset.slug;
-
-UPDATE pv
-SET pv.color = color_value.attribute_value,
-    pv.size = size_value.attribute_value,
-    pv.list_price = COALESCE(pv.list_price, pv.sale_price)
-FROM dbo.Product_Variant pv
-OUTER APPLY (
-    SELECT TOP 1 vav.attribute_value
-    FROM dbo.Variant_Attribute_Value vav
-    INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
-    WHERE vav.variant_id = pv.id AND a.attribute_name = N'Color'
-) color_value
-OUTER APPLY (
-    SELECT TOP 1 vav.attribute_value
-    FROM dbo.Variant_Attribute_Value vav
-    INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
-    WHERE vav.variant_id = pv.id AND a.attribute_name = N'Size'
-) size_value
-WHERE pv.sku LIKE 'EXP-%';
 GO
 
 /* =========================================================================
-   XVII. EXTENDED INVENTORY, PROMOTIONS AND SHOPPING DATA
+   VARIANT IMAGE SEED GENERATED FROM upload/product
+
+   The application reads a Variant image by Product_Image.variant_id first.
+   SKU is used here instead of hard-coded identity IDs, so the relationship
+   remains correct when the database is recreated.
+   ========================================================================= */
+INSERT INTO dbo.Product_Image (
+    product_id, variant_id, color, image_url,
+    is_main, sort_order, updated_at
+)
+SELECT
+    pv.product_id,
+    pv.id,
+    NULL,
+    image_seed.image_url,
+    1,
+    0,
+    SYSDATETIME()
+FROM (VALUES
+    ('CM-TSHIRT-BLK-M', 'p1_v1_m_black_03a189704185.jpg'),
+    ('CM-TSHIRT-BLK-L', 'p1_v2_l_black_9cc866213501.jpg'),
+    ('CM-TSHIRT-WHT-M', 'p1_v3_m_white_127331c779f4.jpg'),
+    ('CM-TSHIRT-WHT-L', 'p1_v4_l_white_5ae3eb4f3ab7.jpg'),
+    ('RT-JEAN-BLU-30', 'p2_v5_l_smoke_gray.jpg'),
+    ('RT-JEAN-BLU-31', 'p2_v6_s_smoke_gray.jpg'),
+    ('CM-SPORT-BLK-M', 'p3_v7_m_black_c5b737852bb7.webp'),
+    ('CM-SPORT-BLK-L', 'p3_v8_l_black_cdb3bf868512.webp'),
+    ('CM-SPORT-NVY-M', 'p3_v9_m_navy_f2a6b1bb3894.webp'),
+    ('CM-SPORT-NVY-L', 'p3_v10_l_navy_f22e3bf198bc.webp'),
+    ('CM-CTSHIRT-WHT-S', 'p4_v11_s_white_4876cf12467b.jpg'),
+    ('CM-CTSHIRT-WHT-M', 'p4_v12_m_white_17f44282a0d8.jpg'),
+    ('CM-CTSHIRT-GRY-M', 'p4_v13_m_gray_095c08936bf1.jpg'),
+    ('CM-CTSHIRT-GRY-L', 'p4_v14_l_gray_ad41d7348f07.jpg'),
+    ('CM-POLO-WHT-M', 'p5_v15_m_white_d7a3e21a2444.jpg'),
+    ('CM-POLO-WHT-L', 'p5_v16_l_white_c4f208c2c7c7.jpg'),
+    ('CM-POLO-NVY-M', 'p5_v17_m_navy_5588d83cda1e.jpg'),
+    ('CM-POLO-NVY-XL', 'p5_v18_xl_navy_c8ef5e72c019.jpg'),
+    ('CM-OVER-BLK-L', 'p6_v19_l_black_cb2041cddaff.jpg'),
+    ('CM-OVER-BLK-XL', 'p6_v20_xl_black_3b3c26f24a2a.jpg'),
+    ('CM-OVER-BEG-L', 'p6_v21_l_beige_54cdbac85098.jpg'),
+    ('CM-OVER-BEG-XL', 'p6_v22_xl_beige_aea9ee7ada0a.jpg'),
+    ('RT-LINEN-BEG-M', 'p7_v23_m_beige.jpg'),
+    ('RT-LINEN-BEG-L', 'p7_v24_l_beige.jpg'),
+    ('RT-LINEN-BRN-M', 'p7_v25_m_brown_172420e4433e.jpg'),
+    ('RT-LINEN-BRN-L', 'p7_v26_l_brown_783c01798389.jpg'),
+    ('RT-OXF-WHT-M', 'p8_v27_m_white.jpg'),
+    ('RT-OXF-WHT-L', 'p8_v28_l_white.jpg'),
+    ('RT-OXF-WHT-XL', 'p8_v29_xl_white.jpg'),
+    ('UQ-STRIPE-BLU-M', 'p9_v30_m_blue_stripe_682ea4f9ee34.jpg'),
+    ('UQ-STRIPE-BLU-L', 'p9_v31_l_blue_stripe_e91fcfb59c29.jpg'),
+    ('UQ-STRIPE-GRY-M', 'p9_v32_m_gray_stripe_9e57cdcb9639.jpg'),
+    ('UQ-STRIPE-GRY-L', 'p9_v33_l_gray_stripe_557e214ea23b.jpg'),
+    ('RT-DENIM-BLU-M', 'p10_v34_m_denim_blue.jpg'),
+    ('RT-DENIM-BLU-L', 'p10_v35_l_denim_blue.jpg'),
+    ('RT-DENIM-BLU-XL', 'p10_v36_xl_denim_blue.jpg'),
+    ('RT-BAGGY-BLK-28', 'p11_v37_xl_black.jpg'),
+    ('RT-BAGGY-BLK-30', 'p11_v38_m_black.jpg'),
+    ('RT-BAGGY-BLK-32', 'p11_v39_s_black.jpg'),
+    ('RT-RIP-BLU-28', 'p12_v40_s_blue_8d30f655dc06.jpg'),
+    ('RT-RIP-BLU-30', 'p12_v41_m_blue_8f1f1d637898.jpg'),
+    ('RT-RIP-BLU-32', 'p12_v42_l_blue_1dbc7d04f55c.jpg'),
+    ('UQ-REG-DBL-30', 'p14_v46_l_dark_blue.jpg'),
+    ('UQ-REG-DBL-32', 'p14_v47_m_dark_blue.jpg'),
+    ('UQ-REG-DBL-34', 'p14_v48_s_dark_blue.jpg'),
+    ('UQ-WIND-BLK-M', 'p15_v49_m_black.jpg'),
+    ('UQ-WIND-BLK-L', 'p15_v50_l_black.jpg'),
+    ('UQ-WIND-OLV-M', 'p15_v51_m_olive_f4e2c867b4f5.jpg'),
+    ('UQ-WIND-OLV-L', 'p15_v52_l_olive_cdac6efc5c81.jpg'),
+    ('CM-HOOD-GRY-M', 'p16_v53_m_gray.jpg'),
+    ('CM-HOOD-GRY-L', 'p16_v54_l_gray_22045f0e318c.jpg'),
+    ('CM-HOOD-BLK-M', 'p16_v55_m_black_222da5c40fa1.jpg'),
+    ('CM-HOOD-BLK-XL', 'p16_v56_xl_black_bc1b0921140f.jpg'),
+    ('RT-SHORT-BEG-M', 'p17_v57_m_beige_4a20ca7f54d3.jpg'),
+    ('RT-SHORT-BEG-L', 'p17_v58_l_beige_d2c0ee8db4a7.jpg'),
+    ('RT-SHORT-OLV-M', 'p17_v59_m_olive_c7b0df5005a0.jpg'),
+    ('RT-SHORT-OLV-L', 'p17_v60_l_olive_6c44a88702ed.jpg'),
+    ('CM-TANK-BLK-M', 'p18_v61_m_black_82fcbc70950f.jpg'),
+    ('CM-TANK-BLK-L', 'p18_v62_l_black_dc04104ebbd5.jpg'),
+    ('CM-TANK-WHT-M', 'p18_v63_m_white_df7457933f94.jpg'),
+    ('CM-TANK-WHT-L', 'p18_v64_l_white_426abbc69791.jpg'),
+    ('RT-TROU-BLK-30', 'p19_v65_m_black_eb2d616b1746.jpg'),
+    ('RT-TROU-BLK-32', 'p19_v66_l_black_e8dce44c2cc8.jpg'),
+    ('RT-TROU-NVY-30', 'p19_v67_m_navy_bb1b7eb91358.jpg'),
+    ('RT-TROU-NVY-32', 'p19_v68_l_navy_9fec18d033ad.jpg'),
+    ('RT-BLZR-BLK-M', 'p20_v69_m_black_fe46cf31ee83.jpg'),
+    ('RT-BLZR-BLK-L', 'p20_v70_l_black_a8371b618f87.jpg'),
+    ('RT-BLZR-GRY-M', 'p20_v71_m_gray_d8b94bf5616c.jpg'),
+    ('RT-BLZR-GRY-L', 'p20_v72_l_gray_79c70733c8a2.jpg'),
+    ('UQ-KNIT-CRM-M', 'p21_v73_m_cream_a411400145df.webp'),
+    ('UQ-KNIT-CRM-L', 'p21_v74_l_cream_cc755ebd8d1c.webp'),
+    ('CM-JOG-BLK-M', 'p22_v77_m_black_307e0925ab42.jpg'),
+    ('CM-JOG-BLK-L', 'p22_v78_l_black_99c7240961a9.jpg'),
+    ('EXP-TEE-WOM-BLK-S', 'p23_v81_s_black.webp'),
+    ('EXP-TEE-WOM-BLK-M', 'p23_v82_m_black.webp'),
+    ('EXP-TEE-WOM-WHT-S', 'p23_v83_s_white_7c9686673deb.webp'),
+    ('EXP-TEE-WOM-WHT-M', 'p23_v84_m_white_876eec032c21.webp'),
+    ('EXP-BLOUSE-PNK-S', 'p24_v87_s_pink_488dbaef5ac3.webp'),
+    ('EXP-BLOUSE-PNK-M', 'p24_v88_m_pink_0f84a9dc1a8a.webp'),
+    ('EXP-SKIRT-BLK-S', 'p25_v89_s_black_b3ef0a960e05.webp'),
+    ('EXP-SKIRT-BLK-M', 'p25_v90_m_black_94ddd432ed19.webp'),
+    ('EXP-SKIRT-BEI-S', 'p25_v91_s_beige_f30fbc6fdf83.webp'),
+    ('EXP-SKIRT-BEI-M', 'p25_v92_m_beige_e4cb9c24254e.webp'),
+    ('EXP-PANTS-CRE-S', 'p26_v93_s_cream_4c975083b80a.webp'),
+    ('EXP-PANTS-CRE-M', 'p26_v94_m_cream_b446462fc5f9.webp'),
+    ('EXP-PANTS-BLK-S', 'p26_v95_s_black.webp'),
+    ('EXP-PANTS-BLK-M', 'p26_v96_m_black.webp'),
+    ('EXP-LEGGING-BLK-S', 'p27_v97_s_black.webp'),
+    ('EXP-LEGGING-BLK-M', 'p27_v98_m_black.webp'),
+    ('EXP-LEGGING-GRY-S', 'p27_v99_s_gray_80506c44b639.webp'),
+    ('EXP-LEGGING-GRY-M', 'p27_v100_m_gray_119f69150013.webp'),
+    ('EXP-RUNSHORT-BLU-M', 'p28_v101_m_blue_0f26956fa3ab.webp'),
+    ('EXP-RUNSHORT-BLU-L', 'p28_v102_l_blue_e94bdb06e992.webp'),
+    ('EXP-RUNSHORT-BLK-M', 'p28_v103_m_black_ebdb050a6445.webp'),
+    ('EXP-RUNSHORT-BLK-L', 'p28_v104_l_black_b8840ccfbf9c.webp'),
+    ('EXP-CARDI-CRE-M', 'p29_v105_m_cream_2f78f94a9239.webp'),
+    ('EXP-CARDI-CRE-L', 'p29_v106_l_cream_dd57c77d91ea.webp'),
+    ('EXP-CARDI-GRY-M', 'p29_v107_m_gray.webp'),
+    ('EXP-CARDI-GRY-L', 'p29_v108_l_gray.jpg'),
+    ('EXP-DENIM-BLU-M', 'p30_v109_m_denim_blue_fa295a069313.jpg'),
+    ('EXP-DENIM-BLU-L', 'p30_v110_l_denim_blue_bcf888bcbd25.jpg'),
+    ('EXP-DENIM-BLK-M', 'p30_v111_m_black_5d1f57556e0a.webp'),
+    ('EXP-DENIM-BLK-L', 'p30_v112_l_black_419aeb5a0e93.webp'),
+    ('EXP-CAP-BLK-FREE', 'p31_v113_free_size_black.webp'),
+    ('EXP-CAP-WHT-FREE', 'p31_v114_free_size_white.webp'),
+    ('EXP-CAP-BEI-FREE', 'p31_v115_free_size_beige.webp'),
+    ('EXP-CAP-NVY-FREE', 'p31_v116_s_navy_484b2462809d.webp'),
+    ('EXP-TOTE-BLK-FREE', 'p32_v118_s_black.webp'),
+    ('EXP-TOTE-RED-FREE', 'p32_v119_free_size_red.webp'),
+    ('EXP-TOTE-GRN-FREE', 'p32_v120_s_green.webp'),
+    ('EXP-POLO-PNK-S', 'p33_v121_s_pink.webp'),
+    ('EXP-POLO-PNK-M', 'p33_v122_m_pink.webp'),
+    ('EXP-POLO-WHT-S', 'p33_v123_s_white.webp'),
+    ('EXP-POLO-WHT-M', 'p33_v124_m_white.webp'),
+    ('EXP-RAIN-BLU-S', 'p34_v125_s_blue_8e62ad82aead.webp'),
+    ('EXP-RAIN-BLU-M', 'p34_v126_m_blue_63ec2c5638f1.webp'),
+    ('EXP-RAIN-BLK-S', 'p34_v127_s_black_99d26d4d1833.webp'),
+    ('EXP-RAIN-BLK-M', 'p34_v128_m_black_3a55be7e73c8.webp')
+) AS image_seed(sku, image_url)
+INNER JOIN dbo.Product_Variant pv
+    ON pv.sku = image_seed.sku
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM dbo.Product_Image existing_image
+    WHERE existing_image.variant_id = pv.id
+      AND existing_image.is_main = 1
+);
+/* END VARIANT IMAGE SEED */
+GO
+
+/* =========================================================================
+   XV. EXTENDED INVENTORY, PROMOTIONS AND SHOPPING DATA
    ========================================================================= */
 
 INSERT INTO dbo.Product_Variant_Price_History (
@@ -1325,12 +1223,12 @@ WHERE pv.sku LIKE 'EXP-%'
   AND pv.id % 4 = 0;
 
 INSERT INTO dbo.Supplier
-    (supplier_name, contact_name, phone, email, address, status)
+    (supplier_name, phone, address, status)
 VALUES
-(N'Đông Á Fashion Materials', N'Nguyễn Hoàng Long', '0906000001', 'sales@donga.example', N'Đà Nẵng', 1),
-(N'An Phú Sportswear', N'Phạm Quốc Việt', '0906000002', 'hello@anphu.example', N'Bình Dương', 1),
-(N'Green Bag Workshop', N'Lê Thảo Nguyên', '0906000003', 'orders@greenbag.example', N'Hồ Chí Minh', 1),
-(N'Khánh Hòa Textile', N'Trần Hải Nam', '0906000004', 'contact@khanhhoa.example', N'Khánh Hòa', 1);
+(N'Đông Á Fashion Materials', '0906000001', N'Đà Nẵng', 1),
+(N'An Phú Sportswear', '0906000002', N'Bình Dương', 1),
+(N'Green Bag Workshop', '0906000003', N'Hồ Chí Minh', 1),
+(N'Khánh Hòa Textile', '0906000004', N'Khánh Hòa', 1);
 
 INSERT INTO dbo.Import_Receipt
     (receipt_code, supplier_id, user_id, total_amount, created_at, status,
@@ -1378,11 +1276,7 @@ INSERT INTO dbo.Product_Batch (
     import_receipt_id, import_receipt_detail_id, status, created_at
 )
 SELECT pv.id, CONCAT('EXT-OPEN-', pv.sku), pv.cost_price,
-       CASE pv.sku
-           WHEN 'EXP-TEE-WOM-BLK-S' THEN pv.stock_quantity + 2
-           WHEN 'EXP-BLOUSE-BLU-S' THEN pv.stock_quantity + 5
-           ELSE pv.stock_quantity
-       END,
+       pv.stock_quantity,
        pv.stock_quantity, NULL, NULL,
        CASE WHEN pv.stock_quantity = 0 THEN 'CLOSED' ELSE 'AVAILABLE' END,
        '2026-07-01 08:00:00'
@@ -1401,61 +1295,6 @@ SELECT pv.id, (SELECT id FROM dbo.[User] WHERE username = 'staff02'),
 FROM dbo.Product_Variant pv
 INNER JOIN dbo.Product p ON p.id = pv.product_id
 WHERE pv.sku LIKE 'EXP-%';
-
-INSERT INTO dbo.Stock_Adjustment (
-    adjustment_code, adjustment_type, status, reason, created_by,
-    approved_by, created_at, approved_at
-)
-VALUES
-('ADJ-20260718-002', 'DAMAGED', 'APPROVED',
- N'Packaging damage found during receiving inspection',
- (SELECT id FROM dbo.[User] WHERE username = 'staff02'), 1,
- '2026-07-18 15:00:00', '2026-07-18 15:20:00'),
-('ADJ-20260719-003', 'CORRECTION', 'APPROVED',
- N'Physical count found five additional units',
- (SELECT id FROM dbo.[User] WHERE username = 'staff03'), 1,
- '2026-07-19 16:00:00', '2026-07-19 16:30:00'),
-('ADJ-20260720-004', 'DAMAGED', 'DRAFT',
- N'Pending review for stained garment samples',
- (SELECT id FROM dbo.[User] WHERE username = 'staff03'), NULL,
- '2026-07-20 10:00:00', NULL);
-
-INSERT INTO dbo.Stock_Adjustment_Detail (
-    adjustment_id, variant_id, quantity_before, change_quantity,
-    quantity_after, note
-)
-VALUES
-((SELECT id FROM dbo.Stock_Adjustment WHERE adjustment_code = 'ADJ-20260718-002'),
- (SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-TEE-WOM-BLK-S'),
- 50, -2, 48, N'Two damaged units removed'),
-((SELECT id FROM dbo.Stock_Adjustment WHERE adjustment_code = 'ADJ-20260719-003'),
- (SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-BLOUSE-BLU-S'),
- 30, 5, 35, N'Counted five units missed in the first count'),
-((SELECT id FROM dbo.Stock_Adjustment WHERE adjustment_code = 'ADJ-20260720-004'),
- (SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-CARDI-CRE-M'),
- 21, -1, 20, N'One stained sample pending approval');
-
-INSERT INTO dbo.Inventory_Log (
-    variant_id, user_id, product_name_snapshot, sku_snapshot,
-    quantity_before, change_quantity, quantity_after, transaction_type,
-    reference_type, reference_id, note, created_at
-)
-VALUES
-((SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-TEE-WOM-BLK-S'), 1,
- N'Essential Womens Cotton Tee', 'EXP-TEE-WOM-BLK-S',
- 50, -2, 48, 'ADJUST_DECREASE', 'STOCK_ADJUSTMENT',
- (SELECT id FROM dbo.Stock_Adjustment WHERE adjustment_code = 'ADJ-20260718-002'),
- N'Damaged units removed from stock', '2026-07-18 15:20:00'),
-((SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-BLOUSE-BLU-S'), 1,
- N'Pleated Office Blouse', 'EXP-BLOUSE-BLU-S',
- 30, 5, 35, 'ADJUST_INCREASE', 'STOCK_ADJUSTMENT',
- (SELECT id FROM dbo.Stock_Adjustment WHERE adjustment_code = 'ADJ-20260719-003'),
- N'Positive count correction', '2026-07-19 16:30:00'),
-((SELECT id FROM dbo.Product_Variant WHERE sku = 'EXP-CARDI-CRE-M'), 2,
- N'Soft Ribbed Cardigan', 'EXP-CARDI-CRE-M',
- 21, -1, 20, 'ADJUST_DECREASE', 'STOCK_ADJUSTMENT',
- (SELECT id FROM dbo.Stock_Adjustment WHERE adjustment_code = 'ADJ-20260720-004'),
- N'Draft adjustment awaiting approval', '2026-07-20 10:00:00');
 GO
 
 INSERT INTO dbo.Voucher (
@@ -1510,7 +1349,7 @@ INNER JOIN dbo.Product_Variant pv ON pv.sku = v.sku;
 GO
 
 /* =========================================================================
-   XVIII. EXTENDED ORDERS, PAYMENTS, RETURNS AND FEEDBACK
+   XVI. EXTENDED ORDERS, PAYMENTS, RETURNS AND FEEDBACK
    ========================================================================= */
 
 INSERT INTO dbo.Shipment
@@ -1810,22 +1649,10 @@ INNER JOIN dbo.[User] u ON u.username = v.username
 INNER JOIN dbo.Product p ON p.slug = v.slug
 INNER JOIN dbo.[Order] o ON o.order_code = v.order_code;
 GO
-
-INSERT INTO dbo.Activity_Log
-    (user_id, action_type, description, ip_address, created_at)
-VALUES
-((SELECT id FROM dbo.[User] WHERE username = 'staff02'), 'LOGIN', N'Staff signed in to inventory workspace', '10.0.0.12', '2026-07-18 08:00:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'staff03'), 'LOGIN', N'Staff signed in to order workspace', '10.0.0.13', '2026-07-19 09:00:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'staff02'), 'IMPORT_RECEIPT_CONFIRM', N'Confirmed receipt IR-20260718-003', '10.0.0.12', '2026-07-18 09:00:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'staff03'), 'IMPORT_RECEIPT_CREATE', N'Created draft receipt IR-20260719-005', '10.0.0.13', '2026-07-19 13:40:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'staff02'), 'STOCK_ADJUSTMENT_APPROVE', N'Approved adjustment ADJ-20260718-002', '10.0.0.12', '2026-07-18 15:20:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'staff03'), 'ORDER_CONFIRM', N'Confirmed order ORD-20260719-014', '10.0.0.13', '2026-07-19 10:00:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'admin01'), 'RETURN_APPROVE', N'Approved return request RET-20260718-002', '127.0.0.1', '2026-07-18 14:00:00'),
-((SELECT id FROM dbo.[User] WHERE username = 'admin01'), 'REPORT_EXPORT', N'Exported July sales report', '127.0.0.1', '2026-07-20 18:00:00');
 GO
 
 /* =========================================================================
-   XIX. HIGH-VOLUME ACCOUNT DEMO DATA
+   XVII. HIGH-VOLUME ACCOUNT DEMO DATA
    Adds deterministic accounts for pagination, search, status filters,
    address selection and authentication screens.
    ========================================================================= */
@@ -2007,24 +1834,10 @@ SET size = CASE size
     ELSE size
 END
 WHERE size IN (N'28', N'30', N'32', N'34', N'36');
-
-UPDATE vav
-SET vav.attribute_value = CASE vav.attribute_value
-    WHEN N'28' THEN N'S'
-    WHEN N'30' THEN N'M'
-    WHEN N'32' THEN N'L'
-    WHEN N'34' THEN N'XL'
-    WHEN N'36' THEN N'XXL'
-    ELSE vav.attribute_value
-END
-FROM dbo.Variant_Attribute_Value vav
-INNER JOIN dbo.Attribute a ON a.id = vav.attribute_id
-WHERE a.attribute_name = N'Size'
-  AND vav.attribute_value IN (N'28', N'30', N'32', N'34', N'36');
 GO
 
 /* =========================================================================
-   XX. VALIDATION
+   XVIII. VALIDATION
    ========================================================================= */
 
 IF EXISTS (
@@ -2077,28 +1890,16 @@ BEGIN
         1;
 END;
 
-IF (
-    SELECT COUNT(*)
-    FROM dbo.Variant_Attribute_Value vav
-    INNER JOIN dbo.Product_Variant pv ON pv.id = vav.variant_id
-    WHERE pv.sku LIKE 'EXP-%'
-) <> 192
-BEGIN
-    THROW 51005,
-        'Seed validation failed: extended variant attributes are incomplete.',
-        1;
-END;
-
 IF (SELECT COUNT(*) FROM dbo.[User] WHERE email LIKE 'demo.customer%@example.com') <> 50
 BEGIN
-    THROW 51006,
+    THROW 51005,
         'Seed validation failed: generated customer accounts are incomplete.',
         1;
 END;
 
 IF (SELECT COUNT(*) FROM dbo.User_Address WHERE address_detail LIKE N'Demo customer%') <> 100
 BEGIN
-    THROW 51007,
+    THROW 51006,
         'Seed validation failed: generated customer addresses are incomplete.',
         1;
 END;

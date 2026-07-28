@@ -61,34 +61,14 @@ CREATE TABLE dbo.Ward (
 GO
 
 /* =========================================================================
-   II. ACCOUNTS AND AUTHORIZATION
+   II. ACCOUNTS AND ROLES
    ========================================================================= */
 
 CREATE TABLE dbo.[Role] (
     id INT IDENTITY(1,1) NOT NULL,
     role_name VARCHAR(50) NOT NULL,
-    description NVARCHAR(255) NULL,
     CONSTRAINT PK_Role PRIMARY KEY (id),
     CONSTRAINT UQ_Role_Name UNIQUE (role_name)
-);
-
-CREATE TABLE dbo.Permission (
-    id INT IDENTITY(1,1) NOT NULL,
-    permission_code VARCHAR(80) NOT NULL,
-    permission_name NVARCHAR(150) NOT NULL,
-    description NVARCHAR(500) NULL,
-    CONSTRAINT PK_Permission PRIMARY KEY (id),
-    CONSTRAINT UQ_Permission_Code UNIQUE (permission_code)
-);
-
-CREATE TABLE dbo.Role_Permission (
-    role_id INT NOT NULL,
-    permission_id INT NOT NULL,
-    CONSTRAINT PK_Role_Permission PRIMARY KEY (role_id, permission_id),
-    CONSTRAINT FK_RolePermission_Role FOREIGN KEY (role_id)
-        REFERENCES dbo.[Role](id) ON DELETE CASCADE,
-    CONSTRAINT FK_RolePermission_Permission FOREIGN KEY (permission_id)
-        REFERENCES dbo.Permission(id) ON DELETE CASCADE
 );
 
 CREATE TABLE dbo.[User] (
@@ -154,18 +134,6 @@ CREATE TABLE dbo.Security_Token (
         REFERENCES dbo.[User](id) ON DELETE CASCADE
 );
 
-CREATE TABLE dbo.Activity_Log (
-    id BIGINT IDENTITY(1,1) NOT NULL,
-    user_id INT NULL,
-    action_type VARCHAR(50) NOT NULL,
-    description NVARCHAR(MAX) NULL,
-    ip_address VARCHAR(45) NULL,
-    created_at DATETIME NOT NULL
-        CONSTRAINT DF_ActivityLog_CreatedAt DEFAULT (GETDATE()),
-    CONSTRAINT PK_Activity_Log PRIMARY KEY (id),
-    CONSTRAINT FK_ActivityLog_User FOREIGN KEY (user_id)
-        REFERENCES dbo.[User](id) ON DELETE SET NULL
-);
 GO
 
 /* =========================================================================
@@ -176,8 +144,6 @@ CREATE TABLE dbo.Brand (
     id INT IDENTITY(1,1) NOT NULL,
     brand_name NVARCHAR(100) NOT NULL,
     slug VARCHAR(150) NOT NULL,
-    description NVARCHAR(MAX) NULL,
-    logo_url VARCHAR(255) NULL,
     CONSTRAINT PK_Brand PRIMARY KEY (id),
     CONSTRAINT UQ_Brand_Slug UNIQUE (slug)
 );
@@ -249,15 +215,6 @@ CREATE TABLE dbo.Product_Image (
         REFERENCES dbo.Product(id) ON DELETE CASCADE
 );
 
--- Kept temporarily because CustomerProductDAO and CartDAO still query these
--- two legacy tables. Product_Variant.color and size remain the main fields.
-CREATE TABLE dbo.Attribute (
-    id INT IDENTITY(1,1) NOT NULL,
-    attribute_name NVARCHAR(100) NOT NULL,
-    CONSTRAINT PK_Attribute PRIMARY KEY (id),
-    CONSTRAINT UQ_Attribute_Name UNIQUE (attribute_name)
-);
-
 CREATE TABLE dbo.Product_Variant (
     id INT IDENTITY(1,1) NOT NULL,
     product_id INT NOT NULL,
@@ -303,17 +260,6 @@ ADD CONSTRAINT FK_ProductImage_VariantProduct
     FOREIGN KEY (variant_id, product_id)
     REFERENCES dbo.Product_Variant(id, product_id);
 
-CREATE TABLE dbo.Variant_Attribute_Value (
-    variant_id INT NOT NULL,
-    attribute_id INT NOT NULL,
-    attribute_value NVARCHAR(100) NOT NULL,
-    CONSTRAINT PK_Variant_Attribute_Value PRIMARY KEY (variant_id, attribute_id),
-    CONSTRAINT FK_VariantAttribute_Variant FOREIGN KEY (variant_id)
-        REFERENCES dbo.Product_Variant(id) ON DELETE CASCADE,
-    CONSTRAINT FK_VariantAttribute_Attribute FOREIGN KEY (attribute_id)
-        REFERENCES dbo.Attribute(id)
-);
-
 CREATE TABLE dbo.Product_Variant_Price_History (
     id BIGINT IDENTITY(1,1) NOT NULL,
     variant_id INT NULL,
@@ -349,14 +295,10 @@ GO
 CREATE TABLE dbo.Supplier (
     id INT IDENTITY(1,1) NOT NULL,
     supplier_name NVARCHAR(200) NOT NULL,
-    contact_name NVARCHAR(100) NULL,
     phone VARCHAR(30) NULL,
-    email VARCHAR(100) NULL,
     address NVARCHAR(500) NULL,
     status BIT NOT NULL
         CONSTRAINT DF_Supplier_Status DEFAULT (1),
-    created_at DATETIME NOT NULL
-        CONSTRAINT DF_Supplier_CreatedAt DEFAULT (GETDATE()),
     CONSTRAINT PK_Supplier PRIMARY KEY (id)
 );
 
@@ -457,51 +399,10 @@ CREATE TABLE dbo.Inventory_Log (
         REFERENCES dbo.[User](id) ON DELETE SET NULL
 );
 
-CREATE TABLE dbo.Stock_Adjustment (
-    id INT IDENTITY(1,1) NOT NULL,
-    adjustment_code VARCHAR(60) NOT NULL,
-    adjustment_type VARCHAR(30) NOT NULL,
-    status VARCHAR(30) NOT NULL
-        CONSTRAINT DF_StockAdjustment_Status DEFAULT ('DRAFT'),
-    reason NVARCHAR(500) NOT NULL,
-    created_by INT NOT NULL,
-    approved_by INT NULL,
-    created_at DATETIME NOT NULL
-        CONSTRAINT DF_StockAdjustment_CreatedAt DEFAULT (GETDATE()),
-    approved_at DATETIME NULL,
-    CONSTRAINT PK_Stock_Adjustment PRIMARY KEY (id),
-    CONSTRAINT UQ_StockAdjustment_Code UNIQUE (adjustment_code),
-    CONSTRAINT FK_StockAdjustment_Creator FOREIGN KEY (created_by)
-        REFERENCES dbo.[User](id),
-    CONSTRAINT FK_StockAdjustment_Approver FOREIGN KEY (approved_by)
-        REFERENCES dbo.[User](id)
-);
-
-CREATE TABLE dbo.Stock_Adjustment_Detail (
-    id INT IDENTITY(1,1) NOT NULL,
-    adjustment_id INT NOT NULL,
-    variant_id INT NOT NULL,
-    quantity_before INT NOT NULL,
-    change_quantity INT NOT NULL,
-    quantity_after INT NOT NULL,
-    note NVARCHAR(255) NULL,
-    CONSTRAINT PK_Stock_Adjustment_Detail PRIMARY KEY (id),
-    CONSTRAINT UQ_StockAdjustmentDetail UNIQUE (adjustment_id, variant_id),
-    CONSTRAINT CK_StockAdjustmentDetail_Before CHECK (quantity_before >= 0),
-    CONSTRAINT CK_StockAdjustmentDetail_Change CHECK (change_quantity <> 0),
-    CONSTRAINT CK_StockAdjustmentDetail_After CHECK (
-        quantity_after >= 0
-        AND quantity_after = quantity_before + change_quantity
-    ),
-    CONSTRAINT FK_StockAdjustmentDetail_Header FOREIGN KEY (adjustment_id)
-        REFERENCES dbo.Stock_Adjustment(id) ON DELETE CASCADE,
-    CONSTRAINT FK_StockAdjustmentDetail_Variant FOREIGN KEY (variant_id)
-        REFERENCES dbo.Product_Variant(id)
-);
 GO
 
 /* =========================================================================
-   VI. CART, VOUCHER, ORDER, PAYMENT AND FEEDBACK
+   V. CART, VOUCHER, ORDER, PAYMENT AND FEEDBACK
    ========================================================================= */
 
 CREATE TABLE dbo.Cart (
@@ -599,13 +500,6 @@ CREATE TABLE dbo.[Order] (
     recipient_phone VARCHAR(15) NOT NULL,
     ward_id VARCHAR(20) NULL,
     address_detail NVARCHAR(255) NOT NULL,
-    shipping_province_code VARCHAR(20) NULL,
-    shipping_province_name NVARCHAR(150) NULL,
-    shipping_district_code VARCHAR(20) NULL,
-    shipping_district_name NVARCHAR(150) NULL,
-    shipping_ward_code VARCHAR(20) NULL,
-    shipping_ward_name NVARCHAR(150) NULL,
-    shipping_address_detail NVARCHAR(255) NULL,
     total_items_price DECIMAL(18,0) NOT NULL,
     discount_amount DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_Order_Discount DEFAULT (0),
@@ -823,7 +717,7 @@ CREATE TABLE dbo.Feedback (
 GO
 
 /* =========================================================================
-   VII. INDEXES
+   VI. INDEXES
    ========================================================================= */
 
 CREATE INDEX IX_District_Province ON dbo.District(province_id);
@@ -845,6 +739,7 @@ CREATE INDEX IX_ProductImage_Main ON dbo.Product_Image(product_id, is_main);
 CREATE UNIQUE INDEX UX_ProductImage_ProductMain
     ON dbo.Product_Image(product_id)
     WHERE variant_id IS NULL
+      AND color IS NULL
       AND is_main = 1;
 CREATE UNIQUE INDEX UX_ProductImage_VariantMain
     ON dbo.Product_Image(variant_id)
@@ -886,8 +781,6 @@ CREATE INDEX IX_ReturnRequestItem_Variant
     ON dbo.Return_Request_Item(variant_id);
 CREATE INDEX IX_ReturnHistory_RequestDate
     ON dbo.Return_Request_History(return_request_id, changed_at DESC);
-CREATE INDEX IX_StockAdjustment_StatusDate
-    ON dbo.Stock_Adjustment(status, created_at DESC);
 CREATE INDEX IX_Wishlist_Variant ON dbo.Wishlist(variant_id);
 CREATE INDEX IX_Voucher_ActiveWindow
     ON dbo.Voucher(start_date, end_date, used_count, usage_limit);
@@ -906,13 +799,11 @@ CREATE INDEX IX_Feedback_ProductStatus ON dbo.Feedback(product_id, status, creat
 GO
 
 /* =========================================================================
-   VII. COMPATIBILITY TRIGGER
-   Admin product code writes Product_Variant.color/size directly, while some
-   current customer/cart DAO queries still read Attribute tables.
-   This trigger keeps the legacy values synchronized.
+   VII. PRODUCT VARIANT DEFAULT PRICE TRIGGER
+   Keeps existing behavior: when list_price is omitted, use sale_price.
    ========================================================================= */
 
-CREATE TRIGGER dbo.TR_ProductVariant_DefaultPriceAndLegacyAttributes
+CREATE TRIGGER dbo.TR_ProductVariant_DefaultListPrice
 ON dbo.Product_Variant
 AFTER INSERT, UPDATE
 AS
@@ -920,138 +811,9 @@ BEGIN
     SET NOCOUNT ON;
 
     UPDATE pv
-    SET pv.list_price = COALESCE(pv.list_price, i.sale_price)
+    SET pv.list_price = i.sale_price
     FROM dbo.Product_Variant pv
     INNER JOIN inserted i ON i.id = pv.id
     WHERE pv.list_price IS NULL;
-
-    DECLARE @ColorAttributeId INT =
-        (SELECT TOP 1 id FROM dbo.Attribute WHERE attribute_name = N'Color');
-
-    DECLARE @SizeAttributeId INT =
-        (SELECT TOP 1 id FROM dbo.Attribute WHERE attribute_name = N'Size');
-
-    IF @ColorAttributeId IS NOT NULL
-    BEGIN
-        UPDATE vav
-        SET vav.attribute_value = i.color
-        FROM dbo.Variant_Attribute_Value vav
-        INNER JOIN inserted i ON i.id = vav.variant_id
-        WHERE vav.attribute_id = @ColorAttributeId
-          AND NULLIF(LTRIM(RTRIM(i.color)), N'') IS NOT NULL;
-
-        INSERT INTO dbo.Variant_Attribute_Value
-            (variant_id, attribute_id, attribute_value)
-        SELECT i.id, @ColorAttributeId, i.color
-        FROM inserted i
-        WHERE NULLIF(LTRIM(RTRIM(i.color)), N'') IS NOT NULL
-          AND NOT EXISTS (
-              SELECT 1
-              FROM dbo.Variant_Attribute_Value vav
-              WHERE vav.variant_id = i.id
-                AND vav.attribute_id = @ColorAttributeId
-          );
-
-        DELETE vav
-        FROM dbo.Variant_Attribute_Value vav
-        INNER JOIN inserted i ON i.id = vav.variant_id
-        WHERE vav.attribute_id = @ColorAttributeId
-          AND NULLIF(LTRIM(RTRIM(i.color)), N'') IS NULL;
-    END
-
-    IF @SizeAttributeId IS NOT NULL
-    BEGIN
-        UPDATE vav
-        SET vav.attribute_value = i.size
-        FROM dbo.Variant_Attribute_Value vav
-        INNER JOIN inserted i ON i.id = vav.variant_id
-        WHERE vav.attribute_id = @SizeAttributeId
-          AND NULLIF(LTRIM(RTRIM(i.size)), N'') IS NOT NULL;
-
-        INSERT INTO dbo.Variant_Attribute_Value
-            (variant_id, attribute_id, attribute_value)
-        SELECT i.id, @SizeAttributeId, i.size
-        FROM inserted i
-        WHERE NULLIF(LTRIM(RTRIM(i.size)), N'') IS NOT NULL
-          AND NOT EXISTS (
-              SELECT 1
-              FROM dbo.Variant_Attribute_Value vav
-              WHERE vav.variant_id = i.id
-                AND vav.attribute_id = @SizeAttributeId
-          );
-
-        DELETE vav
-        FROM dbo.Variant_Attribute_Value vav
-        INNER JOIN inserted i ON i.id = vav.variant_id
-        WHERE vav.attribute_id = @SizeAttributeId
-          AND NULLIF(LTRIM(RTRIM(i.size)), N'') IS NULL;
-    END
 END
 GO
-
-CREATE VIEW dbo.vw_Inventory_Overview
-AS
-SELECT
-    pv.id AS variant_id,
-    p.id AS product_id,
-    p.product_name,
-    pv.sku,
-    pv.color,
-    pv.size,
-    pv.cost_price,
-    pv.list_price,
-    pv.sale_price,
-    pv.stock_quantity,
-    CASE
-        WHEN pv.stock_quantity = 0 THEN 'OUT_OF_STOCK'
-        WHEN pv.stock_quantity <= 5 THEN 'LOW_STOCK'
-        ELSE 'IN_STOCK'
-    END AS stock_status,
-    pv.status AS variant_status,
-    p.status AS product_status
-FROM dbo.Product_Variant pv
-INNER JOIN dbo.Product p ON p.id = pv.product_id;
-GO
-
-/*
-Chạy bổ sung 
-
-*/
-
-SET XACT_ABORT ON;
-BEGIN TRANSACTION;
-
-IF EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE name = 'UX_ProductImage_ProductMain'
-      AND object_id = OBJECT_ID('dbo.Product_Image')
-)
-BEGIN
-    DROP INDEX UX_ProductImage_ProductMain ON dbo.Product_Image;
-END;
-
-CREATE UNIQUE INDEX UX_ProductImage_ProductMain
-    ON dbo.Product_Image(product_id)
-    WHERE variant_id IS NULL
-      AND color IS NULL
-      AND is_main = 1;
-
-IF NOT EXISTS (
-    SELECT 1
-    FROM sys.indexes
-    WHERE name = 'UX_ProductImage_VariantMain'
-      AND object_id = OBJECT_ID('dbo.Product_Image')
-)
-BEGIN
-    CREATE UNIQUE INDEX UX_ProductImage_VariantMain
-        ON dbo.Product_Image(variant_id)
-        WHERE variant_id IS NOT NULL
-          AND is_main = 1;
-END;
-
-COMMIT TRANSACTION;
-
-SELECT id, product_id, variant_id, color, image_url, is_main, updated_at
-FROM dbo.Product_Image
-ORDER BY product_id, variant_id, color, id;

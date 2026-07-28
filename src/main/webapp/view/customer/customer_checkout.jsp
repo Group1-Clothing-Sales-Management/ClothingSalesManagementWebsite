@@ -780,33 +780,7 @@
                                 </label>
                             </div>
 
-                            <div class="col-md-6">
-
-                                <label class="payment-option d-block">
-
-                                    <div class="d-flex gap-3">
-
-                                        <input type="radio"
-                                               name="paymentMethod"
-                                               value="VNPAY"
-                                               form="checkoutForm"
-                                               class="form-check-input"
-                                               <c:if test="${selectedPaymentMethod == 'VNPAY'}">
-                                                   checked
-                                               </c:if>>
-
-                                        <div>
-                                            <div class="fw-semibold">
-                                                VNPay
-                                            </div>
-
-                                            <small class="text-muted">
-                                                Pay securely through VNPay
-                                            </small>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
+                            
                         </div>
                     </div>
 
