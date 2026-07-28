@@ -1013,3 +1013,45 @@ FROM dbo.Product_Variant pv
 INNER JOIN dbo.Product p ON p.id = pv.product_id;
 GO
 
+/*
+Chạy bổ sung 
+
+*/
+
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+
+IF EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = 'UX_ProductImage_ProductMain'
+      AND object_id = OBJECT_ID('dbo.Product_Image')
+)
+BEGIN
+    DROP INDEX UX_ProductImage_ProductMain ON dbo.Product_Image;
+END;
+
+CREATE UNIQUE INDEX UX_ProductImage_ProductMain
+    ON dbo.Product_Image(product_id)
+    WHERE variant_id IS NULL
+      AND color IS NULL
+      AND is_main = 1;
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = 'UX_ProductImage_VariantMain'
+      AND object_id = OBJECT_ID('dbo.Product_Image')
+)
+BEGIN
+    CREATE UNIQUE INDEX UX_ProductImage_VariantMain
+        ON dbo.Product_Image(variant_id)
+        WHERE variant_id IS NOT NULL
+          AND is_main = 1;
+END;
+
+COMMIT TRANSACTION;
+
+SELECT id, product_id, variant_id, color, image_url, is_main, updated_at
+FROM dbo.Product_Image
+ORDER BY product_id, variant_id, color, id;
