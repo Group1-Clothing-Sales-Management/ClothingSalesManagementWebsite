@@ -7,109 +7,67 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 
-@WebFilter(urlPatterns = {
-    "/home",
-    "/Home",
-    "/products",
-    "/product",
-    "/product/*",
-    "/cart",
-    "/cart/*",
-    "/wishlist",
-    "/wishlist/*",
-    "/customer/*",
-    "/feedback/*"
-})
+@WebFilter(
+        filterName = "CustomerHeaderFilter",
+        urlPatterns = {
+            "/home",
+            "/Home",
+            "/products",
+            "/product",
+            "/product/*",
+            "/cart",
+            "/cart/*",
+            "/wishlist",
+            "/wishlist/*",
+            "/customer/*",
+            "/feedback/*"
+        },
+        dispatcherTypes = {
+            DispatcherType.REQUEST,
+            DispatcherType.FORWARD
+        }
+)
 public class CustomerHeaderFilter implements Filter {
-
-    private static final String CATEGORIES_CACHE_KEY
-            = "customerHeaderCategoriesCache";
-    private static final String CATEGORIES_CACHE_TIME_KEY
-            = "customerHeaderCategoriesCacheTime";
-
-    private static final long CATEGORIES_CACHE_TTL_MS
-            = 5 * 60 * 1000L;
 
     private final CustomerProductDAO productDAO
             = new CustomerProductDAO();
 
     @Override
-    public void doFilter(ServletRequest request,
+    public void doFilter(
+            ServletRequest request,
             ServletResponse response,
-            FilterChain chain)
-            throws IOException, ServletException {
+            FilterChain chain
+    ) throws IOException, ServletException {
 
-        request.setAttribute(
-                "headerCategories",
-                getCachedHeaderCategories(
-                        request.getServletContext()
-                )
-        );
-
-        chain.doFilter(request, response);
-    }
-
-    private List<Category> getCachedHeaderCategories(
-            ServletContext context) {
-
-        long now = System.currentTimeMillis();
-
-        synchronized (context) {
-            Object cachedCategories
-                    = context.getAttribute(
-                            CATEGORIES_CACHE_KEY
-                    );
-
-            Object cachedTime
-                    = context.getAttribute(
-                            CATEGORIES_CACHE_TIME_KEY
-                    );
-
-            if (cachedCategories instanceof List
-                    && cachedTime instanceof Long
-                    && now - (Long) cachedTime
-                    < CATEGORIES_CACHE_TTL_MS) {
-
-                return castCategoryList(cachedCategories);
-            }
-
-            // The header renders root categories and their children as dropdowns.
-            // Do not pass the flat active-category list here, otherwise child
-            // categories are rendered as additional top-level navigation items.
-            List<Category> refreshedCategories
+        /*
+         * Không sử dụng cache theo thời gian.
+         *
+         * Mỗi HTTP request mới sẽ lấy danh sách Category mới nhất từ DB.
+         * Khi request được forward sang JSP, thuộc tính đã tồn tại nên không
+         * truy vấn lần thứ hai trong cùng một request.
+         */
+        if (request.getAttribute("headerCategories") == null) {
+            List<Category> headerCategories
                     = productDAO.getHeaderCategories();
 
-            if (refreshedCategories == null) {
-                refreshedCategories
-                        = Collections.emptyList();
+            if (headerCategories == null) {
+                headerCategories = Collections.emptyList();
             }
 
-            context.setAttribute(
-                    CATEGORIES_CACHE_KEY,
-                    refreshedCategories
+            request.setAttribute(
+                    "headerCategories",
+                    headerCategories
             );
-
-            context.setAttribute(
-                    CATEGORIES_CACHE_TIME_KEY,
-                    now
-            );
-
-            return refreshedCategories;
         }
-    }
 
-    @SuppressWarnings("unchecked")
-    private List<Category> castCategoryList(
-            Object cachedCategories) {
-
-        return (List<Category>) cachedCategories;
+        chain.doFilter(request, response);
     }
 }

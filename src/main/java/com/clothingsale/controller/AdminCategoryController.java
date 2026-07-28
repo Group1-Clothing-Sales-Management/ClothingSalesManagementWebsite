@@ -1,16 +1,25 @@
 package com.clothingsale.controller;
 
-import com.clothingsale.service.AdminManageCategoryService;
 import com.clothingsale.model.Category;
+import com.clothingsale.service.AdminManageCategoryService;
+
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(
         name = "AdminManageCategory",
-        urlPatterns = {"/admin/manage-category", "/admin/categories"}
+        urlPatterns = {
+            "/admin/manage-category",
+            "/admin/categories"
+        }
 )
 public class AdminCategoryController extends HttpServlet {
 
@@ -26,8 +35,13 @@ public class AdminCategoryController extends HttpServlet {
         List<Category> categories
                 = categoryService.getAllCategories();
 
+        List<Category> parentCategories
+                = categoryService.getRootCategories();
+
         int activeCount = 0;
         int inactiveCount = 0;
+        int rootCount = 0;
+        int subcategoryCount = 0;
 
         for (Category category : categories) {
             if (category.getStatus() == 1) {
@@ -35,23 +49,39 @@ public class AdminCategoryController extends HttpServlet {
             } else {
                 inactiveCount++;
             }
+
+            if (category.getParentId() == null) {
+                rootCount++;
+            } else {
+                subcategoryCount++;
+            }
         }
 
         request.setAttribute("categories", categories);
+        request.setAttribute(
+                "parentCategories",
+                parentCategories
+        );
 
         request.setAttribute(
                 "totalCategoryCount",
                 categories.size()
         );
-
         request.setAttribute(
                 "activeCategoryCount",
                 activeCount
         );
-
         request.setAttribute(
                 "inactiveCategoryCount",
                 inactiveCount
+        );
+        request.setAttribute(
+                "rootCategoryCount",
+                rootCount
+        );
+        request.setAttribute(
+                "subcategoryCount",
+                subcategoryCount
         );
 
         request.getRequestDispatcher(
@@ -68,62 +98,99 @@ public class AdminCategoryController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        String action = request.getParameter("action");
+        String action = normalizeAction(
+                request.getParameter("action")
+        );
+
         String status;
 
-        if (action == null) {
-            status = "invalid-action";
-        } else {
-            switch (action.trim().toUpperCase()) {
-                case "ADD":
-                    status = categoryService.addCategory(
-                            request.getParameter("categoryName")
-                    );
-                    break;
+        switch (action) {
+            case "ADD":
+                status = categoryService.addCategory(
+                        request.getParameter("categoryName"),
+                        parseNullableId(
+                                request.getParameter(
+                                        "parentCategoryId"
+                                )
+                        ),
+                        request.getParameter("description")
+                );
+                break;
 
-                case "UPDATE":
-                    status = categoryService.updateCategory(
-                            parseId(
-                                    request.getParameter("categoryId")
-                            ),
-                            request.getParameter("categoryName")
-                    );
-                    break;
+            case "UPDATE":
+                status = categoryService.updateCategory(
+                        parseRequiredId(
+                                request.getParameter("categoryId")
+                        ),
+                        request.getParameter("categoryName"),
+                        parseNullableId(
+                                request.getParameter(
+                                        "parentCategoryId"
+                                )
+                        ),
+                        request.getParameter("description")
+                );
+                break;
 
-                case "DEACTIVATE":
-                    status = categoryService.deactivateCategory(
-                            parseId(
-                                    request.getParameter("categoryId")
-                            )
-                    );
-                    break;
+            case "DEACTIVATE":
+                status = categoryService.deactivateCategory(
+                        parseRequiredId(
+                                request.getParameter("categoryId")
+                        )
+                );
+                break;
 
-                case "RESTORE":
-                    status = categoryService.restoreCategory(
-                            parseId(
-                                    request.getParameter("categoryId")
-                            )
-                    );
-                    break;
+            case "RESTORE":
+                status = categoryService.restoreCategory(
+                        parseRequiredId(
+                                request.getParameter("categoryId")
+                        )
+                );
+                break;
 
-                default:
-                    status = "invalid-action";
-                    break;
-            }
+            default:
+                status = "invalid-action";
+                break;
         }
 
         response.sendRedirect(
                 request.getContextPath()
                 + "/admin/manage-category?status="
-                + status
+                + URLEncoder.encode(
+                        status,
+                        StandardCharsets.UTF_8
+                )
         );
     }
 
-    private int parseId(String value) {
+    private String normalizeAction(String action) {
+        return action == null
+                ? ""
+                : action.trim().toUpperCase();
+    }
+
+    private int parseRequiredId(String value) {
         try {
-            return Integer.parseInt(value);
+            int id = Integer.parseInt(value);
+            return id > 0 ? id : -1;
         } catch (NumberFormatException e) {
             return -1;
+        }
+    }
+
+    /**
+     * Giá trị rỗng hoặc 0 nghĩa là Category cấp gốc.
+     */
+    private Integer parseNullableId(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            int id = Integer.parseInt(value.trim());
+            return id > 0 ? id : null;
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 }
