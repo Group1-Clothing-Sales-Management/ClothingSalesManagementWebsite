@@ -757,52 +757,6 @@
             padding:30px 16px 28px;
         }
 
-        .cart-page-title {
-            min-height:96px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:18px;
-            margin-bottom:18px;
-            padding:22px 24px;
-            border:1px solid rgba(138,170,229,.38);
-            border-radius:8px;
-            background:rgba(255,255,255,.96);
-            box-shadow:0 18px 42px rgba(95,132,214,.14);
-        }
-
-        .cart-page-kicker {
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            margin-bottom:7px;
-            color:#5f84d6;
-            font-size:.8rem;
-            font-weight:900;
-            letter-spacing:.08em;
-            text-transform:uppercase;
-        }
-
-        .cart-page-title h1 {
-            margin:0;
-            color:var(--cart-ink);
-            font-size:1.65rem;
-            font-weight:850;
-        }
-
-        .cart-title-link {
-            flex:0 0 auto;
-            color:#365b9f;
-            font-weight:800;
-            text-decoration:none;
-        }
-
-        .cart-title-link:hover {
-            color:#5f84d6;
-            text-decoration:underline;
-            text-underline-offset:4px;
-        }
-
         .cart-head,
         .shop-card,
         .empty-state {
@@ -1184,11 +1138,6 @@
             .cart-shell {
                 padding-top:22px;
             }
-
-            .cart-page-title {
-                align-items:flex-start;
-                flex-direction:column;
-            }
         }
     </style>
 </head>
@@ -1196,14 +1145,6 @@
     <jsp:include page="/view/customer/common/header.jsp"/>
 
     <div class="cart-shell">
-        <div class="cart-page-title">
-            <div>
-                <span class="cart-page-kicker"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</span>
-                <h1>Your selected items</h1>
-            </div>
-            <a href="<%= ctx %>/products" class="cart-title-link">Browse products</a>
-        </div>
-
         <% if (request.getAttribute("cartMessage") != null) { %>
             <div class="d-none" data-app-toast data-app-toast-type="success">
                 <c:out value="${cartMessage}"/>
