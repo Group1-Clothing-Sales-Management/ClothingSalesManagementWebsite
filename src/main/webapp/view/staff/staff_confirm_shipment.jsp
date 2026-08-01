@@ -48,7 +48,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-truck-ramp-box"/>
                     <jsp:param name="title" value="Update Delivery Status"/>
-                    <jsp:param name="subtitle" value="Confirm delivery progress and record the final outcome."/>
                 </jsp:include>
             </div>
 

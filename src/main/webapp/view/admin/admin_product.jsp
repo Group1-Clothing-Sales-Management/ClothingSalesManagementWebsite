@@ -283,7 +283,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-box-open"/>
                         <jsp:param name="title" value="Product Management"/>
-                        <jsp:param name="subtitle" value="Manage product profiles, variants and availability."/>
                     </jsp:include>
                     <button class="btn btn-primary px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#createProductModal">
                         <i class="fa-solid fa-plus me-1"></i> Add New Product

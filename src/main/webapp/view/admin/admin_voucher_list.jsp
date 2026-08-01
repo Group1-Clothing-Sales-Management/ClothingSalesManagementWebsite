@@ -59,7 +59,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-ticket"/>
                         <jsp:param name="title" value="Voucher Management"/>
-                        <jsp:param name="subtitle" value="Monitor, filter, and schedule store-wide discount campaigns."/>
                     </jsp:include>
                     <a href="${pageContext.request.contextPath}/admin/voucher?action=create" class="btn btn-primary fw-bold px-4">
                         <i class="fa-solid fa-plus-circle me-2"></i> Create New Voucher

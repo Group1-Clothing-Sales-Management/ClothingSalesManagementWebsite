@@ -150,7 +150,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="fa-solid fa-user-tie"/>
                 <jsp:param name="title" value="Staff Management"/>
-                <jsp:param name="subtitle" value="View, create, update, and manage staff accounts."/>
             </jsp:include>
             <a href="${staffBasePath}?action=add" class="btn btn-primary btn-sm px-3">
                 <i class="bi bi-person-plus-fill me-1"></i>Add Staff
@@ -277,7 +276,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="${pageMode eq 'add' ? 'fa-solid fa-user-plus' : 'fa-solid fa-user-pen'}"/>
                 <jsp:param name="title" value="${pageMode eq 'add' ? 'Add New Staff' : 'Edit Staff Info'}"/>
-                <jsp:param name="subtitle" value="${pageMode eq 'add' ? 'Create a new internal staff account.' : 'Update profile data and account status.'}"/>
             </jsp:include>
         </div>
 

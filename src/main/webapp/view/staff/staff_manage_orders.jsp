@@ -129,7 +129,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-receipt"/>
                         <jsp:param name="title" value="Order Details"/>
-                        <jsp:param name="subtitle" value="Review order information, track delivery, confirm or cancel when needed."/>
                     </jsp:include>
                 </div>
 
@@ -367,7 +366,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-receipt"/>
                         <jsp:param name="title" value="Order Management"/>
-                        <jsp:param name="subtitle" value="View orders, confirm orders, cancel orders, and update their lifecycle status."/>
                     </jsp:include>
                 </div>
 

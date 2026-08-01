@@ -337,8 +337,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="fa-solid fa-tags"/>
                 <jsp:param name="title" value="Category Management"/>
-                <jsp:param name="subtitle"
-                           value="Manage parent categories and subcategories used by the customer navigation."/>
             </jsp:include>
 
             <button type="button"

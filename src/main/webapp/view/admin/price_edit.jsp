@@ -39,7 +39,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
                 <jsp:param name="title" value="Edit Product Price"/>
-                <jsp:param name="subtitle" value="Update the list price and current sale price of this variant."/>
             </jsp:include>
 
         </div>

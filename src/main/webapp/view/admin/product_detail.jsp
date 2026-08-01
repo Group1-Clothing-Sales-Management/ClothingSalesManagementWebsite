@@ -228,7 +228,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-box"/>
                     <jsp:param name="title" value="Product Details"/>
-                    <jsp:param name="subtitle" value="Inspect the product master record and manage its variants."/>
                 </jsp:include>
 
                 <a href="${pageContext.request.contextPath}/admin/manage-product?action=edit&id=${product.id}"

@@ -83,12 +83,6 @@ body {
     line-height: 1.18;
 }
 
-.page-subtitle {
-    margin-top: 3px;
-    font-size: .84rem;
-    line-height: 1.35;
-}
-
 /* Cards and content sections */
 .card-main,
 .admin-card,
@@ -567,13 +561,6 @@ body {
 
     .page-header {
         margin-bottom: 14px;
-    }
-
-    .page-subtitle {
-        display: -webkit-box;
-        white-space: normal;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
     }
 
     .admin-page .card-body,

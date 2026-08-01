@@ -37,7 +37,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-truck-fast"/>
                     <jsp:param name="title" value="Delivery Status Management"/>
-                    <jsp:param name="subtitle" value="Search deliveries and keep delivery statuses up to date."/>
                 </jsp:include>
             </div>
 

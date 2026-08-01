@@ -41,7 +41,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-ticket"/>
                         <jsp:param name="title" value="Create New Voucher"/>
-                        <jsp:param name="subtitle" value="Configure a new promotional discount campaign for the store."/>
                     </jsp:include>
                 </div>
 

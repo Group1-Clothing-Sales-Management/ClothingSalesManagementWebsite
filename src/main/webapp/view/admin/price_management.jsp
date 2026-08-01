@@ -115,7 +115,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-coins"/>
                         <jsp:param name="title" value="Price Management"/>
-                        <jsp:param name="subtitle" value="Manage list prices and current sale prices for product variants."/>
                     </jsp:include>
                 </div>
 

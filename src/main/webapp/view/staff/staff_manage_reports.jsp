@@ -23,7 +23,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="fa-solid fa-chart-pie"/>
                 <jsp:param name="title" value="Revenue Reports"/>
-                <jsp:param name="subtitle" value="Monitor revenue performance and export filtered business data."/>
             </jsp:include>
         </div>
 

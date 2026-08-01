@@ -6,8 +6,5 @@
     </span>
     <div class="page-heading-copy">
         <h1 class="page-title" title="<c:out value="${param.title}"/>"><c:out value="${param.title}"/></h1>
-        <c:if test="${not empty param.subtitle}">
-            <p class="page-subtitle" title="<c:out value="${param.subtitle}"/>"><c:out value="${param.subtitle}"/></p>
-        </c:if>
     </div>
 </div>

@@ -88,7 +88,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-rotate-left"/>
                     <jsp:param name="title" value="Return Request Details"/>
-                    <jsp:param name="subtitle" value="Review the request, record returned products, and follow the refund workflow."/>
                 </jsp:include>
             </div>
             <c:choose><c:when test="${empty returnRequest}"><div class="alert alert-danger">Return request not found.</div></c:when><c:otherwise>
@@ -152,7 +151,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-rotate-left"/>
                     <jsp:param name="title" value="Returns and Refunds"/>
-                    <jsp:param name="subtitle" value="Manage customer return requests, refunds, and returned stock."/>
                 </jsp:include>
             </div>
             <c:if test="${sessionScope.authRoleName eq 'ADMIN'}"><div class="row g-3 mb-4"><c:forEach var="entry" items="${statusCounts}"><div class="col-sm-6 col-xl-2"><div class="card card-main"><div class="card-body"><div class="text-muted small">${entry.key}</div><div class="fs-3 fw-bold">${entry.value}</div></div></div></div></c:forEach><div class="col-sm-6 col-xl-2"><div class="card card-main"><div class="card-body"><div class="text-muted small">REFUNDED VALUE</div><div class="fs-5 fw-bold"><fmt:formatNumber value="${totalRefunded}" pattern="#,##0"/> ₫</div></div></div></div></div></c:if>

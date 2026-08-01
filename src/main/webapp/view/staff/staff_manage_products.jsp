@@ -51,7 +51,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-box-open"/>
                         <jsp:param name="title" value="Product Management"/>
-                        <jsp:param name="subtitle" value="Review product information, variants and availability."/>
                     </jsp:include>
                 </div>
 

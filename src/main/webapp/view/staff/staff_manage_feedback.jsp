@@ -70,7 +70,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-comments"/>
                     <jsp:param name="title" value="Feedback Management"/>
-                    <jsp:param name="subtitle" value="Choose a product to review and manage all customer feedback in one place."/>
                 </jsp:include>
             </div>
 
@@ -154,7 +153,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-comment-dots"/>
                     <jsp:param name="title" value="Product Feedback"/>
-                    <jsp:param name="subtitle" value="Review each customer comment and reply or edit the Staff/Admin response directly."/>
                 </jsp:include>
             </div>
 

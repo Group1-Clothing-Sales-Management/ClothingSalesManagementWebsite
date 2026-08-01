@@ -46,7 +46,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
                         <jsp:param name="title" value="Edit Voucher: ${voucher.code}"/>
-                        <jsp:param name="subtitle" value="Modify details and operational thresholds for this campaign configuration."/>
                     </jsp:include>
                 </div>
 

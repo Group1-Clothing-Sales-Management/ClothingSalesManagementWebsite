@@ -70,7 +70,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-pen-to-square"/>
                         <jsp:param name="title" value="Edit Product"/>
-                        <jsp:param name="subtitle" value="Update general product information and the main image."/>
                     </jsp:include>
                 </div>
 

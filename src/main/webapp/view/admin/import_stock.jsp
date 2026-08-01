@@ -233,7 +233,6 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-truck-ramp-box"/>
                         <jsp:param name="title" value="Create Stock Receipt"/>
-                        <jsp:param name="subtitle" value="Save the receipt as a draft first. Inventory changes only after confirmation."/>
                     </jsp:include>
 
                 </div>

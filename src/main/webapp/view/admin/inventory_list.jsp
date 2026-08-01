@@ -78,7 +78,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="fa-solid fa-file-invoice-dollar"/>
                 <jsp:param name="title" value="Stock Receipts"/>
-                <jsp:param name="subtitle" value="Create, review, and confirm incoming stock."/>
             </jsp:include>
 
             <a href="${pageContext.request.contextPath}/admin/inventory?action=IMPORT_PAGE"

@@ -34,7 +34,6 @@
             <jsp:include page="/view/admin/common/page_heading.jsp">
                 <jsp:param name="icon" value="fa-solid fa-file-invoice"/>
                 <jsp:param name="title" value="Stock Receipt Details"/>
-                <jsp:param name="subtitle" value="${receipt.receiptCode}"/>
             </jsp:include>
         </div>
 

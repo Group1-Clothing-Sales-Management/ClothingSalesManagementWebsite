@@ -473,7 +473,6 @@
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-chart-line"/>
                     <jsp:param name="title" value="Business Dashboard"/>
-                    <jsp:param name="subtitle" value="${dashboardData.rangeLabel}: ${dashboardData.startDate} to ${dashboardData.endDate}"/>
                 </jsp:include>
             </div>
 

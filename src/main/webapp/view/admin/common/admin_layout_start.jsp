@@ -154,16 +154,6 @@
         text-overflow: ellipsis;
     }
 
-    .page-subtitle {
-        color: var(--admin-muted);
-        font-size: .95rem;
-        line-height: 1.45;
-        margin: 5px 0 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
     .card-main,
     .admin-card {
         border: none;
