@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.clothingsale.model;
 
 import java.math.BigDecimal;
@@ -20,8 +16,11 @@ public class Order {
     private int shipmentId;
     private String recipientName;
     private String recipientPhone;
-    private String wardId;
     private String addressDetail;
+    private String provinceCode;
+    private String provinceName;
+    private String wardCode;
+    private String wardName;
     private BigDecimal totalItemsPrice;
     private BigDecimal discountAmount;
     private BigDecimal shippingFee;
@@ -46,16 +45,14 @@ public class Order {
     private String paymentMethod;
     private String paymentStatus;
     private int detailCount;
-    private String provinceName;
-    private String districtName;
-    private String wardName;
     private List<OrderDetail> details = new ArrayList<>();
 
     public Order() {
     }
 
     public Order(int id, String orderCode, int userId, int voucherId, int shipmentId,
-            String recipientName, String recipientPhone, String wardId, String addressDetail,
+            String recipientName, String recipientPhone, String addressDetail,
+            String provinceCode, String provinceName, String wardCode, String wardName,
             BigDecimal totalItemsPrice, BigDecimal discountAmount, BigDecimal shippingFee,
             BigDecimal totalPayment, String orderStatus, String note, Timestamp createdAt,
             Timestamp updatedAt) {
@@ -66,8 +63,11 @@ public class Order {
         this.shipmentId = shipmentId;
         this.recipientName = recipientName;
         this.recipientPhone = recipientPhone;
-        this.wardId = wardId;
         this.addressDetail = addressDetail;
+        this.provinceCode = provinceCode;
+        this.provinceName = provinceName;
+        this.wardCode = wardCode;
+        this.wardName = wardName;
         this.totalItemsPrice = totalItemsPrice;
         this.discountAmount = discountAmount;
         this.shippingFee = shippingFee;
@@ -149,14 +149,6 @@ public class Order {
 
     public void setRecipientPhone(String recipientPhone) {
         this.recipientPhone = recipientPhone;
-    }
-
-    public String getWardId() {
-        return wardId;
-    }
-
-    public void setWardId(String wardId) {
-        this.wardId = wardId;
     }
 
     public String getAddressDetail() {
@@ -343,6 +335,14 @@ public class Order {
         this.detailCount = detailCount;
     }
 
+    public String getProvinceCode() {
+        return provinceCode;
+    }
+
+    public void setProvinceCode(String provinceCode) {
+        this.provinceCode = provinceCode;
+    }
+
     public String getProvinceName() {
         return provinceName;
     }
@@ -351,12 +351,12 @@ public class Order {
         this.provinceName = provinceName;
     }
 
-    public String getDistrictName() {
-        return districtName;
+    public String getWardCode() {
+        return wardCode;
     }
 
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
+    public void setWardCode(String wardCode) {
+        this.wardCode = wardCode;
     }
 
     public String getWardName() {

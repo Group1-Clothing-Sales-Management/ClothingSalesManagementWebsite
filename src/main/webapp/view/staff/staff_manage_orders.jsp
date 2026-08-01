@@ -164,7 +164,6 @@
                                             <c:choose>
                                                 <c:when test="${not empty order.wardName}">
                                                     ${order.addressDetail}, ${order.wardName}
-                                                    <c:if test="${not empty order.districtName}">, ${order.districtName}</c:if>
                                                     <c:if test="${not empty order.provinceName}">, ${order.provinceName}</c:if>
                                                 </c:when>
                                                 <c:otherwise>${order.addressDetail}</c:otherwise>

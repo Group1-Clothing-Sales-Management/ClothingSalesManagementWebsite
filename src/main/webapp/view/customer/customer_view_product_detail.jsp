@@ -407,16 +407,6 @@
                 font-size:22px;
             }
 
-            .product-tag{
-                display:inline-block;
-                padding:3px 6px;
-                color:#fff;
-                background:var(--detail-primary);
-                font-size:12px;
-                line-height:1;
-                vertical-align:middle;
-            }
-
             .product-rating{
                 display:flex;
                 align-items:center;
@@ -442,31 +432,36 @@
 
             .rating-score{
                 color:var(--detail-ink);
-                text-decoration:underline;
-                font-size:16px;
+                font-size:15px;
+                font-weight:700;
             }
 
             .rating-stars{
-                margin-left:6px;
+                display:inline-flex;
+                gap:2px;
+                margin-left:8px;
                 color:#ffb400;
-                letter-spacing:1px;
+                letter-spacing:0;
+            }
+
+            .rating-stars .is-empty,
+            .feedback-score-stars .is-empty{
+                color:#cbd5e1;
             }
 
             .price{
+                width:fit-content;
+                max-width:100%;
+                box-sizing:border-box;
                 margin:16px 0 14px;
-                padding:18px 20px;
+                padding:12px 16px;
                 border:0;
                 border-radius:0;
                 background:#fff7f5;
                 color:var(--detail-primary);
-                font-size:32px;
+                font-size:24px;
                 font-weight:500;
-            }
-
-            .price-note{
-                margin-left:8px;
-                font-size:13px;
-                font-weight:400;
+                line-height:1.25;
             }
 
             .detail-row{
@@ -786,10 +781,20 @@
             }
 
             .feedback-score-card .feedback-score-stars{
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:3px;
                 margin-top:12px;
                 color:#f9b01d;
                 font-size:20px;
-                letter-spacing:2px;
+                letter-spacing:0;
+            }
+
+            .feedback-score-card .feedback-score-stars span{
+                color:#65748b;
+                font-size:14px;
+                font-weight:700;
             }
 
             .feedback-score-card .feedback-score-total{
@@ -948,9 +953,13 @@
             }
 
             .feedback-score-stars{
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:3px;
                 margin-top:8px;
                 font-size:20px;
-                letter-spacing:2px;
+                letter-spacing:0;
             }
 
             .feedback-filters{
@@ -1399,12 +1408,6 @@
                 font-weight:850;
             }
 
-            .product-tag{
-                border-radius:6px;
-                background:var(--detail-primary);
-                font-weight:850;
-            }
-
             .rating-score{
                 color:#365b9f;
             }
@@ -1415,11 +1418,6 @@
                 background:linear-gradient(180deg,#fff,#f7faff);
                 color:#365b9f;
                 font-weight:850;
-            }
-
-            .price-note{
-                color:var(--detail-primary-dark);
-                font-weight:700;
             }
 
             .detail-row + .detail-row{
@@ -1677,25 +1675,35 @@
 
                         <div class="detail-title-row">
                             <h1 class="product-name">
-                                <span class="product-tag">Featured</span>
                                 ${product.productName}
                             </h1>
                         </div>
 
                         <div class="product-rating" aria-label="Product reviews">
-                            <span>
-                                <span class="rating-score">Customer reviews</span>
-                                <span class="rating-stars">★★★★★</span>
-                            </span>
-                            <span>${feedbacks.size()} Ratings</span>
-                            <span>In stock</span>
+                            <c:choose>
+                                <c:when test="${not empty feedbacks}">
+                                    <span>
+                                        <span class="rating-score">
+                                            <fmt:formatNumber value="${averageRating}" minFractionDigits="1" maxFractionDigits="1"/>
+                                        </span>
+                                        <span class="rating-stars" aria-label="Average rating">
+                                            <c:forEach begin="1" end="5" var="star">
+                                                <i class="fa-solid fa-star ${star <= averageRating + 0.5 ? '' : 'is-empty'}"></i>
+                                            </c:forEach>
+                                        </span>
+                                    </span>
+                                    <span>${feedbacks.size()} Ratings</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span>No ratings yet</span>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
 
                         <c:choose>
                             <c:when test="${not empty product.variants}">
                                 <div class="price">
                                     <span id="priceValue">Select color and size</span>
-                                    <span class="price-note">Best price today</span>
                                 </div>
                             </c:when>
 
@@ -1966,7 +1974,18 @@
                             <div class="feedback-score-value">
                                 <fmt:formatNumber value="${averageRating}" minFractionDigits="1" maxFractionDigits="1"/>
                             </div>
-                            <div class="feedback-score-stars">★★★★★</div>
+                            <div class="feedback-score-stars" aria-label="Average product rating">
+                                <c:choose>
+                                    <c:when test="${not empty feedbacks}">
+                                        <c:forEach begin="1" end="5" var="star">
+                                            <i class="fa-solid fa-star ${star <= averageRating + 0.5 ? '' : 'is-empty'}"></i>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span>No ratings yet</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                             <div class="feedback-score-total">
                                 Dựa trên ${feedbacks.size()} lượt đánh giá
                             </div>

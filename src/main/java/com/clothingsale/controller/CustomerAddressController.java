@@ -1,3 +1,4 @@
+
 package com.clothingsale.controller;
 
 import com.clothingsale.model.UserAddress;
@@ -354,12 +355,6 @@ public class CustomerAddressController extends HttpServlet {
                 resolvedAddress.getWardName()
         );
 
-        // Địa chỉ mới không còn cấp huyện
-        address.setDistrictCode(null);
-        address.setDistrictName(null);
-
-        // Không dùng FK ward_id cũ
-        address.setWardId(null);
 
         return address;
     }

@@ -234,12 +234,6 @@
                                             <c:out value="${address.wardName}"/>
                                         </c:if>
 
-                                        <%-- District chỉ hiển thị cho địa chỉ cũ --%>
-                                        <c:if test="${not empty address.districtName}">
-                                            ,
-                                            <c:out value="${address.districtName}"/>
-                                        </c:if>
-
                                         <c:if test="${not empty address.provinceName}">
                                             ,
                                             <c:out value="${address.provinceName}"/>
@@ -448,27 +442,6 @@
 
                                                         <div class="address-api-error d-none"></div>
                                                     </div>
-
-                                                    <c:if test="${not empty address.districtName}">
-                                                        <div class="col-12">
-
-                                                            <div class="alert alert-warning mb-0">
-
-                                                                <i class="fa-solid
-                                                                   fa-triangle-exclamation
-                                                                   me-2">
-                                                                </i>
-
-                                                                This address was saved
-                                                                using the previous
-                                                                administrative system.
-
-                                                                Please select the current
-                                                                Province and Ward before
-                                                                saving.
-                                                            </div>
-                                                        </div>
-                                                    </c:if>
 
                                                     <div class="col-12">
 

@@ -560,57 +560,6 @@
                             padding-top: 30px;
                         }
 
-                        .orders-page-title {
-                            min-height: 96px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: space-between;
-                            gap: 18px;
-                            margin-bottom: 18px;
-                            padding: 22px 24px;
-                            border: 1px solid rgba(138, 170, 229, .36);
-                            border-radius: 8px;
-                            background: rgba(255, 255, 255, .96);
-                            box-shadow: 0 18px 42px rgba(95, 132, 214, .13);
-                        }
-
-                        .orders-page-kicker {
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 8px;
-                            margin-bottom: 7px;
-                            color: var(--order-primary-dark);
-                            font-size: .8rem;
-                            font-weight: 900;
-                            letter-spacing: .08em;
-                            text-transform: uppercase;
-                        }
-
-                        .orders-page-title h1 {
-                            margin: 0;
-                            color: var(--order-ink);
-                            font-size: 1.7rem;
-                            font-weight: 850;
-                        }
-
-                        .orders-page-title p {
-                            margin: 7px 0 0;
-                            color: var(--order-muted);
-                        }
-
-                        .orders-title-link {
-                            flex: 0 0 auto;
-                            color: #365b9f;
-                            font-weight: 800;
-                            text-decoration: none;
-                        }
-
-                        .orders-title-link:hover {
-                            color: var(--order-primary-dark);
-                            text-decoration: underline;
-                            text-underline-offset: 4px;
-                        }
-
                         .orders-tabs {
                             min-height: 62px;
                             margin-bottom: 14px;
@@ -802,11 +751,6 @@
                                 padding-top: 22px;
                             }
 
-                            .orders-page-title {
-                                align-items: flex-start;
-                                flex-direction: column;
-                                padding: 20px;
-                            }
                         }
                     </style>
                 </head>
@@ -815,16 +759,6 @@
                     <jsp:include page="/view/customer/common/header.jsp" />
 
                     <main class="container orders-page">
-                        <section class="orders-page-title">
-                            <div>
-                                <span class="orders-page-kicker"><i class="fa-solid fa-receipt"></i> My Orders</span>
-                                <h1>Track your orders</h1>
-                                <p>Review purchases, delivery progress, and reorder your favorite items.</p>
-                            </div>
-                            <a class="orders-title-link" href="${pageContext.request.contextPath}/products">Browse
-                                products</a>
-                        </section>
-
                         <nav class="orders-tabs" aria-label="Order status filter">
                             <a href="${pageContext.request.contextPath}/customer/orders"
                                 class="orders-tab ${empty statusFilter ? 'active' : ''}">All</a>

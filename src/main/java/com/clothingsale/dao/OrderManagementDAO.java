@@ -30,7 +30,8 @@ public class OrderManagementDAO {
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT o.id, o.order_code, o.user_id, o.voucher_id, o.shipment_id, ");
-        sql.append("       o.recipient_name, o.recipient_phone, o.ward_id, o.address_detail, ");
+        sql.append("       o.recipient_name, o.recipient_phone, o.address_detail, ");
+        sql.append("       o.province_code, o.province_name, o.ward_code, o.ward_name, ");
         sql.append("       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, ");
         sql.append("       o.order_status, o.note, o.created_at, o.updated_at, ");
         sql.append(
@@ -39,15 +40,11 @@ public class OrderManagementDAO {
                 "       s.carrier_name AS shipment_carrier_name, s.tracking_code AS shipment_tracking_code, s.shipping_status, ");
         sql.append("       p.payment_method, p.payment_status, ");
         sql.append(
-                "       ISNULL((SELECT COUNT(*) FROM Order_Detail od WHERE od.order_id = o.id), 0) AS detail_count, ");
-        sql.append("       pr.province_name, d.district_name, w.ward_name ");
+                "       ISNULL((SELECT COUNT(*) FROM Order_Detail od WHERE od.order_id = o.id), 0) AS detail_count ");
         sql.append("FROM [Order] o ");
         sql.append("LEFT JOIN [User] u ON o.user_id = u.id ");
         sql.append("LEFT JOIN Shipment s ON o.shipment_id = s.id ");
         sql.append("LEFT JOIN Payment p ON o.id = p.order_id ");
-        sql.append("LEFT JOIN Ward w ON o.ward_id = w.id ");
-        sql.append("LEFT JOIN District d ON w.district_id = d.id ");
-        sql.append("LEFT JOIN Province pr ON d.province_id = pr.id ");
         sql.append("WHERE 1 = 1 ");
 
         List<Object> parameters = new ArrayList<>();
@@ -90,21 +87,18 @@ public class OrderManagementDAO {
      */
     public Order getOrderById(int orderId) {
         String sql = "SELECT o.id, o.order_code, o.user_id, o.voucher_id, o.shipment_id, "
-                + "       o.recipient_name, o.recipient_phone, o.ward_id, o.address_detail, "
+                + "       o.recipient_name, o.recipient_phone, o.address_detail, "
+                + "       o.province_code, o.province_name, o.ward_code, o.ward_name, "
                 + "       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, "
                 + "       o.order_status, o.note, o.created_at, o.updated_at, "
                 + "       u.username AS customer_username, u.full_name AS customer_full_name, u.email AS customer_email, "
                 + "       s.carrier_name AS shipment_carrier_name, s.tracking_code AS shipment_tracking_code, s.shipping_status, "
                 + "       p.payment_method, p.payment_status, "
-                + "       ISNULL((SELECT COUNT(*) FROM Order_Detail od WHERE od.order_id = o.id), 0) AS detail_count, "
-                + "       pr.province_name, d.district_name, w.ward_name "
+                + "       ISNULL((SELECT COUNT(*) FROM Order_Detail od WHERE od.order_id = o.id), 0) AS detail_count "
                 + "FROM [Order] o "
                 + "LEFT JOIN [User] u ON o.user_id = u.id "
                 + "LEFT JOIN Shipment s ON o.shipment_id = s.id "
                 + "LEFT JOIN Payment p ON o.id = p.order_id "
-                + "LEFT JOIN Ward w ON o.ward_id = w.id "
-                + "LEFT JOIN District d ON w.district_id = d.id "
-                + "LEFT JOIN Province pr ON d.province_id = pr.id "
                 + "WHERE o.id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -1104,8 +1098,11 @@ public class OrderManagementDAO {
         order.setShipmentId(rs.getInt("shipment_id"));
         order.setRecipientName(rs.getString("recipient_name"));
         order.setRecipientPhone(rs.getString("recipient_phone"));
-        order.setWardId(rs.getString("ward_id"));
         order.setAddressDetail(rs.getString("address_detail"));
+        order.setProvinceCode(rs.getString("province_code"));
+        order.setProvinceName(rs.getString("province_name"));
+        order.setWardCode(rs.getString("ward_code"));
+        order.setWardName(rs.getString("ward_name"));
         order.setTotalItemsPrice(rs.getBigDecimal("total_items_price"));
         order.setDiscountAmount(rs.getBigDecimal("discount_amount"));
         order.setShippingFee(rs.getBigDecimal("shipping_fee"));
@@ -1124,9 +1121,6 @@ public class OrderManagementDAO {
         order.setPaymentMethod(rs.getString("payment_method"));
         order.setPaymentStatus(rs.getString("payment_status"));
         order.setDetailCount(rs.getInt("detail_count"));
-        order.setProvinceName(rs.getString("province_name"));
-        order.setDistrictName(rs.getString("district_name"));
-        order.setWardName(rs.getString("ward_name"));
 
         return order;
     }

@@ -13,16 +13,12 @@ public class StaffShipmentManagementDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT s.id AS shipment_id, o.id AS order_id, o.order_code, o.recipient_name, o.recipient_phone, " +
                         "ISNULL(o.address_detail, '') + " +
-                        "ISNULL(', ' + w.ward_name, '') + " +
-                        "ISNULL(', ' + d.district_name, '') + " +
-                        "ISNULL(', ' + pr.province_name, '') AS delivery_address, " +
+                        "ISNULL(', ' + o.ward_name, '') + " +
+                        "ISNULL(', ' + o.province_name, '') AS delivery_address, " +
                         "s.carrier_name, UPPER(TRIM(s.shipping_status)) AS shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
                         +
                         "FROM Shipment s " +
                         "JOIN [Order] o ON o.shipment_id = s.id " +
-                        "LEFT JOIN Ward w ON o.ward_id = w.id " +
-                        "LEFT JOIN District d ON w.district_id = d.id " +
-                        "LEFT JOIN Province pr ON d.province_id = pr.id " +
                         "WHERE UPPER(TRIM(o.order_status)) NOT IN ('PENDING', 'CANCELLED') ");
 
         List<Object> params = new ArrayList<>();
@@ -78,15 +74,11 @@ public class StaffShipmentManagementDAO {
     public StaffShipment getShipmentById(int shipmentId) {
         String sql = "SELECT s.id AS shipment_id, o.id AS order_id, o.order_code, o.recipient_name, o.recipient_phone, "
                 + "ISNULL(o.address_detail, '') + "
-                + "ISNULL(', ' + w.ward_name, '') + "
-                + "ISNULL(', ' + d.district_name, '') + "
-                + "ISNULL(', ' + pr.province_name, '') AS delivery_address, "
+                + "ISNULL(', ' + o.ward_name, '') + "
+                + "ISNULL(', ' + o.province_name, '') AS delivery_address, "
                 + "s.carrier_name, UPPER(TRIM(s.shipping_status)) AS shipping_status, s.tracking_code, s.shipping_cost, s.estimated_delivery_time, o.note "
                 + "FROM Shipment s "
                 + "JOIN [Order] o ON o.shipment_id = s.id "
-                + "LEFT JOIN Ward w ON o.ward_id = w.id "
-                + "LEFT JOIN District d ON w.district_id = d.id "
-                + "LEFT JOIN Province pr ON d.province_id = pr.id "
                 + "WHERE s.id = ? AND UPPER(TRIM(o.order_status)) NOT IN ('PENDING', 'CANCELLED')";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
