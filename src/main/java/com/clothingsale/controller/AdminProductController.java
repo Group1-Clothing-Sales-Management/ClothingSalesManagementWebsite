@@ -1439,9 +1439,7 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void listProducts(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void listProducts(HttpServletRequest request,HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setAttribute(

@@ -2,6 +2,10 @@ package com.clothingsale.model;
 
 import java.sql.Timestamp;
 
+/**
+ * Địa chỉ giao hàng đã được chuẩn hóa theo dữ liệu từ AddressApiService.
+ * Hệ thống hiện sử dụng mô hình hai cấp: Province -> Ward.
+ */
 public class UserAddress {
 
     private int id;
@@ -9,23 +13,11 @@ public class UserAddress {
     private String recipientName;
     private String recipientPhone;
     private String addressDetail;
-    private boolean isDefault;
-
-    // Cột cũ, giữ lại để tương thích dữ liệu hiện tại
-    private String wardId;
-    private String districtId;
-    private String provinceId;
-
-    // Dữ liệu mới lấy từ API
     private String provinceCode;
     private String provinceName;
-
-    private String districtCode;
-    private String districtName;
-
     private String wardCode;
     private String wardName;
-
+    private boolean isDefault;
     private boolean active;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -38,16 +30,22 @@ public class UserAddress {
             int userId,
             String recipientName,
             String recipientPhone,
-            String wardId,
             String addressDetail,
+            String provinceCode,
+            String provinceName,
+            String wardCode,
+            String wardName,
             boolean isDefault) {
 
         this.id = id;
         this.userId = userId;
         this.recipientName = recipientName;
         this.recipientPhone = recipientPhone;
-        this.wardId = wardId;
         this.addressDetail = addressDetail;
+        this.provinceCode = provinceCode;
+        this.provinceName = provinceName;
+        this.wardCode = wardCode;
+        this.wardName = wardName;
         this.isDefault = isDefault;
     }
 
@@ -91,38 +89,6 @@ public class UserAddress {
         this.addressDetail = addressDetail;
     }
 
-    public boolean isDefault() {
-        return isDefault;
-    }
-
-    public void setDefault(boolean isDefault) {
-        this.isDefault = isDefault;
-    }
-
-    public String getWardId() {
-        return wardId;
-    }
-
-    public void setWardId(String wardId) {
-        this.wardId = wardId;
-    }
-
-    public String getDistrictId() {
-        return districtId;
-    }
-
-    public void setDistrictId(String districtId) {
-        this.districtId = districtId;
-    }
-
-    public String getProvinceId() {
-        return provinceId;
-    }
-
-    public void setProvinceId(String provinceId) {
-        this.provinceId = provinceId;
-    }
-
     public String getProvinceCode() {
         return provinceCode;
     }
@@ -139,22 +105,6 @@ public class UserAddress {
         this.provinceName = provinceName;
     }
 
-    public String getDistrictCode() {
-        return districtCode;
-    }
-
-    public void setDistrictCode(String districtCode) {
-        this.districtCode = districtCode;
-    }
-
-    public String getDistrictName() {
-        return districtName;
-    }
-
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
-    }
-
     public String getWardCode() {
         return wardCode;
     }
@@ -169,6 +119,14 @@ public class UserAddress {
 
     public void setWardName(String wardName) {
         this.wardName = wardName;
+    }
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public boolean isActive() {

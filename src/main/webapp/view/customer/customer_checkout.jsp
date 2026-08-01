@@ -651,12 +651,6 @@
                                                                 <c:out value="${address.wardName}"/>
                                                             </c:if>
 
-                                                            <%-- Huyện chỉ có ở địa chỉ cũ --%>
-                                                            <c:if test="${not empty address.districtName}">
-                                                                ,
-                                                                <c:out value="${address.districtName}"/>
-                                                            </c:if>
-
                                                             <c:if test="${not empty address.provinceName}">
                                                                 ,
                                                                 <c:out value="${address.provinceName}"/>

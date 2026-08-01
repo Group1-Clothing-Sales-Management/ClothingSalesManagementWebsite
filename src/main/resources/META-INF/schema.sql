@@ -29,39 +29,7 @@ SET XACT_ABORT ON;
 GO
 
 /* =========================================================================
-   I. ADMINISTRATIVE DIVISIONS
-   ========================================================================= */
-
-CREATE TABLE dbo.Province (
-    id VARCHAR(20) NOT NULL,
-    province_name NVARCHAR(100) NOT NULL,
-    type NVARCHAR(30) NULL,
-    CONSTRAINT PK_Province PRIMARY KEY (id)
-);
-
-CREATE TABLE dbo.District (
-    id VARCHAR(20) NOT NULL,
-    district_name NVARCHAR(100) NOT NULL,
-    type NVARCHAR(30) NULL,
-    province_id VARCHAR(20) NOT NULL,
-    CONSTRAINT PK_District PRIMARY KEY (id),
-    CONSTRAINT FK_District_Province FOREIGN KEY (province_id)
-        REFERENCES dbo.Province(id)
-);
-
-CREATE TABLE dbo.Ward (
-    id VARCHAR(20) NOT NULL,
-    ward_name NVARCHAR(100) NOT NULL,
-    type NVARCHAR(30) NULL,
-    district_id VARCHAR(20) NOT NULL,
-    CONSTRAINT PK_Ward PRIMARY KEY (id),
-    CONSTRAINT FK_Ward_District FOREIGN KEY (district_id)
-        REFERENCES dbo.District(id)
-);
-GO
-
-/* =========================================================================
-   II. ACCOUNTS AND ROLES
+   I. ACCOUNTS AND ROLES
    ========================================================================= */
 
 CREATE TABLE dbo.[Role] (
@@ -98,14 +66,12 @@ CREATE TABLE dbo.User_Address (
     user_id INT NOT NULL,
     recipient_name NVARCHAR(100) NOT NULL,
     recipient_phone VARCHAR(15) NOT NULL,
-    ward_id VARCHAR(20) NULL,
     address_detail NVARCHAR(255) NOT NULL,
-    province_code VARCHAR(20) NULL,
-    province_name NVARCHAR(150) NULL,
-    district_code VARCHAR(20) NULL,
-    district_name NVARCHAR(150) NULL,
-    ward_code VARCHAR(20) NULL,
-    ward_name NVARCHAR(150) NULL,
+    -- Snapshot returned by AddressApiService. The application uses Province -> Ward.
+    province_code VARCHAR(20) NOT NULL,
+    province_name NVARCHAR(150) NOT NULL,
+    ward_code VARCHAR(20) NOT NULL,
+    ward_name NVARCHAR(150) NOT NULL,
     is_default BIT NOT NULL
         CONSTRAINT DF_UserAddress_Default DEFAULT (0),
     is_active BIT NOT NULL
@@ -115,9 +81,7 @@ CREATE TABLE dbo.User_Address (
     updated_at DATETIME2(0) NULL,
     CONSTRAINT PK_User_Address PRIMARY KEY (id),
     CONSTRAINT FK_UserAddress_User FOREIGN KEY (user_id)
-        REFERENCES dbo.[User](id) ON DELETE CASCADE,
-    CONSTRAINT FK_UserAddress_Ward FOREIGN KEY (ward_id)
-        REFERENCES dbo.Ward(id)
+        REFERENCES dbo.[User](id) ON DELETE CASCADE
 );
 
 CREATE TABLE dbo.Security_Token (
@@ -137,7 +101,7 @@ CREATE TABLE dbo.Security_Token (
 GO
 
 /* =========================================================================
-   III. PRODUCT, CATEGORY AND PRICE MANAGEMENT
+   II. PRODUCT, CATEGORY AND PRICE MANAGEMENT
    ========================================================================= */
 
 CREATE TABLE dbo.Brand (
@@ -287,7 +251,7 @@ CREATE TABLE dbo.Product_Variant_Price_History (
 GO
 
 /* =========================================================================
-   IV. INVENTORY MANAGEMENT
+   III. INVENTORY MANAGEMENT
    Product_Variant.stock_quantity is the current-stock source of truth.
    Product_Batch stores FIFO batch balances and never stores sale price.
    ========================================================================= */
@@ -402,7 +366,7 @@ CREATE TABLE dbo.Inventory_Log (
 GO
 
 /* =========================================================================
-   V. CART, VOUCHER, ORDER, PAYMENT AND FEEDBACK
+   IV. CART, VOUCHER, ORDER, PAYMENT AND FEEDBACK
    ========================================================================= */
 
 CREATE TABLE dbo.Cart (
@@ -498,8 +462,12 @@ CREATE TABLE dbo.[Order] (
     shipment_id INT NULL,
     recipient_name NVARCHAR(100) NOT NULL,
     recipient_phone VARCHAR(15) NOT NULL,
-    ward_id VARCHAR(20) NULL,
     address_detail NVARCHAR(255) NOT NULL,
+    -- Immutable shipping-address snapshot captured at checkout.
+    province_code VARCHAR(20) NOT NULL,
+    province_name NVARCHAR(150) NOT NULL,
+    ward_code VARCHAR(20) NOT NULL,
+    ward_name NVARCHAR(150) NOT NULL,
     total_items_price DECIMAL(18,0) NOT NULL,
     discount_amount DECIMAL(18,0) NOT NULL
         CONSTRAINT DF_Order_Discount DEFAULT (0),
@@ -535,9 +503,7 @@ CREATE TABLE dbo.[Order] (
     CONSTRAINT FK_Order_Voucher FOREIGN KEY (voucher_id)
         REFERENCES dbo.Voucher(id),
     CONSTRAINT FK_Order_Shipment FOREIGN KEY (shipment_id)
-        REFERENCES dbo.Shipment(id),
-    CONSTRAINT FK_Order_Ward FOREIGN KEY (ward_id)
-        REFERENCES dbo.Ward(id)
+        REFERENCES dbo.Shipment(id)
 );
 
 CREATE TABLE dbo.Order_Detail (
@@ -560,7 +526,8 @@ CREATE TABLE dbo.Order_Detail (
 CREATE TABLE dbo.Payment (
     id INT IDENTITY(1,1) NOT NULL,
     order_id INT NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL
+        CONSTRAINT DF_Payment_Method DEFAULT ('COD'),
     payment_status VARCHAR(50) NOT NULL
         CONSTRAINT DF_Payment_Status DEFAULT ('UNPAID'),
     amount DECIMAL(18,0) NOT NULL,
@@ -568,6 +535,7 @@ CREATE TABLE dbo.Payment (
     payment_date DATETIME NULL,
     CONSTRAINT PK_Payment PRIMARY KEY (id),
     CONSTRAINT UQ_Payment_Order UNIQUE (order_id),
+    CONSTRAINT CK_Payment_Method CHECK (payment_method = 'COD'),
     CONSTRAINT CK_Payment_Amount CHECK (amount >= 0),
     CONSTRAINT FK_Payment_Order FOREIGN KEY (order_id)
         REFERENCES dbo.[Order](id) ON DELETE CASCADE
@@ -720,8 +688,6 @@ GO
    VI. INDEXES
    ========================================================================= */
 
-CREATE INDEX IX_District_Province ON dbo.District(province_id);
-CREATE INDEX IX_Ward_District ON dbo.Ward(district_id);
 CREATE INDEX IX_User_RoleStatus ON dbo.[User](role_id, status);
 CREATE UNIQUE INDEX UX_User_Address_One_Default
     ON dbo.User_Address(user_id)

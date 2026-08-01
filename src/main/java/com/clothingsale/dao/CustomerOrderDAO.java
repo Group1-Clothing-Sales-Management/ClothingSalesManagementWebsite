@@ -5,9 +5,6 @@ import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
 import com.clothingsale.model.Shipment;
 import com.clothingsale.model.UserAddress;
-import com.clothingsale.model.Province;
-import com.clothingsale.model.District;
-import com.clothingsale.model.Ward;
 import com.clothingsale.model.Voucher;
 
 import com.clothingsale.util.DBConnection;
@@ -126,7 +123,8 @@ public class CustomerOrderDAO {
                 = new ArrayList<>();
 
         String sql = "SELECT o.id, o.order_code, o.user_id, o.voucher_id, o.shipment_id, "
-                + "       o.recipient_name, o.recipient_phone, o.ward_id, o.address_detail, "
+                + "       o.recipient_name, o.recipient_phone, o.address_detail, "
+                + "       o.province_code, o.province_name, o.ward_code, o.ward_name, "
                 + "       o.total_items_price, o.discount_amount, o.shipping_fee, o.total_payment, "
                 + "       o.order_status, o.note, o.created_at, o.updated_at, "
                 + "       v.code AS voucher_code, v.title AS voucher_title, "
@@ -189,6 +187,21 @@ public class CustomerOrderDAO {
                         rs.getString("payment_status"));
                 o.setPaymentMethod(
                         rs.getString("payment_method"));
+
+                o.setRecipientName(
+                        rs.getString("recipient_name"));
+                o.setRecipientPhone(
+                        rs.getString("recipient_phone"));
+                o.setAddressDetail(
+                        rs.getString("address_detail"));
+                o.setProvinceCode(
+                        rs.getString("province_code"));
+                o.setProvinceName(
+                        rs.getString("province_name"));
+                o.setWardCode(
+                        rs.getString("ward_code"));
+                o.setWardName(
+                        rs.getString("ward_name"));
 
                 o.setCreatedAt(
                         rs.getTimestamp(
@@ -420,8 +433,11 @@ public class CustomerOrderDAO {
                 + "shipment_id,"
                 + "recipient_name,"
                 + "recipient_phone,"
-                + "ward_id,"
                 + "address_detail,"
+                + "province_code,"
+                + "province_name,"
+                + "ward_code,"
+                + "ward_name,"
                 + "total_items_price,"
                 + "discount_amount,"
                 + "shipping_fee,"
@@ -429,7 +445,7 @@ public class CustomerOrderDAO {
                 + "order_status,"
                 + "inventory_status,"
                 + "note"
-                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
         try (PreparedStatement ps = con.prepareStatement(
                 sql,
@@ -452,15 +468,18 @@ public class CustomerOrderDAO {
 
             ps.setString(5, address.getRecipientName());
             ps.setString(6, address.getRecipientPhone());
-            ps.setString(7, address.getWardId());
-            ps.setString(8, address.getAddressDetail());
-            ps.setBigDecimal(9, subtotal);
-            ps.setBigDecimal(10, discount);
-            ps.setBigDecimal(11, shippingFee);
-            ps.setBigDecimal(12, totalPayment);
-            ps.setString(13, "PENDING");
-            ps.setString(14, "RESERVED");
-            ps.setString(15, note);
+            ps.setString(7, address.getAddressDetail());
+            ps.setString(8, address.getProvinceCode());
+            ps.setString(9, address.getProvinceName());
+            ps.setString(10, address.getWardCode());
+            ps.setString(11, address.getWardName());
+            ps.setBigDecimal(12, subtotal);
+            ps.setBigDecimal(13, discount);
+            ps.setBigDecimal(14, shippingFee);
+            ps.setBigDecimal(15, totalPayment);
+            ps.setString(16, "PENDING");
+            ps.setString(17, "RESERVED");
+            ps.setString(18, note);
 
             ps.executeUpdate();
 
@@ -1419,110 +1438,6 @@ public class CustomerOrderDAO {
         }
     }
 
-    public List<Province> getAllProvinces() {
-
-        List<Province> list = new ArrayList<>();
-
-        String sql
-                = "SELECT * FROM Province ORDER BY province_name";
-
-        try (
-                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-
-                Province p = new Province();
-
-                p.setId(rs.getString("id"));
-                p.setProvinceName(rs.getString("province_name"));
-                p.setType(rs.getString("type"));
-
-                list.add(p);
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-
-    }
-
-    public List<District> getDistrictsByProvince(String provinceId) {
-
-        List<District> list = new ArrayList<>();
-
-        String sql
-                = "SELECT * FROM District "
-                + "WHERE province_id=? "
-                + "ORDER BY district_name";
-
-        try (
-                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, provinceId);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                District d = new District();
-
-                d.setId(rs.getString("id"));
-                d.setDistrictName(rs.getString("district_name"));
-                d.setProvinceId(rs.getString("province_id"));
-                d.setType(rs.getString("type"));
-
-                list.add(d);
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-
-    }
-
-    public List<Ward> getWardsByDistrict(String districtId) {
-
-        List<Ward> list = new ArrayList<>();
-
-        String sql
-                = "SELECT * FROM Ward "
-                + "WHERE district_id=? "
-                + "ORDER BY ward_name";
-
-        try (
-                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, districtId);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                Ward w = new Ward();
-
-                w.setId(rs.getString("id"));
-                w.setWardName(rs.getString("ward_name"));
-                w.setDistrictId(rs.getString("district_id"));
-                w.setType(rs.getString("type"));
-
-                list.add(w);
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-
-    }
-
     private int countAddressByUser(
             Connection con,
             int userId)
@@ -1605,24 +1520,12 @@ public class CustomerOrderDAO {
                 rs.getBoolean("is_active")
         );
 
-        address.setWardId(
-                rs.getString("ward_id")
-        );
-
         address.setProvinceCode(
                 rs.getString("province_code")
         );
 
         address.setProvinceName(
                 rs.getString("province_name")
-        );
-
-        address.setDistrictCode(
-                rs.getString("district_code")
-        );
-
-        address.setDistrictName(
-                rs.getString("district_name")
         );
 
         address.setWardCode(
@@ -1783,20 +1686,17 @@ public class CustomerOrderDAO {
                 + "user_id, "
                 + "recipient_name, "
                 + "recipient_phone, "
+                + "address_detail, "
                 + "province_code, "
                 + "province_name, "
-                + "district_code, "
-                + "district_name, "
                 + "ward_code, "
                 + "ward_name, "
-                + "ward_id, "
-                + "address_detail, "
                 + "is_default, "
                 + "is_active, "
                 + "created_at, "
                 + "updated_at"
                 + ") VALUES ("
-                + "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                + "?, ?, ?, ?, ?, ?, ?, ?, ?, "
                 + "1, GETDATE(), GETDATE()"
                 + ")";
 
@@ -1812,7 +1712,7 @@ public class CustomerOrderDAO {
                                 address.getUserId()
                         );
 
-                // Địa chỉ đầu tiên phải là mặc định
+                // Địa chỉ đầu tiên phải là mặc định.
                 if (addressCount == 0) {
                     address.setDefault(true);
                 }
@@ -1828,65 +1728,15 @@ public class CustomerOrderDAO {
                 try (PreparedStatement ps
                         = con.prepareStatement(sql)) {
 
-                    ps.setInt(
-                            1,
-                            address.getUserId()
-                    );
-
-                    ps.setString(
-                            2,
-                            address.getRecipientName()
-                    );
-
-                    ps.setString(
-                            3,
-                            address.getRecipientPhone()
-                    );
-
-                    ps.setString(
-                            4,
-                            address.getProvinceCode()
-                    );
-
-                    ps.setString(
-                            5,
-                            address.getProvinceName()
-                    );
-
-                    ps.setString(
-                            6,
-                            address.getDistrictCode()
-                    );
-
-                    ps.setString(
-                            7,
-                            address.getDistrictName()
-                    );
-
-                    ps.setString(
-                            8,
-                            address.getWardCode()
-                    );
-
-                    ps.setString(
-                            9,
-                            address.getWardName()
-                    );
-
-                    ps.setNull(
-                            10,
-                            Types.VARCHAR
-                    );
-
-                    ps.setString(
-                            11,
-                            address.getAddressDetail()
-                    );
-
-                    ps.setBoolean(
-                            12,
-                            address.isDefault()
-                    );
+                    ps.setInt(1, address.getUserId());
+                    ps.setString(2, address.getRecipientName());
+                    ps.setString(3, address.getRecipientPhone());
+                    ps.setString(4, address.getAddressDetail());
+                    ps.setString(5, address.getProvinceCode());
+                    ps.setString(6, address.getProvinceName());
+                    ps.setString(7, address.getWardCode());
+                    ps.setString(8, address.getWardName());
+                    ps.setBoolean(9, address.isDefault());
 
                     int rows = ps.executeUpdate();
 
@@ -1918,11 +1768,8 @@ public class CustomerOrderDAO {
                 + "recipient_phone = ?, "
                 + "province_code = ?, "
                 + "province_name = ?, "
-                + "district_code = NULL, "
-                + "district_name = NULL, "
                 + "ward_code = ?, "
                 + "ward_name = ?, "
-                + "ward_id = NULL, "
                 + "address_detail = ?, "
                 + "is_default = ?, "
                 + "updated_at = GETDATE() "

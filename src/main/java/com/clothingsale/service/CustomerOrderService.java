@@ -7,9 +7,6 @@ import com.clothingsale.model.Order;
 import com.clothingsale.model.OrderDetail;
 import com.clothingsale.model.ReorderResult;
 import com.clothingsale.model.UserAddress;
-import com.clothingsale.model.Province;
-import com.clothingsale.model.District;
-import com.clothingsale.model.Ward;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -53,18 +50,6 @@ public class CustomerOrderService {
 
     public boolean setDefaultAddress(int userId, int addressId) {
         return dao.setDefaultAddress(userId, addressId);
-    }
-
-    public List<Province> getAllProvinces() {
-        return dao.getAllProvinces();
-    }
-
-    public List<District> getDistrictsByProvince(String provinceId) {
-        return dao.getDistrictsByProvince(provinceId);
-    }
-
-    public List<Ward> getWardsByDistrict(String districtId) {
-        return dao.getWardsByDistrict(districtId);
     }
 
     // =================== CART ===================

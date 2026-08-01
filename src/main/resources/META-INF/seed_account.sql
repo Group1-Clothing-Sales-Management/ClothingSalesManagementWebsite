@@ -10,30 +10,7 @@ GO
    ========================================================================= */
 
 -- =========================================================================
--- 1. ADMINISTRATIVE DIVISIONS
--- =========================================================================
-INSERT INTO Province (id, province_name, type) VALUES
-('01', N'Thành phố Hà Nội',       N'Thành phố Trung ương'),
-('79', N'Thành phố Hồ Chí Minh',  N'Thành phố Trung ương'),
-('92', N'Thành phố Cần Thơ',      N'Thành phố Trung ương');
-
-INSERT INTO District (id, district_name, type, province_id) VALUES
-('001', N'Quận Ba Đình',   N'Quận', '01'),
-('002', N'Quận Tây Hồ',   N'Quận', '01'),
-('760', N'Quận 1',         N'Quận', '79'),
-('769', N'Quận Thủ Đức',  N'Quận', '79'),
-('916', N'Quận Ninh Kiều', N'Quận', '92');
-
-INSERT INTO Ward (id, ward_name, type, district_id) VALUES
-('00001', N'Phường Phúc Xá',    N'Phường', '001'),
-('00010', N'Phường Trúc Bạch',  N'Phường', '001'),
-('26734', N'Phường Bến Nghé',   N'Phường', '760'),
-('26743', N'Phường Cô Giang',   N'Phường', '760'),
-('31147', N'Phường An Khánh',   N'Phường', '916'),
-('31162', N'Phường Xuân Khánh', N'Phường', '916');
-
--- =========================================================================
--- 2. ROLES & USERS
+-- 1. ROLES & USERS
 -- =========================================================================
 INSERT INTO Role (role_name) VALUES
 ('ADMIN'),
@@ -48,13 +25,19 @@ INSERT INTO [User] (username, password, full_name, email, phone, status, role_id
 ('quy_nn',      '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Nguyễn Ngọc Quý',    'quynn@gmail.com',       '0933445566', 'ACTIVE', 3),
 ('khachhang02', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO', N'Lê Hoàng Nam',       'namlh@gmail.com',       '0944556677', 'ACTIVE', 3);
 
-INSERT INTO User_Address (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default) VALUES
-(4, N'Nguyễn Ngọc Quý',        '0933445566', '31162', N'123 3/2 Street',                1),
-(4, N'Anh Quý (Office)',       '0933445566', '26734', N'Bitexco Building, Floor 15',    0),
-(5, N'Lê Hoàng Nam',           '0944556677', '00010', N'45 Truc Bach Street',            1);
+INSERT INTO User_Address (
+    user_id, recipient_name, recipient_phone, address_detail,
+    province_code, province_name, ward_code, ward_name, is_default
+) VALUES
+(4, N'Nguyễn Ngọc Quý',  '0933445566', N'123 3/2 Street',
+ '92', N'Thành phố Cần Thơ', '31162', N'Phường Xuân Khánh', 1),
+(4, N'Anh Quý (Office)', '0933445566', N'Bitexco Building, Floor 15',
+ '79', N'Thành phố Hồ Chí Minh', '26734', N'Phường Bến Nghé', 0),
+(5, N'Lê Hoàng Nam',     '0944556677', N'45 Truc Bach Street',
+ '01', N'Thành phố Hà Nội', '00010', N'Phường Trúc Bạch', 1);
 
 -- =========================================================================
--- 3. BRANDS & CATEGORIES
+-- 2. BRANDS & CATEGORIES
 -- =========================================================================
 INSERT INTO Brand (brand_name, slug) VALUES
 ('Coolmate', 'coolmate'),
@@ -71,7 +54,7 @@ INSERT INTO Category (category_name, slug, parent_id, description, status) VALUE
 (N'Mens Jeans','quan-jean-nam',  2, N'Full-length denim jeans for men', 1);
 
 -- =========================================================================
--- 4. PRODUCTS (ID 1-22)
+-- 3. PRODUCTS (ID 1-22)
 -- =========================================================================
 INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status, created_at, updated_at) VALUES
 (N'Compact Cotton Mens T-Shirt',    'ao-thun-nam-cotton-compact',    1, 3, N'Cool 100% cotton T-shirt',             N'Durable compact cotton is twice as strong as regular cotton and offers excellent moisture absorption for everyday wear.', 'ACTIVE', GETDATE(), GETDATE()),
@@ -99,7 +82,7 @@ INSERT INTO Product (product_name, slug, brand_id, category_id, short_descriptio
 GO
 
 -- =========================================================================
--- 5. PRODUCT VARIANTS (SKU) — ID 1-80
+-- 4. PRODUCT VARIANTS (SKU) — ID 1-80
 -- =========================================================================
 
 -- Product 1: Áo Thun Nam Cotton Compact (variant_id 1-4)
@@ -250,7 +233,7 @@ INSERT INTO Product_Variant (product_id, sku, cost_price, sale_price, stock_quan
 GO
 
 -- =========================================================================
--- 6. VARIANT COLOR AND SIZE (variant_id 1-80)
+-- 5. VARIANT COLOR AND SIZE (variant_id 1-80)
 -- =========================================================================
 UPDATE pv
 SET pv.color = variant_data.color,
@@ -343,7 +326,7 @@ INNER JOIN (VALUES
 GO
 
 -- =========================================================================
--- 7. PRODUCT IMAGES
+-- 6. PRODUCT IMAGES
 -- =========================================================================
 INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
 (1, 'p1_main_00.webp', 1, 0),
@@ -370,7 +353,7 @@ INSERT INTO Product_Image (product_id, image_url, is_main, sort_order) VALUES
 (22,'prod22-main.jpg', 1, 0);
 
 /* =========================================================================
-   VIII. PRICE HISTORY SAMPLE
+   VII. PRICE HISTORY SAMPLE
    ========================================================================= */
 
 UPDATE dbo.Product_Variant
@@ -407,7 +390,7 @@ VALUES
 GO
 
 /* =========================================================================
-   IX. INVENTORY: SUPPLIERS, RECEIPTS AND BATCHES
+   VIII. INVENTORY: SUPPLIERS, RECEIPTS AND BATCHES
    ========================================================================= */
 
 INSERT INTO dbo.Supplier
@@ -533,7 +516,7 @@ VALUES
 GO
 
 /* =========================================================================
-   X. VOUCHERS
+   IX. VOUCHERS
    ========================================================================= */
 
 INSERT INTO dbo.Voucher (
@@ -561,7 +544,7 @@ VALUES
 GO
 
 /* =========================================================================
-   XI. CART AND WISHLIST
+   X. CART AND WISHLIST
    ========================================================================= */
 
 INSERT INTO dbo.Cart (user_id, variant_id, quantity)
@@ -577,7 +560,7 @@ VALUES
 GO
 
 /* =========================================================================
-   XII. SHIPMENTS, ORDERS, DETAILS AND PAYMENTS
+   XI. SHIPMENTS, ORDERS, DETAILS AND PAYMENTS
    ========================================================================= */
 
 INSERT INTO dbo.Shipment (
@@ -598,67 +581,68 @@ VALUES
 
 INSERT INTO dbo.[Order] (
     order_code, user_id, voucher_id, shipment_id,
-    recipient_name, recipient_phone, ward_id, address_detail,
+    recipient_name, recipient_phone, address_detail,
+    province_code, province_name, ward_code, ward_name,
     total_items_price, discount_amount, shipping_fee, total_payment,
     order_status, note, created_at, updated_at
 )
 VALUES
 ('ORD-20260115-001', 4, 1, 1,
- N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ N'Nguyễn Ngọc Quý', '0933445566', N'123 3/2 Street', '92', N'Thành phố Cần Thơ', '31162', N'Phường Xuân Khánh',
  378000, 50000, 30000, 358000,
  'DELIVERED', N'Completed January order',
  '2026-01-15 10:30:00', '2026-01-17 15:00:00'),
 
 ('ORD-20260220-002', 5, NULL, 2,
- N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ N'Lê Hoàng Nam', '0944556677', N'45 Truc Bach Street', '01', N'Thành phố Hà Nội', '00010', N'Phường Trúc Bạch',
  450000, 0, 30000, 480000,
  'DELIVERED', N'Completed February order',
  '2026-02-20 14:15:00', '2026-02-22 16:30:00'),
 
 ('ORD-20260312-003', 4, 2, 3,
- N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ N'Nguyễn Ngọc Quý', '0933445566', N'123 3/2 Street', '92', N'Thành phố Cần Thơ', '31162', N'Phường Xuân Khánh',
  518000, 30000, 30000, 518000,
  'DELIVERED', N'Completed March order with summer voucher',
  '2026-03-12 09:00:00', '2026-03-14 11:00:00'),
 
 ('ORD-20260405-004', 5, NULL, 4,
- N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ N'Lê Hoàng Nam', '0944556677', N'45 Truc Bach Street', '01', N'Thành phố Hà Nội', '00010', N'Phường Trúc Bạch',
  680000, 0, 30000, 710000,
  'DELIVERED', N'Completed blazer order',
  '2026-04-05 18:20:00', '2026-04-07 20:00:00'),
 
 ('ORD-20260518-005', 4, 3, 5,
- N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ N'Nguyễn Ngọc Quý', '0933445566', N'123 3/2 Street', '92', N'Thành phố Cần Thơ', '31162', N'Phường Xuân Khánh',
  398000, 50000, 30000, 378000,
  'DELIVERED', N'Completed category voucher order',
  '2026-05-18 11:10:00', '2026-05-20 14:00:00'),
 
 ('ORD-20260620-006', 5, NULL, 6,
- N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ N'Lê Hoàng Nam', '0944556677', N'45 Truc Bach Street', '01', N'Thành phố Hà Nội', '00010', N'Phường Trúc Bạch',
  379000, 0, 30000, 409000,
  'CANCELLED', N'Cancelled before warehouse release',
  '2026-06-20 14:05:00', '2026-06-20 14:40:00'),
 
 ('ORD-20260712-007', 4, NULL, 7,
- N'Nguyễn Ngọc Quý', '0933445566', '26734', N'Bitexco Building, Floor 15',
+ N'Nguyễn Ngọc Quý', '0933445566', N'Bitexco Building, Floor 15', '79', N'Thành phố Hồ Chí Minh', '26734', N'Phường Bến Nghé',
  560000, 0, 30000, 590000,
  'SHIPPING', N'Currently in transit',
  '2026-07-12 11:45:00', '2026-07-16 13:00:00'),
 
 ('ORD-20260714-008', 5, NULL, 8,
- N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ N'Lê Hoàng Nam', '0944556677', N'45 Truc Bach Street', '01', N'Thành phố Hà Nội', '00010', N'Phường Trúc Bạch',
  229000, 0, 30000, 259000,
  'CONFIRMED', N'Confirmed and waiting for pickup',
  '2026-07-14 08:30:00', '2026-07-15 09:00:00'),
 
 ('ORD-20260716-009', 4, NULL, 9,
- N'Nguyễn Ngọc Quý', '0933445566', '31162', N'123 3/2 Street',
+ N'Nguyễn Ngọc Quý', '0933445566', N'123 3/2 Street', '92', N'Thành phố Cần Thơ', '31162', N'Phường Xuân Khánh',
  179000, 0, 30000, 209000,
  'PENDING', N'New order waiting for approval',
  '2026-07-16 15:20:00', '2026-07-16 15:20:00'),
 
 ('ORD-20260705-010', 5, NULL, 10,
- N'Lê Hoàng Nam', '0944556677', '00010', N'45 Truc Bach Street',
+ N'Lê Hoàng Nam', '0944556677', N'45 Truc Bach Street', '01', N'Thành phố Hà Nội', '00010', N'Phường Trúc Bạch',
  340000, 0, 30000, 370000,
  'RETURNED', N'Returned after delivery because the size did not fit',
  '2026-07-05 09:00:00', '2026-07-12 10:15:00');
@@ -704,19 +688,19 @@ INSERT INTO dbo.Payment (
 )
 VALUES
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260115-001'),
- 'VNPAY', 'PAID', 358000, 'TXN-20260115-001', '2026-01-15 10:35:00'),
+ 'COD', 'PAID', 358000, NULL, '2026-01-15 10:35:00'),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260220-002'),
- 'BANK_TRANSFER', 'PAID', 480000, 'TXN-20260220-002', '2026-02-20 14:20:00'),
+ 'COD', 'PAID', 480000, NULL, '2026-02-20 14:20:00'),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260312-003'),
  'COD', 'PAID', 518000, NULL, '2026-03-14 11:00:00'),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260405-004'),
- 'VNPAY', 'PAID', 710000, 'TXN-20260405-004', '2026-04-05 18:25:00'),
+ 'COD', 'PAID', 710000, NULL, '2026-04-05 18:25:00'),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260518-005'),
- 'BANK_TRANSFER', 'PAID', 378000, 'TXN-20260518-005', '2026-05-18 11:15:00'),
+ 'COD', 'PAID', 378000, NULL, '2026-05-18 11:15:00'),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260620-006'),
  'COD', 'UNPAID', 409000, NULL, NULL),
@@ -725,13 +709,13 @@ VALUES
  'COD', 'UNPAID', 590000, NULL, NULL),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260714-008'),
- 'VNPAY', 'PAID', 259000, 'TXN-20260714-008', '2026-07-14 08:35:00'),
+ 'COD', 'PAID', 259000, NULL, '2026-07-14 08:35:00'),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260716-009'),
  'COD', 'UNPAID', 209000, NULL, NULL),
 
 ((SELECT id FROM dbo.[Order] WHERE order_code = 'ORD-20260705-010'),
- 'BANK_TRANSFER', 'REFUNDED', 370000, 'TXN-20260705-010', '2026-07-12 10:30:00');
+ 'COD', 'REFUNDED', 370000, NULL, '2026-07-12 10:30:00');
 
 INSERT INTO dbo.Voucher_Usage (
     voucher_id, user_id, order_id, discount_amount, used_at
@@ -746,7 +730,7 @@ VALUES
 GO
 
 /* =========================================================================
-   XIII. FEEDBACK
+   XII. FEEDBACK
    ========================================================================= */
 
 INSERT INTO dbo.Feedback (
@@ -779,31 +763,10 @@ VALUES
 GO
 
 /* =========================================================================
-   XIV. EXTENDED DEMO DATA
+   XIII. EXTENDED DEMO DATA
    This section intentionally adds a broader dataset for search, filtering,
    inventory, promotion, order and return screens.
    ========================================================================= */
-
--- Additional locations
-INSERT INTO dbo.Province (id, province_name, type) VALUES
-('48', N'Thành phố Đà Nẵng', N'Thành phố Trung ương'),
-('56', N'Tỉnh Khánh Hòa', N'Tỉnh');
-
-INSERT INTO dbo.District (id, district_name, type, province_id) VALUES
-('490', N'Quận Hải Châu', N'Quận', '48'),
-('491', N'Quận Sơn Trà', N'Quận', '48'),
-('569', N'Thành phố Nha Trang', N'Thành phố', '56'),
-('570', N'Huyện Cam Lâm', N'Huyện', '56');
-
-INSERT INTO dbo.Ward (id, ward_name, type, district_id) VALUES
-('20194', N'Phường Thạch Thang', N'Phường', '490'),
-('20200', N'Phường Hải Châu', N'Phường', '490'),
-('20305', N'Phường An Hải Bắc', N'Phường', '491'),
-('20314', N'Phường Mân Thái', N'Phường', '491'),
-('22366', N'Phường Lộc Thọ', N'Phường', '569'),
-('22369', N'Phường Vạn Thạnh', N'Phường', '569'),
-('22420', N'Thị trấn Cam Đức', N'Thị trấn', '570'),
-('22423', N'Xã Cam Hải Tây', N'Xã', '570');
 
 -- More staff and customers
 INSERT INTO dbo.[User]
@@ -826,31 +789,55 @@ VALUES
 ('customer08', '$2a$12$qHDNzN1jRm4wFD4yk2jDLOx46nkQ2DFr4IJUPTEH97oBuvXK4dYlO',
  N'Bùi Gia Hân', 'han.bg@gmail.com', '0905000008', 'ACTIVE', 3);
 
-INSERT INTO dbo.User_Address
-    (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default)
-SELECT u.id, u.full_name, u.phone, v.ward_id, v.address_detail, 1
+INSERT INTO dbo.User_Address (
+    user_id, recipient_name, recipient_phone, address_detail,
+    province_code, province_name, ward_code, ward_name, is_default
+)
+SELECT
+    u.id,
+    u.full_name,
+    u.phone,
+    v.address_detail,
+    v.province_code,
+    v.province_name,
+    v.ward_code,
+    v.ward_name,
+    1
 FROM dbo.[User] u
 INNER JOIN (VALUES
-    ('customer03', '20194', N'12 Trần Phú'),
-    ('customer04', '20305', N'88 Võ Văn Kiệt'),
-    ('customer05', '22366', N'25 Nguyễn Thiện Thuật'),
-    ('customer06', '22420', N'09 Hùng Vương'),
-    ('customer07', '20200', N'41 Bạch Đằng'),
-    ('customer08', '20314', N'66 Ngô Quyền')
-) v(username, ward_id, address_detail) ON v.username = u.username;
+    ('customer03', N'12 Trần Phú', '48', N'Thành phố Đà Nẵng', '20194', N'Phường Thạch Thang'),
+    ('customer04', N'88 Võ Văn Kiệt', '48', N'Thành phố Đà Nẵng', '20305', N'Phường An Hải Bắc'),
+    ('customer05', N'25 Nguyễn Thiện Thuật', '56', N'Tỉnh Khánh Hòa', '22366', N'Phường Lộc Thọ'),
+    ('customer06', N'09 Hùng Vương', '56', N'Tỉnh Khánh Hòa', '22420', N'Thị trấn Cam Đức'),
+    ('customer07', N'41 Bạch Đằng', '48', N'Thành phố Đà Nẵng', '20200', N'Phường Hải Châu'),
+    ('customer08', N'66 Ngô Quyền', '48', N'Thành phố Đà Nẵng', '20314', N'Phường Mân Thái')
+) v(username, address_detail, province_code, province_name, ward_code, ward_name)
+    ON v.username = u.username;
 
-INSERT INTO dbo.User_Address
-    (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default)
-SELECT u.id, u.full_name, u.phone, v.ward_id, v.address_detail, 0
+INSERT INTO dbo.User_Address (
+    user_id, recipient_name, recipient_phone, address_detail,
+    province_code, province_name, ward_code, ward_name, is_default
+)
+SELECT
+    u.id,
+    u.full_name,
+    u.phone,
+    v.address_detail,
+    v.province_code,
+    v.province_name,
+    v.ward_code,
+    v.ward_name,
+    0
 FROM dbo.[User] u
 INNER JOIN (VALUES
-    ('customer03', '20200', N'Apartment A12, Hải Châu'),
-    ('customer04', '22369', N'15 Lê Thánh Tôn'),
-    ('customer05', '20194', N'Office 3F, Trần Phú'),
-    ('customer06', '20305', N'20 Phạm Văn Đồng'),
-    ('customer07', '22423', N'Khu dân cư Cam Hải Tây'),
-    ('customer08', '22366', N'10 Tô Hiến Thành')
-) v(username, ward_id, address_detail) ON v.username = u.username;
+    ('customer03', N'Apartment A12, Hải Châu', '48', N'Thành phố Đà Nẵng', '20200', N'Phường Hải Châu'),
+    ('customer04', N'15 Lê Thánh Tôn', '56', N'Tỉnh Khánh Hòa', '22369', N'Phường Vạn Thạnh'),
+    ('customer05', N'Office 3F, Trần Phú', '48', N'Thành phố Đà Nẵng', '20194', N'Phường Thạch Thang'),
+    ('customer06', N'20 Phạm Văn Đồng', '48', N'Thành phố Đà Nẵng', '20305', N'Phường An Hải Bắc'),
+    ('customer07', N'Khu dân cư Cam Hải Tây', '56', N'Tỉnh Khánh Hòa', '22423', N'Xã Cam Hải Tây'),
+    ('customer08', N'10 Tô Hiến Thành', '56', N'Tỉnh Khánh Hòa', '22366', N'Phường Lộc Thọ')
+) v(username, address_detail, province_code, province_name, ward_code, ward_name)
+    ON v.username = u.username;
 
 INSERT INTO dbo.Security_Token
     (user_id, token_type, token_value, expiry_date, is_used)
@@ -1203,7 +1190,7 @@ WHERE NOT EXISTS (
 GO
 
 /* =========================================================================
-   XV. EXTENDED INVENTORY, PROMOTIONS AND SHOPPING DATA
+   XIV. EXTENDED INVENTORY, PROMOTIONS AND SHOPPING DATA
    ========================================================================= */
 
 INSERT INTO dbo.Product_Variant_Price_History (
@@ -1349,7 +1336,7 @@ INNER JOIN dbo.Product_Variant pv ON pv.sku = v.sku;
 GO
 
 /* =========================================================================
-   XVI. EXTENDED ORDERS, PAYMENTS, RETURNS AND FEEDBACK
+   XV. EXTENDED ORDERS, PAYMENTS, RETURNS AND FEEDBACK
    ========================================================================= */
 
 INSERT INTO dbo.Shipment
@@ -1371,7 +1358,8 @@ VALUES
 
 INSERT INTO dbo.[Order] (
     order_code, user_id, voucher_id, shipment_id, recipient_name,
-    recipient_phone, ward_id, address_detail, total_items_price,
+    recipient_phone, address_detail, province_code, province_name,
+    ward_code, ward_name, total_items_price,
     discount_amount, shipping_fee, total_payment, order_status, note,
     created_at, updated_at
 )
@@ -1379,67 +1367,67 @@ VALUES
 ('ORD-20260718-011', (SELECT id FROM dbo.[User] WHERE username = 'customer03'),
  (SELECT id FROM dbo.Voucher WHERE code = 'NEWCUSTOMER'),
  (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHN-20260718-011'),
- N'Nguyễn Minh Anh', '0905000003', '20194', N'12 Trần Phú',
+ N'Nguyễn Minh Anh', '0905000003', N'12 Trần Phú', '48', N'Thành phố Đà Nẵng', '20194', N'Phường Thạch Thang',
  498000, 70000, 30000, 458000, 'DELIVERED', N'New customer first order',
  '2026-07-18 09:10:00', '2026-07-20 16:00:00'),
 ('ORD-20260718-012', (SELECT id FROM dbo.[User] WHERE username = 'customer04'),
  NULL, (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHTK-20260718-012'),
- N'Trần Quốc Bảo', '0905000004', '20305', N'88 Võ Văn Kiệt',
+ N'Trần Quốc Bảo', '0905000004', N'88 Võ Văn Kiệt', '48', N'Thành phố Đà Nẵng', '20305', N'Phường An Hải Bắc',
  329000, 0, 30000, 359000, 'DELIVERED', N'Blouse order',
  '2026-07-18 11:20:00', '2026-07-21 16:00:00'),
 ('ORD-20260719-013', (SELECT id FROM dbo.[User] WHERE username = 'customer05'),
  (SELECT id FROM dbo.Voucher WHERE code = 'WOMEN20'),
  (SELECT id FROM dbo.Shipment WHERE tracking_code = 'VTP-20260719-013'),
- N'Lê Khánh Vy', '0905000005', '22366', N'25 Nguyễn Thiện Thuật',
+ N'Lê Khánh Vy', '0905000005', N'25 Nguyễn Thiện Thuật', '56', N'Tỉnh Khánh Hòa', '22366', N'Phường Lộc Thọ',
  549000, 109800, 30000, 469200, 'SHIPPING', N'Womens collection campaign order',
  '2026-07-19 08:40:00', '2026-07-20 13:00:00'),
 ('ORD-20260719-014', (SELECT id FROM dbo.[User] WHERE username = 'customer06'),
  NULL, (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHN-20260719-014'),
- N'Phan Đức Huy', '0905000006', '22420', N'09 Hùng Vương',
+ N'Phan Đức Huy', '0905000006', N'09 Hùng Vương', '56', N'Tỉnh Khánh Hòa', '22420', N'Thị trấn Cam Đức',
  549000, 0, 30000, 579000, 'CONFIRMED', N'Waiting for carrier pickup',
  '2026-07-19 09:30:00', '2026-07-19 10:00:00'),
 ('ORD-20260719-015', (SELECT id FROM dbo.[User] WHERE username = 'customer07'),
  (SELECT id FROM dbo.Voucher WHERE code = 'SPORT10'),
  (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHTK-20260719-015'),
- N'Vũ Ngọc Hà', '0905000007', '20200', N'41 Bạch Đằng',
+ N'Vũ Ngọc Hà', '0905000007', N'41 Bạch Đằng', '48', N'Thành phố Đà Nẵng', '20200', N'Phường Hải Châu',
  798000, 50000, 30000, 778000, 'DELIVERED', N'Two training leggings',
  '2026-07-19 12:15:00', '2026-07-21 14:00:00'),
 ('ORD-20260719-016', (SELECT id FROM dbo.[User] WHERE username = 'customer08'),
  NULL, (SELECT id FROM dbo.Shipment WHERE id = 16),
- N'Bùi Gia Hân', '0905000008', '20314', N'66 Ngô Quyền',
+ N'Bùi Gia Hân', '0905000008', N'66 Ngô Quyền', '48', N'Thành phố Đà Nẵng', '20314', N'Phường Mân Thái',
  259000, 0, 20000, 279000, 'PENDING', N'Awaiting order confirmation',
  '2026-07-19 14:00:00', '2026-07-19 14:00:00'),
 ('ORD-20260720-017', (SELECT id FROM dbo.[User] WHERE username = 'customer03'),
  NULL, (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHN-20260720-017'),
- N'Nguyễn Minh Anh', '0905000003', '20194', N'12 Trần Phú',
+ N'Nguyễn Minh Anh', '0905000003', N'12 Trần Phú', '48', N'Thành phố Đà Nẵng', '20194', N'Phường Thạch Thang',
  459000, 0, 30000, 489000, 'DELIVERED', N'Cardigan for office layering',
  '2026-07-20 08:10:00', '2026-07-22 15:00:00'),
 ('ORD-20260720-018', (SELECT id FROM dbo.[User] WHERE username = 'customer04'),
  (SELECT id FROM dbo.Voucher WHERE code = 'VIP15'),
  (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHTK-20260720-018'),
- N'Trần Quốc Bảo', '0905000004', '20305', N'88 Võ Văn Kiệt',
+ N'Trần Quốc Bảo', '0905000004', N'88 Võ Văn Kiệt', '48', N'Thành phố Đà Nẵng', '20305', N'Phường An Hải Bắc',
  1298000, 150000, 30000, 1178000, 'SHIPPING', N'VIP denim jacket order',
  '2026-07-20 09:30:00', '2026-07-20 12:00:00'),
 ('ORD-20260720-019', (SELECT id FROM dbo.[User] WHERE username = 'customer05'),
  (SELECT id FROM dbo.Voucher WHERE code = 'ACCESSORY50'),
  (SELECT id FROM dbo.Shipment WHERE tracking_code = 'VTP-20260720-019'),
- N'Lê Khánh Vy', '0905000005', '22366', N'25 Nguyễn Thiện Thuật',
+ N'Lê Khánh Vy', '0905000005', N'25 Nguyễn Thiện Thuật', '56', N'Tỉnh Khánh Hòa', '22366', N'Phường Lộc Thọ',
  358000, 50000, 30000, 338000, 'DELIVERED', N'Cap and tote set',
  '2026-07-20 10:10:00', '2026-07-22 12:00:00'),
 ('ORD-20260720-020', (SELECT id FROM dbo.[User] WHERE username = 'customer06'),
  NULL, (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHN-20260720-020'),
- N'Phan Đức Huy', '0905000006', '22420', N'09 Hùng Vương',
+ N'Phan Đức Huy', '0905000006', N'09 Hùng Vương', '56', N'Tỉnh Khánh Hòa', '22420', N'Thị trấn Cam Đức',
  229000, 0, 30000, 259000, 'CONFIRMED', N'Canvas tote order',
  '2026-07-20 11:20:00', '2026-07-20 11:30:00'),
 ('ORD-20260720-021', (SELECT id FROM dbo.[User] WHERE username = 'customer07'),
  (SELECT id FROM dbo.Voucher WHERE code = 'FLASH100'),
  (SELECT id FROM dbo.Shipment WHERE tracking_code = 'GHTK-20260720-021'),
- N'Vũ Ngọc Hà', '0905000007', '20200', N'41 Bạch Đằng',
+ N'Vũ Ngọc Hà', '0905000007', N'41 Bạch Đằng', '48', N'Thành phố Đà Nẵng', '20200', N'Phường Hải Châu',
  399000, 100000, 30000, 329000, 'DELIVERED', N'Pique polo order',
  '2026-07-20 12:00:00', '2026-07-23 15:00:00'),
 ('ORD-20260720-022', (SELECT id FROM dbo.[User] WHERE username = 'customer08'),
  NULL, (SELECT id FROM dbo.Shipment WHERE id = 22),
- N'Bùi Gia Hân', '0905000008', '20314', N'66 Ngô Quyền',
+ N'Bùi Gia Hân', '0905000008', N'66 Ngô Quyền', '48', N'Thành phố Đà Nẵng', '20314', N'Phường Mân Thái',
  849000, 0, 20000, 869000, 'CANCELLED', N'Cancelled after delivery estimate changed',
  '2026-07-20 13:30:00', '2026-07-20 14:00:00');
 
@@ -1496,18 +1484,18 @@ SELECT o.id, v.payment_method, v.payment_status, o.total_payment,
        v.transaction_reference, v.payment_date
 FROM dbo.[Order] o
 INNER JOIN (VALUES
-    ('ORD-20260718-011', 'VNPAY', 'PAID', 'TXN-EXT-011', '2026-07-18 09:15:00'),
+    ('ORD-20260718-011', 'COD', 'PAID', NULL, '2026-07-18 09:15:00'),
     ('ORD-20260718-012', 'COD', 'PAID', NULL, '2026-07-21 16:00:00'),
-    ('ORD-20260719-013', 'BANK_TRANSFER', 'PAID', 'TXN-EXT-013', '2026-07-19 08:45:00'),
+    ('ORD-20260719-013', 'COD', 'PAID', NULL, '2026-07-19 08:45:00'),
     ('ORD-20260719-014', 'COD', 'UNPAID', NULL, NULL),
-    ('ORD-20260719-015', 'VNPAY', 'PAID', 'TXN-EXT-015', '2026-07-19 12:20:00'),
+    ('ORD-20260719-015', 'COD', 'PAID', NULL, '2026-07-19 12:20:00'),
     ('ORD-20260719-016', 'COD', 'UNPAID', NULL, NULL),
-    ('ORD-20260720-017', 'BANK_TRANSFER', 'PAID', 'TXN-EXT-017', '2026-07-20 08:15:00'),
-    ('ORD-20260720-018', 'VNPAY', 'PAID', 'TXN-EXT-018', '2026-07-20 09:35:00'),
+    ('ORD-20260720-017', 'COD', 'PAID', NULL, '2026-07-20 08:15:00'),
+    ('ORD-20260720-018', 'COD', 'PAID', NULL, '2026-07-20 09:35:00'),
     ('ORD-20260720-019', 'COD', 'PAID', NULL, '2026-07-22 12:00:00'),
     ('ORD-20260720-020', 'COD', 'UNPAID', NULL, NULL),
-    ('ORD-20260720-021', 'BANK_TRANSFER', 'PAID', 'TXN-EXT-021', '2026-07-20 12:05:00'),
-    ('ORD-20260720-022', 'VNPAY', 'REFUNDED', 'TXN-EXT-022', '2026-07-20 14:05:00')
+    ('ORD-20260720-021', 'COD', 'PAID', NULL, '2026-07-20 12:05:00'),
+    ('ORD-20260720-022', 'COD', 'REFUNDED', NULL, '2026-07-20 14:05:00')
 ) v(order_code, payment_method, payment_status, transaction_reference, payment_date)
 ON o.order_code = v.order_code;
 
@@ -1652,7 +1640,7 @@ GO
 GO
 
 /* =========================================================================
-   XVII. HIGH-VOLUME ACCOUNT DEMO DATA
+   XVI. HIGH-VOLUME ACCOUNT DEMO DATA
    Adds deterministic accounts for pagination, search, status filters,
    address selection and authentication screens.
    ========================================================================= */
@@ -1739,12 +1727,35 @@ OPTION (MAXRECURSION 0);
     FROM CustomerNumbers
     WHERE account_no < 58
 )
-INSERT INTO dbo.User_Address
-    (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default)
+INSERT INTO dbo.User_Address (
+    user_id, recipient_name, recipient_phone, address_detail,
+    province_code, province_name, ward_code, ward_name, is_default
+)
 SELECT
     u.id,
     u.full_name,
     u.phone,
+    CONCAT(N'Demo customer apartment ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CASE n.account_no % 8
+        WHEN 0 THEN '01'
+        WHEN 1 THEN '01'
+        WHEN 2 THEN '79'
+        WHEN 3 THEN '79'
+        WHEN 4 THEN '92'
+        WHEN 5 THEN '92'
+        WHEN 6 THEN '48'
+        WHEN 7 THEN '48'
+    END,
+    CASE n.account_no % 8
+        WHEN 0 THEN N'Thành phố Hà Nội'
+        WHEN 1 THEN N'Thành phố Hà Nội'
+        WHEN 2 THEN N'Thành phố Hồ Chí Minh'
+        WHEN 3 THEN N'Thành phố Hồ Chí Minh'
+        WHEN 4 THEN N'Thành phố Cần Thơ'
+        WHEN 5 THEN N'Thành phố Cần Thơ'
+        WHEN 6 THEN N'Thành phố Đà Nẵng'
+        WHEN 7 THEN N'Thành phố Đà Nẵng'
+    END,
     CASE n.account_no % 8
         WHEN 0 THEN '00001'
         WHEN 1 THEN '00010'
@@ -1753,9 +1764,18 @@ SELECT
         WHEN 4 THEN '31147'
         WHEN 5 THEN '31162'
         WHEN 6 THEN '20194'
-        ELSE '20200'
+        WHEN 7 THEN '20200'
     END,
-    CONCAT(N'Demo customer apartment ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CASE n.account_no % 8
+        WHEN 0 THEN N'Phường Phúc Xá'
+        WHEN 1 THEN N'Phường Trúc Bạch'
+        WHEN 2 THEN N'Phường Bến Nghé'
+        WHEN 3 THEN N'Phường Cô Giang'
+        WHEN 4 THEN N'Phường An Khánh'
+        WHEN 5 THEN N'Phường Xuân Khánh'
+        WHEN 6 THEN N'Phường Thạch Thang'
+        WHEN 7 THEN N'Phường Hải Châu'
+    END,
     1
 FROM CustomerNumbers n
 INNER JOIN dbo.[User] u
@@ -1768,12 +1788,35 @@ INNER JOIN dbo.[User] u
     FROM CustomerNumbers
     WHERE account_no < 58
 )
-INSERT INTO dbo.User_Address
-    (user_id, recipient_name, recipient_phone, ward_id, address_detail, is_default)
+INSERT INTO dbo.User_Address (
+    user_id, recipient_name, recipient_phone, address_detail,
+    province_code, province_name, ward_code, ward_name, is_default
+)
 SELECT
     u.id,
     u.full_name,
     u.phone,
+    CONCAT(N'Demo customer office ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CASE n.account_no % 8
+        WHEN 0 THEN '79'
+        WHEN 1 THEN '79'
+        WHEN 2 THEN '92'
+        WHEN 3 THEN '92'
+        WHEN 4 THEN '48'
+        WHEN 5 THEN '48'
+        WHEN 6 THEN '01'
+        WHEN 7 THEN '01'
+    END,
+    CASE n.account_no % 8
+        WHEN 0 THEN N'Thành phố Hồ Chí Minh'
+        WHEN 1 THEN N'Thành phố Hồ Chí Minh'
+        WHEN 2 THEN N'Thành phố Cần Thơ'
+        WHEN 3 THEN N'Thành phố Cần Thơ'
+        WHEN 4 THEN N'Thành phố Đà Nẵng'
+        WHEN 5 THEN N'Thành phố Đà Nẵng'
+        WHEN 6 THEN N'Thành phố Hà Nội'
+        WHEN 7 THEN N'Thành phố Hà Nội'
+    END,
     CASE n.account_no % 8
         WHEN 0 THEN '26734'
         WHEN 1 THEN '26743'
@@ -1782,9 +1825,18 @@ SELECT
         WHEN 4 THEN '20194'
         WHEN 5 THEN '20200'
         WHEN 6 THEN '00001'
-        ELSE '00010'
+        WHEN 7 THEN '00010'
     END,
-    CONCAT(N'Demo customer office ', RIGHT('00' + CONVERT(VARCHAR(2), n.account_no), 2)),
+    CASE n.account_no % 8
+        WHEN 0 THEN N'Phường Bến Nghé'
+        WHEN 1 THEN N'Phường Cô Giang'
+        WHEN 2 THEN N'Phường An Khánh'
+        WHEN 3 THEN N'Phường Xuân Khánh'
+        WHEN 4 THEN N'Phường Thạch Thang'
+        WHEN 5 THEN N'Phường Hải Châu'
+        WHEN 6 THEN N'Phường Phúc Xá'
+        WHEN 7 THEN N'Phường Trúc Bạch'
+    END,
     0
 FROM CustomerNumbers n
 INNER JOIN dbo.[User] u
@@ -1837,7 +1889,7 @@ WHERE size IN (N'28', N'30', N'32', N'34', N'36');
 GO
 
 /* =========================================================================
-   XVIII. VALIDATION
+   XVII. VALIDATION
    ========================================================================= */
 
 IF EXISTS (
@@ -1901,6 +1953,17 @@ IF (SELECT COUNT(*) FROM dbo.User_Address WHERE address_detail LIKE N'Demo custo
 BEGIN
     THROW 51006,
         'Seed validation failed: generated customer addresses are incomplete.',
+        1;
+END;
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Payment
+    WHERE payment_method <> 'COD'
+)
+BEGIN
+    THROW 51007,
+        'Seed validation failed: Payment contains a method other than COD.',
         1;
 END;
 
