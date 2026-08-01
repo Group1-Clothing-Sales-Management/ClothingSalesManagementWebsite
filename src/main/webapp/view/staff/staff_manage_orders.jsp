@@ -129,7 +129,7 @@
                     <jsp:include page="/view/admin/common/page_heading.jsp">
                         <jsp:param name="icon" value="fa-solid fa-receipt"/>
                         <jsp:param name="title" value="Order Details"/>
-                        <jsp:param name="subtitle" value="Review order information, track shipment, confirm or cancel when needed."/>
+                        <jsp:param name="subtitle" value="Review order information, track delivery, confirm or cancel when needed."/>
                     </jsp:include>
                 </div>
 
@@ -195,11 +195,11 @@
                                         </c:if>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="detail-label">Shipping</div>
-                                        <div class="detail-value mb-1">${not empty order.shipmentCarrierName ? order.shipmentCarrierName : 'No shipping info'}</div>
+                                        <div class="detail-label">Delivery</div>
+                                        <div class="detail-value mb-1">${not empty order.shipmentCarrierName ? order.shipmentCarrierName : 'No delivery info'}</div>
                                         <div class="subtext">${not empty order.shipmentTrackingCode ? 'Tracking: ' : ''}${not empty order.shipmentTrackingCode ? order.shipmentTrackingCode : 'No tracking code yet'}</div>
                                         <div class="subtext">
-                                            Shipping status:
+                                            Delivery status:
                                             <span class="badge rounded-pill ${not empty order.shippingStatusBadgeClass ? order.shippingStatusBadgeClass : 'badge-soft'}">
                                                 ${not empty order.shippingStatusLabel ? order.shippingStatusLabel : 'N/A'}
                                             </span>
@@ -315,11 +315,11 @@
                                         <div class="d-flex flex-wrap gap-2 mb-3">
                                             <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${order.shipmentId}"
                                                class="btn btn-success btn-sm">
-                                                <i class="bi bi-truck me-1"></i>Update shipment
+                                                <i class="bi bi-truck me-1"></i>Update delivery
                                             </a>
                                         </div>
                                         <div class="alert alert-light border mb-0">
-                                            Đơn này đã có phiếu giao hàng. Muốn cập nhật trạng thái tiếp theo thì chuyển sang màn hình Shipment.
+                                            Đơn này đã có phiếu giao hàng. Muốn cập nhật trạng thái tiếp theo thì chuyển sang màn hình Delivery.
                                         </div>
                                     </c:when>
                                     <c:otherwise>

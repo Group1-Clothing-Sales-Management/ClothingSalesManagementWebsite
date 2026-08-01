@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Shipment Status</title>
+    <title>Update Delivery Status</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <style>
@@ -47,7 +47,7 @@
             <div class="page-header">
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-truck-ramp-box"/>
-                    <jsp:param name="title" value="Update Shipment Status"/>
+                    <jsp:param name="title" value="Update Delivery Status"/>
                     <jsp:param name="subtitle" value="Confirm delivery progress and record the final outcome."/>
                 </jsp:include>
             </div>
@@ -55,7 +55,7 @@
             <div class="d-flex justify-content-center align-items-start">
             <div class="card card-main admin-card w-100">
                 <div class="card-header bg-dark text-white py-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-truck-ramp-box me-2"></i>Update Shipment Status</h5>
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-truck-ramp-box me-2"></i>Update Delivery Status</h5>
                 </div>
                 <div class="card-body p-4">
                     
@@ -92,29 +92,35 @@
                         <input type="hidden" name="id" value="${shipment.shipmentId}">
                         
                         <div class="mb-4">
-                            <label class="form-label fw-bold text-dark mb-3">Select New Shipment Status <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold text-dark mb-3">Select New Delivery Status <span class="text-danger">*</span></label>
                             <div class="card p-3 bg-white">
                                 
                                 <c:choose>
-                                    <%-- CASE 1: Current status is Pending Pickup -> ONLY allow transition to Shipping --%>
+                                    <%-- Pending Pickup can move directly to a final delivery outcome. --%>
                                     <c:when test="${shipment.shippingStatus == 'PENDING_PICKUP'}">
-                                        <div class="form-check form-check-custom d-flex align-items-center mb-0">
-                                            <input class="form-check-input me-3" type="radio" name="outcome" id="statusShipping" value="SHIPPING" checked required>
-                                            <label class="form-check-label text-primary fw-bold fs-6 mb-0 w-100" for="statusShipping">
-                                                <i class="fa-solid fa-truck-moving me-2"></i>In Transit / Shipping
+                                        <div class="form-check form-check-custom d-flex align-items-center mb-3">
+                                            <input class="form-check-input me-3" type="radio" name="outcome" id="statusPendingSuccess" value="SUCCESS" checked required>
+                                            <label class="form-check-label text-success fw-bold fs-6 mb-0 w-100" for="statusPendingSuccess">
+                                                <i class="fa-solid fa-house-chimney-user me-2"></i>Success
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-custom d-flex align-items-center">
+                                            <input class="form-check-input me-3" type="radio" name="outcome" id="statusPendingFailed" value="FAILED" required>
+                                            <label class="form-check-label text-danger fw-bold fs-6 mb-0 w-100" for="statusPendingFailed">
+                                                <i class="fa-solid fa-circle-exclamation me-2"></i>Failure
                                             </label>
                                         </div>
                                     </c:when>
 
-                                    <%-- CASE 2: Current status is Shipping -> ONLY allow final states (Success / Failure) --%>
+                                    <%-- Shipping also allows the same final outcomes for existing in-transit records. --%>
                                     <c:when test="${shipment.shippingStatus == 'SHIPPING'}">
-                                        <div class="form-check form-check-custom d-flex align-items-center">
+                                        <div class="form-check form-check-custom d-flex align-items-center mb-3">
                                             <input class="form-check-input me-3" type="radio" name="outcome" id="statusDelivered" value="SUCCESS" checked required>
                                             <label class="form-check-label text-success fw-bold fs-6 mb-0 w-100" for="statusDelivered">
                                                 <i class="fa-solid fa-house-chimney-user me-2"></i>Success
                                             </label>
                                         </div>
-                                        
+
                                         <div class="form-check form-check-custom d-flex align-items-center mb-0">
                                             <input class="form-check-input me-3" type="radio" name="outcome" id="statusFailed" value="FAILED" required>
                                             <label class="form-check-label text-danger fw-bold fs-6 mb-0 w-100" for="statusFailed">
@@ -152,7 +158,7 @@
                 </div>
                 <h5 class="modal-title fw-bold text-dark mb-2">Confirm Status Update?</h5>
                 <p class="text-secondary px-2 mb-0">
-                    Are you sure you want to change this shipment status to:
+                    Are you sure you want to change this delivery status to:
                 </p>
                 <div class="my-3">
                     <span id="modalStatusBadge" class="badge fs-6 px-3 py-2 rounded-pill">Status</span>

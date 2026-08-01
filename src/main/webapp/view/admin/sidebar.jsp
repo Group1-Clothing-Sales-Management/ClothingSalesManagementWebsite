@@ -377,9 +377,9 @@
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/shipments"
            class="sidebar-link ${requestScope.sidebarActiveTab == 'shipments' ? 'active' : ''}"
-           title="Shipments">
+           title="Delivery">
             <i class="fa-solid fa-truck sidebar-icon"></i>
-            <span class="sidebar-label">Shipments</span>
+            <span class="sidebar-label">Delivery</span>
         </a>
 
         <a href="${pageContext.request.contextPath}${rolePrefix}/customers"

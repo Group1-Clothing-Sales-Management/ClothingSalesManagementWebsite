@@ -27,7 +27,7 @@ public class StaffViewShipmentController extends HttpServlet {
             int id = parseId(request.getParameter("id"));
             StaffShipment shipment = service.getShipmentById(id);
             if (shipment == null) {
-                request.getSession().setAttribute("errorMsg", "Shipment record not found.");
+                request.getSession().setAttribute("errorMsg", "Delivery record not found.");
                 response.sendRedirect(request.getContextPath() + "/staff/shipments");
                 return;
             }

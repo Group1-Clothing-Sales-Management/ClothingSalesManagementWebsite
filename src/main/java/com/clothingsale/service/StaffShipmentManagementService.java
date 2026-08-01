@@ -17,12 +17,12 @@ public class StaffShipmentManagementService {
 
     public String confirmDeliveryOutcome(int shipmentId, String outcome, String remarks) {
         if (outcome == null || outcome.trim().isEmpty()) {
-            return "Please select a valid shipment status.";
+            return "Please select a valid delivery status.";
         }
 
         StaffShipment shipment = dao.getShipmentById(shipmentId);
         if (shipment == null) {
-            return "Shipment record not found for this order.";
+            return "Delivery record not found for this order.";
         }
 
         boolean success = dao.updateDeliveryOutcome(shipmentId, outcome.trim().toUpperCase(), remarks);

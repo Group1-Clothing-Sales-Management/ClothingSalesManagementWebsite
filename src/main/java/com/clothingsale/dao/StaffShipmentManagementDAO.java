@@ -123,6 +123,7 @@ public class StaffShipmentManagementDAO {
             try {
                 int orderId;
                 String currentOrderStatus;
+                String currentShippingStatus;
                 String paymentMethod;
                 String paymentStatus;
 
@@ -135,6 +136,7 @@ public class StaffShipmentManagementDAO {
                         }
                         orderId = rs.getInt("order_id");
                         currentOrderStatus = normalize(rs.getString("order_status"));
+                        currentShippingStatus = normalize(rs.getString("shipping_status"));
                         paymentMethod = normalize(rs.getString("payment_method"));
                         paymentStatus = normalize(rs.getString("payment_status"));
                     }
@@ -150,19 +152,19 @@ public class StaffShipmentManagementDAO {
                         return false;
                     }
                 } else if ("SUCCESS".equals(newShippingStatus)) {
-                    expectedShippingStatus = "SHIPPING";
+                    expectedShippingStatus = currentShippingStatus;
                     mappedOrderStatus = "SUCCESS";
-                    if (!"SHIPPING".equals(currentOrderStatus)) {
+                    if (!isValidFinalTransition(currentShippingStatus, currentOrderStatus)) {
                         conn.rollback();
                         return false;
                     }
                 } else {
-                    expectedShippingStatus = "SHIPPING";
+                    expectedShippingStatus = currentShippingStatus;
                     // A failed delivery is a returned order, not an invented
                     // FAILURE order status. This also makes stock restoration
                     // visible in the existing customer/order lifecycle.
                     mappedOrderStatus = "RETURNED";
-                    if (!"SHIPPING".equals(currentOrderStatus)) {
+                    if (!isValidFinalTransition(currentShippingStatus, currentOrderStatus)) {
                         conn.rollback();
                         return false;
                     }
@@ -242,6 +244,11 @@ public class StaffShipmentManagementDAO {
             return status;
         }
         return null;
+    }
+
+    private boolean isValidFinalTransition(String shippingStatus, String orderStatus) {
+        return ("PENDING_PICKUP".equals(shippingStatus) && "CONFIRMED".equals(orderStatus))
+                || ("SHIPPING".equals(shippingStatus) && "SHIPPING".equals(orderStatus));
     }
 
     private String normalize(String value) {

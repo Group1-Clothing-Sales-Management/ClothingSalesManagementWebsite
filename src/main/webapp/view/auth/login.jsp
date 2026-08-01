@@ -388,7 +388,7 @@
                 </div>
                 <h1 class="panel-title">Sign in to manage the store.</h1>
                 <p class="panel-text">
-                    This page is reserved for active admin and staff accounts to manage orders, products, shipments, and feedback.
+                    This page is reserved for active admin and staff accounts to manage orders, products, delivery, and feedback.
                 </p>
 
                 <div class="benefits">
@@ -403,7 +403,7 @@
                         <i class="fa-solid fa-boxes-stacked"></i>
                         <div>
                             <div class="benefit-title">Operational tools</div>
-                            <div class="benefit-copy">Manage products, orders, shipments, and feedback in one place.</div>
+                            <div class="benefit-copy">Manage products, orders, delivery, and feedback in one place.</div>
                         </div>
                     </div>
                     <div class="benefit-item">

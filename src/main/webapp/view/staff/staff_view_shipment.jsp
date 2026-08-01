@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shipment Status Management</title>
+    <title>Delivery Status Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
     <style>
@@ -36,8 +36,8 @@
             <div class="page-header">
                 <jsp:include page="/view/admin/common/page_heading.jsp">
                     <jsp:param name="icon" value="fa-solid fa-truck-fast"/>
-                    <jsp:param name="title" value="Shipment Status Management"/>
-                    <jsp:param name="subtitle" value="Search shipments and keep delivery statuses up to date."/>
+                    <jsp:param name="title" value="Delivery Status Management"/>
+                    <jsp:param name="subtitle" value="Search deliveries and keep delivery statuses up to date."/>
                 </jsp:include>
             </div>
 
@@ -100,7 +100,7 @@
                                 <c:choose>
                                     <c:when test="${empty shipments}">
                                         <tr>
-                                            <td colspan="8" class="text-center py-4 text-muted">No shipment records found.</td>
+                                            <td colspan="8" class="text-center py-4 text-muted">No delivery records found.</td>
                                         </tr>
                                     </c:when>
                                     <c:otherwise>
@@ -133,16 +133,6 @@
     <c:choose>
         <c:when test="${s.shippingStatus == 'SUCCESS' || s.shippingStatus == 'SUCCESSFUL' || s.shippingStatus == 'Success' || s.shippingStatus == 'FAILURE' || s.shippingStatus == 'Failure' || s.shippingStatus == 'FAILED'}">
             <button class="btn btn-sm btn-secondary" disabled>Completed</button>
-        </c:when>
-        <c:when test="${s.shippingStatus == 'PENDING_PICKUP'}">
-            <%-- Pending Pickup only ever transitions to Shipping, so update it right away
-                 without navigating to the confirm JSP page. --%>
-            <form action="${pageContext.request.contextPath}/staff/shipments" method="POST" class="d-inline">
-                <input type="hidden" name="action" value="confirmDelivery">
-                <input type="hidden" name="id" value="${s.shipmentId}">
-                <input type="hidden" name="outcome" value="SHIPPING">
-                <button type="submit" class="btn btn-sm btn-success">Update Status</button>
-            </form>
         </c:when>
         <c:otherwise>
             <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${s.shipmentId}" class="btn btn-sm btn-success">Update Status</a>
@@ -204,7 +194,7 @@
 
         const start = (currentPage - 1) * ROWS_PER_PAGE + 1;
         const end = Math.min(currentPage * ROWS_PER_PAGE, totalItems);
-        info.textContent = "Showing " + start + "-" + end + " of " + totalItems + " shipments";
+        info.textContent = "Showing " + start + "-" + end + " of " + totalItems + " deliveries";
 
         const addPageItem = (label, page, disabled, active) => {
             const li = document.createElement("li");
