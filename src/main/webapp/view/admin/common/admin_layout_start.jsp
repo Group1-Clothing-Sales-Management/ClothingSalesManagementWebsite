@@ -14,12 +14,12 @@
         --admin-shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.07);
         --admin-radius: 16px;
         --admin-control-radius: 10px;
-        --admin-sidebar-width: 260px;
-        --admin-page-padding-top: 28px;
-        --admin-page-padding-x: 32px;
-        --admin-page-padding-bottom: 36px;
-        --admin-section-gap: 24px;
-        --admin-control-height: 42px;
+        --admin-sidebar-width: 252px;
+        --admin-page-padding-top: 24px;
+        --admin-page-padding-x: 24px;
+        --admin-page-padding-bottom: 28px;
+        --admin-section-gap: 18px;
+        --admin-control-height: 40px;
     }
 
     html {
@@ -100,8 +100,8 @@
         align-items: center;
         gap: 12px;
         flex-wrap: nowrap;
-        min-height: 64px;
-        margin-bottom: 24px;
+        min-height: 42px;
+        margin-bottom: 20px;
     }
 
     .page-header > div:first-child {
@@ -193,8 +193,8 @@
         background: var(--admin-surface) !important;
         color: var(--admin-text) !important;
         border-bottom: 1px solid var(--admin-border-soft) !important;
-        padding: 18px 24px !important;
-        min-height: 60px;
+        padding: 15px 20px !important;
+        min-height: 52px;
     }
 
     .admin-page .card-header h1,
@@ -219,13 +219,21 @@
     .admin-page .card-body,
     .main-content .card-body,
     .content-area .card-body {
-        padding: 24px;
+        padding: 20px;
     }
 
     .admin-page .card-body:not(.p-0),
     .main-content .card-body:not(.p-0),
     .content-area .card-body:not(.p-0) {
-        padding: 24px !important;
+        padding: 20px !important;
+    }
+
+    /* Legacy pages still use Bootstrap spacing utilities. Keep their cards
+       aligned with the shared, denser layout instead of restoring 24px gaps. */
+    .admin-page .card-body.p-4,
+    .main-content .card-body.p-4,
+    .content-area .card-body.p-4 {
+        padding: 20px !important;
     }
 
     .card-main .card-footer,
@@ -233,7 +241,7 @@
     .admin-card-footer {
         background: var(--admin-surface-soft);
         border-top: 1px solid var(--admin-border-soft);
-        padding: 16px 24px !important;
+        padding: 14px 20px !important;
     }
 
     .card-main .table,
@@ -252,7 +260,7 @@
         font-size: .85rem;
         white-space: nowrap;
         border: none;
-        padding: 13px 16px;
+        padding: 11px 14px;
         vertical-align: middle;
     }
 
@@ -269,7 +277,7 @@
     .main-content .table td,
     .content-area .table td {
         vertical-align: middle;
-        padding: 14px 16px;
+        padding: 11px 14px;
         border-color: var(--admin-border-soft);
         font-size: .9rem;
     }
@@ -323,7 +331,7 @@
         background: #f9fafb;
         border: 1px solid var(--admin-border);
         border-radius: 14px;
-        padding: 16px;
+        padding: 14px;
     }
 
     .admin-pill,
@@ -480,9 +488,9 @@
     .admin-page .btn,
     .main-content .btn,
     .content-area .btn {
-        height: 40px;
-        min-height: 40px;
-        padding: 8px 14px;
+        height: 38px;
+        min-height: 38px;
+        padding: 7px 13px;
         border-radius: var(--admin-control-radius);
         font-size: .875rem;
         line-height: 1.2;
@@ -496,15 +504,30 @@
     .admin-page .btn-sm,
     .main-content .btn-sm,
     .content-area .btn-sm {
-        height: 34px;
-        min-height: 34px;
-        padding: 6px 11px;
+        height: 32px;
+        min-height: 32px;
+        padding: 5px 10px;
         border-radius: 8px;
     }
 
+    .admin-page .table td .btn:not(.btn-lg),
+    .main-content .table td .btn:not(.btn-lg),
+    .content-area .table td .btn:not(.btn-lg) {
+        height: 32px;
+        min-height: 32px;
+        padding: 5px 10px;
+        font-size: .8rem;
+    }
+
+    .admin-page .table td .btn + .btn,
+    .main-content .table td .btn + .btn,
+    .content-area .table td .btn + .btn {
+        margin-left: 4px;
+    }
+
     .admin-page .row {
-        --bs-gutter-x: 24px !important;
-        --bs-gutter-y: 24px !important;
+        --bs-gutter-x: 18px !important;
+        --bs-gutter-y: 18px !important;
     }
 
     .admin-page .btn-primary,
@@ -553,14 +576,14 @@
     .main-content .modal-header,
     .content-area .modal-header {
         border-bottom-color: var(--admin-border-soft);
-        padding: 20px 24px;
+        padding: 18px 20px;
     }
 
     .admin-page .modal-footer,
     .main-content .modal-footer,
     .content-area .modal-footer {
         border-top-color: var(--admin-border-soft);
-        padding: 16px 24px;
+        padding: 14px 20px;
     }
 
     .admin-mobile-header {
@@ -764,12 +787,22 @@
     .admin-page .filter-label,
     .admin-page .product-filter-label {
         display: block;
-        min-height: 20px;
-        margin-bottom: 7px !important;
+        min-height: 0;
+        margin-top: 0 !important;
+        margin-bottom: 6px !important;
         color: #475569;
         font-size: .84rem;
         font-weight: 700;
         line-height: 1.35;
+    }
+
+    .admin-page .product-filter-field > label,
+    .admin-page .voucher-filter-field > label,
+    .admin-page .price-filter-search > label,
+    .admin-page .price-filter-status > label {
+        min-height: 0;
+        margin-top: 0 !important;
+        margin-bottom: 6px !important;
     }
 
     .admin-page .form-control,
@@ -794,18 +827,36 @@
     .admin-page .voucher-filter-panel,
     .admin-page .price-filter-panel {
         width: 100%;
-        padding: 18px 20px;
+        padding: 12px 16px;
         border: 1px solid var(--admin-border);
         border-radius: 14px;
         background: #f8fafc;
+    }
+
+    /* Filter cards already contain a card-body. Avoid stacking the panel
+       padding and card-body padding, which creates unnecessary vertical space. */
+    .admin-page .card.admin-filter-surface,
+    .admin-page .card.product-filter-panel,
+    .admin-page .card.category-toolbar,
+    .admin-page .card.voucher-filter-panel,
+    .admin-page .card.price-filter-panel {
+        padding: 0;
+    }
+
+    .admin-page .card.admin-filter-surface > .card-body,
+    .admin-page .card.product-filter-panel > .card-body,
+    .admin-page .card.category-toolbar > .card-body,
+    .admin-page .card.voucher-filter-panel > .card-body,
+    .admin-page .card.price-filter-panel > .card-body {
+        padding: 12px 16px !important;
     }
 
     /* Product filters: the search field is intentionally wider. */
     .product-filter-grid {
         display: grid;
         grid-template-columns: minmax(320px, 2.2fr) repeat(3, minmax(145px, 1fr)) minmax(150px, .9fr);
-        gap: 16px;
-        align-items: end;
+        gap: 12px;
+        align-items: start;
     }
 
     .product-filter-field,
@@ -829,24 +880,30 @@
     .category-filter-grid {
         display: grid;
         grid-template-columns: minmax(320px, 2fr) minmax(220px, 1fr);
-        gap: 16px;
-        align-items: end;
+        gap: 12px;
+        align-items: start;
     }
 
     /* Voucher: search wider than lifecycle status, compact action. */
     .voucher-filter-grid {
         display: grid;
         grid-template-columns: minmax(340px, 1.65fr) minmax(250px, 1fr) minmax(160px, .55fr);
-        gap: 16px;
-        align-items: end;
+        gap: 12px;
+        align-items: start;
     }
 
     /* Price: avoid an excessively long search field on wide screens. */
     .price-filter-grid {
         display: grid;
         grid-template-columns: minmax(340px, 1.55fr) minmax(260px, 1fr) minmax(140px, .45fr);
-        gap: 16px;
-        align-items: end;
+        gap: 12px;
+        align-items: start;
+    }
+
+    .product-filter-actions,
+    .voucher-filter-actions,
+    .price-filter-actions {
+        align-self: end;
     }
 
     .variant-search-input-group {
@@ -886,7 +943,7 @@
         .page-header > .btn,
         .page-header > a.btn,
         .page-header > .page-header-actions {
-            margin-left: 54px;
+            margin-left: 0;
         }
 
         .product-filter-grid,
@@ -933,6 +990,7 @@
     }
 
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/admin-ui.css?v=20260731-4">
 <div class="admin-shell" id="adminShell">
     <div class="admin-shell-sidebar">
         <jsp:include page="/view/admin/sidebar.jsp">

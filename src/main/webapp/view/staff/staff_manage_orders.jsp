@@ -421,7 +421,7 @@
                                             <th>Shipping</th>
                                             <th>Status</th>
                                             <th>Created</th>
-                                            <th class="text-end pe-4" style="width: 220px;">Actions</th>
+                                            <th class="text-end pe-4 order-actions-column">Actions</th>
                                         </tr>
                                         </thead>
                                                 <tbody>
@@ -463,20 +463,27 @@
                                                     <div class="fw-semibold"><fmt:formatDate value="${o.createdAt}" pattern="dd/MM/yyyy"/></div>
                                                     <div class="subtext"><fmt:formatDate value="${o.createdAt}" pattern="HH:mm"/></div>
                                                 </td>
-                                                <td class="pe-4">
-                                                    <div class="d-flex justify-content-end flex-wrap gap-2">
-                                                        <a class="btn btn-sm btn-outline-primary" href="${ordersBasePath}?action=view&id=${o.id}">
-                                                            <i class="bi bi-eye me-1"></i>View
+                                                <td class="pe-4 order-actions-column">
+                                                    <div class="admin-table-actions">
+                                                        <a class="btn btn-sm btn-outline-primary"
+                                                           href="${ordersBasePath}?action=view&id=${o.id}"
+                                                           aria-label="View order"
+                                                           title="View order">
+                                                            <i class="bi bi-eye" aria-hidden="true"></i>
+                                                            <span class="visually-hidden">View</span>
                                                         </a>
                                                         <c:if test="${o.orderStatus eq 'PENDING'}">
                                                             <form action="${ordersBasePath}" method="post" class="m-0">
                                                                 <input type="hidden" name="action" value="confirm">
                                                                 <input type="hidden" name="id" value="${o.id}">
                                                                 <button type="submit" class="btn btn-sm btn-success"
+                                                                        aria-label="Confirm order"
+                                                                        title="Confirm order"
                                                                         data-confirm="Confirm order ${o.orderCode}?"
                                                                         data-confirm-title="Confirm order"
                                                                         data-confirm-label="Confirm order">
-                                                                    <i class="bi bi-check2-circle me-1"></i>Confirm
+                                                                    <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                                                                    <span class="visually-hidden">Confirm</span>
                                                                 </button>
                                                             </form>
                                                         </c:if>
@@ -485,11 +492,14 @@
                                                                 <input type="hidden" name="action" value="cancel">
                                                                 <input type="hidden" name="id" value="${o.id}">
                                                                 <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                        aria-label="Cancel order"
+                                                                        title="Cancel order"
                                                                         data-confirm="Cancel order ${o.orderCode}?"
                                                                         data-confirm-title="Cancel order"
                                                                         data-confirm-label="Cancel order"
                                                                         data-confirm-danger="true">
-                                                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                                                    <i class="bi bi-x-circle" aria-hidden="true"></i>
+                                                                    <span class="visually-hidden">Cancel</span>
                                                                 </button>
                                                             </form>
                                                         </c:if>

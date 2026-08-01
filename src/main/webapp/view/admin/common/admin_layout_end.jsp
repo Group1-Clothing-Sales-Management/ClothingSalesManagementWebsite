@@ -11,6 +11,15 @@
 
             var toggle = shell.querySelector('[data-admin-sidebar-toggle]');
             var closeButton = shell.querySelector('[data-admin-sidebar-close]');
+            var collapseButton = shell.querySelector('[data-admin-sidebar-collapse]');
+            var collapsePreference = false;
+            var collapseStorageKey = 'clothingSale.adminSidebarCollapsed';
+
+            try {
+                collapsePreference = window.localStorage.getItem(collapseStorageKey) === 'true';
+            } catch (ignored) {
+                collapsePreference = false;
+            }
 
             function setSidebarOpen(isOpen) {
                 shell.classList.toggle('is-sidebar-open', isOpen);
@@ -18,6 +27,23 @@
                 if (toggle) {
                     toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                     toggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+                }
+            }
+
+            function renderDesktopCollapse() {
+                var isCollapsed = window.innerWidth >= 768 && collapsePreference;
+                shell.classList.toggle('is-sidebar-collapsed', isCollapsed);
+
+                if (collapseButton) {
+                    collapseButton.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+                    collapseButton.setAttribute(
+                        'aria-label',
+                        isCollapsed ? 'Expand navigation' : 'Collapse navigation'
+                    );
+                    collapseButton.setAttribute(
+                        'title',
+                        isCollapsed ? 'Expand navigation' : 'Collapse navigation'
+                    );
                 }
             }
 
@@ -30,6 +56,18 @@
             if (closeButton) {
                 closeButton.addEventListener('click', function () {
                     setSidebarOpen(false);
+                });
+            }
+
+            if (collapseButton) {
+                collapseButton.addEventListener('click', function () {
+                    collapsePreference = !collapsePreference;
+                    try {
+                        window.localStorage.setItem(collapseStorageKey, String(collapsePreference));
+                    } catch (ignored) {
+                        // The layout still works when storage is unavailable.
+                    }
+                    renderDesktopCollapse();
                 });
             }
 
@@ -49,7 +87,10 @@
                 if (window.innerWidth >= 768) {
                     setSidebarOpen(false);
                 }
+                renderDesktopCollapse();
             });
+
+            renderDesktopCollapse();
         }
 
         if (document.readyState === 'loading') {

@@ -67,12 +67,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 <style>
     .sidebar-shell {
-        flex: 0 0 260px;
-        width: 260px;
-        max-width: 260px;
+        flex: 0 0 var(--admin-sidebar-width, 224px);
+        width: var(--admin-sidebar-width, 224px);
+        max-width: var(--admin-sidebar-width, 224px);
         min-height: 100vh;
         height: 100vh;
-        background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+        background: linear-gradient(180deg, #121b2c 0%, #0d1626 100%);
         color: #e5e7eb;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         line-height: 1.35;
@@ -84,62 +84,108 @@
         overflow-y: auto;
         scrollbar-gutter: stable;
         -webkit-overflow-scrolling: touch;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+        box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
     }
     .sidebar-brand {
-        padding: 1.15rem 1rem;
-        text-align: center;
+        min-height: 58px;
+        padding: .75rem .8rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .55rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .sidebar-brand-title {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
         color: #fff;
-        font-size: 1.15rem;
+        font-size: 1rem;
         font-weight: 800;
         margin: 0;
         letter-spacing: .01em;
+        white-space: nowrap;
     }
     .sidebar-brand-title i {
         color: #60a5fa;
     }
+    .sidebar-collapse {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 8px;
+        color: #94a3b8;
+        background: rgba(255, 255, 255, .04);
+        transition: color .2s ease, background-color .2s ease, transform .2s ease;
+    }
+    .sidebar-collapse:hover,
+    .sidebar-collapse:focus-visible {
+        color: #ffffff;
+        background: rgba(255, 255, 255, .1);
+        outline: none;
+    }
     .sidebar-nav {
-        padding: .75rem 0;
+        padding: .45rem;
         display: flex;
         flex-direction: column;
-        gap: .15rem;
+        gap: .08rem;
     }
     .sidebar-nav a {
         color: #cbd5e1;
         text-decoration: none;
         display: flex;
         align-items: center;
-        gap: .75rem;
-        padding: .85rem 1.15rem;
+        gap: .65rem;
+        min-height: 39px;
+        padding: .62rem .75rem;
+        border-radius: 8px;
+        font-size: .84rem;
         font-weight: 600;
-        border-left: 4px solid transparent;
+        border: 1px solid transparent;
         transition: background-color .2s ease, color .2s ease, border-color .2s ease;
     }
     .sidebar-nav a:hover,
     .sidebar-nav a.active {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(96, 165, 250, .11);
         color: #fff;
-        border-left-color: #3b82f6;
+        border-color: rgba(96, 165, 250, .16);
+    }
+    .sidebar-nav a.active {
+        color: #ffffff;
+        background: linear-gradient(90deg, rgba(37, 99, 235, .28), rgba(37, 99, 235, .12));
+        box-shadow: inset 3px 0 0 #60a5fa;
     }
     .sidebar-nav i {
-        width: 1.2rem;
+        width: 1rem;
         text-align: center;
         flex-shrink: 0;
+        color: #94a3b8;
+    }
+    .sidebar-nav a:hover i,
+    .sidebar-nav a.active i {
+        color: #93c5fd;
     }
     .sidebar-icon {
-        margin-right: 0.15rem;
+        margin-right: 0;
     }
     .sidebar-link {
         width: 100%;
     }
     .sidebar-footer {
         margin-top: auto;
-        padding: 1rem;
+        padding: .7rem .75rem;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(15, 23, 42, 0.96);
+    }
+    .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
     }
     .sidebar-user-role {
         font-size: .78rem;
@@ -183,9 +229,62 @@
     .min-w-0 {
         min-width: 0;
     }
+    .admin-shell.is-sidebar-collapsed .sidebar-brand {
+        justify-content: center;
+        padding-inline: .45rem;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-brand-title {
+        display: none;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-collapse i {
+        transform: rotate(180deg);
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-nav {
+        padding-inline: .45rem;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-nav a {
+        justify-content: center;
+        min-height: 42px;
+        padding: .65rem .45rem;
+        box-shadow: none;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-nav a.active {
+        box-shadow: inset 0 -3px 0 #60a5fa;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-label,
+    .admin-shell.is-sidebar-collapsed .sidebar-user-copy {
+        display: none;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-footer {
+        padding-inline: .45rem;
+    }
+    .admin-shell.is-sidebar-collapsed .sidebar-user {
+        justify-content: center;
+    }
     @media (max-width: 767.98px) {
         .sidebar-shell {
             display: none;
+            width: 224px;
+            max-width: 224px;
+            flex-basis: 224px;
+        }
+        .sidebar-collapse {
+            display: none;
+        }
+        .admin-shell.is-sidebar-collapsed .sidebar-brand {
+            justify-content: space-between;
+        }
+        .admin-shell.is-sidebar-collapsed .sidebar-brand-title {
+            display: inline-flex;
+        }
+        .admin-shell.is-sidebar-collapsed .sidebar-nav a {
+            justify-content: flex-start;
+            min-height: 39px;
+            padding: .62rem .75rem;
+        }
+        .admin-shell.is-sidebar-collapsed .sidebar-label,
+        .admin-shell.is-sidebar-collapsed .sidebar-user-copy {
+            display: block;
         }
     }
     @media (min-width: 768px) {
@@ -197,72 +296,123 @@
 
 <div class="sidebar-shell" id="adminSidebarNavigation">
     <div class="sidebar-brand">
-        <h4 class="sidebar-brand-title mb-0"><i class="fa-solid fa-shirt sidebar-icon"></i>Clothing Sale</h4>
+        <h4 class="sidebar-brand-title mb-0">
+            <i class="fa-solid fa-shirt sidebar-icon"></i>
+            <span class="sidebar-label">Clothing Sale</span>
+        </h4>
+        <button type="button"
+                class="sidebar-collapse"
+                data-admin-sidebar-collapse
+                aria-label="Collapse navigation"
+                aria-expanded="true"
+                title="Collapse navigation">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        </button>
     </div>
     <div class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/admin/dashboard" class="sidebar-link ${requestScope.sidebarActiveTab == 'dashboard' ? 'active' : ''}">
-            <i class="fa-solid fa-chart-line sidebar-icon"></i>Dashboard
+        <a href="${pageContext.request.contextPath}/admin/dashboard"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'dashboard' ? 'active' : ''}"
+           title="Dashboard">
+            <i class="fa-solid fa-chart-line sidebar-icon"></i>
+            <span class="sidebar-label">Dashboard</span>
         </a>
 
         <c:choose>
             <c:when test="${sessionScope.authRoleName == 'STAFF'}">
-                <a href="${pageContext.request.contextPath}/staff/products" class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box sidebar-icon"></i>Products
+                <a href="${pageContext.request.contextPath}/staff/products"
+                   class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}"
+                   title="Products">
+                    <i class="fa-solid fa-box sidebar-icon"></i>
+                    <span class="sidebar-label">Products</span>
                 </a>
             </c:when>
             <c:otherwise>
-                <a href="${pageContext.request.contextPath}${rolePrefix}/products" class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}">
-                    <i class="fa-solid fa-box sidebar-icon"></i>Products
+                <a href="${pageContext.request.contextPath}${rolePrefix}/products"
+                   class="sidebar-link ${requestScope.sidebarActiveTab == 'products' ? 'active' : ''}"
+                   title="Products">
+                    <i class="fa-solid fa-box sidebar-icon"></i>
+                    <span class="sidebar-label">Products</span>
                 </a>
-                <a href="${pageContext.request.contextPath}/admin/inventory" class="sidebar-link ${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}">
-                    <i class="fa-solid fa-warehouse sidebar-icon"></i>Inventory
+                <a href="${pageContext.request.contextPath}/admin/inventory"
+                   class="sidebar-link ${requestScope.sidebarActiveTab == 'inventory' ? 'active' : ''}"
+                   title="Inventory">
+                    <i class="fa-solid fa-warehouse sidebar-icon"></i>
+                    <span class="sidebar-label">Inventory</span>
                 </a>
                 <a href="${pageContext.request.contextPath}/admin/prices"
-   class="sidebar-link ${requestScope.sidebarActiveTab == 'prices' ? 'active' : ''}">
-    <i class="fa-solid fa-coins sidebar-icon"></i>Price Management
-</a>
-                
-                <a href="${pageContext.request.contextPath}/admin/manage-category" class="sidebar-link ${requestScope.sidebarActiveTab == 'categories' ? 'active' : ''}">
-                    <i class="fa-solid fa-tags sidebar-icon"></i>Categories
+                   class="sidebar-link ${requestScope.sidebarActiveTab == 'prices' ? 'active' : ''}"
+                   title="Price Management">
+                    <i class="fa-solid fa-coins sidebar-icon"></i>
+                    <span class="sidebar-label">Price Management</span>
                 </a>
-                <a class="sidebar-link ${requestScope.sidebarActiveTab == 'discounts' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/voucher?action=list">
+                
+                <a href="${pageContext.request.contextPath}/admin/manage-category"
+                   class="sidebar-link ${requestScope.sidebarActiveTab == 'categories' ? 'active' : ''}"
+                   title="Categories">
+                    <i class="fa-solid fa-tags sidebar-icon"></i>
+                    <span class="sidebar-label">Categories</span>
+                </a>
+                <a class="sidebar-link ${requestScope.sidebarActiveTab == 'discounts' ? 'active' : ''}"
+                   href="${pageContext.request.contextPath}/admin/voucher?action=list"
+                   title="Vouchers">
                     <i class="fas fa-ticket-alt sidebar-icon"></i> 
-                    <span>Vouchers</span>
+                    <span class="sidebar-label">Vouchers</span>
                 </a>
                 <%-- Mục này chỉ dành cho ADMIN nên cần active riêng khi đang ở trang quản lý staff. --%>
-                <a href="${pageContext.request.contextPath}/admin/staffs" class="sidebar-link ${requestScope.sidebarActiveTab == 'staffs' ? 'active' : ''}">
-                    <i class="fa-solid fa-user-tie sidebar-icon"></i> Manage Staff
+                <a href="${pageContext.request.contextPath}/admin/staffs"
+                   class="sidebar-link ${requestScope.sidebarActiveTab == 'staffs' ? 'active' : ''}"
+                   title="Manage Staff">
+                    <i class="fa-solid fa-user-tie sidebar-icon"></i>
+                    <span class="sidebar-label">Manage Staff</span>
                 </a>
             </c:otherwise>
         </c:choose>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/orders" class="sidebar-link ${requestScope.sidebarActiveTab == 'orders' ? 'active' : ''}">
-            <i class="fa-solid fa-receipt sidebar-icon"></i>Orders
+        <a href="${pageContext.request.contextPath}${rolePrefix}/orders"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'orders' ? 'active' : ''}"
+           title="Orders">
+            <i class="fa-solid fa-receipt sidebar-icon"></i>
+            <span class="sidebar-label">Orders</span>
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/shipments" class="sidebar-link ${requestScope.sidebarActiveTab == 'shipments' ? 'active' : ''}">
-            <i class="fa-solid fa-truck sidebar-icon"></i>Shipments
+        <a href="${pageContext.request.contextPath}${rolePrefix}/shipments"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'shipments' ? 'active' : ''}"
+           title="Shipments">
+            <i class="fa-solid fa-truck sidebar-icon"></i>
+            <span class="sidebar-label">Shipments</span>
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/customers" class="sidebar-link ${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}">
-            <i class="fa-solid fa-users sidebar-icon"></i>Customers
+        <a href="${pageContext.request.contextPath}${rolePrefix}/customers"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'customers' ? 'active' : ''}"
+           title="Customers">
+            <i class="fa-solid fa-users sidebar-icon"></i>
+            <span class="sidebar-label">Customers</span>
         </a>
 
-        <a href="${pageContext.request.contextPath}${rolePrefix}/feedback" class="sidebar-link ${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}">
-            <i class="fa-solid fa-comments sidebar-icon"></i>Feedback
+        <a href="${pageContext.request.contextPath}${rolePrefix}/feedback"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'feedback' ? 'active' : ''}"
+           title="Feedback">
+            <i class="fa-solid fa-comments sidebar-icon"></i>
+            <span class="sidebar-label">Feedback</span>
         </a>
         <%-- Link này dùng rolePrefix để Staff và Admin đi vào đúng URL của mình. --%>
-        <a href="${pageContext.request.contextPath}${rolePrefix}/returns" class="sidebar-link ${requestScope.sidebarActiveTab == 'returns' ? 'active' : ''}">
-            <i class="fa-solid fa-rotate-left sidebar-icon"></i>Returns & Refunds
+        <a href="${pageContext.request.contextPath}${rolePrefix}/returns"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'returns' ? 'active' : ''}"
+           title="Returns &amp; Refunds">
+            <i class="fa-solid fa-rotate-left sidebar-icon"></i>
+            <span class="sidebar-label">Returns &amp; Refunds</span>
         </a>
-        <a href="${pageContext.request.contextPath}/staff/reports" class="sidebar-link ${requestScope.sidebarActiveTab == 'reports' ? 'active' : ''}">
-            <i class="fa-solid fa-chart-pie sidebar-icon"></i>Revenue Reports
+        <a href="${pageContext.request.contextPath}/staff/reports"
+           class="sidebar-link ${requestScope.sidebarActiveTab == 'reports' ? 'active' : ''}"
+           title="Revenue Reports">
+            <i class="fa-solid fa-chart-pie sidebar-icon"></i>
+            <span class="sidebar-label">Revenue Reports</span>
         </a>
     </div>
 
     <div class="sidebar-footer">
-        <div class="d-flex align-items-center gap-3">
-            <div class="min-w-0 flex-grow-1">
+        <div class="sidebar-user">
+            <div class="sidebar-user-copy min-w-0 flex-grow-1">
                 <div class="text-sm fw-bold text-white text-truncate">
                     <c:choose>
                         <c:when test="${not empty sessionScope.authFullName}">
