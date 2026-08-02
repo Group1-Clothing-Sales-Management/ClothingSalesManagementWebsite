@@ -801,3 +801,113 @@ BEGIN
     WHERE pv.list_price IS NULL;
 END
 GO
+
+
+/*
+Bổ sung vào DB
+
+*/
+
+SET XACT_ABORT ON;
+GO
+
+IF OBJECT_ID('dbo.Delivery_Return_Inspection', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Delivery_Return_Inspection (
+        id INT IDENTITY(1,1) NOT NULL,
+        shipment_id INT NOT NULL,
+        order_id INT NOT NULL,
+        failure_reason NVARCHAR(500) NOT NULL,
+        status VARCHAR(30) NOT NULL
+            CONSTRAINT DF_DeliveryReturnInspection_Status
+            DEFAULT ('PENDING_INSPECTION'),
+        created_by INT NULL,
+        created_at DATETIME NOT NULL
+            CONSTRAINT DF_DeliveryReturnInspection_CreatedAt
+            DEFAULT (GETDATE()),
+        inspected_by INT NULL,
+        inspected_at DATETIME NULL,
+        inspection_note NVARCHAR(1000) NULL,
+        CONSTRAINT PK_Delivery_Return_Inspection PRIMARY KEY (id),
+        CONSTRAINT UQ_DeliveryReturnInspection_Shipment UNIQUE (shipment_id),
+        CONSTRAINT UQ_DeliveryReturnInspection_Order UNIQUE (order_id),
+        CONSTRAINT CK_DeliveryReturnInspection_Status CHECK (
+            status IN ('PENDING_INSPECTION', 'COMPLETED')
+        ),
+        CONSTRAINT FK_DeliveryReturnInspection_Shipment
+            FOREIGN KEY (shipment_id) REFERENCES dbo.Shipment(id),
+        CONSTRAINT FK_DeliveryReturnInspection_Order
+            FOREIGN KEY (order_id) REFERENCES dbo.[Order](id),
+        CONSTRAINT FK_DeliveryReturnInspection_CreatedBy
+            FOREIGN KEY (created_by) REFERENCES dbo.[User](id),
+        CONSTRAINT FK_DeliveryReturnInspection_InspectedBy
+            FOREIGN KEY (inspected_by) REFERENCES dbo.[User](id)
+    );
+END;
+GO
+
+IF OBJECT_ID('dbo.Delivery_Return_Inspection_Item', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Delivery_Return_Inspection_Item (
+        id INT IDENTITY(1,1) NOT NULL,
+        inspection_id INT NOT NULL,
+        order_detail_id INT NOT NULL,
+        variant_id INT NULL,
+        product_name_snapshot NVARCHAR(200) NOT NULL,
+        variant_attributes_snapshot NVARCHAR(255) NULL,
+        return_quantity INT NOT NULL,
+        restock_quantity INT NOT NULL
+            CONSTRAINT DF_DeliveryReturnItem_Restock DEFAULT (0),
+        damaged_quantity INT NOT NULL
+            CONSTRAINT DF_DeliveryReturnItem_Damaged DEFAULT (0),
+        item_note NVARCHAR(500) NULL,
+        inspected BIT NOT NULL
+            CONSTRAINT DF_DeliveryReturnItem_Inspected DEFAULT (0),
+        inspected_by INT NULL,
+        inspected_at DATETIME NULL,
+        CONSTRAINT PK_Delivery_Return_Inspection_Item PRIMARY KEY (id),
+        CONSTRAINT UQ_DeliveryReturnItem_OrderDetail
+            UNIQUE (inspection_id, order_detail_id),
+        CONSTRAINT CK_DeliveryReturnItem_ReturnQuantity
+            CHECK (return_quantity > 0),
+        CONSTRAINT CK_DeliveryReturnItem_Restock
+            CHECK (restock_quantity >= 0),
+        CONSTRAINT CK_DeliveryReturnItem_Damaged
+            CHECK (damaged_quantity >= 0),
+        CONSTRAINT CK_DeliveryReturnItem_Total
+            CHECK (restock_quantity + damaged_quantity <= return_quantity),
+        CONSTRAINT FK_DeliveryReturnItem_Inspection
+            FOREIGN KEY (inspection_id)
+            REFERENCES dbo.Delivery_Return_Inspection(id) ON DELETE CASCADE,
+        CONSTRAINT FK_DeliveryReturnItem_OrderDetail
+            FOREIGN KEY (order_detail_id) REFERENCES dbo.Order_Detail(id),
+        CONSTRAINT FK_DeliveryReturnItem_Variant
+            FOREIGN KEY (variant_id)
+            REFERENCES dbo.Product_Variant(id) ON DELETE SET NULL,
+        CONSTRAINT FK_DeliveryReturnItem_InspectedBy
+            FOREIGN KEY (inspected_by) REFERENCES dbo.[User](id)
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_DeliveryReturnInspection_Status'
+      AND object_id = OBJECT_ID('dbo.Delivery_Return_Inspection')
+)
+BEGIN
+    CREATE INDEX IX_DeliveryReturnInspection_Status
+        ON dbo.Delivery_Return_Inspection(status, created_at DESC);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_DeliveryReturnInspectionItem_Inspection'
+      AND object_id = OBJECT_ID('dbo.Delivery_Return_Inspection_Item')
+)
+BEGIN
+    CREATE INDEX IX_DeliveryReturnInspectionItem_Inspection
+        ON dbo.Delivery_Return_Inspection_Item(inspection_id, inspected);
+END;
+GO

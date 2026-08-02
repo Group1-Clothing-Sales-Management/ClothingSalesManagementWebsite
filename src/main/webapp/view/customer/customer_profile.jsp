@@ -561,7 +561,6 @@
         <main class="profile-shell">
             <section class="page-hero">
                 <div>
-                    <div class="page-kicker">Account Settings</div>
                     <h1 class="page-title">My Profile</h1>
                     <p class="page-subtitle">
                         Keep your account details up to date so checkout, delivery, and order updates stay smooth.

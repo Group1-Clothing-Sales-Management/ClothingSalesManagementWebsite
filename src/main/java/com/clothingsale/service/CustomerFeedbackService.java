@@ -91,6 +91,13 @@ public class CustomerFeedbackService {
             return false;
         }
 
+        if (!feedbackDAO.canCreateFeedback(
+                feedback.getUserId(),
+                feedback.getProductId(),
+                feedback.getOrderDetailId())) {
+            return false;
+        }
+
         Integer orderId = feedbackDAO.getOrderIdForDetail(feedback.getOrderDetailId());
 
         if (orderId == null) {
@@ -99,7 +106,7 @@ public class CustomerFeedbackService {
 
         feedback.setOrderId(orderId);
 
-        // feedback mới luôn hiển thị
+        // Feedback mới luôn hiển thị.
         feedback.setVisible(true);
 
         return feedbackDAO.createFeedback(feedback);

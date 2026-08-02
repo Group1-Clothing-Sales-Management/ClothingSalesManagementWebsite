@@ -204,45 +204,109 @@ public class CustomerFeedbackDAO {
     }
 
     /**
-     * Kiểm tra user có được phép tạo feedback hay không cho một dòng đơn hàng cụ
-     * thể.
+     * Kiểm tra customer có được tạo feedback cho dòng đơn hàng đã chọn hay không.
      *
-     * Điều kiện: - Đã mua sản phẩm trong Order_Detail - Đơn hàng đã giao
-     * (DELIVERED)
-     * - Chưa feedback cho order_detail đó - Không có return/refund hoàn tất cho
-     * dòng đó
+     * Quy tắc nghiệp vụ:
+     * - Đơn hàng thuộc đúng customer và đã giao thành công.
+     * - Dòng đơn hàng thuộc đúng sản phẩm.
+     * - Trong cùng một đơn hàng, mỗi sản phẩm chỉ được feedback một lần,
+     *   không phụ thuộc variant, size hoặc color.
+     * - Dòng hàng không có yêu cầu đổi/trả đã hoàn tất.
      */
     public boolean canCreateFeedback(int userId, int productId, int orderDetailId) {
 
-        return hasEligibleDeliveredOrderDetail(userId, productId, orderDetailId)
-                && !hasFeedbackForOrderDetail(userId, orderDetailId)
-                && !hasCompletedReturnForOrderDetail(orderDetailId);
-
-    }
-
-    public List<OrderDetail> getEligibleOrderDetailsForFeedback(int userId, int productId) {
-        List<OrderDetail> list = new ArrayList<>();
-        String sql = "SELECT od.id, od.order_id, od.variant_id, od.product_name_snapshot, od.variant_attributes_snapshot, od.quantity, od.price, "
-                + "pv.product_id, p.product_name, o.order_code "
+        String sql = "SELECT TOP 1 1 "
                 + "FROM Order_Detail od "
                 + "INNER JOIN [Order] o ON o.id = od.order_id "
                 + "INNER JOIN Shipment s ON o.shipment_id = s.id "
-                + "LEFT JOIN Product_Variant pv ON pv.id = od.variant_id "
-                + "LEFT JOIN Product p ON p.id = pv.product_id "
+                + "INNER JOIN Product_Variant pv ON pv.id = od.variant_id "
                 + "WHERE o.user_id = ? "
-                + "AND (pv.product_id = ? OR p.id = ?) "
+                + "AND od.id = ? "
+                + "AND pv.product_id = ? "
                 + "AND s.shipping_status IN ('DELIVERED', 'SUCCESS') "
-                + "AND NOT EXISTS (SELECT 1 FROM Feedback f WHERE f.user_id = ? AND f.order_detail_id = od.id) "
-                + "AND NOT EXISTS (SELECT 1 FROM Return_Request_Item rri "
-                + "INNER JOIN Return_Request rr ON rr.id = rri.return_request_id "
-                + "WHERE rri.order_detail_id = od.id AND rr.status = 'COMPLETED') "
-                + "ORDER BY o.created_at DESC, od.id DESC";
+                + "AND NOT EXISTS ("
+                + "    SELECT 1 FROM Feedback f "
+                + "    WHERE f.user_id = ? "
+                + "    AND f.product_id = ? "
+                + "    AND f.order_id = o.id"
+                + ") "
+                + "AND NOT EXISTS ("
+                + "    SELECT 1 FROM Return_Request_Item rri "
+                + "    INNER JOIN Return_Request rr ON rr.id = rri.return_request_id "
+                + "    WHERE rri.order_detail_id = od.id "
+                + "    AND rr.status = 'COMPLETED'"
+                + ")";
 
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, userId);
-            ps.setInt(2, productId);
+            ps.setInt(2, orderDetailId);
             ps.setInt(3, productId);
             ps.setInt(4, userId);
+            ps.setInt(5, productId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    /**
+     * Lấy danh sách đơn hàng đủ điều kiện feedback cho một sản phẩm.
+     * Mỗi order chỉ trả về một OrderDetail đại diện, nên các variant khác màu/size
+     * của cùng sản phẩm trong cùng order không tạo ra nhiều lựa chọn feedback.
+     */
+    public List<OrderDetail> getEligibleOrderDetailsForFeedback(int userId, int productId) {
+
+        List<OrderDetail> list = new ArrayList<>();
+
+        String sql = "WITH EligibleDetails AS ("
+                + "SELECT od.id, od.order_id, od.variant_id, "
+                + "od.product_name_snapshot, od.variant_attributes_snapshot, "
+                + "od.quantity, od.price, pv.product_id, p.product_name, "
+                + "o.order_code, o.created_at, "
+                + "ROW_NUMBER() OVER (PARTITION BY od.order_id ORDER BY od.id DESC) AS row_num "
+                + "FROM Order_Detail od "
+                + "INNER JOIN [Order] o ON o.id = od.order_id "
+                + "INNER JOIN Shipment s ON o.shipment_id = s.id "
+                + "INNER JOIN Product_Variant pv ON pv.id = od.variant_id "
+                + "LEFT JOIN Product p ON p.id = pv.product_id "
+                + "WHERE o.user_id = ? "
+                + "AND pv.product_id = ? "
+                + "AND s.shipping_status IN ('DELIVERED', 'SUCCESS') "
+                + "AND NOT EXISTS ("
+                + "    SELECT 1 FROM Feedback f "
+                + "    WHERE f.user_id = ? "
+                + "    AND f.product_id = ? "
+                + "    AND f.order_id = o.id"
+                + ") "
+                + "AND NOT EXISTS ("
+                + "    SELECT 1 FROM Return_Request_Item rri "
+                + "    INNER JOIN Return_Request rr ON rr.id = rri.return_request_id "
+                + "    WHERE rri.order_detail_id = od.id "
+                + "    AND rr.status = 'COMPLETED'"
+                + ")"
+                + ") "
+                + "SELECT id, order_id, variant_id, product_name_snapshot, "
+                + "variant_attributes_snapshot, quantity, price, product_id, "
+                + "product_name, order_code "
+                + "FROM EligibleDetails "
+                + "WHERE row_num = 1 "
+                + "ORDER BY created_at DESC, id DESC";
+
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ps.setInt(2, productId);
+            ps.setInt(3, userId);
+            ps.setInt(4, productId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -259,71 +323,12 @@ public class CustomerFeedbackDAO {
                     list.add(detail);
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return list;
-    }
-
-    private boolean hasEligibleDeliveredOrderDetail(int userId, int productId, int orderDetailId) {
-        String sql = "SELECT TOP 1 1 "
-                + "FROM Order_Detail od "
-                + "INNER JOIN [Order] o ON o.id = od.order_id "
-                + "INNER JOIN Shipment s ON o.shipment_id = s.id "
-                + "LEFT JOIN Product_Variant pv ON pv.id = od.variant_id "
-                + "WHERE o.user_id = ? "
-                + "AND od.id = ? "
-                + "AND (pv.product_id = ? OR pv.product_id IS NULL) "
-                + "AND s.shipping_status IN ('DELIVERED', 'SUCCESS')";
-
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, orderDetailId);
-            ps.setInt(3, productId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    private boolean hasFeedbackForOrderDetail(int userId, int orderDetailId) {
-        String sql = "SELECT COUNT(*) total FROM Feedback WHERE user_id = ? AND order_detail_id = ?";
-
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, orderDetailId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("total") > 0;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    private boolean hasCompletedReturnForOrderDetail(int orderDetailId) {
-        String sql = "SELECT TOP 1 1 FROM Return_Request_Item rri "
-                + "INNER JOIN Return_Request rr ON rr.id = rri.return_request_id "
-                + "WHERE rri.order_detail_id = ? AND rr.status = 'COMPLETED'";
-
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, orderDetailId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
     }
 
     /**
@@ -422,38 +427,42 @@ public class CustomerFeedbackDAO {
 
         String sql = "SELECT TOP 1 od.id "
                 + "FROM [Order] o "
-                + "INNER JOIN Shipment s "
-                + "ON o.shipment_id = s.id "
-                + "INNER JOIN Order_Detail od "
-                + "ON o.id = od.order_id "
-                + "INNER JOIN Product_Variant pv "
-                + "ON od.variant_id = pv.id "
+                + "INNER JOIN Shipment s ON o.shipment_id = s.id "
+                + "INNER JOIN Order_Detail od ON o.id = od.order_id "
+                + "INNER JOIN Product_Variant pv ON od.variant_id = pv.id "
                 + "WHERE o.user_id = ? "
                 + "AND pv.product_id = ? "
                 + "AND s.shipping_status IN ('DELIVERED', 'SUCCESS') "
-                + "AND NOT EXISTS (SELECT 1 FROM Feedback f WHERE f.user_id = ? AND f.order_detail_id = od.id) "
-                + "AND NOT EXISTS (SELECT 1 FROM Return_Request_Item rri INNER JOIN Return_Request rr ON rr.id = rri.return_request_id WHERE rri.order_detail_id = od.id AND rr.status = 'COMPLETED') "
-                + "ORDER BY o.created_at DESC";
+                + "AND NOT EXISTS ("
+                + "    SELECT 1 FROM Feedback f "
+                + "    WHERE f.user_id = ? "
+                + "    AND f.product_id = ? "
+                + "    AND f.order_id = o.id"
+                + ") "
+                + "AND NOT EXISTS ("
+                + "    SELECT 1 FROM Return_Request_Item rri "
+                + "    INNER JOIN Return_Request rr ON rr.id = rri.return_request_id "
+                + "    WHERE rri.order_detail_id = od.id "
+                + "    AND rr.status = 'COMPLETED'"
+                + ") "
+                + "ORDER BY o.created_at DESC, od.id DESC";
 
-        try (
-                Connection con = DBConnection.getConnection();
+        try (Connection con = DBConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
             ps.setInt(2, productId);
+            ps.setInt(3, userId);
+            ps.setInt(4, productId);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                return rs.getInt("id");
-
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
             }
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
 
         return null;
@@ -488,59 +497,88 @@ public class CustomerFeedbackDAO {
      */
     public boolean createFeedback(Feedback feedback) {
 
+        if (feedback.getOrderId() == null) {
+            return false;
+        }
+
         String sql = "INSERT INTO Feedback ("
-                + "user_id, "
-                + "product_id, "
-                + "order_id, "
-                + "order_detail_id, "
-                + "variant_id, "
-                + "size, "
-                + "color, "
-                + "rating, "
-                + "comment, "
-                + "status"
+                + "user_id, product_id, order_id, order_detail_id, variant_id, "
+                + "size, color, rating, comment, status"
                 + ") "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?)";
+                + "SELECT ?,?,?,?,?,?,?,?,?,? "
+                + "WHERE NOT EXISTS ("
+                + "    SELECT 1 FROM Feedback WITH (UPDLOCK, HOLDLOCK) "
+                + "    WHERE user_id = ? "
+                + "    AND product_id = ? "
+                + "    AND order_id = ?"
+                + ")";
 
-        try (
-                Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection()) {
 
-            ps.setInt(1, feedback.getUserId());
-            ps.setInt(2, feedback.getProductId());
+            boolean originalAutoCommit = con.getAutoCommit();
+            int originalIsolation = con.getTransactionIsolation();
 
-            if (feedback.getOrderId() == null) {
-                ps.setNull(3, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(3, feedback.getOrderId());
+            try {
+                con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+                con.setAutoCommit(false);
+
+                int insertedRows;
+
+                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                    ps.setInt(1, feedback.getUserId());
+                    ps.setInt(2, feedback.getProductId());
+                    ps.setInt(3, feedback.getOrderId());
+
+                    if (feedback.getOrderDetailId() == null) {
+                        ps.setNull(4, java.sql.Types.INTEGER);
+                    } else {
+                        ps.setInt(4, feedback.getOrderDetailId());
+                    }
+
+                    if (feedback.getVariantId() == null) {
+                        ps.setNull(5, java.sql.Types.INTEGER);
+                    } else {
+                        ps.setInt(5, feedback.getVariantId());
+                    }
+
+                    ps.setString(6, feedback.getSize());
+                    ps.setString(7, feedback.getColor());
+                    ps.setInt(8, feedback.getRating());
+                    ps.setString(9, feedback.getComment());
+                    ps.setBoolean(10, feedback.isVisible());
+
+                    // Khóa nghiệp vụ: cùng user + order + product chỉ insert một lần.
+                    ps.setInt(11, feedback.getUserId());
+                    ps.setInt(12, feedback.getProductId());
+                    ps.setInt(13, feedback.getOrderId());
+
+                    insertedRows = ps.executeUpdate();
+                }
+
+                con.commit();
+                return insertedRows > 0;
+
+            } catch (Exception e) {
+                try {
+                    con.rollback();
+                } catch (Exception rollbackException) {
+                    rollbackException.printStackTrace();
+                }
+
+                e.printStackTrace();
+                return false;
+
+            } finally {
+                try {
+                    con.setTransactionIsolation(originalIsolation);
+                    con.setAutoCommit(originalAutoCommit);
+                } catch (Exception restoreException) {
+                    restoreException.printStackTrace();
+                }
             }
-
-            if (feedback.getOrderDetailId() == null) {
-                ps.setNull(4, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(4, feedback.getOrderDetailId());
-            }
-
-            if (feedback.getVariantId() == null) {
-                ps.setNull(5, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(5, feedback.getVariantId());
-            }
-
-            ps.setString(6, feedback.getSize());
-            ps.setString(7, feedback.getColor());
-            ps.setInt(8, feedback.getRating());
-            ps.setString(9, feedback.getComment());
-
-            // Feedback mới mặc định hiển thị
-            ps.setBoolean(10, feedback.isVisible());
-
-            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
 
         return false;

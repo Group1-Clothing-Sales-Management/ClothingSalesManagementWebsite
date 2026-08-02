@@ -72,7 +72,7 @@
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <div>
                         <div class="fw-bold" style="font-size:1rem;">Update product information</div>
-                        <div class="text-muted mt-1" style="font-size:.82rem;">Edit only the fields that your role is allowed to change</div>
+                        
                     </div>
                     <span class="badge px-3 py-2 rounded-pill <%= statusClass %>"><%= product.getStatus() %></span>
                 </div>

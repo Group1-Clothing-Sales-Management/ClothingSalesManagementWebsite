@@ -77,7 +77,7 @@
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
                         <div class="fw-bold text-dark"><i class="bi bi-box-seam me-2 text-primary"></i>Products with feedback</div>
-                        <div class="subtext mt-1">Feedback is grouped by product for faster follow-up.</div>
+                        
                     </div>
                     <div class="d-flex gap-2">
                         <span class="badge rounded-pill text-bg-primary px-3 py-2">${fn:length(productGroups)} products</span>

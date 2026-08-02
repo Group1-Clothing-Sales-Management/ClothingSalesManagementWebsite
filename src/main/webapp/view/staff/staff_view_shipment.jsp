@@ -46,6 +46,12 @@
                 </div>
                 <% session.removeAttribute("successMsg"); %>
             </c:if>
+            <c:if test="${not empty sessionScope.errorMsg}">
+                <div class="d-none" data-app-toast data-app-toast-type="error">
+                    <c:out value="${sessionScope.errorMsg}"/>
+                </div>
+                <% session.removeAttribute("errorMsg"); %>
+            </c:if>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
@@ -129,15 +135,28 @@
     </c:choose>
 </td>
                                                 <td class="text-center">
-    <c:choose>
-        <c:when test="${s.shippingStatus == 'SUCCESS' || s.shippingStatus == 'SUCCESSFUL' || s.shippingStatus == 'Success' || s.shippingStatus == 'FAILURE' || s.shippingStatus == 'Failure' || s.shippingStatus == 'FAILED'}">
-            <button class="btn btn-sm btn-secondary" disabled>Completed</button>
-        </c:when>
-        <c:otherwise>
-            <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&id=${s.shipmentId}" class="btn btn-sm btn-success">Update Status</a>
-        </c:otherwise>
-    </c:choose>
-</td>
+                                                    <c:choose>
+                                                        <c:when test="${s.shippingStatus == 'FAILED' and s.returnInspectionStatus == 'PENDING_INSPECTION'}">
+                                                            <a href="${pageContext.request.contextPath}/staff/shipments?action=inspectReturn&amp;id=${s.shipmentId}"
+                                                               class="btn btn-sm btn-warning fw-semibold">
+                                                                Inspect Return
+                                                            </a>
+                                                        </c:when>
+                                                        <c:when test="${s.shippingStatus == 'FAILED' and s.returnInspectionStatus == 'COMPLETED'}">
+                                                            <button class="btn btn-sm btn-secondary" disabled>Return Processed</button>
+                                                        </c:when>
+                                                        <c:when test="${s.shippingStatus == 'FAILED'}">
+                                                            <button class="btn btn-sm btn-outline-secondary" disabled title="This legacy failed delivery has no inspection record.">Legacy Failure</button>
+                                                        </c:when>
+                                                        <c:when test="${s.shippingStatus == 'SUCCESS' || s.shippingStatus == 'SUCCESSFUL' || s.shippingStatus == 'Success'}">
+                                                            <button class="btn btn-sm btn-secondary" disabled>Completed</button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <a href="${pageContext.request.contextPath}/staff/shipments?action=confirmForm&amp;id=${s.shipmentId}"
+                                                               class="btn btn-sm btn-success">Update Status</a>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>

@@ -16,6 +16,7 @@ public class StaffShipment {
     private BigDecimal shippingCost;
     private Timestamp estimatedDeliveryTime;
     private String note;
+    private String returnInspectionStatus;
 
     public StaffShipment() {
     }
@@ -115,5 +116,13 @@ public class StaffShipment {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getReturnInspectionStatus() {
+        return returnInspectionStatus;
+    }
+
+    public void setReturnInspectionStatus(String returnInspectionStatus) {
+        this.returnInspectionStatus = returnInspectionStatus;
     }
 }
