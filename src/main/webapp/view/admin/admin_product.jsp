@@ -291,7 +291,7 @@
 
                 <div class="card card-main admin-card p-4">
                     <div class="mb-3">
-                        <h3 class="h5 mb-0 fw-bold text-dark">
+                        <h3 class="h6 mb-0 fw-bold text-dark">
                             <i class="fa-solid fa-list me-2 text-secondary"></i>Product Catalog List
                         </h3>
                     </div>

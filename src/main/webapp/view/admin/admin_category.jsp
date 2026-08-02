@@ -436,71 +436,10 @@
             </c:when>
         </c:choose>
 
-        <div class="row g-3 mb-4">
-            <div class="col-sm-6 col-xl-3">
-                <div class="category-summary-card d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="category-summary-label">Total Categories</div>
-                        <p class="category-summary-value">${totalCategoryCount}</p>
-                    </div>
-                    <span class="category-summary-icon">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </span>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-3">
-                <div class="category-summary-card d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="category-summary-label">Root Categories</div>
-                        <p class="category-summary-value">${rootCategoryCount}</p>
-                    </div>
-                    <span class="category-summary-icon">
-                        <i class="fa-solid fa-folder-tree"></i>
-                    </span>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-3">
-                <div class="category-summary-card d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="category-summary-label">Subcategories</div>
-                        <p class="category-summary-value">${subcategoryCount}</p>
-                    </div>
-                    <span class="category-summary-icon">
-                        <i class="fa-solid fa-code-branch"></i>
-                    </span>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-3">
-                <div class="category-summary-card d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="category-summary-label">Active / Inactive</div>
-                        <p class="category-summary-value">
-                            ${activeCategoryCount} / ${inactiveCategoryCount}
-                        </p>
-                    </div>
-                    <span class="category-summary-icon">
-                        <i class="fa-solid fa-toggle-on"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
+       
 
         <div class="card card-main admin-card">
-            <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <div>
-                    <h2 class="h6 fw-bold mb-1">Category List</h2>
-                    <p class="text-muted small mb-0">
-                        The customer header displays active root categories and their active subcategories.
-                    </p>
-                </div>
-                <span class="text-muted small" id="visibleCategoryCount">
-                    ${totalCategoryCount} categories
-                </span>
-            </div>
-
+       
             <div class="category-toolbar">
                 <div class="category-filter-grid">
                     <div class="input-group">

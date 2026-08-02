@@ -126,63 +126,7 @@
                     </div>
                 </c:if>
 
-                <div class="row g-3 mb-4">
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card summary-card h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="summary-icon bg-primary-subtle text-primary me-3">
-                                    <i class="fa-solid fa-boxes-stacked"></i>
-                                </div>
-                                <div>
-                                    <div class="text-muted small">Total Variants</div>
-                                    <div class="fs-4 fw-bold">${totalCount}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card summary-card h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="summary-icon bg-secondary-subtle text-secondary me-3">
-                                    <i class="fa-solid fa-circle-question"></i>
-                                </div>
-                                <div>
-                                    <div class="text-muted small">Unpriced</div>
-                                    <div class="fs-4 fw-bold">${unpricedCount}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card summary-card h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="summary-icon bg-danger-subtle text-danger me-3">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                </div>
-                                <div>
-                                    <div class="text-muted small">Below Cost</div>
-                                    <div class="fs-4 fw-bold">${belowCostCount}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card summary-card h-100">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="summary-icon bg-success-subtle text-success me-3">
-                                    <i class="fa-solid fa-percent"></i>
-                                </div>
-                                <div>
-                                    <div class="text-muted small">Discounted</div>
-                                    <div class="fs-4 fw-bold">${discountedCount}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
 
                 <div class="card filter-card price-filter-panel mb-4">
                     <div class="card-body">

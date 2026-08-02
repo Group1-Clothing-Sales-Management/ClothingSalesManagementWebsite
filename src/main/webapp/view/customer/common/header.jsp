@@ -145,7 +145,7 @@
                                 <a href="${pageContext.request.contextPath}/customer/returns"
                                    role="menuitem">
                                     <i class="fa-solid fa-rotate-left"></i>
-                                    <span>Returns &amp; Refunds</span>
+                                    <span>Returns</span>
                                 </a>
 
                                 <a href="${pageContext.request.contextPath}/customer/vouchers"
