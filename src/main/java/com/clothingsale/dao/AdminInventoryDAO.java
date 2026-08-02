@@ -469,20 +469,10 @@ public class AdminInventoryDAO {
                         "The supplier does not exist or is inactive."
                 );
 
-                try (
-                        PreparedStatement validateVariant
-                        = connection.prepareStatement(
-                                validateVariantSql
-                        )) {
+                try (PreparedStatement validateVariant= connection.prepareStatement(validateVariantSql)) {
                             for (ImportReceiptDetail detail : details) {
-                                validateVariant.setInt(
-                                        1,
-                                        detail.getVariantId()
-                                );
-
-                                try (
-                                        ResultSet resultSet
-                                        = validateVariant.executeQuery()) {
+                                validateVariant.setInt(1,detail.getVariantId());
+                                try (  ResultSet resultSet= validateVariant.executeQuery()) {
                                     if (!resultSet.next()) {
                                         throw new SQLException(
                                                 "Product variant #"
@@ -498,11 +488,7 @@ public class AdminInventoryDAO {
                         int receiptId;
 
                         try (
-                                PreparedStatement insertReceipt
-                                = connection.prepareStatement(
-                                        insertReceiptSql,
-                                        Statement.RETURN_GENERATED_KEYS
-                                )) {
+                                PreparedStatement insertReceipt= connection.prepareStatement(insertReceiptSql, Statement.RETURN_GENERATED_KEYS)) {
                                     insertReceipt.setString(1, receiptCode);
                                     insertReceipt.setInt(2, supplierId);
                                     insertReceipt.setInt(3, userId);
@@ -634,7 +620,7 @@ public class AdminInventoryDAO {
          * Cập nhật:
          * - stock_quantity
          * - cost_price theo giá vốn bình quân
-         * Không cập nhật sale_price.
+       
          */
         String updateVariantSql
                 = "UPDATE Product_Variant "
@@ -1142,7 +1128,7 @@ public class AdminInventoryDAO {
         try {
             connection.rollback();
         } catch (SQLException ignored) {
-            // Giữ lại exception ban đầu.
+            
         }
     }
 }

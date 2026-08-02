@@ -2,6 +2,9 @@ package com.clothingsale.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
 public class Voucher {
@@ -9,23 +12,40 @@ public class Voucher {
     private int id;
     private String code;
     private String title;
-
     private String discountType;
     private BigDecimal discountValue;
-
     private BigDecimal maxDiscountAmount;
     private BigDecimal minOrderValue;
-
     private Timestamp startDate;
     private Timestamp endDate;
     private int usageLimit;
     private int usedCount;
     private int limitPerUser;
     private String terminateReason;
+
+    /*
+     * Multi-category scope:
+     * - categoryId == null: entire store.
+     * - categoryId != null: selected parent/group category.
+     * - selectedCategoryIds: the categories that actually receive the voucher.
+     *
+     * Voucher.category_id is retained as the selected parent/group so the
+     * existing database can be migrated without dropping the column.
+     */
     private Integer categoryId;
     private String categoryName;
+    private Integer categoryParentId;
+    private boolean categoryHasChildren;
+    private boolean categoryScopeActive = true;
+    private List<Integer> selectedCategoryIds = new ArrayList<>();
+    private List<String> selectedCategoryNames = new ArrayList<>();
+
     private int userUsedCount;
+    private BigDecimal applicableSubtotal = BigDecimal.ZERO;
     private BigDecimal applicableDiscount = BigDecimal.ZERO;
+    private BigDecimal amountNeeded = BigDecimal.ZERO;
+    private boolean eligibleForCheckout;
+    private String checkoutIneligibilityReason;
 
     public Voucher() {
     }
@@ -151,7 +171,7 @@ public class Voucher {
     }
 
     public boolean isAvailable() {
-        return usedCount < usageLimit;
+        return usageLimit > 0 && usedCount < usageLimit;
     }
 
     public int getLimitPerUser() {
@@ -186,6 +206,66 @@ public class Voucher {
         this.categoryName = categoryName;
     }
 
+    public Integer getCategoryParentId() {
+        return categoryParentId;
+    }
+
+    public void setCategoryParentId(Integer categoryParentId) {
+        this.categoryParentId = categoryParentId;
+    }
+
+    public boolean isCategoryHasChildren() {
+        return categoryHasChildren;
+    }
+
+    public void setCategoryHasChildren(boolean categoryHasChildren) {
+        this.categoryHasChildren = categoryHasChildren;
+    }
+
+    public boolean isCategoryScopeActive() {
+        return categoryScopeActive;
+    }
+
+    public void setCategoryScopeActive(boolean categoryScopeActive) {
+        this.categoryScopeActive = categoryScopeActive;
+    }
+
+    public List<Integer> getSelectedCategoryIds() {
+        return selectedCategoryIds;
+    }
+
+    public void setSelectedCategoryIds(List<Integer> selectedCategoryIds) {
+        this.selectedCategoryIds = selectedCategoryIds == null
+                ? new ArrayList<>()
+                : new ArrayList<>(selectedCategoryIds);
+    }
+
+    public void addSelectedCategoryId(Integer categoryId) {
+        if (categoryId != null && !selectedCategoryIds.contains(categoryId)) {
+            selectedCategoryIds.add(categoryId);
+        }
+    }
+
+    public List<String> getSelectedCategoryNames() {
+        return selectedCategoryNames;
+    }
+
+    public void setSelectedCategoryNames(List<String> selectedCategoryNames) {
+        this.selectedCategoryNames = selectedCategoryNames == null
+                ? new ArrayList<>()
+                : new ArrayList<>(selectedCategoryNames);
+    }
+
+    public void addSelectedCategoryName(String categoryName) {
+        if (categoryName != null && !categoryName.trim().isEmpty()) {
+            selectedCategoryNames.add(categoryName.trim());
+        }
+    }
+
+    public int getSelectedCategoryCount() {
+        return selectedCategoryIds == null ? 0 : selectedCategoryIds.size();
+    }
+
     public int getUserUsedCount() {
         return userUsedCount;
     }
@@ -194,30 +274,113 @@ public class Voucher {
         this.userUsedCount = userUsedCount;
     }
 
+    public BigDecimal getApplicableSubtotal() {
+        return applicableSubtotal;
+    }
+
+    public void setApplicableSubtotal(BigDecimal applicableSubtotal) {
+        this.applicableSubtotal = safeMoney(applicableSubtotal);
+    }
+
     public BigDecimal getApplicableDiscount() {
         return applicableDiscount;
     }
 
     public void setApplicableDiscount(BigDecimal applicableDiscount) {
-        this.applicableDiscount = applicableDiscount == null
-                ? BigDecimal.ZERO
-                : applicableDiscount;
+        this.applicableDiscount = safeMoney(applicableDiscount);
+    }
+
+    public BigDecimal getAmountNeeded() {
+        return amountNeeded;
+    }
+
+    public void setAmountNeeded(BigDecimal amountNeeded) {
+        this.amountNeeded = safeMoney(amountNeeded);
+    }
+
+    public boolean isEligibleForCheckout() {
+        return eligibleForCheckout;
+    }
+
+    public void setEligibleForCheckout(boolean eligibleForCheckout) {
+        this.eligibleForCheckout = eligibleForCheckout;
+    }
+
+    public String getCheckoutIneligibilityReason() {
+        return checkoutIneligibilityReason;
+    }
+
+    public void setCheckoutIneligibilityReason(String checkoutIneligibilityReason) {
+        this.checkoutIneligibilityReason = checkoutIneligibilityReason;
+    }
+
+    public boolean isGlobalScope() {
+        return categoryId == null;
+    }
+
+    public boolean isRootCategoryScope() {
+        return categoryId != null;
+    }
+
+    public String getScopeLabel() {
+        if (isGlobalScope()) {
+            return "Entire Store";
+        }
+
+        if (selectedCategoryNames == null || selectedCategoryNames.isEmpty()) {
+            String parent = categoryName == null || categoryName.trim().isEmpty()
+                    ? "Selected categories"
+                    : categoryName.trim();
+            return parent;
+        }
+
+        StringJoiner joiner = new StringJoiner(", ");
+        for (String selectedName : selectedCategoryNames) {
+            if (selectedName != null && !selectedName.trim().isEmpty()) {
+                joiner.add(selectedName.trim());
+            }
+        }
+
+        String selectedText = joiner.toString();
+        if (selectedText.isEmpty()) {
+            return "Selected categories";
+        }
+
+        return selectedText;
+    }
+
+    public String getScopeGroupLabel() {
+        if (isGlobalScope()) {
+            return "Entire Store";
+        }
+
+        String parent = categoryName == null || categoryName.trim().isEmpty()
+                ? "Category group"
+                : categoryName.trim();
+        return parent + " · " + getSelectedCategoryCount() + " selected";
     }
 
     public String getCustomerStatus() {
         long now = System.currentTimeMillis();
 
-        if (userUsedCount > 0) {
+        if (limitPerUser > 0 && userUsedCount >= limitPerUser) {
             return "USED";
         }
 
-        if (startDate == null
-                || startDate.getTime() > now
-                || endDate == null
-                || endDate.getTime() < now
-                || usedCount >= usageLimit) {
-
+        if (startDate == null || endDate == null) {
             return "EXPIRED";
+        }
+
+        if (startDate.getTime() > now) {
+            return "UPCOMING";
+        }
+
+        if (endDate.getTime() < now) {
+            return "EXPIRED";
+        }
+
+        if (!isAvailable()) {
+            return "EXHAUSTED";
         }
 
         return "AVAILABLE";
@@ -237,5 +400,9 @@ public class Voucher {
                         / (double) TimeUnit.DAYS.toMillis(1)
                 )
         );
+    }
+
+    private BigDecimal safeMoney(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

@@ -419,6 +419,8 @@ CREATE TABLE dbo.Voucher (
     limit_per_user INT NOT NULL
         CONSTRAINT DF_Voucher_LimitPerUser DEFAULT (1),
     terminate_reason NVARCHAR(255) NULL,
+    -- NULL means global scope. Otherwise this stores the selected root/group
+    -- category; actual applicable categories are stored in Voucher_Category_Scope.
     category_id INT NULL,
     CONSTRAINT PK_Voucher PRIMARY KEY (id),
     CONSTRAINT UQ_Voucher_Code UNIQUE (code),
@@ -441,6 +443,22 @@ CREATE TABLE dbo.Voucher (
     CONSTRAINT FK_Voucher_Category FOREIGN KEY (category_id)
         REFERENCES dbo.Category(id)
 );
+
+CREATE TABLE dbo.Voucher_Category_Scope (
+    voucher_id INT NOT NULL,
+    category_id INT NOT NULL,
+    CONSTRAINT PK_Voucher_Category_Scope
+        PRIMARY KEY (voucher_id, category_id),
+    CONSTRAINT FK_VoucherCategoryScope_Voucher
+        FOREIGN KEY (voucher_id)
+        REFERENCES dbo.Voucher(id) ON DELETE CASCADE,
+    CONSTRAINT FK_VoucherCategoryScope_Category
+        FOREIGN KEY (category_id)
+        REFERENCES dbo.Category(id)
+);
+
+CREATE INDEX IX_VoucherCategoryScope_Category
+    ON dbo.Voucher_Category_Scope(category_id, voucher_id);
 
 CREATE TABLE dbo.Shipment (
     id INT IDENTITY(1,1) NOT NULL,

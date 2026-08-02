@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.HashSet;
 
 public class CustomerOrderService {
 
@@ -74,15 +75,18 @@ public class CustomerOrderService {
     }
 
     public Voucher getAvailableVoucherForUser(int userId, String code) {
-        if (code == null) {
+        if (code == null || code.trim().isEmpty()) {
             return null;
         }
+
         for (Voucher voucher : dao.getVouchersForUser(userId)) {
             if (code.trim().equalsIgnoreCase(voucher.getCode())
-                    && "AVAILABLE".equals(voucher.getCustomerStatus())) {
+                    && "AVAILABLE".equals(voucher.getCustomerStatus())
+                    && voucher.isCategoryScopeActive()) {
                 return voucher;
             }
         }
+
         return null;
     }
 
@@ -90,45 +94,130 @@ public class CustomerOrderService {
         return dao.getVouchersForUser(userId);
     }
 
+    /**
+     * Prepares every voucher for the checkout modal. Each voucher receives its
+     * eligible subtotal, estimated discount, usable state and a user-facing
+     * reason when it cannot be selected.
+     */
+    public List<Voucher> getCheckoutVouchers(
+            int userId,
+            List<CartItem> cartItems) {
+
+        List<Voucher> vouchers = dao.getVouchersForUser(userId);
+        Map<Integer, Integer> categoryParentMap
+                = dao.getActiveCategoryParentMap();
+
+        for (Voucher voucher : vouchers) {
+            BigDecimal applicableSubtotal = calculateApplicableSubtotal(
+                    cartItems,
+                    voucher,
+                    categoryParentMap
+            );
+
+            voucher.setApplicableSubtotal(applicableSubtotal);
+            voucher.setApplicableDiscount(BigDecimal.ZERO);
+            voucher.setAmountNeeded(BigDecimal.ZERO);
+            voucher.setEligibleForCheckout(false);
+            voucher.setCheckoutIneligibilityReason(null);
+
+            String status = voucher.getCustomerStatus();
+
+            if (!voucher.isCategoryScopeActive()) {
+                voucher.setCheckoutIneligibilityReason(
+                        "The voucher category is currently inactive."
+                );
+                continue;
+            }
+
+            if ("USED".equals(status)) {
+                voucher.setCheckoutIneligibilityReason(
+                        "You have reached the usage limit for this voucher."
+                );
+                continue;
+            }
+
+            if ("UPCOMING".equals(status)) {
+                voucher.setCheckoutIneligibilityReason(
+                        "This voucher campaign has not started yet."
+                );
+                continue;
+            }
+
+            if ("EXHAUSTED".equals(status)) {
+                voucher.setCheckoutIneligibilityReason(
+                        "This voucher has reached its total usage limit."
+                );
+                continue;
+            }
+
+            if (!"AVAILABLE".equals(status)) {
+                voucher.setCheckoutIneligibilityReason(
+                        "This voucher is expired or no longer available."
+                );
+                continue;
+            }
+
+            if (applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0) {
+                voucher.setCheckoutIneligibilityReason(
+                        "No product in your checkout belongs to the applicable category."
+                );
+                continue;
+            }
+
+            BigDecimal minimumSpend = safeMoney(voucher.getMinOrderValue());
+            if (applicableSubtotal.compareTo(minimumSpend) < 0) {
+                voucher.setAmountNeeded(
+                        minimumSpend.subtract(applicableSubtotal)
+                                .max(BigDecimal.ZERO)
+                );
+                voucher.setCheckoutIneligibilityReason(
+                        "The eligible product value has not reached the minimum spend."
+                );
+                continue;
+            }
+
+            voucher.setApplicableDiscount(
+                    calculateDiscount(applicableSubtotal, voucher)
+            );
+            voucher.setEligibleForCheckout(true);
+        }
+
+        vouchers.sort((first, second) -> {
+            if (first.isEligibleForCheckout() != second.isEligibleForCheckout()) {
+                return first.isEligibleForCheckout() ? -1 : 1;
+            }
+
+            int discountCompare = second.getApplicableDiscount()
+                    .compareTo(first.getApplicableDiscount());
+            if (discountCompare != 0) {
+                return discountCompare;
+            }
+
+            if (first.getEndDate() == null && second.getEndDate() == null) {
+                return 0;
+            }
+            if (first.getEndDate() == null) {
+                return 1;
+            }
+            if (second.getEndDate() == null) {
+                return -1;
+            }
+            return first.getEndDate().compareTo(second.getEndDate());
+        });
+
+        return vouchers;
+    }
+
     public List<Voucher> getEligibleVouchers(
             int userId,
             List<CartItem> cartItems) {
 
         List<Voucher> eligible = new ArrayList<>();
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-
-        for (Voucher voucher : dao.getVouchersForUser(userId)) {
-            boolean active = voucher.getStartDate() != null
-                    && voucher.getEndDate() != null
-                    && !now.before(voucher.getStartDate())
-                    && !now.after(voucher.getEndDate());
-
-            BigDecimal applicableSubtotal
-                    = calculateApplicableSubtotal(cartItems, voucher);
-
-            if (active
-                    && voucher.isAvailable()
-                    && voucher.getUserUsedCount() == 0
-                    && voucher.getMinOrderValue() != null
-                    && applicableSubtotal.compareTo(BigDecimal.ZERO) > 0
-                    && applicableSubtotal.compareTo(
-                            voucher.getMinOrderValue()) >= 0) {
-
-                voucher.setApplicableDiscount(
-                        calculateDiscount(
-                                applicableSubtotal,
-                                voucher
-                        )
-                );
+        for (Voucher voucher : getCheckoutVouchers(userId, cartItems)) {
+            if (voucher.isEligibleForCheckout()) {
                 eligible.add(voucher);
             }
         }
-
-        eligible.sort(
-                (a, b) -> b.getApplicableDiscount()
-                        .compareTo(a.getApplicableDiscount())
-        );
-
         return eligible;
     }
 
@@ -147,8 +236,8 @@ public class CustomerOrderService {
                 addressId,
                 voucherCode,
                 note,
-                paymentMethod,
-                carrierName,
+                "COD",
+                "GHN",
                 selectedVariantIds
         );
     }
@@ -167,9 +256,10 @@ public class CustomerOrderService {
                 addressId,
                 voucherCode,
                 note,
-                paymentMethod,
-                carrierName,
-                cartItems);
+                "COD",
+                "GHN",
+                cartItems
+        );
     }
 
     public boolean cancelOrder(int orderId, int userId) {
@@ -180,13 +270,26 @@ public class CustomerOrderService {
             List<CartItem> cartItems,
             Voucher voucher) {
 
+        return calculateApplicableSubtotal(
+                cartItems,
+                voucher,
+                dao.getActiveCategoryParentMap()
+        );
+    }
+
+    private BigDecimal calculateApplicableSubtotal(
+            List<CartItem> cartItems,
+            Voucher voucher,
+            Map<Integer, Integer> categoryParentMap) {
+
         if (cartItems == null || cartItems.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        Integer voucherCategoryId = voucher != null
-                ? voucher.getCategoryId()
-                : null;
+        boolean globalScope = voucher == null || voucher.isGlobalScope();
+        List<Integer> selectedCategoryIds = voucher == null
+                ? Collections.emptyList()
+                : voucher.getSelectedCategoryIds();
 
         BigDecimal applicableSubtotal = BigDecimal.ZERO;
 
@@ -194,13 +297,14 @@ public class CustomerOrderService {
             if (item == null
                     || item.getPrice() == null
                     || item.getQuantity() <= 0) {
-
                 continue;
             }
 
-            if (voucherCategoryId != null
-                    && item.getCategoryId() != voucherCategoryId) {
-
+            if (!isCategoryWithinScope(
+                    item.getCategoryId(),
+                    globalScope,
+                    selectedCategoryIds,
+                    categoryParentMap)) {
                 continue;
             }
 
@@ -214,6 +318,42 @@ public class CustomerOrderService {
         return applicableSubtotal;
     }
 
+    private boolean isCategoryWithinScope(
+            int productCategoryId,
+            boolean globalScope,
+            List<Integer> selectedCategoryIds,
+            Map<Integer, Integer> categoryParentMap) {
+
+        if (globalScope) {
+            return true;
+        }
+
+        if (productCategoryId <= 0
+                || selectedCategoryIds == null
+                || selectedCategoryIds.isEmpty()
+                || categoryParentMap == null
+                || !categoryParentMap.containsKey(productCategoryId)) {
+            return false;
+        }
+
+        Set<Integer> scopeIds = new HashSet<>(selectedCategoryIds);
+        Integer currentCategoryId = productCategoryId;
+        Set<Integer> visited = new HashSet<>();
+
+        while (currentCategoryId != null && visited.add(currentCategoryId)) {
+            if (scopeIds.contains(currentCategoryId)) {
+                return true;
+            }
+            currentCategoryId = categoryParentMap.get(currentCategoryId);
+        }
+
+        return false;
+    }
+
+    private BigDecimal safeMoney(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
     public BigDecimal calculateDiscount(
             BigDecimal applicableSubtotal,
             Voucher voucher) {
@@ -221,17 +361,14 @@ public class CustomerOrderService {
         if (voucher == null
                 || applicableSubtotal == null
                 || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
-                || voucher.getMinOrderValue() == null
                 || applicableSubtotal.compareTo(
-                        voucher.getMinOrderValue()) < 0) {
-
+                        safeMoney(voucher.getMinOrderValue())) < 0) {
             return BigDecimal.ZERO;
         }
 
         BigDecimal discountValue = voucher.getDiscountValue();
         if (discountValue == null
                 || discountValue.compareTo(BigDecimal.ZERO) <= 0) {
-
             return BigDecimal.ZERO;
         }
 

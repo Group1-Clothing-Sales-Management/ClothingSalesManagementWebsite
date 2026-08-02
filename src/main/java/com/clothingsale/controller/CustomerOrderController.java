@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +24,8 @@ public class CustomerOrderController extends HttpServlet {
 
     private static final String CHECKOUT_VIEW = "/view/customer/customer_checkout.jsp";
     private static final BigDecimal SHIPPING_FEE = BigDecimal.valueOf(30000);
+    private static final String PAYMENT_METHOD = "COD";
+    private static final String CARRIER_NAME = "GHN";
 
     private final CustomerOrderService service = new CustomerOrderService();
 
@@ -120,8 +121,8 @@ public class CustomerOrderController extends HttpServlet {
         String action = trimToEmpty(request.getParameter("action"));
 
         String selectedAddressId = trimToNull(request.getParameter("selectedAddressId"));
-        String selectedCarrierName = trimToNull(request.getParameter("selectedCarrierName"));
-        String selectedPaymentMethod = trimToNull(request.getParameter("selectedPaymentMethod"));
+        String selectedCarrierName = CARRIER_NAME;
+        String selectedPaymentMethod = PAYMENT_METHOD;
         String checkoutNote = request.getParameter("checkoutNote");
 
         if ("applyVoucher".equals(action)) {
@@ -190,8 +191,8 @@ public class CustomerOrderController extends HttpServlet {
                     cartTotal,
                     voucherCode,
                     String.valueOf(addressId),
-                    request.getParameter("carrierName"),
-                    request.getParameter("paymentMethod"),
+                    CARRIER_NAME,
+                    PAYMENT_METHOD,
                     request.getParameter("note"),
                     null
             );
@@ -199,14 +200,8 @@ public class CustomerOrderController extends HttpServlet {
         }
 
         String note = request.getParameter("note");
-        String paymentMethod = defaultIfBlank(
-                request.getParameter("paymentMethod"),
-                "COD"
-        );
-        String carrierName = defaultIfBlank(
-                request.getParameter("carrierName"),
-                "GHN"
-        );
+        String paymentMethod = PAYMENT_METHOD;
+        String carrierName = CARRIER_NAME;
 
         boolean success;
         if (buyNow) {
@@ -335,19 +330,13 @@ public class CustomerOrderController extends HttpServlet {
                 .max(BigDecimal.ZERO);
 
         List<Voucher> customerVouchers
-                = service.getVouchersForUser(userId);
+                = service.getCheckoutVouchers(userId, cartItems);
 
-        Map<Integer, BigDecimal> voucherApplicableSubtotals
-                = new LinkedHashMap<>();
-
+        List<Voucher> suggestedVouchers = new ArrayList<>();
         for (Voucher customerVoucher : customerVouchers) {
-            voucherApplicableSubtotals.put(
-                    customerVoucher.getId(),
-                    service.calculateApplicableSubtotal(
-                            cartItems,
-                            customerVoucher
-                    )
-            );
+            if (customerVoucher.isEligibleForCheckout()) {
+                suggestedVouchers.add(customerVoucher);
+            }
         }
 
         request.setAttribute("addresses", service.getAddressesByUserId(userId));
@@ -358,24 +347,11 @@ public class CustomerOrderController extends HttpServlet {
         request.setAttribute("totalPayment", totalPayment);
         request.setAttribute("voucherCode", voucher != null ? voucher.getCode() : null);
         request.setAttribute("customerVouchers", customerVouchers);
-        request.setAttribute(
-                "voucherApplicableSubtotals",
-                voucherApplicableSubtotals
-        );
-        request.setAttribute(
-                "suggestedVouchers",
-                service.getEligibleVouchers(userId, cartItems)
-        );
+        request.setAttribute("suggestedVouchers", suggestedVouchers);
 
         request.setAttribute("selectedAddressId", selectedAddressId);
-        request.setAttribute(
-                "selectedCarrierName",
-                defaultIfBlank(selectedCarrierName, "GHN")
-        );
-        request.setAttribute(
-                "selectedPaymentMethod",
-                defaultIfBlank(selectedPaymentMethod, "COD")
-        );
+        request.setAttribute("selectedCarrierName", CARRIER_NAME);
+        request.setAttribute("selectedPaymentMethod", PAYMENT_METHOD);
         request.setAttribute("checkoutNote", checkoutNote == null ? "" : checkoutNote);
 
         if (checkoutError != null && !checkoutError.trim().isEmpty()) {

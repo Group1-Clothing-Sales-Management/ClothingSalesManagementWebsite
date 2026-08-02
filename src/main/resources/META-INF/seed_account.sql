@@ -543,6 +543,39 @@ VALUES
  '2026-01-01', '2026-06-30 23:59:59', 100, 0, 1, NULL, NULL);
 GO
 
+/* Build explicit multi-category scope for vouchers inserted above.
+   A voucher that used to target a root category keeps all CURRENT active
+   children. A voucher that targeted one child keeps only that child. */
+INSERT INTO dbo.Voucher_Category_Scope (voucher_id, category_id)
+SELECT DISTINCT
+       v.id,
+       CASE
+           WHEN selectedCategory.parent_id IS NULL AND child.id IS NOT NULL
+               THEN child.id
+           ELSE selectedCategory.id
+       END
+FROM dbo.Voucher v
+INNER JOIN dbo.Category selectedCategory
+        ON selectedCategory.id = v.category_id
+LEFT JOIN dbo.Category child
+       ON selectedCategory.parent_id IS NULL
+      AND child.parent_id = selectedCategory.id
+      AND child.status = 1
+WHERE v.category_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.Voucher_Category_Scope existingScope
+      WHERE existingScope.voucher_id = v.id
+  );
+
+UPDATE v
+SET v.category_id = selectedCategory.parent_id
+FROM dbo.Voucher v
+INNER JOIN dbo.Category selectedCategory
+        ON selectedCategory.id = v.category_id
+WHERE selectedCategory.parent_id IS NOT NULL;
+GO
+
 /* =========================================================================
    X. CART AND WISHLIST
    ========================================================================= */
@@ -1305,6 +1338,39 @@ VALUES
 ('ACCESSORY50', N'50.000 ₫ accessory offer', 'FIXED_AMOUNT', 50000, 50000, 200000,
  '2026-06-01', '2026-12-31 23:59:59', 300, 1, 1, NULL,
  (SELECT id FROM dbo.Category WHERE slug = 'phu-kien'));
+GO
+
+/* Build explicit multi-category scope for vouchers inserted above.
+   A voucher that used to target a root category keeps all CURRENT active
+   children. A voucher that targeted one child keeps only that child. */
+INSERT INTO dbo.Voucher_Category_Scope (voucher_id, category_id)
+SELECT DISTINCT
+       v.id,
+       CASE
+           WHEN selectedCategory.parent_id IS NULL AND child.id IS NOT NULL
+               THEN child.id
+           ELSE selectedCategory.id
+       END
+FROM dbo.Voucher v
+INNER JOIN dbo.Category selectedCategory
+        ON selectedCategory.id = v.category_id
+LEFT JOIN dbo.Category child
+       ON selectedCategory.parent_id IS NULL
+      AND child.parent_id = selectedCategory.id
+      AND child.status = 1
+WHERE v.category_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM dbo.Voucher_Category_Scope existingScope
+      WHERE existingScope.voucher_id = v.id
+  );
+
+UPDATE v
+SET v.category_id = selectedCategory.parent_id
+FROM dbo.Voucher v
+INNER JOIN dbo.Category selectedCategory
+        ON selectedCategory.id = v.category_id
+WHERE selectedCategory.parent_id IS NOT NULL;
 GO
 
 INSERT INTO dbo.Cart (user_id, variant_id, quantity)

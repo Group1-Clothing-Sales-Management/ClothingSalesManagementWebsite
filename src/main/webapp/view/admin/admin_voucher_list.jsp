@@ -110,7 +110,7 @@
                                         <th class="border-top-0 px-4">Code</th>
                                         <th class="border-top-0">Campaign Details & Scope</th>
                                         <th class="border-top-0">Discount Incentives</th>
-                                        <th class="border-top-0">Min Order</th>
+                                        <th class="border-top-0">Min Eligible Spend</th>
                                         <th class="border-top-0">Metrics (Used/Total/User)</th>
                                         <th class="border-top-0">Validity Period</th>
                                         <th class="border-top-0">Status</th>
@@ -135,10 +135,13 @@
                                                         <div class="mt-1">
                                                             <c:choose>
                                                                 <c:when test="${v.categoryId == null}">
-                                                                    <span class="badge text-bg-secondary"><i class="fa-solid fa-globe me-1"></i> Global Scale</span>
+                                                                    <span class="badge text-bg-secondary"><i class="fa-solid fa-globe me-1"></i> Entire Store</span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span class="badge text-bg-info"><i class="fa-solid fa-folder me-1"></i> Category Restricted</span>
+                                                                    <span class="badge text-bg-info"><i class="fa-solid fa-folder-tree me-1"></i> <c:out value="${v.scopeLabel}"/></span>
+                                                                    <c:if test="${not v.categoryScopeActive}">
+                                                                        <span class="badge text-bg-danger ms-1">Inactive scope</span>
+                                                                    </c:if>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>
@@ -183,7 +186,7 @@
                                                         <a href="${pageContext.request.contextPath}/admin/voucher?action=edit&id=${v.id}" class="btn btn-sm btn-outline-primary me-1" title="Edit Properties">
                                                             <i class="fa-solid fa-edit"></i>
                                                         </a>
-                                                        <button class="btn btn-sm btn-outline-danger" title="Graceful Early Termination" 
+                                                        <button class="btn btn-sm btn-outline-danger" title="Graceful Early Termination"
                                                                 onclick="openTerminateModal(${v.id}, '${v.code}')" ${(isExpired || isExhausted) ? 'disabled' : ''}>
                                                             <i class="fa-solid fa-stop-circle"></i>
                                                         </button>
@@ -236,7 +239,7 @@
 
                             <div class="form-group">
                                 <label for="reason" class="fw-bold">Termination Notice Reason <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="reason" name="reason" rows="3" required 
+                                <textarea class="form-control" id="reason" name="reason" rows="3" required
                                           placeholder="Provide transparent explanation for system audit logs (e.g., Budget limits reached, business direction shift)"></textarea>
                             </div>
                         </div>

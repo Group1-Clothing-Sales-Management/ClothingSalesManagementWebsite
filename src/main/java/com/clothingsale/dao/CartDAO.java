@@ -19,7 +19,7 @@ public class CartDAO {
     private static final String SELECT_CART_SQL =
             "SELECT c.variant_id, c.quantity, "
             + "pv.product_id, p.category_id, pv.sale_price, "
-            + "p.product_name, "
+            + "p.product_name, cat.category_name, "
             + "COALESCE(variant_img.image_url, product_img.image_url) AS main_image, "
             + "pv.color, pv.size "
             + "FROM Cart c "
@@ -27,6 +27,8 @@ public class CartDAO {
             + "ON c.variant_id = pv.id "
             + "INNER JOIN Product p "
             + "ON pv.product_id = p.id "
+            + "INNER JOIN Category cat "
+            + "ON cat.id = p.category_id "
             + "OUTER APPLY ("
             + "    SELECT TOP 1 pi.image_url "
             + "    FROM Product_Image pi "
@@ -64,12 +66,14 @@ public class CartDAO {
     private static final String SELECT_ACTIVE_VARIANT_FOR_CART_SQL =
             "SELECT pv.id AS variant_id, "
             + "pv.product_id, p.category_id, pv.sale_price, pv.stock_quantity, "
-            + "p.product_name, "
+            + "p.product_name, cat.category_name, "
             + "COALESCE(variant_img.image_url, product_img.image_url) AS main_image, "
             + "pv.color, pv.size "
             + "FROM Product_Variant pv "
             + "INNER JOIN Product p "
             + "ON pv.product_id = p.id "
+            + "INNER JOIN Category cat "
+            + "ON cat.id = p.category_id "
             + "OUTER APPLY ("
             + "    SELECT TOP 1 pi.image_url "
             + "    FROM Product_Image pi "
@@ -137,6 +141,7 @@ public class CartDAO {
                         item.setVariantId(variantId);
                         item.setProductId(productId);
                         item.setCategoryId(categoryId);
+                        item.setCategoryName(rs.getString("category_name"));
                         item.setProductName(
                                 productName != null ? productName : "");
                         item.setPrice(
@@ -356,6 +361,7 @@ public class CartDAO {
                         item.setVariantId(rs.getInt("variant_id"));
                         item.setProductId(rs.getInt("product_id"));
                         item.setCategoryId(rs.getInt("category_id"));
+                        item.setCategoryName(rs.getString("category_name"));
                         item.setProductName(rs.getString("product_name"));
                         item.setPrice(
                                 rs.getBigDecimal("sale_price") != null

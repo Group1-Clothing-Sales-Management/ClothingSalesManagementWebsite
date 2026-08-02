@@ -3,1613 +3,977 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<c:set var="contextPath"
-       value="${pageContext.request.contextPath}"/>
-
+<c:set var="contextPath" value="${pageContext.request.contextPath}"/>
 <c:set var="bestVoucherCode" value=""/>
-
 <c:if test="${not empty suggestedVouchers}">
-    <c:set var="bestVoucherCode"
-           value="${suggestedVouchers[0].code}"/>
+    <c:set var="bestVoucherCode" value="${suggestedVouchers[0].code}"/>
 </c:if>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport"
-              content="width=device-width, initial-scale=1.0">
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Checkout</title>
-
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-              rel="stylesheet">
-
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-              rel="stylesheet">
-        
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
         <style>
+            :root {
+                --checkout-ink: #172033;
+                --checkout-muted: #697386;
+                --checkout-line: #e6e9ef;
+                --checkout-soft: #f6f8fb;
+                --checkout-accent: #ee4d2d;
+                --checkout-accent-dark: #d93d20;
+            }
+
             body {
-                background: #f5f6f8;
+                background: #f4f6f9;
+                color: var(--checkout-ink);
             }
 
             .checkout-page {
-                min-height: 700px;
+                min-height: 760px;
             }
 
-            .checkout-title {
-                font-size: 30px;
-                font-weight: 700;
+            .checkout-heading {
+                font-size: clamp(28px, 3vw, 38px);
+                font-weight: 800;
+                letter-spacing: -.03em;
             }
 
-            .checkout-section {
-                background: #ffffff;
-                border: 1px solid #e5e7eb;
-                border-radius: 14px;
-                padding: 24px;
+            .checkout-subtitle {
+                color: var(--checkout-muted);
+                margin: 0;
+            }
+
+            .checkout-card {
+                background: #fff;
+                border: 1px solid var(--checkout-line);
+                border-radius: 18px;
+                box-shadow: 0 8px 28px rgba(23, 32, 51, .045);
                 margin-bottom: 22px;
+                overflow: hidden;
             }
 
-            .section-title {
+            .checkout-card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 16px;
+                padding: 21px 24px;
+                border-bottom: 1px solid var(--checkout-line);
+            }
+
+            .checkout-card-title {
+                display: flex;
+                align-items: center;
+                gap: 11px;
+                margin: 0;
                 font-size: 19px;
-                font-weight: 700;
-                margin-bottom: 18px;
+                font-weight: 800;
+            }
+
+            .checkout-card-title i {
+                color: var(--checkout-accent);
+            }
+
+            .checkout-card-body {
+                padding: 22px 24px;
             }
 
             .address-option {
                 display: block;
-                border: 1px solid #dee2e6;
-                border-radius: 10px;
-                padding: 16px;
+                padding: 17px 18px;
+                border: 1px solid var(--checkout-line);
+                border-radius: 13px;
                 cursor: pointer;
-                transition: 0.2s ease;
+                transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
             }
 
             .address-option:hover {
-                border-color: #999fa6;
+                border-color: #b9c0cc;
             }
 
             .address-option.selected {
-                border: 2px solid #212529;
-                background: #fafafa;
-            }
-
-            .address-option input[type="radio"] {
-                margin-top: 5px;
+                border-color: var(--checkout-accent);
+                background: #fff9f7;
+                box-shadow: 0 0 0 3px rgba(238, 77, 45, .08);
             }
 
             .recipient-name {
-                font-weight: 700;
+                font-weight: 800;
             }
 
             .address-text {
-                color: #555d65;
+                color: var(--checkout-muted);
                 line-height: 1.55;
+                margin-top: 6px;
             }
 
-            .product-item {
+            .order-item {
+                display: grid;
+                grid-template-columns: 112px minmax(0, 1fr) auto;
+                gap: 18px;
+                align-items: center;
+                padding: 18px 0;
+                border-bottom: 1px solid #edf0f4;
+            }
+
+            .order-item:first-child {
+                padding-top: 0;
+            }
+
+            .order-item:last-child {
+                padding-bottom: 0;
+                border-bottom: 0;
+            }
+
+            .product-image-box {
+                width: 112px;
+                height: 136px;
+                border: 1px solid var(--checkout-line);
+                border-radius: 13px;
+                overflow: hidden;
+                background: var(--checkout-soft);
                 display: flex;
-                gap: 14px;
-                padding: 15px 0;
-                border-bottom: 1px solid #edf0f2;
+                align-items: center;
+                justify-content: center;
             }
 
-            .product-item:last-child {
-                border-bottom: none;
-            }
-
-            .product-image {
-                width: 75px;
-                height: 90px;
+            .product-image-box img {
+                width: 100%;
+                height: 100%;
                 object-fit: cover;
-                border-radius: 8px;
-                border: 1px solid #e3e5e8;
-                background: #f8f9fa;
+            }
+
+            .image-fallback {
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #9aa3b2;
+                font-size: 12px;
+            }
+
+            .image-fallback.show {
+                display: flex;
+            }
+
+            .image-fallback i {
+                font-size: 25px;
+                margin-bottom: 7px;
+            }
+
+            .product-category {
+                display: inline-flex;
+                align-items: center;
+                border: 1px solid #dce3ec;
+                background: #f8fafc;
+                border-radius: 999px;
+                padding: 4px 9px;
+                color: #526071;
+                font-size: 12px;
+                margin-bottom: 8px;
             }
 
             .product-name {
-                font-weight: 600;
+                font-size: 17px;
+                font-weight: 800;
+                line-height: 1.35;
             }
 
-            .product-variant {
-                color: #6c757d;
+            .variant-line {
+                color: var(--checkout-muted);
                 font-size: 14px;
+                margin-top: 8px;
+            }
+
+            .price-line {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 18px;
+                margin-top: 13px;
+                color: var(--checkout-muted);
+                font-size: 14px;
+            }
+
+            .line-total {
+                min-width: 130px;
+                text-align: right;
+            }
+
+            .line-total-label {
+                color: var(--checkout-muted);
+                font-size: 12px;
+                margin-bottom: 5px;
+            }
+
+            .line-total-value {
+                font-size: 17px;
+                font-weight: 800;
+            }
+
+            .fulfillment-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+
+            .fulfillment-item {
+                border: 1px solid var(--checkout-line);
+                border-radius: 13px;
+                padding: 17px;
+                display: flex;
+                gap: 13px;
+                align-items: flex-start;
+                background: #fff;
+            }
+
+            .fulfillment-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 11px;
+                display: grid;
+                place-items: center;
+                background: #fff0eb;
+                color: var(--checkout-accent);
+                flex: 0 0 40px;
+            }
+
+            .fulfillment-label {
+                color: var(--checkout-muted);
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                font-weight: 700;
+            }
+
+            .fulfillment-value {
+                font-weight: 800;
+                margin-top: 2px;
+            }
+
+            .fulfillment-note {
+                color: var(--checkout-muted);
+                font-size: 13px;
+                margin-top: 3px;
+            }
+
+            .voucher-overview {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 18px;
+                border: 1px dashed #f2a18d;
+                background: #fffaf8;
+                border-radius: 14px;
+                padding: 16px 18px;
+            }
+
+            .voucher-selected-title {
+                font-weight: 800;
+                color: var(--checkout-accent-dark);
+            }
+
+            .voucher-selected-meta {
+                color: var(--checkout-muted);
+                font-size: 13px;
+                margin-top: 4px;
+            }
+
+            .btn-voucher {
+                border-color: var(--checkout-accent);
+                color: var(--checkout-accent);
+                white-space: nowrap;
+            }
+
+            .btn-voucher:hover,
+            .btn-voucher:focus {
+                border-color: var(--checkout-accent-dark);
+                color: #fff;
+                background: var(--checkout-accent-dark);
+            }
+
+            .summary-card {
+                position: sticky;
+                top: 20px;
             }
 
             .summary-row {
                 display: flex;
                 justify-content: space-between;
-                gap: 15px;
-                margin-bottom: 12px;
+                gap: 16px;
+                margin-bottom: 13px;
+                color: #465163;
+            }
+
+            .summary-row strong {
+                color: var(--checkout-ink);
             }
 
             .summary-total {
-                border-top: 1px solid #dee2e6;
-                padding-top: 16px;
-                margin-top: 16px;
-                font-size: 20px;
-                font-weight: 700;
-            }
-
-            .sticky-summary {
-                position: sticky;
-                top: 20px;
-            }
-
-            .payment-option,
-            .shipping-option {
-                border: 1px solid #dee2e6;
-                border-radius: 10px;
-                padding: 15px;
-                cursor: pointer;
-            }
-
-            .payment-option:has(input:checked),
-            .shipping-option:has(input:checked) {
-                border: 2px solid #212529;
-                background: #fafafa;
-            }
-
-            .voucher-box {
-                background: #f8f9fa;
-                border-radius: 10px;
-                padding: 16px;
-            }
-            /* ================= PRODUCT IMAGE ================= */
-
-            .checkout-product-image-box {
-                width: 92px;
-                height: 112px;
-                flex: 0 0 92px;
-                border: 1px solid #e4e7eb;
-                border-radius: 10px;
-                overflow: hidden;
-                background: #f7f7f7;
                 display: flex;
-                align-items: center;
-                justify-content: center;
+                justify-content: space-between;
+                align-items: flex-end;
+                gap: 16px;
+                border-top: 1px solid var(--checkout-line);
+                padding-top: 17px;
+                margin-top: 18px;
             }
 
-            .checkout-product-image {
-                width: 100%;
-                height: 100%;
-                display: block;
-                object-fit: cover;
+            .summary-total-label {
+                font-weight: 800;
             }
 
-            .checkout-image-fallback {
-                width: 100%;
-                height: 100%;
-                display: none;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 8px;
-                color: #9ca3af;
+            .summary-total-value {
+                font-size: 26px;
+                font-weight: 900;
+                color: var(--checkout-accent);
+                line-height: 1;
+            }
+
+            .place-order-button {
+                background: var(--checkout-ink);
+                border-color: var(--checkout-ink);
+                border-radius: 12px;
+                font-weight: 800;
+                padding: 14px 18px;
+            }
+
+            .place-order-button:hover,
+            .place-order-button:focus {
+                background: #0f1728;
+                border-color: #0f1728;
+            }
+
+            .cod-note {
+                color: var(--checkout-muted);
                 text-align: center;
                 font-size: 12px;
+                margin-top: 11px;
             }
-
-            .checkout-image-fallback i {
-                font-size: 25px;
-                margin-bottom: 7px;
-            }
-
-            .checkout-image-fallback.show {
-                display: flex;
-            }
-
-
-            /* ================= VOUCHER SUMMARY ================= */
-
-            .checkout-voucher-box {
-                border: 1px solid #e5e7eb;
-                border-radius: 14px;
-                background: #fff;
-                overflow: hidden;
-            }
-
-            .checkout-voucher-header {
-                padding: 20px 22px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 15px;
-            }
-
-            .checkout-voucher-title {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                color: #25282c;
-                font-size: 19px;
-                font-weight: 700;
-            }
-
-            .checkout-voucher-title i {
-                color: #ee4d2d;
-            }
-
-            .checkout-voucher-selected {
-                margin: 0 22px 20px;
-                padding: 14px 16px;
-                border: 1px solid #f6c6ba;
-                border-radius: 9px;
-                background: #fff8f6;
-            }
-
-            .checkout-voucher-selected-title {
-                color: #ee4d2d;
-                font-weight: 700;
-            }
-
-            .checkout-voucher-selected-code {
-                margin-top: 3px;
-                color: #6b7280;
-                font-size: 13px;
-            }
-
-            .btn-select-voucher {
-                border: 1px solid #ee4d2d;
-                background: #fff;
-                color: #ee4d2d;
-                white-space: nowrap;
-            }
-
-            .btn-select-voucher:hover,
-            .btn-select-voucher:focus {
-                border-color: #d93618;
-                background: #fff4f1;
-                color: #d93618;
-            }
-
-
-            /* ================= VOUCHER MODAL ================= */
 
             .voucher-modal-content {
                 border: 0;
-                border-radius: 14px;
+                border-radius: 18px;
                 overflow: hidden;
             }
 
             .voucher-modal-header {
-                padding: 20px 24px;
-                border-bottom: 1px solid #eceff2;
+                border-bottom: 1px solid var(--checkout-line);
+                padding: 20px 22px;
             }
 
-            .voucher-modal-body {
-                padding: 18px;
-                max-height: 70vh;
-                overflow-y: auto;
-                background: #f5f5f5;
-            }
-
-            .voucher-modal-section-title {
-                margin-bottom: 12px;
-                color: #4b5563;
-                font-size: 14px;
-                font-weight: 700;
-                text-transform: uppercase;
+            .voucher-list {
+                display: grid;
+                gap: 14px;
             }
 
             .voucher-item {
                 position: relative;
-                display: flex;
-                min-height: 126px;
-                margin-bottom: 14px;
-                border: 1px solid #e4e7eb;
-                border-radius: 8px;
-                background: #fff;
+                display: grid;
+                grid-template-columns: 132px minmax(0, 1fr) 140px;
+                border: 1px solid var(--checkout-line);
+                border-radius: 14px;
                 overflow: hidden;
-                transition: 0.15s ease;
+                background: #fff;
+                transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
             }
 
-            .voucher-item:hover {
-                border-color: #ee4d2d;
-                box-shadow: 0 4px 14px rgba(238, 77, 45, 0.09);
+            .voucher-item:not(.is-disabled):hover {
+                transform: translateY(-1px);
+                box-shadow: 0 10px 25px rgba(23, 32, 51, .08);
             }
 
-            .voucher-item.applied {
-                border: 2px solid #ee4d2d;
+            .voucher-item.is-selected {
+                border-color: var(--checkout-accent);
+                box-shadow: 0 0 0 2px rgba(238, 77, 45, .09);
             }
 
-            .voucher-item.disabled {
-                opacity: 0.62;
-                background: #f4f4f4;
+            .voucher-item.is-disabled {
+                opacity: .52;
+                background: #f7f8fa;
             }
 
-            .voucher-left {
-                position: relative;
-                width: 116px;
-                min-width: 116px;
-                padding: 14px 10px;
-                background: linear-gradient(145deg, #ff6d4a, #ee4d2d);
-                color: #fff;
+            .voucher-ticket-side {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
+                min-height: 178px;
+                padding: 16px 10px;
                 text-align: center;
+                color: #fff;
+                background: linear-gradient(145deg, #ff6749, #ee4d2d);
             }
 
-            .voucher-left::before,
-            .voucher-left::after {
-                content: "";
-                position: absolute;
-                right: -7px;
-                width: 14px;
-                height: 14px;
-                border-radius: 50%;
-                background: #f5f5f5;
+            .voucher-ticket-side i {
+                font-size: 28px;
+                margin-bottom: 10px;
             }
 
-            .voucher-left::before {
-                top: -7px;
+            .voucher-ticket-value {
+                font-size: 22px;
+                font-weight: 900;
             }
 
-            .voucher-left::after {
-                bottom: -7px;
-            }
-
-            .voucher-left-icon {
-                margin-bottom: 7px;
-                font-size: 26px;
-            }
-
-            .voucher-left-value {
-                font-size: 18px;
-                font-weight: 800;
-                line-height: 1.2;
-            }
-
-            .voucher-left-label {
-                margin-top: 4px;
+            .voucher-ticket-label {
                 font-size: 11px;
-                opacity: 0.95;
+                margin-top: 5px;
+                letter-spacing: .04em;
             }
 
-            .voucher-main {
-                flex: 1;
-                min-width: 0;
-                padding: 13px 14px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 14px;
-            }
-
-            .voucher-information {
+            .voucher-content {
+                padding: 18px;
                 min-width: 0;
             }
 
             .voucher-name {
-                color: #24272b;
-                font-size: 15px;
-                font-weight: 700;
+                font-weight: 800;
+                font-size: 16px;
             }
 
             .voucher-code {
                 display: inline-block;
-                margin-top: 4px;
-                padding: 2px 7px;
-                border-radius: 4px;
-                background: #fff1ed;
-                color: #ee4d2d;
-                font-size: 12px;
-                font-weight: 700;
-            }
-
-            .voucher-condition {
-                margin-top: 7px;
-                color: #606770;
-                font-size: 13px;
-                line-height: 1.5;
-            }
-
-            .voucher-expiry {
                 margin-top: 5px;
-                color: #8a919a;
+                padding: 3px 7px;
+                border-radius: 6px;
+                color: var(--checkout-accent-dark);
+                background: #fff0eb;
                 font-size: 12px;
-            }
-
-            .voucher-action {
-                min-width: 90px;
-                text-align: right;
-            }
-
-            .voucher-best-label {
-                position: absolute;
-                top: 0;
-                left: 0;
-                z-index: 2;
-                padding: 3px 9px;
-                border-bottom-right-radius: 7px;
-                background: #ffbf00;
-                color: #3d2e00;
-                font-size: 11px;
                 font-weight: 800;
             }
 
-            .voucher-status-label {
-                margin-bottom: 7px;
-                color: #8a919a;
+            .voucher-scope {
+                display: flex;
+                align-items: flex-start;
+                gap: 7px;
+                color: #4f5c6d;
+                font-size: 13px;
+                margin-top: 11px;
+            }
+
+            .voucher-details {
+                color: var(--checkout-muted);
+                font-size: 13px;
+                line-height: 1.55;
+                margin-top: 9px;
+            }
+
+            .voucher-unavailable-reason {
+                color: #a73b2a;
                 font-size: 12px;
+                font-weight: 700;
+                margin-top: 9px;
+            }
+
+            .voucher-action {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: stretch;
+                gap: 8px;
+                padding: 17px;
+                border-left: 1px solid var(--checkout-line);
+            }
+
+            .best-choice {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background: #16855b;
+                color: #fff;
+                border-radius: 0 13px 0 10px;
+                padding: 5px 10px;
+                font-size: 10px;
+                font-weight: 900;
+                letter-spacing: .04em;
+            }
+
+            .voucher-saving {
+                color: #16855b;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 800;
             }
 
             .btn-apply-voucher {
-                min-width: 78px;
-                border-color: #ee4d2d;
-                background: #ee4d2d;
                 color: #fff;
+                background: var(--checkout-accent);
+                border-color: var(--checkout-accent);
             }
 
             .btn-apply-voucher:hover {
-                border-color: #d93618;
-                background: #d93618;
                 color: #fff;
+                background: var(--checkout-accent-dark);
+                border-color: var(--checkout-accent-dark);
             }
 
-            .btn-apply-voucher:disabled {
-                border-color: #c9cdd2;
-                background: #c9cdd2;
-                color: #fff;
-            }
-
-            .btn-remove-voucher {
-                border: 0;
-                background: transparent;
-                color: #ee4d2d;
-                font-size: 13px;
-                text-decoration: underline;
-            }
-
-            @media (max-width: 575.98px) {
-                .voucher-left {
-                    width: 92px;
-                    min-width: 92px;
+            @media (max-width: 767.98px) {
+                .checkout-card-header,
+                .checkout-card-body {
+                    padding-left: 17px;
+                    padding-right: 17px;
                 }
 
-                .voucher-main {
+                .order-item {
+                    grid-template-columns: 88px minmax(0, 1fr);
+                    align-items: start;
+                }
+
+                .product-image-box {
+                    width: 88px;
+                    height: 108px;
+                }
+
+                .line-total {
+                    grid-column: 2;
+                    text-align: left;
+                }
+
+                .fulfillment-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .voucher-overview {
                     align-items: flex-start;
                     flex-direction: column;
                 }
 
+                .voucher-item {
+                    grid-template-columns: 100px minmax(0, 1fr);
+                }
+
+                .voucher-ticket-side {
+                    min-height: 100%;
+                }
+
                 .voucher-action {
-                    width: 100%;
-                    text-align: left;
+                    grid-column: 1 / -1;
+                    border-left: 0;
+                    border-top: 1px solid var(--checkout-line);
                 }
             }
         </style>
     </head>
-
     <body>
-
         <jsp:include page="/view/customer/common/header.jsp"/>
 
-        <c:set var="contextPath"
-               value="${pageContext.request.contextPath}"/>
-
-        <%-- Tìm ID địa chỉ mặc định --%>
         <c:set var="defaultAddressId" value=""/>
-
         <c:forEach items="${addresses}" var="address">
             <c:if test="${address.isDefault()}">
-                <c:set var="defaultAddressId"
-                       value="${address.id}"/>
+                <c:set var="defaultAddressId" value="${address.id}"/>
             </c:if>
         </c:forEach>
 
-        <div class="container checkout-page py-5">
-
+        <main class="container checkout-page py-5">
             <div class="mb-4">
-                <h1 class="checkout-title mb-1">Checkout</h1>
-
-                <p class="text-muted mb-0">
-                    Review your order and delivery information.
-                </p>
+                <h1 class="checkout-heading mb-1">Checkout</h1>
+                <p class="checkout-subtitle">Review your products, delivery address and payment total before placing the order.</p>
             </div>
 
             <c:if test="${param.error == 'invalid_address'}">
-                <div class="alert alert-danger">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i>
-                    Please select a valid delivery address.
-                </div>
+                <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation me-2"></i>Please select a valid delivery address.</div>
             </c:if>
-
             <c:if test="${param.error == 'invalid_checkout'}">
-                <div class="alert alert-danger">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i>
-                    Checkout information is invalid.
-                    Please check your order and try again.
-                </div>
+                <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation me-2"></i>Checkout information is invalid. Please review your order.</div>
             </c:if>
-
             <c:if test="${not empty checkoutError}">
-                <div class="alert alert-danger">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i>
-                    <c:out value="${checkoutError}"/>
-                </div>
+                <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation me-2"></i><c:out value="${checkoutError}"/></div>
             </c:if>
-
             <c:if test="${not empty voucherError}">
-                <div class="alert alert-danger">
-                    <i class="fa-solid fa-ticket me-2"></i>
-                    <c:out value="${voucherError}"/>
-                </div>
+                <div class="alert alert-danger"><i class="fa-solid fa-ticket me-2"></i><c:out value="${voucherError}"/></div>
             </c:if>
 
             <div class="row g-4">
-
                 <div class="col-lg-8">
-
-                    <%-- Địa chỉ giao hàng --%>
-                    <div class="checkout-section">
-
-                        <div class="d-flex justify-content-between
-                             align-items-center gap-3 mb-3">
-
-                            <h2 class="section-title mb-0">
-                                <i class="fa-solid fa-location-dot me-2"></i>
-                                Delivery Address
-                            </h2>
-
-                            <a href="${contextPath}/customer/address?from=checkout"
-                               class="btn btn-outline-dark btn-sm">
-
-                                Manage Addresses
-                            </a>
+                    <section class="checkout-card">
+                        <div class="checkout-card-header">
+                            <h2 class="checkout-card-title"><i class="fa-solid fa-location-dot"></i>Delivery Address</h2>
+                            <a href="${contextPath}/customer/address?from=checkout" class="btn btn-outline-dark btn-sm">Manage Addresses</a>
                         </div>
-
-                        <c:choose>
-                            <c:when test="${empty addresses}">
-
-                                <div class="alert alert-warning mb-0">
-
-                                    <i class="fa-solid
-                                       fa-triangle-exclamation
-                                       me-2">
-                                    </i>
-
-                                    You do not have a delivery address.
-
-                                    <a href="${contextPath}/customer/address?from=checkout"
-                                       class="alert-link">
-
-                                        Add an address
-                                    </a>
-                                    before placing the order.
-                                </div>
-                            </c:when>
-
-                            <c:otherwise>
-
-                                <div class="row g-3">
-
-                                    <c:forEach items="${addresses}"
-                                               var="address"
-                                               varStatus="status">
-
-                                        <c:set var="isSelectedAddress"
-                                               value="${not empty selectedAddressId
-                                                        ? address.id == selectedAddressId
-                                                        : ((not empty defaultAddressId
-                                                        and address.id == defaultAddressId)
-                                                        or
-                                                        (empty defaultAddressId
-                                                        and status.first))}"/>
-
-                                        <div class="col-12">
-
-                                            <label class="address-option
-                                                   ${isSelectedAddress
-                                                     ? 'selected'
-                                                     : ''}">
-
-                                                <div class="d-flex gap-3">
-
-                                                    <input type="radio"
-                                                           name="addressId"
-                                                           value="${address.id}"
-                                                           form="checkoutForm"
-                                                           class="form-check-input address-radio"
-                                                           <c:if test="${isSelectedAddress}">
-                                                               checked
-                                                           </c:if>
-                                                           required>
-
-                                                    <div class="flex-grow-1">
-
-                                                        <div class="d-flex
-                                                             flex-wrap
-                                                             justify-content-between
-                                                             align-items-center
-                                                             gap-2">
-
-                                                            <div>
-                                                                <span class="recipient-name">
-                                                                    <c:out value="${address.recipientName}"/>
-                                                                </span>
-
-                                                                <span class="text-muted ms-2">
-                                                                    <c:out value="${address.recipientPhone}"/>
-                                                                </span>
+                        <div class="checkout-card-body">
+                            <c:choose>
+                                <c:when test="${empty addresses}">
+                                    <div class="alert alert-warning mb-0">
+                                        You do not have a delivery address.
+                                        <a href="${contextPath}/customer/address?from=checkout" class="alert-link">Add an address</a>
+                                        before placing the order.
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="row g-3">
+                                        <c:forEach items="${addresses}" var="address" varStatus="status">
+                                            <c:set var="isSelectedAddress"
+                                                   value="${not empty selectedAddressId
+                                                            ? address.id == selectedAddressId
+                                                            : ((not empty defaultAddressId and address.id == defaultAddressId)
+                                                            or (empty defaultAddressId and status.first))}"/>
+                                            <div class="col-12">
+                                                <label class="address-option ${isSelectedAddress ? 'selected' : ''}">
+                                                    <div class="d-flex gap-3">
+                                                        <input type="radio" name="addressId" value="${address.id}"
+                                                               form="checkoutForm" class="form-check-input address-radio mt-1"
+                                                               ${isSelectedAddress ? 'checked' : ''} required>
+                                                        <div class="flex-grow-1">
+                                                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                                                <div>
+                                                                    <span class="recipient-name"><c:out value="${address.recipientName}"/></span>
+                                                                    <span class="text-muted ms-2"><c:out value="${address.recipientPhone}"/></span>
+                                                                </div>
+                                                                <c:if test="${address.isDefault()}"><span class="badge text-bg-success">Default</span></c:if>
                                                             </div>
-
-                                                            <c:if test="${address.isDefault()}">
-
-                                                                <span class="badge bg-success">
-                                                                    Default
-                                                                </span>
-                                                            </c:if>
-                                                        </div>
-
-                                                        <div class="address-text mt-2">
-
-                                                            <c:out value="${address.addressDetail}"/>
-
-                                                            <c:if test="${not empty address.wardName}">
-                                                                ,
-                                                                <c:out value="${address.wardName}"/>
-                                                            </c:if>
-
-                                                            <c:if test="${not empty address.provinceName}">
-                                                                ,
-                                                                <c:out value="${address.provinceName}"/>
-                                                            </c:if>
+                                                            <div class="address-text">
+                                                                <c:out value="${address.addressDetail}"/>
+                                                                <c:if test="${not empty address.wardName}">, <c:out value="${address.wardName}"/></c:if>
+                                                                <c:if test="${not empty address.provinceName}">, <c:out value="${address.provinceName}"/></c:if>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </label>
+                                                </label>
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </section>
+
+                    <section class="checkout-card">
+                        <div class="checkout-card-header">
+                            <h2 class="checkout-card-title"><i class="fa-solid fa-bag-shopping"></i>Order Items</h2>
+                            <span class="text-muted small">${fn:length(cartItems)} product line(s)</span>
+                        </div>
+                        <div class="checkout-card-body">
+                            <c:forEach items="${cartItems}" var="item">
+                                <c:set var="imageParts" value="${fn:split(item.imageUrl, '/')}"/>
+                                <c:set var="imageName" value="${imageParts[fn:length(imageParts) - 1]}"/>
+                                <c:url var="mediaImageUrl" value="/media/product/${imageName}"/>
+
+                                <article class="order-item">
+                                    <div class="product-image-box">
+                                        <c:choose>
+                                            <c:when test="${not empty item.imageUrl}">
+                                                <img src="${mediaImageUrl}" alt="${fn:escapeXml(item.productName)}"
+                                                     onerror="handleCheckoutImageError(this);">
+                                                <div class="image-fallback"><i class="fa-regular fa-image"></i><span>No image</span></div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="image-fallback show"><i class="fa-regular fa-image"></i><span>No image</span></div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+
+                                    <div>
+                                        <c:if test="${not empty item.categoryName}">
+                                            <span class="product-category"><i class="fa-regular fa-folder me-1"></i><c:out value="${item.categoryName}"/></span>
+                                        </c:if>
+                                        <div class="product-name"><c:out value="${item.productName}"/></div>
+                                        <div class="variant-line">
+                                            <c:choose>
+                                                <c:when test="${not empty item.attributes}"><c:out value="${item.attributes}"/></c:when>
+                                                <c:otherwise>Standard variant</c:otherwise>
+                                            </c:choose>
                                         </div>
+                                        <div class="price-line">
+                                            <span>Unit price: <strong><fmt:formatNumber value="${item.price}" type="number" maxFractionDigits="0"/> ₫</strong></span>
+                                            <span>Quantity: <strong>${item.quantity}</strong></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="line-total">
+                                        <div class="line-total-label">Item total</div>
+                                        <div class="line-total-value"><fmt:formatNumber value="${item.price * item.quantity}" type="number" maxFractionDigits="0"/> ₫</div>
+                                    </div>
+                                </article>
+                            </c:forEach>
+                        </div>
+                    </section>
+
+                    <section class="checkout-card">
+                        <div class="checkout-card-header">
+                            <h2 class="checkout-card-title"><i class="fa-solid fa-ticket"></i>Shop Voucher</h2>
+                        </div>
+                        <div class="checkout-card-body">
+                            <div class="voucher-overview">
+                                <div>
+                                    <c:choose>
+                                        <c:when test="${not empty voucher}">
+                                            <div class="voucher-selected-title"><i class="fa-solid fa-circle-check me-1"></i><c:out value="${voucher.title}"/></div>
+                                            <div class="voucher-selected-meta">
+                                                Code: <strong><c:out value="${voucher.code}"/></strong>
+                                                <span class="mx-1">•</span>
+                                                Applies to: <strong><c:out value="${voucher.scopeLabel}"/></strong>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="fw-bold">Choose the best voucher for this order</div>
+                                            <div class="voucher-selected-meta">Unavailable vouchers are shown dimmed and cannot be selected.</div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <c:if test="${not empty voucher}">
+                                        <form method="post" action="${contextPath}/customer/checkout" class="voucher-state-form">
+                                            <input type="hidden" name="action" value="applyVoucher">
+                                            <input type="hidden" name="voucherCode" value="">
+                                            <input type="hidden" name="selectedAddressId" class="voucher-state-address">
+                                            <input type="hidden" name="checkoutNote" class="voucher-state-note">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm">Remove</button>
+                                        </form>
+                                    </c:if>
+                                    <button type="button" class="btn btn-voucher btn-sm"
+                                            data-bs-toggle="modal" data-bs-target="#voucherSelectionModal">
+                                        ${not empty voucher ? 'Change Voucher' : 'Select Voucher'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="checkout-card">
+                        <div class="checkout-card-header">
+                            <h2 class="checkout-card-title"><i class="fa-solid fa-truck-fast"></i>Delivery & Payment</h2>
+                        </div>
+                        <div class="checkout-card-body">
+                            <div class="fulfillment-grid">
+                                <div class="fulfillment-item">
+                                    <div class="fulfillment-icon"><i class="fa-solid fa-truck"></i></div>
+                                    <div>
+                                        <div class="fulfillment-label">Delivery method</div>
+                                        <div class="fulfillment-value">Standard Home Delivery</div>
+                                        <div class="fulfillment-note">The order will be delivered to your selected address.</div>
+                                    </div>
+                                </div>
+                                <div class="fulfillment-item">
+                                    <div class="fulfillment-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                                    <div>
+                                        <div class="fulfillment-label">Payment method</div>
+                                        <div class="fulfillment-value">Cash on Delivery (COD)</div>
+                                        <div class="fulfillment-note">Pay in cash after receiving the order.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="checkout-card">
+                        <div class="checkout-card-header">
+                            <h2 class="checkout-card-title"><i class="fa-regular fa-note-sticky"></i>Order Note</h2>
+                        </div>
+                        <div class="checkout-card-body">
+                            <textarea name="note" form="checkoutForm" class="form-control" rows="4" maxlength="500"
+                                      placeholder="Notes for the store or delivery staff..."><c:out value="${checkoutNote}"/></textarea>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-lg-4">
+                    <section class="checkout-card summary-card">
+                        <div class="checkout-card-header">
+                            <h2 class="checkout-card-title"><i class="fa-solid fa-receipt"></i>Order Summary</h2>
+                        </div>
+                        <div class="checkout-card-body">
+                            <div class="summary-row"><span>Merchandise subtotal</span><strong><fmt:formatNumber value="${cartTotal}" type="number" maxFractionDigits="0"/> ₫</strong></div>
+                            <div class="summary-row"><span>Voucher discount</span><strong class="text-success">-<fmt:formatNumber value="${discountAmount}" type="number" maxFractionDigits="0"/> ₫</strong></div>
+                            <div class="summary-row"><span>Delivery fee</span><strong><fmt:formatNumber value="${shippingFee}" type="number" maxFractionDigits="0"/> ₫</strong></div>
+
+                            <c:if test="${not empty voucher}">
+                                <div class="alert alert-success py-2 px-3 small mt-3 mb-0">
+                                    You save <strong><fmt:formatNumber value="${discountAmount}" type="number" maxFractionDigits="0"/> ₫</strong> with <c:out value="${voucher.code}"/>.
+                                </div>
+                            </c:if>
+
+                            <div class="summary-total">
+                                <div>
+                                    <div class="summary-total-label">Total Payment</div>
+                                    <div class="text-muted small">Cash payable on delivery</div>
+                                </div>
+                                <div class="summary-total-value"><fmt:formatNumber value="${totalPayment}" type="number" maxFractionDigits="0"/> ₫</div>
+                            </div>
+
+                            <form method="post" action="${contextPath}/customer/checkout"
+                                  id="checkoutForm" class="needs-validation" novalidate>
+                                <input type="hidden" name="action" value="placeOrder">
+                                <input type="hidden" name="voucherCode" value="${fn:escapeXml(voucherCode)}">
+                                <input type="hidden" name="paymentMethod" value="COD">
+                                <input type="hidden" name="carrierName" value="GHN">
+                                <button type="submit" id="placeOrderButton"
+                                        class="btn btn-dark place-order-button w-100 mt-4"
+                                        ${empty addresses or empty cartItems ? 'disabled' : ''}>
+                                    <i class="fa-solid fa-lock me-2"></i>Place Order
+                                </button>
+                            </form>
+                            <div class="cod-note"><i class="fa-solid fa-shield-halved me-1"></i>No online payment is required.</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <div class="modal fade" id="voucherSelectionModal" tabindex="-1"
+             aria-labelledby="voucherSelectionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+                <div class="modal-content voucher-modal-content">
+                    <div class="modal-header voucher-modal-header">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="voucherSelectionModalLabel">Select Shop Voucher</h5>
+                            <div class="text-muted small mt-1">Minimum spend is calculated only from products inside each voucher's scope.</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <c:choose>
+                            <c:when test="${empty customerVouchers}">
+                                <div class="text-center py-5">
+                                    <i class="fa-solid fa-ticket fs-1 text-secondary"></i>
+                                    <h6 class="mt-3">No vouchers available</h6>
+                                    <p class="text-muted mb-0">New vouchers will appear here.</p>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="voucher-list">
+                                    <c:forEach items="${customerVouchers}" var="cv">
+                                        <c:set var="voucherApplied" value="${not empty voucherCode and voucherCode eq cv.code}"/>
+                                        <c:set var="bestVoucher" value="${not empty bestVoucherCode and bestVoucherCode eq cv.code}"/>
+
+                                        <article class="voucher-item ${cv.eligibleForCheckout ? '' : 'is-disabled'} ${voucherApplied ? 'is-selected' : ''}">
+                                            <c:if test="${bestVoucher and cv.eligibleForCheckout}"><div class="best-choice">BEST SAVING</div></c:if>
+
+                                            <div class="voucher-ticket-side">
+                                                <i class="fa-solid fa-tags"></i>
+                                                <div class="voucher-ticket-value">
+                                                    <c:choose>
+                                                        <c:when test="${cv.discountType == 'PERCENTAGE'}"><fmt:formatNumber value="${cv.discountValue}" maxFractionDigits="2"/>%</c:when>
+                                                        <c:otherwise><fmt:formatNumber value="${cv.discountValue}" type="number" maxFractionDigits="0"/>₫</c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                                <div class="voucher-ticket-label">SHOP VOUCHER</div>
+                                            </div>
+
+                                            <div class="voucher-content">
+                                                <div class="voucher-name"><c:out value="${cv.title}"/></div>
+                                                <span class="voucher-code"><c:out value="${cv.code}"/></span>
+                                                <div class="voucher-scope">
+                                                    <i class="fa-solid ${empty cv.categoryId ? 'fa-globe' : 'fa-folder-tree'} mt-1"></i>
+                                                    <span><strong>Applies to:</strong> <c:out value="${cv.scopeLabel}"/></span>
+                                                </div>
+                                                <div class="voucher-details">
+                                                    Eligible subtotal: <strong><fmt:formatNumber value="${cv.applicableSubtotal}" type="number" maxFractionDigits="0"/> ₫</strong><br>
+                                                    Minimum eligible spend: <strong><fmt:formatNumber value="${cv.minOrderValue}" type="number" maxFractionDigits="0"/> ₫</strong>
+                                                    <c:if test="${cv.discountType == 'PERCENTAGE' and not empty cv.maxDiscountAmount}">
+                                                        <br>Maximum discount: <strong><fmt:formatNumber value="${cv.maxDiscountAmount}" type="number" maxFractionDigits="0"/> ₫</strong>
+                                                    </c:if>
+                                                    <br>Valid until: <strong><fmt:formatDate value="${cv.endDate}" pattern="dd/MM/yyyy HH:mm"/></strong>
+                                                </div>
+                                                <c:if test="${not cv.eligibleForCheckout}">
+                                                    <div class="voucher-unavailable-reason">
+                                                        <i class="fa-solid fa-circle-info me-1"></i><c:out value="${cv.checkoutIneligibilityReason}"/>
+                                                        <c:if test="${cv.amountNeeded > 0}">
+                                                            Add <fmt:formatNumber value="${cv.amountNeeded}" type="number" maxFractionDigits="0"/> ₫ more in eligible products.
+                                                        </c:if>
+                                                    </div>
+                                                </c:if>
+                                            </div>
+
+                                            <div class="voucher-action">
+                                                <c:choose>
+                                                    <c:when test="${voucherApplied}">
+                                                        <div class="voucher-saving">Applied to order</div>
+                                                        <button type="button" class="btn btn-outline-success btn-sm" disabled>Selected</button>
+                                                    </c:when>
+                                                    <c:when test="${cv.eligibleForCheckout}">
+                                                        <div class="voucher-saving">Save <fmt:formatNumber value="${cv.applicableDiscount}" type="number" maxFractionDigits="0"/> ₫</div>
+                                                        <form method="post" action="${contextPath}/customer/checkout" class="voucher-state-form">
+                                                            <input type="hidden" name="action" value="applyVoucher">
+                                                            <input type="hidden" name="voucherCode" value="${fn:escapeXml(cv.code)}">
+                                                            <input type="hidden" name="selectedAddressId" class="voucher-state-address">
+                                                            <input type="hidden" name="checkoutNote" class="voucher-state-note">
+                                                            <button type="submit" class="btn btn-apply-voucher btn-sm w-100">Apply</button>
+                                                        </form>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <button type="button" class="btn btn-secondary btn-sm" disabled>Not Eligible</button>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </article>
                                     </c:forEach>
                                 </div>
                             </c:otherwise>
                         </c:choose>
                     </div>
-
-                    <%-- Phương thức vận chuyển --%>
-                    <div class="checkout-section">
-
-                        <h2 class="section-title">
-                            <i class="fa-solid fa-truck me-2"></i>
-                            Shipping Method
-                        </h2>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <label class="shipping-option d-block">
-
-                                    <div class="d-flex gap-3">
-
-                                        <input type="radio"
-                                               name="carrierName"
-                                               value="GHN"
-                                               form="checkoutForm"
-                                               class="form-check-input"
-                                               <c:if test="${empty selectedCarrierName
-                                                             or selectedCarrierName == 'GHN'}">
-                                                   checked
-                                               </c:if>>
-
-                                        <div>
-                                            <div class="fw-semibold">
-                                                Economical Delivery
-                                            </div>
-
-                                            <small class="text-muted">
-                                                Standard delivery service
-                                            </small>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <label class="shipping-option d-block">
-
-                                    <div class="d-flex gap-3">
-
-                                        <input type="radio"
-                                               name="carrierName"
-                                               value="SELF"
-                                               form="checkoutForm"
-                                               class="form-check-input"
-                                               <c:if test="${selectedCarrierName == 'SELF'}">
-                                                   checked
-                                               </c:if>>
-
-                                        <div>
-                                            <div class="fw-semibold">
-                                                Store Delivery
-                                            </div>
-
-                                            <small class="text-muted">
-                                                Delivered by the store
-                                            </small>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <%-- Phương thức thanh toán --%>
-                    <div class="checkout-section">
-
-                        <h2 class="section-title">
-                            <i class="fa-solid fa-credit-card me-2"></i>
-                            Payment Method
-                        </h2>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <label class="payment-option d-block">
-
-                                    <div class="d-flex gap-3">
-
-                                        <input type="radio"
-                                               name="paymentMethod"
-                                               value="COD"
-                                               form="checkoutForm"
-                                               class="form-check-input"
-                                               <c:if test="${empty selectedPaymentMethod
-                                                             or selectedPaymentMethod == 'COD'}">
-                                                   checked
-                                               </c:if>>
-
-                                        <div>
-                                            <div class="fw-semibold">
-                                                Cash on Delivery
-                                            </div>
-
-                                            <small class="text-muted">
-                                                Pay when you receive the order
-                                            </small>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-
-                            
-                        </div>
-                    </div>
-
-                    <%-- Ghi chú --%>
-                    <div class="checkout-section">
-
-                        <h2 class="section-title">
-                            <i class="fa-solid fa-note-sticky me-2"></i>
-                            Order Note
-                        </h2>
-
-                        <textarea name="note"
-                                  form="checkoutForm"
-                                  class="form-control"
-                                  rows="4"
-                                  maxlength="500"
-                                  placeholder="Notes for the store or delivery staff..."><c:out value="${checkoutNote}"/></textarea>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-
-                    <div class="sticky-summary">
-
-                        <%-- Voucher là form riêng, không lồng trong form checkout --%>
-                        <div class="checkout-voucher-box">
-
-                            <div class="checkout-voucher-header">
-
-                                <div class="checkout-voucher-title">
-                                    <i class="fa-solid fa-ticket"></i>
-                                    <span>Shop Voucher</span>
-                                </div>
-
-                                <button type="button"
-                                        class="btn btn-sm btn-select-voucher"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#voucherSelectionModal">
-
-                                    <c:choose>
-                                        <c:when test="${not empty voucher}">
-                                            Change
-                                        </c:when>
-
-                                        <c:otherwise>
-                                            Select Voucher
-                                        </c:otherwise>
-                                    </c:choose>
-                                </button>
-                            </div>
-
-                            <c:choose>
-                                <c:when test="${not empty voucher}">
-
-                                    <div class="checkout-voucher-selected">
-
-                                        <div class="d-flex justify-content-between
-                                             align-items-start gap-3">
-
-                                            <div>
-                                                <div class="checkout-voucher-selected-title">
-                                                    <i class="fa-solid
-                                                       fa-circle-check me-1">
-                                                    </i>
-
-                                                    <c:out value="${voucher.title}"/>
-                                                </div>
-
-                                                <div class="checkout-voucher-selected-code">
-                                                    Code:
-                                                    <strong>
-                                                        <c:out value="${voucher.code}"/>
-                                                    </strong>
-                                                </div>
-
-                                                <div class="small text-success mt-1">
-                                                    You saved
-
-                                                    <strong>
-                                                        <fmt:formatNumber
-                                                            value="${discountAmount}"
-                                                            type="number"
-                                                            maxFractionDigits="0"/>
-                                                        ₫
-                                                    </strong>
-                                                </div>
-                                            </div>
-
-                                            <form method="post"
-                                                  action="${contextPath}/customer/checkout"
-                                                  class="voucher-state-form">
-
-                                                <input type="hidden"
-                                                       name="action"
-                                                       value="applyVoucher">
-
-                                                <input type="hidden"
-                                                       name="voucherCode"
-                                                       value="">
-
-                                                <input type="hidden"
-                                                       name="selectedAddressId"
-                                                       class="voucher-state-address">
-
-                                                <input type="hidden"
-                                                       name="selectedCarrierName"
-                                                       class="voucher-state-carrier">
-
-                                                <input type="hidden"
-                                                       name="selectedPaymentMethod"
-                                                       class="voucher-state-payment">
-
-                                                <input type="hidden"
-                                                       name="checkoutNote"
-                                                       class="voucher-state-note">
-
-                                                <button type="submit"
-                                                        class="btn-remove-voucher">
-
-                                                    Remove
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </c:when>
-
-                                <c:otherwise>
-
-                                    <div class="px-4 pb-4 text-muted small">
-                                        Select an available voucher to receive
-                                        the best discount for this order.
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-
-                            <c:if test="${not empty voucherError}">
-                                <div class="alert alert-danger mx-4 mb-4 py-2">
-                                    <c:out value="${voucherError}"/>
-                                </div>
-                            </c:if>
-                        </div>
-
-                        <%-- Danh sách sản phẩm --%>
-                        <div class="checkout-section">
-
-                            <h2 class="section-title">
-                                Order Summary
-                            </h2>
-
-                            <c:choose>
-                                <c:when test="${empty cartItems}">
-
-                                    <div class="alert alert-warning mb-0">
-                                        Your shopping cart is empty.
-                                    </div>
-                                </c:when>
-
-                                <c:otherwise>
-
-                                    <c:forEach items="${cartItems}" var="item">
-
-                                        <%--
-                                            Ưu tiên đọc từ ProductImageServlet:
-                                            /media/product/{filename}
-
-        Nếu không tìm thấy, JavaScript sẽ thử:
-                                            /media/product/{filename}
-                                        --%>
-
-                                        <c:set var="checkoutImageParts"
-                                               value="${fn:split(item.imageUrl, '/')}"/>
-
-                                        <c:set var="checkoutImageName"
-                                               value="${checkoutImageParts[fn:length(checkoutImageParts) - 1]}"/>
-
-                                        <c:url var="mediaImageUrl"
-                                               value="/media/product/${checkoutImageName}"/>
-
-                                        <div class="product-item">
-
-                                            <div class="checkout-product-image-box">
-
-                                                <c:choose>
-                                                    <c:when test="${not empty item.imageUrl}">
-
-                                                        <img src="${mediaImageUrl}"
-                                                             alt="${fn:escapeXml(item.productName)}"
-                                                             class="checkout-product-image"
-                                                             onerror="handleCheckoutImageError(this);">
-
-                                                        <div class="checkout-image-fallback">
-                                                            <i class="fa-regular fa-image"></i>
-                                                            <span>No image</span>
-                                                        </div>
-
-                                                    </c:when>
-
-                                                    <c:otherwise>
-
-                                                        <div class="checkout-image-fallback show">
-                                                            <i class="fa-regular fa-image"></i>
-                                                            <span>No image</span>
-                                                        </div>
-
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-
-                                            <div class="flex-grow-1">
-
-                                                <div class="product-name">
-                                                    <c:out value="${item.productName}"/>
-                                                </div>
-
-                                                <div class="product-variant mt-2">
-
-                                                    <c:if test="${not empty item.color}">
-                                                        <span>
-                                                            Color:
-                                                            <c:out value="${item.color}"/>
-                                                        </span>
-                                                    </c:if>
-
-                                                    <c:if test="${not empty item.color
-                                                                  and not empty item.size}">
-                                                          <span class="mx-2">|</span>
-                                                    </c:if>
-
-                                                    <c:if test="${not empty item.size}">
-                                                        <span>
-                                                            Size:
-                                                            <c:out value="${item.size}"/>
-                                                        </span>
-                                                    </c:if>
-                                                </div>
-
-                                                <div class="d-flex justify-content-between
-                                                     align-items-end gap-3 mt-3">
-
-                                                    <span class="text-muted">
-                                                        Quantity:
-                                                        <c:out value="${item.quantity}"/>
-                                                    </span>
-
-                                                    <strong>
-                                                        <fmt:formatNumber
-                                                            value="${item.price * item.quantity}"
-                                                            type="number"
-                                                            maxFractionDigits="0"/>
-                                                        ₫
-                                                    </strong>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-
-                            <div class="mt-4">
-
-                                <div class="summary-row">
-                                    <span>Subtotal</span>
-
-                                    <span>
-                                        <fmt:formatNumber
-                                            value="${cartTotal}"
-                                            type="number"
-                                            maxFractionDigits="0"/>
-                                        ₫
-                                    </span>
-                                </div>
-
-                                <div class="summary-row">
-                                    <span>Discount</span>
-
-                                    <span class="text-success">
-                                        -
-                                        <fmt:formatNumber
-                                            value="${discountAmount}"
-                                            type="number"
-                                            maxFractionDigits="0"/>
-                                        ₫
-                                    </span>
-                                </div>
-
-                                <div class="summary-row">
-                                    <span>Shipping Fee</span>
-
-                                    <span>
-                                        <fmt:formatNumber
-                                            value="${shippingFee}"
-                                            type="number"
-                                            maxFractionDigits="0"/>
-                                        ₫
-                                    </span>
-                                </div>
-
-                                <div class="summary-row summary-total">
-                                    <span>Total</span>
-
-                                    <span>
-                                        <fmt:formatNumber
-                                            value="${totalPayment}"
-                                            type="number"
-                                            maxFractionDigits="0"/>
-                                        ₫
-                                    </span>
-                                </div>
-                            </div>
-
-                            <%-- Form đặt hàng chính --%>
-                            <form method="post"
-                                  action="${contextPath}/customer/checkout"
-                                  id="checkoutForm"
-                                  class="needs-validation"
-                                  novalidate>
-
-                                <input type="hidden"
-                                       name="action"
-                                       value="placeOrder">
-
-                                <input type="hidden"
-                                       name="voucherCode"
-                                       value="${fn:escapeXml(voucherCode)}">
-
-                                <button type="submit"
-                                        id="placeOrderButton"
-                                        class="btn btn-dark w-100 py-3 mt-4"
-                                        <c:if test="${empty addresses
-                                                      or empty cartItems}">
-                                              disabled
-                                        </c:if>>
-
-                                    <i class="fa-solid fa-lock me-2"></i>
-                                    Place Order
-                                </button>
-                            </form>
-
-                            <c:if test="${empty addresses}">
-                                <div class="text-danger small mt-2 text-center">
-                                    Add a delivery address before placing the order.
-                                </div>
-                            </c:if>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <jsp:include page="/view/customer/common/footer.jsp"/>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-        </script>
-
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
-
-                const addressOptions =
-                        document.querySelectorAll(
-                                ".address-option"
-                                );
-
-                const addressRadios =
-                        document.querySelectorAll(
-                                ".address-radio"
-                                );
+                const addressOptions = document.querySelectorAll(".address-option");
+                const addressRadios = document.querySelectorAll(".address-radio");
+                const checkoutForm = document.getElementById("checkoutForm");
+                const placeOrderButton = document.getElementById("placeOrderButton");
 
                 function refreshSelectedAddress() {
-                    addressOptions.forEach(function (option) {
-                        option.classList.remove("selected");
-                    });
-
-                    addressRadios.forEach(function (radio) {
+                    addressOptions.forEach(option => option.classList.remove("selected"));
+                    addressRadios.forEach(radio => {
                         if (radio.checked) {
-                            const option =
-                                    radio.closest(".address-option");
-
-                            if (option) {
-                                option.classList.add("selected");
-                            }
+                            const option = radio.closest(".address-option");
+                            if (option) option.classList.add("selected");
                         }
                     });
                 }
 
-                addressRadios.forEach(function (radio) {
-                    radio.addEventListener(
-                            "change",
-                            refreshSelectedAddress
-                            );
-                });
-
+                addressRadios.forEach(radio => radio.addEventListener("change", refreshSelectedAddress));
                 refreshSelectedAddress();
 
-                const checkoutForm =
-                        document.getElementById("checkoutForm");
-
-                const placeOrderButton =
-                        document.getElementById(
-                                "placeOrderButton"
-                                );
-
                 if (checkoutForm) {
-                    checkoutForm.addEventListener(
-                            "submit",
-                            function (event) {
+                    checkoutForm.addEventListener("submit", function (event) {
+                        const selectedAddress = document.querySelector(".address-radio:checked");
+                        if (!selectedAddress) {
+                            event.preventDefault();
+                            window.showAppToast("Please select a delivery address.", "warning", {title: "Delivery address required"});
+                            return;
+                        }
 
-                                const selectedAddress =
-                                        document.querySelector(
-                                                ".address-radio:checked"
-                                                );
+                        if (!checkoutForm.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            checkoutForm.classList.add("was-validated");
+                            return;
+                        }
 
-                                if (!selectedAddress) {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-
-                                    window.showAppToast(
-                                            "Please select a delivery address.",
-                                            "warning",
-                                            {title: "Delivery address required"}
-                                            );
-
-                                    return;
-                                }
-
-                                if (!checkoutForm.checkValidity()) {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-
-                                    checkoutForm.classList.add(
-                                            "was-validated"
-                                            );
-
-                                    return;
-                                }
-
-                                if (placeOrderButton) {
-                                    placeOrderButton.disabled = true;
-
-                                    placeOrderButton.innerHTML =
-                                            '<span class="spinner-border '
-                                            + 'spinner-border-sm me-2"></span>'
-                                            + 'Processing...';
-                                }
-                            }
-                    );
+                        if (placeOrderButton) {
+                            placeOrderButton.disabled = true;
+                            placeOrderButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+                        }
+                    });
                 }
 
+                document.querySelectorAll(".voucher-state-form").forEach(function (voucherForm) {
+                    voucherForm.addEventListener("submit", function () {
+                        const address = document.querySelector('input[name="addressId"]:checked');
+                        const note = document.querySelector('textarea[name="note"]');
+                        const addressField = voucherForm.querySelector(".voucher-state-address");
+                        const noteField = voucherForm.querySelector(".voucher-state-note");
 
-                document.querySelectorAll(".voucher-state-form")
-                        .forEach(function (voucherForm) {
-                            voucherForm.addEventListener("submit", function () {
-                                const address = document.querySelector(
-                                        'input[name="addressId"]:checked'
-                                        );
-                                const carrier = document.querySelector(
-                                        'input[name="carrierName"]:checked'
-                                        );
-                                const payment = document.querySelector(
-                                        'input[name="paymentMethod"]:checked'
-                                        );
-                                const note = document.querySelector(
-                                        'textarea[name="note"]'
-                                        );
-
-                                const addressField = voucherForm.querySelector(
-                                        ".voucher-state-address"
-                                        );
-                                const carrierField = voucherForm.querySelector(
-                                        ".voucher-state-carrier"
-                                        );
-                                const paymentField = voucherForm.querySelector(
-                                        ".voucher-state-payment"
-                                        );
-                                const noteField = voucherForm.querySelector(
-                                        ".voucher-state-note"
-                                        );
-
-                                if (addressField) {
-                                    addressField.value = address ? address.value : "";
-                                }
-                                if (carrierField) {
-                                    carrierField.value = carrier ? carrier.value : "GHN";
-                                }
-                                if (paymentField) {
-                                    paymentField.value = payment ? payment.value : "COD";
-                                }
-                                if (noteField) {
-                                    noteField.value = note ? note.value : "";
-                                }
-                            });
-                        });
+                        if (addressField) addressField.value = address ? address.value : "";
+                        if (noteField) noteField.value = note ? note.value : "";
+                    });
+                });
             });
 
             function handleCheckoutImageError(imageElement) {
-                const fallbackSource =
-                        imageElement.getAttribute("data-fallback-src");
-
-                const alreadyTriedFallback =
-                        imageElement.getAttribute("data-fallback-tried")
-                        === "true";
-
-                if (!alreadyTriedFallback && fallbackSource) {
-                    imageElement.setAttribute(
-                            "data-fallback-tried",
-                            "true"
-                            );
-
-                    imageElement.src = fallbackSource;
-                    return;
-                }
-
                 imageElement.style.display = "none";
-
-                const fallbackElement =
-                        imageElement.nextElementSibling;
-
-                if (fallbackElement) {
-                    fallbackElement.classList.add("show");
-                }
+                const fallbackElement = imageElement.nextElementSibling;
+                if (fallbackElement) fallbackElement.classList.add("show");
             }
-
         </script>
-        <div class="modal fade"
-             id="voucherSelectionModal"
-             tabindex="-1"
-             aria-labelledby="voucherSelectionModalLabel"
-             aria-hidden="true">
-
-            <div class="modal-dialog
-                 modal-dialog-centered
-                 modal-dialog-scrollable
-                 modal-lg">
-
-                <div class="modal-content voucher-modal-content">
-
-                    <div class="modal-header voucher-modal-header">
-
-                        <div>
-                            <h5 class="modal-title"
-                                id="voucherSelectionModalLabel">
-
-                                Select Shop Voucher
-                            </h5>
-
-                            <div class="text-muted small mt-1">
-                                Only one shop voucher can be applied.
-                            </div>
-                        </div>
-
-                        <button type="button"
-                                class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
-                    </div>
-
-                    <div class="modal-body voucher-modal-body">
-
-                        <c:choose>
-                            <c:when test="${empty customerVouchers}">
-
-                                <div class="text-center py-5">
-
-                                    <i class="fa-solid fa-ticket
-                                       fs-1 text-secondary">
-                                    </i>
-
-                                    <h6 class="mt-3">
-                                        No vouchers available
-                                    </h6>
-
-                                    <p class="text-muted mb-0">
-                                        New vouchers will appear here.
-                                    </p>
-                                </div>
-                            </c:when>
-
-                            <c:otherwise>
-
-                                <div class="voucher-modal-section-title">
-                                    Available Shop Vouchers
-                                </div>
-
-                                <c:forEach items="${customerVouchers}"
-                                           var="cv">
-
-                                    <c:set var="voucherAvailable"
-                                           value="${cv.customerStatus == 'AVAILABLE'}"/>
-
-                                    <c:set var="orderEnough"
-                                           value="${cartTotal >= cv.minOrderValue}"/>
-
-                                    <c:set var="voucherCanUse"
-                                           value="${voucherAvailable
-                                                    and orderEnough}"/>
-
-                                    <c:set var="voucherApplied"
-                                           value="${not empty voucherCode
-                                                    and voucherCode eq cv.code}"/>
-
-                                    <c:set var="bestVoucher"
-                                           value="${not empty bestVoucherCode
-                                                    and bestVoucherCode eq cv.code}"/>
-
-                                    <div class="voucher-item
-                                         ${voucherApplied ? 'applied' : ''}
-                                         ${voucherCanUse ? '' : 'disabled'}">
-
-                                        <c:if test="${bestVoucher
-                                                      and voucherCanUse}">
-
-                                              <div class="voucher-best-label">
-                                                  BEST CHOICE
-                                              </div>
-                                        </c:if>
-
-                                        <div class="voucher-left">
-
-                                            <div class="voucher-left-icon">
-                                                <i class="fa-solid fa-tags"></i>
-                                            </div>
-
-                                            <div class="voucher-left-value">
-
-                                                <c:choose>
-                                                    <c:when test="${cv.discountType
-                                                                    == 'PERCENTAGE'}">
-
-                                                            <fmt:formatNumber
-                                                                value="${cv.discountValue}"
-                                                                maxFractionDigits="0"/>
-                                                            %
-                                                    </c:when>
-
-                                                    <c:otherwise>
-
-                                                        <fmt:formatNumber
-                                                            value="${cv.discountValue}"
-                                                            type="number"
-                                                            maxFractionDigits="0"/>
-                                                        ₫
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-
-                                            <div class="voucher-left-label">
-                                                SHOP VOUCHER
-                                            </div>
-                                        </div>
-
-                                        <div class="voucher-main">
-
-                                            <div class="voucher-information">
-
-                                                <div class="voucher-name">
-                                                    <c:out value="${cv.title}"/>
-                                                </div>
-
-                                                <span class="voucher-code">
-                                                    <c:out value="${cv.code}"/>
-                                                </span>
-
-                                                <div class="voucher-condition">
-
-                                                    Min. spend:
-
-                                                    <strong>
-                                                        <fmt:formatNumber
-                                                            value="${cv.minOrderValue}"
-                                                            type="number"
-                                                            maxFractionDigits="0"/>
-                                                        ₫
-                                                    </strong>
-
-                                                    <c:if test="${cv.discountType
-                                                                  == 'PERCENTAGE'
-                                                                  and
-                                                                  not empty
-                                                                  cv.maxDiscountAmount}">
-
-                                                          <br>
-
-                                                          Maximum discount:
-
-                                                          <strong>
-                                                              <fmt:formatNumber
-                                                                  value="${cv.maxDiscountAmount}"
-                                                                  type="number"
-                                                                  maxFractionDigits="0"/>
-                                                              ₫
-                                                          </strong>
-                                                    </c:if>
-                                                </div>
-
-                                                <div class="voucher-expiry">
-                                                    Valid until:
-
-                                                    <fmt:formatDate
-                                                        value="${cv.endDate}"
-                                                        pattern="dd/MM/yyyy"/>
-                                                </div>
-                                            </div>
-
-                                            <div class="voucher-action">
-
-                                                <c:choose>
-                                                    <c:when test="${voucherApplied}">
-
-                                                        <div class="voucher-status-label
-                                                             text-success">
-
-                                                            Applied
-                                                        </div>
-
-                                                        <button type="button"
-                                                                class="btn
-                                                                btn-sm
-                                                                btn-outline-success"
-                                                                disabled>
-
-                                                            Selected
-                                                        </button>
-                                                    </c:when>
-
-                                                    <c:when test="${cv.customerStatus
-                                                                    == 'USED'}">
-
-                                                            <div class="voucher-status-label">
-                                                                Already used
-                                                            </div>
-
-                                                            <button type="button"
-                                                                    class="btn
-                                                                    btn-sm
-                                                                    btn-secondary"
-                                                                    disabled>
-
-                                                                Used
-                                                            </button>
-                                                    </c:when>
-
-                                                    <c:when test="${cv.customerStatus
-                                                                    == 'EXPIRED'}">
-
-                                                            <div class="voucher-status-label">
-                                                                Expired
-                                                            </div>
-
-                                                            <button type="button"
-                                                                    class="btn
-                                                                    btn-sm
-                                                                    btn-secondary"
-                                                                    disabled>
-
-                                                                Expired
-                                                            </button>
-                                                    </c:when>
-
-                                                    <c:when test="${not orderEnough}">
-
-                                                        <div class="voucher-status-label
-                                                             text-danger">
-
-                                                            Minimum order not reached
-                                                        </div>
-
-                                                        <button type="button"
-                                                                class="btn
-                                                                btn-sm
-                                                                btn-secondary"
-                                                                disabled>
-
-                                                            Unavailable
-                                                        </button>
-                                                    </c:when>
-
-                                                    <c:otherwise>
-
-                                                        <form method="post"
-                                                              action="${contextPath}/customer/checkout"
-                                                              class="voucher-state-form">
-
-                                                            <input type="hidden"
-                                                                   name="action"
-                                                                   value="applyVoucher">
-
-                                                            <input type="hidden"
-                                                                   name="voucherCode"
-                                                                   value="${fn:escapeXml(cv.code)}">
-
-                                                            <input type="hidden"
-                                                                   name="selectedAddressId"
-                                                                   class="voucher-state-address">
-
-                                                            <input type="hidden"
-                                                                   name="selectedCarrierName"
-                                                                   class="voucher-state-carrier">
-
-                                                            <input type="hidden"
-                                                                   name="selectedPaymentMethod"
-                                                                   class="voucher-state-payment">
-
-                                                            <input type="hidden"
-                                                                   name="checkoutNote"
-                                                                   class="voucher-state-note">
-
-                                                            <button type="submit"
-                                                                    class="btn btn-sm btn-apply-voucher">
-
-                                                                Apply
-                                                            </button>
-                                                        </form>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </c:forEach>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-
-                    <div class="modal-footer">
-
-                        <button type="button"
-                                class="btn btn-light"
-                                data-bs-dismiss="modal">
-
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </body>
 </html>

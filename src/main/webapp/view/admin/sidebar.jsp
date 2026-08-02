@@ -400,7 +400,7 @@
            class="sidebar-link ${requestScope.sidebarActiveTab == 'returns' ? 'active' : ''}"
            title="Returns &amp; Refunds">
             <i class="fa-solid fa-rotate-left sidebar-icon"></i>
-            <span class="sidebar-label">Returns &amp; Refunds</span>
+            <span class="sidebar-label">Returns</span>
         </a>
         <a href="${pageContext.request.contextPath}/staff/reports"
            class="sidebar-link ${requestScope.sidebarActiveTab == 'reports' ? 'active' : ''}"

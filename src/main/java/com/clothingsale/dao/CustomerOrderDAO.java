@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,8 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 public class CustomerOrderDAO {
+
+    private static final String VOUCHER_SCOPE_TABLE = "Voucher_Category_Scope";
 
     private final CartDAO cartDAO
             = new CartDAO();
@@ -537,15 +541,17 @@ public class CustomerOrderDAO {
 
     private BigDecimal calculateApplicableSubtotal(
             List<CartItem> cartItems,
-            Voucher voucher) {
+            Voucher voucher,
+            Map<Integer, Integer> categoryParentMap) {
 
         if (cartItems == null || cartItems.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        Integer voucherCategoryId = voucher != null
-                ? voucher.getCategoryId()
-                : null;
+        boolean globalScope = voucher == null || voucher.isGlobalScope();
+        List<Integer> selectedCategoryIds = voucher == null
+                ? new ArrayList<>()
+                : voucher.getSelectedCategoryIds();
 
         BigDecimal applicableSubtotal = BigDecimal.ZERO;
 
@@ -553,13 +559,14 @@ public class CustomerOrderDAO {
             if (item == null
                     || item.getPrice() == null
                     || item.getQuantity() <= 0) {
-
                 continue;
             }
 
-            if (voucherCategoryId != null
-                    && item.getCategoryId() != voucherCategoryId) {
-
+            if (!isCategoryWithinScope(
+                    item.getCategoryId(),
+                    globalScope,
+                    selectedCategoryIds,
+                    categoryParentMap)) {
                 continue;
             }
 
@@ -588,6 +595,9 @@ public class CustomerOrderDAO {
             con = DBConnection.getConnection();
             con.setAutoCommit(false);
 
+            paymentMethod = "COD";
+            carrierName = "GHN";
+
             List<CartItem> cartItems = getCartItems(userId, selectedVariantIds);
             if (cartItems.isEmpty()) {
                 con.rollback();
@@ -613,12 +623,20 @@ public class CustomerOrderDAO {
                     ? getVoucherByCode(voucherCode)
                     : null;
 
+            Map<Integer, Integer> categoryParentMap
+                    = loadActiveCategoryParentMap(con);
+
             BigDecimal applicableSubtotal
-                    = calculateApplicableSubtotal(cartItems, voucher);
+                    = calculateApplicableSubtotal(
+                            cartItems,
+                            voucher,
+                            categoryParentMap);
 
             if (voucherRequested
                     && (voucher == null
-                    || hasUserUsedVoucher(userId, voucher.getId())
+                    || !voucher.isCategoryScopeActive()
+                    || getUserVoucherUsageCount(con, userId, voucher.getId())
+                    >= normalizePerUserLimit(voucher.getLimitPerUser())
                     || voucher.getMinOrderValue() == null
                     || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
                     || applicableSubtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
@@ -719,6 +737,9 @@ public class CustomerOrderDAO {
             con = DBConnection.getConnection();
             con.setAutoCommit(false);
 
+            paymentMethod = "COD";
+            carrierName = "GHN";
+
             if (cartItems == null || cartItems.isEmpty()) {
                 con.rollback();
                 return false;
@@ -743,12 +764,20 @@ public class CustomerOrderDAO {
                     ? getVoucherByCode(voucherCode)
                     : null;
 
+            Map<Integer, Integer> categoryParentMap
+                    = loadActiveCategoryParentMap(con);
+
             BigDecimal applicableSubtotal
-                    = calculateApplicableSubtotal(cartItems, voucher);
+                    = calculateApplicableSubtotal(
+                            cartItems,
+                            voucher,
+                            categoryParentMap);
 
             if (voucherRequested
                     && (voucher == null
-                    || hasUserUsedVoucher(userId, voucher.getId())
+                    || !voucher.isCategoryScopeActive()
+                    || getUserVoucherUsageCount(con, userId, voucher.getId())
+                    >= normalizePerUserLimit(voucher.getLimitPerUser())
                     || voucher.getMinOrderValue() == null
                     || applicableSubtotal.compareTo(BigDecimal.ZERO) <= 0
                     || applicableSubtotal.compareTo(voucher.getMinOrderValue()) < 0)) {
@@ -835,14 +864,8 @@ public class CustomerOrderDAO {
         try (PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
-            ps.setString(2, method);
-
-            if ("COD".equalsIgnoreCase(method)) {
-                ps.setString(3, "UNPAID");
-            } else {
-                ps.setString(3, "UNPAID"); // VNPAY pending
-            }
-
+            ps.setString(2, "COD");
+            ps.setString(3, "UNPAID");
             ps.setBigDecimal(4, amount);
 
             ps.executeUpdate();
@@ -860,7 +883,7 @@ public class CustomerOrderDAO {
             ps.setString(1, carrierName);
             ps.setString(2, "PENDING_PICKUP");
             ps.setString(3, null);
-            ps.setBigDecimal(4, BigDecimal.ZERO);
+            ps.setBigDecimal(4, BigDecimal.valueOf(30000));
 
             ps.executeUpdate();
 
@@ -874,48 +897,55 @@ public class CustomerOrderDAO {
     }
 
     public Voucher getVoucherByCode(String code) {
-
         if (code == null || code.trim().isEmpty()) {
             return null;
         }
 
-        String sql
-                = "SELECT * FROM Voucher "
-                + "WHERE code=? "
-                + "AND GETDATE() BETWEEN start_date AND end_date "
-                + "AND used_count < usage_limit";
+        String sql = "SELECT v.*, parentCategory.category_name, "
+                + "parentCategory.parent_id AS category_parent_id, "
+                + "CASE WHEN parentCategory.id IS NOT NULL AND EXISTS ("
+                + "    SELECT 1 FROM Category child "
+                + "    WHERE child.parent_id = parentCategory.id AND child.status = 1"
+                + ") THEN 1 ELSE 0 END AS category_has_children, "
+                + "CASE "
+                + "    WHEN v.category_id IS NULL THEN 1 "
+                + "    WHEN parentCategory.id IS NOT NULL "
+                + "         AND parentCategory.status = 1 "
+                + "         AND parentCategory.parent_id IS NULL "
+                + "         AND EXISTS (SELECT 1 FROM " + VOUCHER_SCOPE_TABLE
+                + " scopeRow WHERE scopeRow.voucher_id = v.id) "
+                + "         AND NOT EXISTS ("
+                + "             SELECT 1 FROM " + VOUCHER_SCOPE_TABLE + " scopeRow "
+                + "             LEFT JOIN Category selectedCategory "
+                + "                    ON selectedCategory.id = scopeRow.category_id "
+                + "             LEFT JOIN Category selectedParent "
+                + "                    ON selectedParent.id = selectedCategory.parent_id "
+                + "             WHERE scopeRow.voucher_id = v.id "
+                + "               AND (selectedCategory.id IS NULL "
+                + "                    OR selectedCategory.status <> 1 "
+                + "                    OR (selectedCategory.parent_id IS NOT NULL "
+                + "                        AND ISNULL(selectedParent.status, 0) <> 1))"
+                + "         ) "
+                + "    THEN 1 ELSE 0 "
+                + "END AS category_scope_active "
+                + "FROM Voucher v "
+                + "LEFT JOIN Category parentCategory ON parentCategory.id = v.category_id "
+                + "WHERE UPPER(v.code) = UPPER(?) "
+                + "AND GETDATE() BETWEEN v.start_date AND v.end_date "
+                + "AND v.used_count < v.usage_limit";
 
-        try (
-                Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, code.trim());
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                Voucher v = new Voucher();
-
-                v.setId(rs.getInt("id"));
-                v.setCode(rs.getString("code"));
-                v.setTitle(rs.getString("title"));
-                v.setDiscountType(rs.getString("discount_type"));
-                v.setDiscountValue(rs.getBigDecimal("discount_value"));
-                v.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
-                v.setMinOrderValue(rs.getBigDecimal("min_order_value"));
-                v.setStartDate(rs.getTimestamp("start_date"));
-                v.setEndDate(rs.getTimestamp("end_date"));
-                v.setUsageLimit(rs.getInt("usage_limit"));
-                v.setUsedCount(rs.getInt("used_count"));
-                v.setLimitPerUser(rs.getInt("limit_per_user"));
-
-                int categoryId = rs.getInt("category_id");
-                v.setCategoryId(rs.wasNull() ? null : categoryId);
-
-                return v;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Voucher voucher = mapVoucherWithScope(rs);
+                    loadVoucherScopeCategories(con, voucher);
+                    return voucher;
+                }
             }
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -924,49 +954,230 @@ public class CustomerOrderDAO {
 
     public List<Voucher> getVouchersForUser(int userId) {
         List<Voucher> vouchers = new ArrayList<>();
-        String sql = "SELECT v.*, (SELECT COUNT(*) FROM [Order] o "
-                + "WHERE o.voucher_id=v.id AND o.user_id=? AND o.order_status <> 'CANCELLED') AS user_used_count "
-                + "FROM Voucher v ORDER BY v.end_date ASC";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+        String sql = "SELECT v.*, parentCategory.category_name, "
+                + "parentCategory.parent_id AS category_parent_id, "
+                + "CASE WHEN parentCategory.id IS NOT NULL AND EXISTS ("
+                + "    SELECT 1 FROM Category child "
+                + "    WHERE child.parent_id = parentCategory.id AND child.status = 1"
+                + ") THEN 1 ELSE 0 END AS category_has_children, "
+                + "CASE "
+                + "    WHEN v.category_id IS NULL THEN 1 "
+                + "    WHEN parentCategory.id IS NOT NULL "
+                + "         AND parentCategory.status = 1 "
+                + "         AND parentCategory.parent_id IS NULL "
+                + "         AND EXISTS (SELECT 1 FROM " + VOUCHER_SCOPE_TABLE
+                + " scopeRow WHERE scopeRow.voucher_id = v.id) "
+                + "         AND NOT EXISTS ("
+                + "             SELECT 1 FROM " + VOUCHER_SCOPE_TABLE + " scopeRow "
+                + "             LEFT JOIN Category selectedCategory "
+                + "                    ON selectedCategory.id = scopeRow.category_id "
+                + "             LEFT JOIN Category selectedParent "
+                + "                    ON selectedParent.id = selectedCategory.parent_id "
+                + "             WHERE scopeRow.voucher_id = v.id "
+                + "               AND (selectedCategory.id IS NULL "
+                + "                    OR selectedCategory.status <> 1 "
+                + "                    OR (selectedCategory.parent_id IS NOT NULL "
+                + "                        AND ISNULL(selectedParent.status, 0) <> 1))"
+                + "         ) "
+                + "    THEN 1 ELSE 0 "
+                + "END AS category_scope_active, "
+                + "(SELECT COUNT(*) FROM [Order] o "
+                + " WHERE o.voucher_id = v.id AND o.user_id = ? "
+                + " AND o.order_status <> 'CANCELLED') AS user_used_count "
+                + "FROM Voucher v "
+                + "LEFT JOIN Category parentCategory ON parentCategory.id = v.category_id "
+                + "ORDER BY v.end_date ASC, v.id DESC";
+
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Voucher v = new Voucher();
-                    v.setId(rs.getInt("id"));
-                    v.setCode(rs.getString("code"));
-                    v.setTitle(rs.getString("title"));
-                    v.setDiscountType(rs.getString("discount_type"));
-                    v.setDiscountValue(rs.getBigDecimal("discount_value"));
-                    v.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
-                    v.setMinOrderValue(rs.getBigDecimal("min_order_value"));
-                    v.setStartDate(rs.getTimestamp("start_date"));
-                    v.setEndDate(rs.getTimestamp("end_date"));
-                    v.setUsageLimit(rs.getInt("usage_limit"));
-                    v.setUsedCount(rs.getInt("used_count"));
-                    v.setLimitPerUser(rs.getInt("limit_per_user"));
-
-                    int categoryId = rs.getInt("category_id");
-                    v.setCategoryId(rs.wasNull() ? null : categoryId);
-
-                    v.setUserUsedCount(rs.getInt("user_used_count"));
-                    vouchers.add(v);
+                    Voucher voucher = mapVoucherWithScope(rs);
+                    voucher.setUserUsedCount(rs.getInt("user_used_count"));
+                    vouchers.add(voucher);
                 }
             }
+
+            loadVoucherScopeCategories(con, vouchers);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return vouchers;
     }
 
-    private boolean hasUserUsedVoucher(int userId, int voucherId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM [Order] WHERE user_id=? AND voucher_id=? AND order_status <> 'CANCELLED'";
-        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+    public Map<Integer, Integer> getActiveCategoryParentMap() {
+        try (Connection con = DBConnection.getConnection()) {
+            return loadActiveCategoryParentMap(con);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new HashMap<>();
+        }
+    }
+
+    private Map<Integer, Integer> loadActiveCategoryParentMap(Connection con)
+            throws SQLException {
+
+        Map<Integer, Integer> categoryParentMap = new HashMap<>();
+        String sql = "SELECT c.id, c.parent_id "
+                + "FROM Category c "
+                + "LEFT JOIN Category parent ON parent.id = c.parent_id "
+                + "WHERE c.status = 1 "
+                + "AND (c.parent_id IS NULL OR parent.status = 1)";
+
+        try (PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                int categoryId = rs.getInt("id");
+                int parentId = rs.getInt("parent_id");
+                categoryParentMap.put(
+                        categoryId,
+                        rs.wasNull() ? null : parentId
+                );
+            }
+        }
+
+        return categoryParentMap;
+    }
+
+    private boolean isCategoryWithinScope(
+            int productCategoryId,
+            boolean globalScope,
+            List<Integer> selectedCategoryIds,
+            Map<Integer, Integer> categoryParentMap) {
+
+        if (globalScope) {
+            return true;
+        }
+
+        if (productCategoryId <= 0
+                || selectedCategoryIds == null
+                || selectedCategoryIds.isEmpty()
+                || categoryParentMap == null
+                || !categoryParentMap.containsKey(productCategoryId)) {
+            return false;
+        }
+
+        Set<Integer> scopeIds = new HashSet<>(selectedCategoryIds);
+        Integer currentCategoryId = productCategoryId;
+        Set<Integer> visited = new HashSet<>();
+
+        while (currentCategoryId != null && visited.add(currentCategoryId)) {
+            if (scopeIds.contains(currentCategoryId)) {
+                return true;
+            }
+            currentCategoryId = categoryParentMap.get(currentCategoryId);
+        }
+
+        return false;
+    }
+
+    private void loadVoucherScopeCategories(
+            Connection con,
+            Voucher voucher) throws SQLException {
+
+        if (voucher == null) {
+            return;
+        }
+
+        List<Voucher> vouchers = new ArrayList<>();
+        vouchers.add(voucher);
+        loadVoucherScopeCategories(con, vouchers);
+    }
+
+    private void loadVoucherScopeCategories(
+            Connection con,
+            List<Voucher> vouchers) throws SQLException {
+
+        if (vouchers == null || vouchers.isEmpty()) {
+            return;
+        }
+
+        Map<Integer, Voucher> voucherById = new LinkedHashMap<>();
+        StringJoiner placeholders = new StringJoiner(",");
+
+        for (Voucher voucher : vouchers) {
+            voucher.setSelectedCategoryIds(new ArrayList<>());
+            voucher.setSelectedCategoryNames(new ArrayList<>());
+            voucherById.put(voucher.getId(), voucher);
+            placeholders.add("?");
+        }
+
+        String sql = "SELECT scopeRow.voucher_id, category.id, category.category_name "
+                + "FROM " + VOUCHER_SCOPE_TABLE + " scopeRow "
+                + "JOIN Category category ON category.id = scopeRow.category_id "
+                + "WHERE scopeRow.voucher_id IN (" + placeholders + ") "
+                + "ORDER BY scopeRow.voucher_id, category.category_name";
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            int index = 1;
+            for (Integer voucherId : voucherById.keySet()) {
+                ps.setInt(index++, voucherId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Voucher voucher = voucherById.get(rs.getInt("voucher_id"));
+                    if (voucher != null) {
+                        voucher.addSelectedCategoryId(rs.getInt("id"));
+                        voucher.addSelectedCategoryName(rs.getString("category_name"));
+                    }
+                }
+            }
+        }
+    }
+
+    private int normalizePerUserLimit(int configuredLimit) {
+        return configuredLimit > 0 ? configuredLimit : 1;
+    }
+
+    private int getUserVoucherUsageCount(
+            Connection con,
+            int userId,
+            int voucherId) throws SQLException {
+
+        String sql = "SELECT COUNT(*) FROM [Order] "
+                + "WHERE user_id = ? AND voucher_id = ? "
+                + "AND order_status <> 'CANCELLED'";
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, voucherId);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
+                return rs.next() ? rs.getInt(1) : 0;
             }
         }
+    }
+
+    private Voucher mapVoucherWithScope(ResultSet rs) throws SQLException {
+        Voucher voucher = new Voucher();
+        voucher.setId(rs.getInt("id"));
+        voucher.setCode(rs.getString("code"));
+        voucher.setTitle(rs.getString("title"));
+        voucher.setDiscountType(rs.getString("discount_type"));
+        voucher.setDiscountValue(rs.getBigDecimal("discount_value"));
+        voucher.setMaxDiscountAmount(rs.getBigDecimal("max_discount_amount"));
+        voucher.setMinOrderValue(rs.getBigDecimal("min_order_value"));
+        voucher.setStartDate(rs.getTimestamp("start_date"));
+        voucher.setEndDate(rs.getTimestamp("end_date"));
+        voucher.setUsageLimit(rs.getInt("usage_limit"));
+        voucher.setUsedCount(rs.getInt("used_count"));
+        voucher.setLimitPerUser(rs.getInt("limit_per_user"));
+        voucher.setTerminateReason(rs.getString("terminate_reason"));
+
+        int categoryId = rs.getInt("category_id");
+        voucher.setCategoryId(rs.wasNull() ? null : categoryId);
+        voucher.setCategoryName(rs.getString("category_name"));
+
+        int categoryParentId = rs.getInt("category_parent_id");
+        voucher.setCategoryParentId(rs.wasNull() ? null : categoryParentId);
+        voucher.setCategoryHasChildren(rs.getBoolean("category_has_children"));
+        voucher.setCategoryScopeActive(rs.getBoolean("category_scope_active"));
+        return voucher;
     }
 
     private void createOrderDetail(
