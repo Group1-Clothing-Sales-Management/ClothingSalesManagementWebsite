@@ -793,10 +793,10 @@ public class CustomerProductDAO {
                 + "    WHERE available_variant.product_id = p.id "
                 + "    AND available_variant.status = 'ACTIVE' "
                 + "    AND available_variant.stock_quantity > 0 "
-                + "    AND ISNULL(available_variant.list_price, 0) > 0 "
                 + "    AND ISNULL(available_variant.sale_price, 0) > 0 "
                 + "    AND available_variant.sale_price "
-                + "        <= available_variant.list_price"
+                + "        <= COALESCE(available_variant.list_price, "
+                + "                    available_variant.sale_price)"
                 + ") ";
     }
 

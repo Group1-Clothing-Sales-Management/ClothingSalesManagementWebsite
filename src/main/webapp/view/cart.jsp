@@ -1277,7 +1277,9 @@
                            }
                        }
                 %>
-                    <div class="cart-item cart-grid">
+                    <div class="cart-item cart-grid"
+                         data-cart-variant-id="<%= it.getVariantId() %>"
+                         data-cart-product-id="<%= it.getProductId() %>">
                         <div>
                             <input type="checkbox"
                                    class="cart-check cart-select-input"
@@ -1456,13 +1458,170 @@
     </div>
 
     <script>
-        function submitCartForm(form) {
+        var CART_VARIANT_ORDER_KEY = "clothingSale.cart.pendingVariantOrder";
+
+        function getCartRows() {
+            return Array.prototype.slice.call(
+                    document.querySelectorAll(".shop-card .cart-item")
+            );
+        }
+
+        function getCartRowVariantId(row) {
+            if (!row) {
+                return "";
+            }
+
+            return String(
+                    row.dataset.cartVariantId
+                    || (row.querySelector('input[name="selectedVariantId"]')
+                        ? row.querySelector('input[name="selectedVariantId"]').value
+                        : "")
+            );
+        }
+
+        function rememberVariantUpdatePosition(form) {
+            if (!form) {
+                return;
+            }
+
+            var oldVariantInput = form.querySelector('input[name="variantId"]');
+            var newVariantInput = form.querySelector('[name="newVariantId"]');
+            var currentRow = form.closest(".cart-item");
+
+            if (!oldVariantInput || !newVariantInput || !currentRow) {
+                return;
+            }
+
+            var oldVariantId = String(oldVariantInput.value || "");
+            var newVariantId = String(newVariantInput.value || "");
+
+            if (!oldVariantId || !newVariantId || oldVariantId === newVariantId) {
+                return;
+            }
+
+            var rows = getCartRows();
+            var currentOrder = rows.map(getCartRowVariantId);
+            var rowIndex = rows.indexOf(currentRow);
+
+            try {
+                sessionStorage.setItem(
+                        CART_VARIANT_ORDER_KEY,
+                        JSON.stringify({
+                            oldVariantId: oldVariantId,
+                            newVariantId: newVariantId,
+                            rowIndex: rowIndex,
+                            order: currentOrder,
+                            scrollY: window.scrollY || 0,
+                            savedAt: Date.now()
+                        })
+                );
+            } catch (error) {
+                console.warn("Could not remember cart row position.", error);
+            }
+        }
+
+        function restoreVariantUpdatePosition() {
+            var rawState = null;
+
+            try {
+                rawState = sessionStorage.getItem(CART_VARIANT_ORDER_KEY);
+                sessionStorage.removeItem(CART_VARIANT_ORDER_KEY);
+            } catch (error) {
+                return;
+            }
+
+            if (!rawState) {
+                return;
+            }
+
+            var state;
+            try {
+                state = JSON.parse(rawState);
+            } catch (error) {
+                return;
+            }
+
+            if (!state
+                    || !Array.isArray(state.order)
+                    || Date.now() - Number(state.savedAt || 0) > 60000) {
+                return;
+            }
+
+            var shopCard = document.querySelector(".shop-card");
+            var rows = getCartRows();
+
+            if (!shopCard || rows.length === 0) {
+                return;
+            }
+
+            var rowsByVariantId = new Map();
+            rows.forEach(function(row) {
+                rowsByVariantId.set(getCartRowVariantId(row), row);
+            });
+
+            var oldVariantId = String(state.oldVariantId || "");
+            var newVariantId = String(state.newVariantId || "");
+            var insertionIndex = Number.isInteger(state.rowIndex)
+                    ? state.rowIndex
+                    : state.order.indexOf(oldVariantId);
+
+            var desiredOrder = state.order.filter(function(variantId) {
+                var normalizedId = String(variantId);
+                return normalizedId !== oldVariantId
+                        && normalizedId !== newVariantId;
+            });
+
+            if (newVariantId && rowsByVariantId.has(newVariantId)) {
+                if (insertionIndex < 0) {
+                    insertionIndex = desiredOrder.length;
+                }
+
+                insertionIndex = Math.min(
+                        Math.max(insertionIndex, 0),
+                        desiredOrder.length
+                );
+
+                desiredOrder.splice(insertionIndex, 0, newVariantId);
+            }
+
+            var placedRows = new Set();
+
+            desiredOrder.forEach(function(variantId) {
+                var row = rowsByVariantId.get(String(variantId));
+                if (row && !placedRows.has(row)) {
+                    shopCard.appendChild(row);
+                    placedRows.add(row);
+                }
+            });
+
+            rows.forEach(function(row) {
+                if (!placedRows.has(row)) {
+                    shopCard.appendChild(row);
+                }
+            });
+
+            window.requestAnimationFrame(function() {
+                window.scrollTo({
+                    top: Number(state.scrollY || 0),
+                    left: 0,
+                    behavior: "auto"
+                });
+            });
+        }
+
+        function submitCartForm(form, preserveVariantPosition) {
+            if (preserveVariantPosition) {
+                rememberVariantUpdatePosition(form);
+            }
+
             if (form.requestSubmit) {
                 form.requestSubmit();
             } else {
                 form.submit();
             }
         }
+
+        restoreVariantUpdatePosition();
 
         function getCurrentStock(form) {
             var select = form.querySelector('.variant-select');
@@ -1699,7 +1858,7 @@
             syncVariantSelect(hiddenSelect);
 
             if (changedVariant) {
-                submitCartForm(form);
+                submitCartForm(form, true);
             }
         }
 
@@ -1783,7 +1942,7 @@
                     markVariantChoice(popover, choice.dataset.value);
                     syncVariantSelect(select);
                     closeVariantPopover(popover);
-                    submitCartForm(form);
+                    submitCartForm(form, true);
                 });
             });
         });

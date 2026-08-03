@@ -583,16 +583,16 @@ public class AdminProductController extends HttpServlet {
         boolean ajaxRequest = isAjaxRequest(request);
         int productId;
         try {
-            productId = Integer.parseInt(request.getParameter("productId"));
+            productId = Integer.parseInt(getMultipartParameter(request, "productId"));
         } catch (Exception e) {
             finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_BAD_REQUEST, "invalid-request", null);
             return;
         }
 
-        String featuredRaw = request.getParameter("featured");
+        String featuredRaw = getMultipartParameter(request, "featured");
         boolean featured = "true".equalsIgnoreCase(featuredRaw) || "1".equals(featuredRaw) || "on".equalsIgnoreCase(featuredRaw) || "yes".equalsIgnoreCase(featuredRaw);
         Integer displayOrder = null;
-        String displayOrderRaw = request.getParameter("displayOrder");
+        String displayOrderRaw = getMultipartParameter(request, "displayOrder");
 
         if (featured && displayOrderRaw != null && !displayOrderRaw.isBlank()) {
             try {

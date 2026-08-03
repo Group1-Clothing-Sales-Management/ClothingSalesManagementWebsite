@@ -122,11 +122,12 @@ public class AdminManageProductService {
             }
             if (displayOrder != null && displayOrder > 0) {
                 normalizedDisplayOrder = displayOrder;
-            } else if (product.isFeatured() && product.getFeaturedDisplayOrder() != null && product.getFeaturedDisplayOrder() > 0) {
+            } else if (product.isFeatured()
+                    && product.getFeaturedDisplayOrder() != null
+                    && product.getFeaturedDisplayOrder() > 0) {
                 normalizedDisplayOrder = product.getFeaturedDisplayOrder();
-            } else {
-                normalizedDisplayOrder = productDAO.getNextFeaturedDisplayOrder();
             }
+            // Khi bật lần đầu, để DAO tự lấy MAX + 1 trong cùng transaction.
         }
 
         if (!productDAO.updateFeaturedStatus(productId, featured, normalizedDisplayOrder)) {

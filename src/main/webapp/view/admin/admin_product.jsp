@@ -290,15 +290,9 @@
                 </div>
 
                 <div class="card card-main admin-card p-4">
-                    <div class="mb-3">
-                        <h3 class="h6 mb-0 fw-bold text-dark">
-                            <i class="fa-solid fa-list me-2 text-secondary"></i>Product Catalog List
-                        </h3>
-                    </div>
-
+                   
                     <div class="product-filter-panel mb-3">
                         <div class="product-filter-grid">
-
                             <!-- Search is wider so the placeholder and entered text remain readable. -->
                             <div class="product-filter-field product-filter-search">
                                 <label for="productSearchInput" class="product-filter-label">
@@ -310,9 +304,14 @@
                                            class="form-control"
                                            placeholder="Search by product name, category or brand..."
                                            autocomplete="off">
-                                    <span class="input-group-text">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                    </span>
+                                    <button type="button"
+                                            id="productSearchClear"
+                                            class="btn btn-outline-secondary"
+                                            title="Clear search"
+                                            aria-label="Clear search"
+                                            disabled>
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="product-filter-field">
@@ -362,6 +361,10 @@
                             </div>
 
                         </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small id="productResultSummary" class="text-muted"></small>
                     </div>
 
                     <div class="table-responsive">
@@ -457,6 +460,7 @@
                                         <td>
                                             <form class="featured-control-form"
                                                   action="${pageContext.request.contextPath}/admin/manage-product"
+                                                  data-submit-url="${pageContext.request.contextPath}/admin/manage-product"
                                                   method="POST">
                                                 <input type="hidden" name="action" value="UPDATE_FEATURED">
                                                 <input type="hidden" name="productId" value="${prod.id}">
@@ -707,440 +711,482 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-                                                            document.addEventListener("DOMContentLoaded", function () {
-                                                                const searchInput = document.getElementById("productSearchInput");
-                                                                const clearSearchButton = document.getElementById("productSearchClear");
-                                                                const categoryFilter = document.getElementById("productCategoryFilter");
-                                                                const brandFilter = document.getElementById("productBrandFilter");
-                                                                const statusFilter = document.getElementById("productStatusFilter");
-                                                                const resetFiltersButton = document.getElementById("resetProductFilters");
-                                                                const resultSummary = document.getElementById("productResultSummary");
-                                                                const noResultsRow = document.getElementById("productNoResultsRow");
-                                                                const productRows = Array.from(
-                                                                        document.querySelectorAll("#productTableBody .product-row")
-                                                                        );
+            (function () {
+                "use strict";
 
-                                                                /** Chuẩn hóa từ khóa tìm kiếm. */
-                                                                function normalizeSearchValue(value) {
-                                                                    return String(value == null ? "" : value)
-                                                                            .normalize("NFD")
-                                                                            .replace(/[\u0300-\u036f]/g, "")
-                                                                            .replace(/đ/g, "d")
-                                                                            .replace(/Đ/g, "D")
-                                                                            .toLowerCase()
-                                                                            .replace(/\s+/g, " ")
-                                                                            .trim();
-                                                                }
+                const statusMessages = {
+                    "product-name-exists": ["Duplicate product name", "A product with this name already exists.", "warning"],
+                    "product-not-eligible-for-featured": ["Cannot feature product", "The product must be active and have at least one active variant with a valid price.", "warning"],
+                    "featured-update-failed": ["Update failed", "The Featured Products setting could not be saved.", "error"],
+                    "product-not-found": ["Product not found", "The selected product no longer exists.", "error"],
+                    "invalid-product-id": ["Invalid product", "The selected product ID is invalid.", "warning"],
+                    "invalid-request": ["Invalid request", "The submitted product data is invalid.", "warning"],
+                    "invalid-action": ["Invalid action", "The requested Product action is not supported.", "warning"],
+                    "session-expired": ["Session expired", "Please sign in again before changing Featured Products.", "warning"],
+                    "server-error": ["Server error", "The server could not process the Featured Product request.", "error"]
+                };
 
-                                                                /** Lấy nhãn của option đã chọn. */
-                                                                function getOptionLabel(select, value) {
-                                                                    if (!select || !value) {
-                                                                        return "";
-                                                                    }
+                function showToast(message, type, title) {
+                    if (typeof window.showAppToast === "function") {
+                        window.showAppToast(message, type, {title: title});
+                        return;
+                    }
+                    window.alert(title + ": " + message);
+                }
 
-                                                                    const option = Array.from(select.options).find(function (item) {
-                                                                        return item.value === String(value);
-                                                                    });
+                function showStatusMessage(errorCode) {
+                    const message = statusMessages[errorCode] || statusMessages["featured-update-failed"];
+                    showToast(message[1], message[2], message[0]);
+                }
 
-                                                                    return option ? option.textContent : "";
-                                                                }
+                function initProductFilters() {
+                    const searchInput = document.getElementById("productSearchInput");
+                    const clearSearchButton = document.getElementById("productSearchClear");
+                    const categoryFilter = document.getElementById("productCategoryFilter");
+                    const brandFilter = document.getElementById("productBrandFilter");
+                    const statusFilter = document.getElementById("productStatusFilter");
+                    const resetFiltersButton = document.getElementById("resetProductFilters");
+                    const resultSummary = document.getElementById("productResultSummary");
+                    const noResultsRow = document.getElementById("productNoResultsRow");
+                    const productRows = Array.from(document.querySelectorAll("#productTableBody .product-row"));
 
-                                                                /** Áp dụng bộ lọc Product. */
-                                                                function applyProductFilters() {
-                                                                    const keyword = normalizeSearchValue(searchInput.value);
-                                                                    const selectedCategory = categoryFilter.value;
-                                                                    const selectedBrand = brandFilter.value;
-                                                                    const selectedStatus = statusFilter.value.toUpperCase();
-                                                                    let visibleCount = 0;
+                    if (!searchInput || !categoryFilter || !brandFilter || !statusFilter || !resetFiltersButton) {
+                        console.warn("Product filters were not initialized because one or more controls are missing.");
+                        return;
+                    }
 
-                                                                    productRows.forEach(function (row) {
-                                                                        const productId = row.dataset.productId || "";
-                                                                        const categoryId = row.dataset.categoryId || "";
-                                                                        const brandId = row.dataset.brandId || "";
-                                                                        const status = (row.dataset.status || "").toUpperCase();
-                                                                        const productNameCell = row.querySelector(".product-name-cell");
-                                                                        const productName = productNameCell
-                                                                                ? productNameCell.textContent
-                                                                                : "";
-                                                                        const categoryName = getOptionLabel(categoryFilter, categoryId);
-                                                                        const brandName = getOptionLabel(brandFilter, brandId);
+                    function normalizeSearchValue(value) {
+                        return String(value == null ? "" : value)
+                                .normalize("NFD")
+                                .replace(/[\u0300-\u036f]/g, "")
+                                .replace(/đ/g, "d")
+                                .replace(/Đ/g, "D")
+                                .toLowerCase()
+                                .replace(/\s+/g, " ")
+                                .trim();
+                    }
 
-                                                                        const searchableText = normalizeSearchValue([
-                                                                            productId,
-                                                                            "#PROD-" + productId,
-                                                                            productName,
-                                                                            categoryId,
-                                                                            categoryName,
-                                                                            brandId,
-                                                                            brandName,
-                                                                            status
-                                                                        ].join(" "));
+                    function getOptionLabel(select, value) {
+                        if (!select || !value) {
+                            return "";
+                        }
+                        const option = Array.from(select.options).find(function (item) {
+                            return item.value === String(value);
+                        });
+                        return option ? option.textContent : "";
+                    }
 
-                                                                        const matchesKeyword = !keyword
-                                                                                || searchableText.includes(keyword);
-                                                                        const matchesCategory = !selectedCategory
-                                                                                || categoryId === selectedCategory;
-                                                                        const matchesBrand = !selectedBrand
-                                                                                || brandId === selectedBrand;
-                                                                        const matchesStatus = !selectedStatus
-                                                                                || status === selectedStatus;
-                                                                        const visible = matchesKeyword
-                                                                                && matchesCategory
-                                                                                && matchesBrand
-                                                                                && matchesStatus;
+                    function applyProductFilters() {
+                        const keyword = normalizeSearchValue(searchInput.value);
+                        const selectedCategory = categoryFilter.value;
+                        const selectedBrand = brandFilter.value;
+                        const selectedStatus = statusFilter.value.toUpperCase();
+                        let visibleCount = 0;
 
-                                                                        row.classList.toggle("d-none", !visible);
+                        productRows.forEach(function (row) {
+                            const productId = row.dataset.productId || "";
+                            const categoryId = row.dataset.categoryId || "";
+                            const brandId = row.dataset.brandId || "";
+                            const status = (row.dataset.status || "").toUpperCase();
+                            const productNameCell = row.querySelector(".product-name-cell");
+                            const productName = productNameCell ? productNameCell.textContent : "";
+                            const categoryName = getOptionLabel(categoryFilter, categoryId);
+                            const brandName = getOptionLabel(brandFilter, brandId);
+                            const searchableText = normalizeSearchValue([
+                                productId,
+                                "#PROD-" + productId,
+                                productName,
+                                categoryId,
+                                categoryName,
+                                brandId,
+                                brandName,
+                                status
+                            ].join(" "));
 
-                                                                        if (visible) {
-                                                                            visibleCount++;
-                                                                        }
-                                                                    });
+                            const visible = (!keyword || searchableText.includes(keyword))
+                                    && (!selectedCategory || categoryId === selectedCategory)
+                                    && (!selectedBrand || brandId === selectedBrand)
+                                    && (!selectedStatus || status === selectedStatus);
 
-                                                                    resultSummary.textContent = "Showing "
-                                                                            + visibleCount
-                                                                            + " of "
-                                                                            + productRows.length
-                                                                            + (productRows.length === 1
-                                                                                    ? " product"
-                                                                                    : " products");
+                            row.classList.toggle("d-none", !visible);
+                            if (visible) {
+                                visibleCount++;
+                            }
+                        });
 
-                                                                    if (noResultsRow) {
-                                                                        noResultsRow.classList.toggle(
-                                                                                "d-none",
-                                                                                visibleCount > 0 || productRows.length === 0
-                                                                                );
-                                                                    }
+                        if (resultSummary) {
+                            resultSummary.textContent = "Showing " + visibleCount + " of " + productRows.length
+                                    + (productRows.length === 1 ? " product" : " products");
+                        }
 
-                                                                    clearSearchButton.disabled = searchInput.value.length === 0;
-                                                                }
+                        if (noResultsRow) {
+                            noResultsRow.classList.toggle("d-none", visibleCount > 0 || productRows.length === 0);
+                        }
 
-                                                                /** Đặt lại bộ lọc Product. */
-                                                                function resetProductFilters() {
-                                                                    searchInput.value = "";
-                                                                    categoryFilter.value = "";
-                                                                    brandFilter.value = "";
-                                                                    statusFilter.value = "";
-                                                                    applyProductFilters();
-                                                                    searchInput.focus();
-                                                                }
+                        if (clearSearchButton) {
+                            clearSearchButton.disabled = searchInput.value.length === 0;
+                        }
+                    }
 
-                                                                searchInput.addEventListener("input", applyProductFilters);
-                                                                categoryFilter.addEventListener("change", applyProductFilters);
-                                                                brandFilter.addEventListener("change", applyProductFilters);
-                                                                statusFilter.addEventListener("change", applyProductFilters);
+                    function resetProductFilters() {
+                        searchInput.value = "";
+                        categoryFilter.value = "";
+                        brandFilter.value = "";
+                        statusFilter.value = "";
+                        applyProductFilters();
+                        searchInput.focus();
+                    }
 
-                                                                clearSearchButton.addEventListener("click", function () {
-                                                                    searchInput.value = "";
-                                                                    applyProductFilters();
-                                                                    searchInput.focus();
-                                                                });
+                    searchInput.addEventListener("input", applyProductFilters);
+                    categoryFilter.addEventListener("change", applyProductFilters);
+                    brandFilter.addEventListener("change", applyProductFilters);
+                    statusFilter.addEventListener("change", applyProductFilters);
+                    resetFiltersButton.addEventListener("click", resetProductFilters);
 
-                                                                resetFiltersButton.addEventListener("click", resetProductFilters);
+                    if (clearSearchButton) {
+                        clearSearchButton.addEventListener("click", function () {
+                            searchInput.value = "";
+                            applyProductFilters();
+                            searchInput.focus();
+                        });
+                    }
 
-                                                                applyProductFilters();
-                                                            });
+                    applyProductFilters();
+                }
 
-                                                            document.addEventListener("DOMContentLoaded", function () {
-                                                                const form = document.getElementById("createProductForm");
-                                                                const productNameInput = document.getElementById("adminProductName");
-                                                                const sizeInput = document.getElementById("adminVariantSize");
-                                                                const colorInput = document.getElementById("adminVariantColor");
-                                                                const addButton = document.getElementById("adminAddVariantButton");
-                                                                const tableBody = document.getElementById("adminVariantListBody");
-                                                                const countLabel = document.getElementById("adminVariantCount");
-                                                                const createModal = document.getElementById("createProductModal");
-                                                                const variants = [];
+                function initCreateProductForm() {
+                    const form = document.getElementById("createProductForm");
+                    const productNameInput = document.getElementById("adminProductName");
+                    const sizeInput = document.getElementById("adminVariantSize");
+                    const colorInput = document.getElementById("adminVariantColor");
+                    const addButton = document.getElementById("adminAddVariantButton");
+                    const tableBody = document.getElementById("adminVariantListBody");
+                    const countLabel = document.getElementById("adminVariantCount");
+                    const createModal = document.getElementById("createProductModal");
 
-                                                                /** Chuẩn hóa khoảng trắng. */
-                                                                function cleanText(value) {
-                                                                    return value == null ? "" : value.trim().replace(/\s+/g, " ");
-                                                                }
+                    if (!form || !productNameInput || !sizeInput || !colorInput
+                            || !addButton || !tableBody || !countLabel || !createModal) {
+                        console.warn("Create Product form was not initialized because one or more controls are missing.");
+                        return;
+                    }
 
-                                                                /** Loại bỏ dấu tiếng Việt. */
-                                                                function removeVietnameseTones(value) {
-                                                                    return value
-                                                                            .normalize("NFD")
-                                                                            .replace(/[\u0300-\u036f]/g, "")
-                                                                            .replace(/đ/g, "d")
-                                                                            .replace(/Đ/g, "D");
-                                                                }
+                    const variants = [];
 
-                                                                /** Chuẩn hóa giá trị SKU. */
-                                                                function normalizeSku(value) {
-                                                                    const normalized = removeVietnameseTones(cleanText(value))
-                                                                            .toLowerCase()
-                                                                            .replace(/[^a-z0-9]+/g, "-")
-                                                                            .replace(/^-+|-+$/g, "");
-                                                                    return normalized || "na";
-                                                                }
+                    function cleanText(value) {
+                        return value == null ? "" : value.trim().replace(/\s+/g, " ");
+                    }
 
-                                                                /** Chuẩn hóa Size và Color. */
-                                                                function normalizeCombinationValue(value) {
-                                                                    return removeVietnameseTones(cleanText(value))
-                                                                            .toLowerCase();
-                                                                }
+                    function removeVietnameseTones(value) {
+                        return value
+                                .normalize("NFD")
+                                .replace(/[\u0300-\u036f]/g, "")
+                                .replace(/đ/g, "d")
+                                .replace(/Đ/g, "D");
+                    }
 
-                                                                /** Tạo khóa Size và Color. */
-                                                                function getCombinationKey(size, color) {
-                                                                    return normalizeCombinationValue(size) + "|" + normalizeCombinationValue(color);
-                                                                }
+                    function normalizeSku(value) {
+                        const normalized = removeVietnameseTones(cleanText(value))
+                                .toLowerCase()
+                                .replace(/[^a-z0-9]+/g, "-")
+                                .replace(/^-+|-+$/g, "");
+                        return normalized || "na";
+                    }
 
-                                                                /** Tạo SKU cho Variant. */
-                                                                function getVariantSku(variant) {
-                                                                    return normalizeSku(productNameInput.value)
-                                                                            + "-" + normalizeSku(variant.size)
-                                                                            + "-" + normalizeSku(variant.color);
-                                                                }
+                    function normalizeCombinationValue(value) {
+                        return removeVietnameseTones(cleanText(value)).toLowerCase();
+                    }
 
-                                                                /** Mã hóa ký tự HTML. */
-                                                                function escapeHtml(value) {
-                                                                    return String(value)
-                                                                            .replace(/&/g, "&amp;")
-                                                                            .replace(/</g, "&lt;")
-                                                                            .replace(/>/g, "&gt;")
-                                                                            .replace(/"/g, "&quot;")
-                                                                            .replace(/'/g, "&#039;");
-                                                                }
+                    function getCombinationKey(size, color) {
+                        return normalizeCombinationValue(size) + "|" + normalizeCombinationValue(color);
+                    }
 
-                                                                /** Hiển thị danh sách Variant. */
-                                                                function renderVariants() {
-                                                                    countLabel.textContent = variants.length
-                                                                            + (variants.length === 1 ? " variant" : " variants");
+                    function getVariantSku(variant) {
+                        return normalizeSku(productNameInput.value)
+                                + "-" + normalizeSku(variant.size)
+                                + "-" + normalizeSku(variant.color);
+                    }
 
-                                                                    if (variants.length === 0) {
-                                                                        tableBody.innerHTML = `
-                            <tr>
-                                <td colspan="3" class="text-center py-4 text-muted">
-                                    <i class="fa-solid fa-circle-info me-1"></i>No variants added yet.
-                                </td>
-                            </tr>`;
-                                                                        return;
-                                                                    }
+                    function escapeHtml(value) {
+                        return String(value)
+                                .replace(/&/g, "&amp;")
+                                .replace(/</g, "&lt;")
+                                .replace(/>/g, "&gt;")
+                                .replace(/"/g, "&quot;")
+                                .replace(/'/g, "&#039;");
+                    }
 
-                                                                    let rows = "";
-                                                                    variants.forEach(function (variant, index) {
-                                                                        rows += "<tr>"
-                                                                                + "<td>"
-                                                                                + "<span class='badge bg-dark me-1'>Size: " + escapeHtml(variant.size) + "</span> "
-                                                                                + "<span class='badge bg-primary'>Color: " + escapeHtml(variant.color) + "</span>"
-                                                                                + "<input type='hidden' name='variants[" + index + "].size' value='" + escapeHtml(variant.size) + "'>"
-                                                                                + "<input type='hidden' name='variants[" + index + "].color' value='" + escapeHtml(variant.color) + "'>"
-                                                                                + "</td>"
-                                                                                + "<td>"
-                                                                                + "<input type='text' class='form-control form-control-sm bg-light fw-semibold' value='" + escapeHtml(getVariantSku(variant)) + "' readonly>"
-                                                                                + "</td>"
-                                                                                + "<td class='text-center'>"
-                                                                                + "<button type='button' class='btn btn-sm btn-outline-danger' data-remove-index='" + index + "' title='Remove variant'>"
-                                                                                + "<i class='fa-solid fa-trash'></i>"
-                                                                                + "</button>"
-                                                                                + "</td>"
-                                                                                + "</tr>";
-                                                                    });
-                                                                    tableBody.innerHTML = rows;
-                                                                }
+                    function renderVariants() {
+                        countLabel.textContent = variants.length
+                                + (variants.length === 1 ? " variant" : " variants");
 
-                                                                /** Thêm Variant tạm. */
-                                                                function addVariant() {
-                                                                    const productName = cleanText(productNameInput.value);
-                                                                    const size = cleanText(sizeInput.value);
-                                                                    const color = cleanText(colorInput.value);
+                        if (variants.length === 0) {
+                            tableBody.innerHTML = "<tr>"
+                                    + "<td colspan='3' class='text-center py-4 text-muted'>"
+                                    + "<i class='fa-solid fa-circle-info me-1'></i>No variants added yet."
+                                    + "</td></tr>";
+                            return;
+                        }
 
-                                                                    if (!productName) {
-                                                                        window.showAppToast("Please enter the product name before adding variants.", "warning", {title: "Product name required"});
-                                                                        productNameInput.focus();
-                                                                        return;
-                                                                    }
+                        let rows = "";
+                        variants.forEach(function (variant, index) {
+                            rows += "<tr>"
+                                    + "<td>"
+                                    + "<span class='badge bg-dark me-1'>Size: " + escapeHtml(variant.size) + "</span> "
+                                    + "<span class='badge bg-primary'>Color: " + escapeHtml(variant.color) + "</span>"
+                                    + "<input type='hidden' name='variants[" + index + "].size' value='" + escapeHtml(variant.size) + "'>"
+                                    + "<input type='hidden' name='variants[" + index + "].color' value='" + escapeHtml(variant.color) + "'>"
+                                    + "</td>"
+                                    + "<td><input type='text' class='form-control form-control-sm bg-light fw-semibold' value='"
+                                    + escapeHtml(getVariantSku(variant)) + "' readonly></td>"
+                                    + "<td class='text-center'>"
+                                    + "<button type='button' class='btn btn-sm btn-outline-danger' data-remove-index='" + index + "' title='Remove variant'>"
+                                    + "<i class='fa-solid fa-trash'></i></button>"
+                                    + "</td></tr>";
+                        });
+                        tableBody.innerHTML = rows;
+                    }
 
-                                                                    if (!size || !color) {
-                                                                        window.showAppToast("Please select a size and enter a color.", "warning", {title: "Incomplete variant"});
-                                                                        return;
-                                                                    }
+                    function addVariant() {
+                        const productName = cleanText(productNameInput.value);
+                        const size = cleanText(sizeInput.value);
+                        const color = cleanText(colorInput.value);
 
-                                                                    const combinationKey = getCombinationKey(size, color);
-                                                                    const duplicated = variants.some(function (variant) {
-                                                                        return getCombinationKey(variant.size, variant.color) === combinationKey;
-                                                                    });
+                        if (!productName) {
+                            showToast("Please enter the product name before adding variants.", "warning", "Product name required");
+                            productNameInput.focus();
+                            return;
+                        }
 
-                                                                    if (duplicated) {
-                                                                        window.showAppToast("This size and color combination is already in the list.", "warning", {title: "Duplicate variant"});
-                                                                        return;
-                                                                    }
+                        if (!size || !color) {
+                            showToast("Please select a size and enter a color.", "warning", "Incomplete variant");
+                            return;
+                        }
 
-                                                                    variants.push({size: size, color: color});
-                                                                    sizeInput.value = "";
-                                                                    colorInput.value = "";
-                                                                    colorInput.focus();
-                                                                    renderVariants();
-                                                                }
+                        const combinationKey = getCombinationKey(size, color);
+                        const duplicated = variants.some(function (variant) {
+                            return getCombinationKey(variant.size, variant.color) === combinationKey;
+                        });
 
-                                                                addButton.addEventListener("click", addVariant);
+                        if (duplicated) {
+                            showToast("This size and color combination is already in the list.", "warning", "Duplicate variant");
+                            return;
+                        }
 
-                                                                colorInput.addEventListener("keydown", function (event) {
-                                                                    if (event.key === "Enter") {
-                                                                        event.preventDefault();
-                                                                        addVariant();
-                                                                    }
-                                                                });
+                        variants.push({size: size, color: color});
+                        sizeInput.value = "";
+                        colorInput.value = "";
+                        colorInput.focus();
+                        renderVariants();
+                    }
 
-                                                                productNameInput.addEventListener("input", renderVariants);
+                    addButton.addEventListener("click", addVariant);
+                    colorInput.addEventListener("keydown", function (event) {
+                        if (event.key === "Enter") {
+                            event.preventDefault();
+                            addVariant();
+                        }
+                    });
+                    productNameInput.addEventListener("input", renderVariants);
+                    tableBody.addEventListener("click", function (event) {
+                        const removeButton = event.target.closest("[data-remove-index]");
+                        if (!removeButton) {
+                            return;
+                        }
+                        variants.splice(Number(removeButton.dataset.removeIndex), 1);
+                        renderVariants();
+                    });
 
-                                                                tableBody.addEventListener("click", function (event) {
-                                                                    const removeButton = event.target.closest("[data-remove-index]");
-                                                                    if (!removeButton) {
-                                                                        return;
-                                                                    }
-                                                                    variants.splice(Number(removeButton.dataset.removeIndex), 1);
-                                                                    renderVariants();
-                                                                });
+                    form.addEventListener("submit", function (event) {
+                        event.preventDefault();
 
-                                                                form.addEventListener("submit", function (event) {
-                                                                    event.preventDefault();
+                        const normalizedName = cleanText(productNameInput.value).toLowerCase();
+                        const duplicatedName = Array.from(document.querySelectorAll(".product-name-cell")).some(function (cell) {
+                            return cleanText(cell.textContent).toLowerCase() === normalizedName;
+                        });
 
-                                                                    const normalizedName = cleanText(productNameInput.value).toLowerCase();
-                                                                    const duplicatedName = Array.from(document.querySelectorAll(".product-name-cell")).some(function (cell) {
-                                                                        return cleanText(cell.textContent).toLowerCase() === normalizedName;
-                                                                    });
+                        if (duplicatedName) {
+                            showToast("A product with this name already exists.", "warning", "Duplicate product name");
+                            productNameInput.focus();
+                            return;
+                        }
 
-                                                                    if (duplicatedName) {
-                                                                        window.showAppToast("A product with this name already exists.", "warning", {title: "Duplicate product name"});
-                                                                        productNameInput.focus();
-                                                                        return;
-                                                                    }
+                        if (variants.length === 0) {
+                            showToast("Please add at least one size-color variant.", "warning", "Variant required");
+                            return;
+                        }
 
-                                                                    if (variants.length === 0) {
-                                                                        window.showAppToast("Please add at least one size-color variant.", "warning", {title: "Variant required"});
-                                                                        return;
-                                                                    }
+                        if (typeof window.confirmAppAction !== "function") {
+                            if (window.confirm("Do you want to save this new product information?")) {
+                                form.submit();
+                            }
+                            return;
+                        }
 
-                                                                    window.confirmAppAction("Do you want to save this new product information?", {
-                                                                        title: "Save product",
-                                                                        confirmLabel: "Save product"
-                                                                    }).then(function (confirmed) {
-                                                                        if (!confirmed) {
-                                                                            return;
-                                                                        }
+                        window.confirmAppAction("Do you want to save this new product information?", {
+                            title: "Save product",
+                            confirmLabel: "Save product"
+                        }).then(function (confirmed) {
+                            if (confirmed) {
+                                form.submit();
+                            }
+                        });
+                    });
 
-                                                                        form.submit();
-                                                                    });
-                                                                });
+                    createModal.addEventListener("hidden.bs.modal", function () {
+                        form.reset();
+                        variants.splice(0, variants.length);
+                        renderVariants();
+                    });
 
-                                                                createModal.addEventListener("hidden.bs.modal", function () {
-                                                                    form.reset();
-                                                                    variants.splice(0, variants.length);
-                                                                    renderVariants();
-                                                                });
+                    renderVariants();
+                }
 
-                                                                renderVariants();
-                                                            });
+                function renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, featured) {
+                    toggle.checked = featured;
+                    hiddenValue.value = featured ? "true" : "false";
+                    switchWrap.classList.toggle("is-active", featured);
+                    toggleText.textContent = featured ? "Featured" : "Not featured";
+                    if (productRow) {
+                        productRow.dataset.featured = featured ? "true" : "false";
+                    }
+                }
 
-                                                            document.addEventListener("DOMContentLoaded", function () {
-                                                                const statusMessages = {
-                                                                    "product-name-exists": ["Duplicate product name", "A product with this name already exists.", "warning"],
-                                                                    "invalid-featured-order": ["Invalid order", "Display order must be a positive number.", "warning"],
-                                                                    "product-not-eligible-for-featured": ["Cannot feature product", "The product must be active and have at least one active variant with a valid price.", "warning"],
-                                                                    "featured-update-failed": ["Update failed", "The Featured Products setting could not be saved.", "error"],
-                                                                    "product-not-found": ["Product not found", "The selected product no longer exists.", "error"],
-                                                                    "invalid-product-id": ["Invalid product", "The selected product ID is invalid.", "warning"],
-                                                                    "invalid-request": ["Invalid request", "The submitted product data is invalid.", "warning"],
-                                                                    "invalid-action": ["Invalid action", "The requested Product action is not supported.", "warning"],
-                                                                    "variant-invalid": ["Invalid variant", "Please check the Size and Color values.", "warning"],
-                                                                    "variant-required": ["Variant required", "Please add at least one Size and Color variant.", "warning"],
-                                                                    "category-inactive": ["Inactive category", "Please select an active subcategory.", "warning"],
-                                                                    "error": ["Update failed", "An unexpected error occurred while saving.", "error"]
-                                                                };
+                function initFeaturedControls() {
+                    document.querySelectorAll(".featured-control-form").forEach(function (form) {
+                        const toggle = form.querySelector(".featured-toggle");
+                        const hiddenValue = form.querySelector(".featured-hidden-value");
+                        const switchWrap = form.querySelector(".featured-switch-wrap");
+                        const toggleText = form.querySelector(".featured-toggle-text");
+                        const productIdInput = form.querySelector("input[name='productId']");
+                        const productRow = form.closest(".product-row");
+                        const submitUrl = form.dataset.submitUrl || form.getAttribute("action");
+                        const permanentlyDisabled = toggle ? toggle.disabled : false;
 
-                                                                /** Cập nhật giao diện công tắc Featured. */
-                                                                function renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, featured) {
-                                                                    toggle.checked = featured;
-                                                                    hiddenValue.value = featured ? "true" : "false";
-                                                                    switchWrap.classList.toggle("is-active", featured);
-                                                                    toggleText.textContent = featured ? "Featured" : "Not featured";
-                                                                    if (productRow) {
-                                                                        productRow.dataset.featured = featured ? "true" : "false";
-                                                                    }
-                                                                }
+                        if (!toggle || !hiddenValue || !switchWrap || !toggleText || !productIdInput || !submitUrl) {
+                            console.warn("A Featured Product control was skipped because required data is missing.", form);
+                            return;
+                        }
 
-                                                                document.querySelectorAll(".featured-control-form").forEach(function (form) {
-                                                                    const toggle = form.querySelector(".featured-toggle");
-                                                                    const hiddenValue = form.querySelector(".featured-hidden-value");
-                                                                    const switchWrap = form.querySelector(".featured-switch-wrap");
-                                                                    const toggleText = form.querySelector(".featured-toggle-text");
-                                                                    const productRow = form.closest(".product-row");
-                                                                    if (!toggle || !hiddenValue || !switchWrap || !toggleText) {
-                                                                        return;
-                                                                    }
+                        form.addEventListener("submit", function (event) {
+                            event.preventDefault();
+                        });
 
-                                                                    toggle.addEventListener("change", async function () {
-                                                                        const oldFeaturedState = hiddenValue.value === "true";
-                                                                        const requestedFeaturedState = toggle.checked;
-                                                                        const requestBody = new URLSearchParams();
-                                                                        requestBody.set("action", "UPDATE_FEATURED");
-                                                                        requestBody.set("productId", form.querySelector("[name='productId']").value);
-                                                                        requestBody.set("featured", requestedFeaturedState ? "true" : "false");
+                        toggle.addEventListener("change", async function () {
+                            if (toggle.dataset.saving === "true") {
+                                return;
+                            }
 
-                                                                        hiddenValue.value = requestedFeaturedState ? "true" : "false";
-                                                                        switchWrap.classList.toggle("is-active", requestedFeaturedState);
-                                                                        switchWrap.classList.add("is-saving");
-                                                                        toggleText.textContent = "Saving...";
-                                                                        toggle.disabled = true;
+                            const oldFeaturedState = hiddenValue.value === "true";
+                            const requestedFeaturedState = toggle.checked;
+                            const requestBody = new URLSearchParams();
+                            requestBody.set("action", "UPDATE_FEATURED");
+                            requestBody.set("productId", productIdInput.value);
+                            requestBody.set("featured", requestedFeaturedState ? "true" : "false");
 
-                                                                        try {
-                                                                            const response = await fetch(form.action, {
-                                                                                method: "POST",
-                                                                                headers: {
-                                                                                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-                                                                                    "X-Requested-With": "XMLHttpRequest",
-                                                                                    "Accept": "application/json"
-                                                                                },
-                                                                                body: requestBody.toString(),
-                                                                                credentials: "same-origin"
-                                                                            });
+                            toggle.dataset.saving = "true";
+                            hiddenValue.value = requestedFeaturedState ? "true" : "false";
+                            switchWrap.classList.toggle("is-active", requestedFeaturedState);
+                            switchWrap.classList.add("is-saving");
+                            toggleText.textContent = "Saving...";
+                            toggle.disabled = true;
 
-                                                                            let result = null;
-                                                                            try {
-                                                                                result = await response.json();
-                                                                            } catch (parseError) {
-                                                                                throw new Error("featured-update-failed");
-                                                                            }
+                            try {
+                                const response = await fetch(submitUrl, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                                        "X-Requested-With": "XMLHttpRequest",
+                                        "Accept": "application/json"
+                                    },
+                                    body: requestBody.toString(),
+                                    credentials: "same-origin",
+                                    redirect: "follow"
+                                });
 
-                                                                            if (!response.ok || !result || result.success !== true) {
-                                                                                throw new Error(result && result.error ? result.error : "featured-update-failed");
-                                                                            }
+                                const responseText = await response.text();
+                                let result = null;
 
-                                                                            renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, result.featured === true);
-                                                                        } catch (error) {
-                                                                            renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, oldFeaturedState);
-                                                                            const errorCode = error && error.message ? error.message : "featured-update-failed";
-                                                                            const message = statusMessages[errorCode] || statusMessages["featured-update-failed"];
-                                                                            window.showAppToast(message[1], message[2], {title: message[0]});
-                                                                            console.error("Could not update Featured Product:", error);
-                                                                        } finally {
-                                                                            switchWrap.classList.remove("is-saving");
-                                                                            toggle.disabled = false;
-                                                                        }
-                                                                    });
-                                                                });
+                                try {
+                                    result = responseText ? JSON.parse(responseText) : null;
+                                } catch (parseError) {
+                                    if (response.redirected || /<html[\s>]/i.test(responseText)) {
+                                        throw new Error("session-expired");
+                                    }
+                                    console.error("Featured Product returned a non-JSON response:", responseText);
+                                    throw new Error("server-error");
+                                }
 
-                                                                const status = new URLSearchParams(window.location.search).get("status");
-                                                                if (status && statusMessages[status]) {
-                                                                    const message = statusMessages[status];
-                                                                    window.showAppToast(message[1], message[2], {title: message[0]});
-                                                                }
-                                                            });
+                                if (!response.ok || !result || result.success !== true) {
+                                    throw new Error(result && result.error ? result.error : "featured-update-failed");
+                                }
 
-                                                            /** Xác nhận xóa Product. */
-                                                            function deleteProduct(id) {
-                                                                window.confirmAppAction("The product will be soft-deleted and its variants will become inactive.", {
-                                                                    title: "Delete this product?",
-                                                                    confirmLabel: "Delete product",
-                                                                    danger: true
-                                                                }).then(function (confirmed) {
-                                                                    if (confirmed) {
-                                                                        document.getElementById("hiddenDeleteProductId").value = id;
-                                                                        document.getElementById("hiddenDeleteForm").submit();
-                                                                    }
-                                                                });
-                                                            }
+                                renderFeaturedState(
+                                        toggle,
+                                        hiddenValue,
+                                        switchWrap,
+                                        toggleText,
+                                        productRow,
+                                        result.featured === true
+                                        );
+                            } catch (error) {
+                                renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, oldFeaturedState);
+                                const errorCode = error && error.message ? error.message : "featured-update-failed";
+                                showStatusMessage(errorCode);
+                                console.error("Could not update Featured Product:", error);
+                            } finally {
+                                switchWrap.classList.remove("is-saving");
+                                toggle.dataset.saving = "false";
+                                toggle.disabled = permanentlyDisabled;
+                            }
+                        });
+                    });
+                }
+
+                function showMessageFromQueryString() {
+                    const status = new URLSearchParams(window.location.search).get("status");
+                    if (status && statusMessages[status]) {
+                        showStatusMessage(status);
+                    }
+                }
+
+                document.addEventListener("DOMContentLoaded", function () {
+                    initProductFilters();
+                    initCreateProductForm();
+                    initFeaturedControls();
+                    showMessageFromQueryString();
+                });
+
+                window.deleteProduct = function (id) {
+                    const deleteProductId = document.getElementById("hiddenDeleteProductId");
+                    const deleteForm = document.getElementById("hiddenDeleteForm");
+                    if (!deleteProductId || !deleteForm) {
+                        showToast("The delete form is unavailable.", "error", "Delete failed");
+                        return;
+                    }
+
+                    function submitDelete() {
+                        deleteProductId.value = id;
+                        deleteForm.submit();
+                    }
+
+                    if (typeof window.confirmAppAction !== "function") {
+                        if (window.confirm("Delete this product?")) {
+                            submitDelete();
+                        }
+                        return;
+                    }
+
+                    window.confirmAppAction("The product will be soft-deleted and its variants will become inactive.", {
+                        title: "Delete this product?",
+                        confirmLabel: "Delete product",
+                        danger: true
+                    }).then(function (confirmed) {
+                        if (confirmed) {
+                            submitDelete();
+                        }
+                    });
+                };
+            })();
         </script>
     </body>
 </html>

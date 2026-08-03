@@ -31,6 +31,25 @@
                 color: #212529;
             }
 
+            .page-title-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                color: #212529;
+                text-decoration: none;
+                transition: color 0.18s ease, transform 0.18s ease;
+            }
+
+            .page-title-link:hover,
+            .page-title-link:focus {
+                color: #c65b3d;
+                transform: translateX(-2px);
+            }
+
+            .page-title-link i {
+                font-size: 20px;
+            }
+
             .address-card {
                 background: #ffffff;
                 border: 1px solid #e4e7eb;
@@ -123,10 +142,32 @@
                  justify-content-between align-items-md-center gap-3 mb-4">
 
                 <div>
-                    <h1 class="page-title mb-1">My Addresses</h1>
+                    <h1 class="page-title mb-1">
+                        <c:choose>
+                            <c:when test="${from eq 'checkout'}">
+                                <a href="${contextPath}/customer/checkout"
+                                   class="page-title-link"
+                                   title="Back to Checkout"
+                                   aria-label="Back to Checkout">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>My Addresses</span>
+                                </a>
+                            </c:when>
+                            <c:otherwise>
+                                My Addresses
+                            </c:otherwise>
+                        </c:choose>
+                    </h1>
 
                     <p class="text-muted mb-0">
-                        Manage your delivery addresses.
+                        <c:choose>
+                            <c:when test="${from eq 'checkout'}">
+                                Manage your delivery addresses, then click the title to return to Checkout.
+                            </c:when>
+                            <c:otherwise>
+                                Manage your delivery addresses.
+                            </c:otherwise>
+                        </c:choose>
                     </p>
                 </div>
 

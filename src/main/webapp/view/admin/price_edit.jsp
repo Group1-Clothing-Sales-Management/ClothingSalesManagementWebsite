@@ -132,7 +132,6 @@
                         <form id="priceForm" action="${pageContext.request.contextPath}/admin/prices?action=update" method="POST">
                             <input type="hidden" name="variantId" value="${priceItem.variantId}">
                             <input type="hidden" id="costPrice" value="${priceItem.costPrice}">
-                            <input type="hidden" id="currentSalePrice" value="${priceItem.salePrice}">
 
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -342,7 +341,6 @@
 <script>
     const priceForm = document.getElementById("priceForm");
     const costInput = document.getElementById("costPrice");
-    const currentSaleInput = document.getElementById("currentSalePrice");
     const listInput = document.getElementById("listPrice");
     const saleInput = document.getElementById("salePrice");
     const reasonInput = document.getElementById("reason");
@@ -400,7 +398,6 @@
     }
 
     priceForm.addEventListener("submit", function (event) {
-        const currentSalePrice = Number(currentSaleInput.value) || 0;
         const listPrice = Number(listInput.value);
         const salePrice = Number(saleInput.value);
 
@@ -425,22 +422,21 @@
             return;
         }
 
-        if (salePrice < currentSalePrice) {
-            event.preventDefault();
-            showPriceError(
-                    "The new sale price cannot be lower than the current sale price ("
-                    + formatMoney(currentSalePrice)
-                    + ").",
-                    saleInput
-            );
-            return;
-        }
-
         if (salePrice > listPrice) {
             event.preventDefault();
             showPriceError(
                     "Sale price cannot be greater than list price.",
                     saleInput
+            );
+            return;
+        }
+
+        const costPrice = Number(costInput.value) || 0;
+        if (salePrice < costPrice && !reasonInput.value.trim()) {
+            event.preventDefault();
+            showPriceError(
+                    "A change reason is required when the sale price is below cost.",
+                    reasonInput
             );
         }
     });

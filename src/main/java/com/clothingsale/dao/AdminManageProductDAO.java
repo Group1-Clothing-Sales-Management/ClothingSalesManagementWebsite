@@ -359,45 +359,136 @@ public class AdminManageProductDAO {
         }
     }
 
-    /** Kiểm tra Product đủ điều kiện Featured. */
+    /**
+     * Kiểm tra Product đủ điều kiện Featured.
+     *
+     * list_price của dữ liệu cũ có thể NULL vì trước đây hệ thống chỉ lưu
+     * sale_price. Khi đó sale_price được xem là giá niêm yết tạm thời, đúng với
+     * quy tắc mặc định giá hiện tại của Product_Variant.
+     */
     public boolean isProductEligibleForFeatured(int productId) {
         if (productId <= 0) {
             return false;
         }
 
-        String sql = "SELECT COUNT(*) FROM Product p INNER JOIN Category c ON c.id = p.category_id WHERE p.id = ? AND p.status = 'ACTIVE' AND c.status = 1 AND EXISTS (SELECT 1 FROM Product_Variant pv WHERE pv.product_id = p.id AND pv.status = 'ACTIVE' AND ISNULL(pv.list_price, 0) > 0 AND ISNULL(pv.sale_price, 0) > 0 AND pv.sale_price <= pv.list_price)";
+        String sql = "SELECT CASE WHEN EXISTS ("
+                + "SELECT 1 "
+                + "FROM Product p "
+                + "INNER JOIN Category c ON c.id = p.category_id "
+                + "WHERE p.id = ? "
+                + "AND p.status = 'ACTIVE' "
+                + "AND c.status = 1 "
+                + "AND EXISTS ("
+                + "    SELECT 1 "
+                + "    FROM Product_Variant pv "
+                + "    WHERE pv.product_id = p.id "
+                + "    AND pv.status = 'ACTIVE' "
+                + "    AND ISNULL(pv.sale_price, 0) > 0 "
+                + "    AND pv.sale_price <= COALESCE(pv.list_price, pv.sale_price)"
+                + ")"
+                + ") THEN 1 ELSE 0 END";
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
+                return rs.next() && rs.getInt(1) == 1;
             }
         } catch (SQLException e) {
+            System.err.println("Could not validate Featured Product " + productId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
-    /** Cập nhật trạng thái Featured của Product. */
+    /**
+     * Cập nhật trạng thái Featured trong một transaction.
+     *
+     * Khi bật mà Controller không truyền displayOrder, DAO tự khóa tập Product
+     * Featured và lấy MAX + 1. Cách này tránh hai request nhận cùng thứ tự và
+     * không phụ thuộc vào một truy vấn MAX chạy ở connection khác.
+     */
     public boolean updateFeaturedStatus(int productId, boolean featured, Integer displayOrder) {
-        if (productId <= 0 || (featured && (displayOrder == null || displayOrder < 1))) {
+        if (productId <= 0 || (displayOrder != null && displayOrder < 1)) {
             return false;
         }
 
-        String sql = "UPDATE Product SET is_featured = ?, featured_display_order = ?, updated_at = GETDATE() WHERE id = ? AND status <> 'DELETED'";
+        String lockProductSql = "SELECT is_featured, featured_display_order "
+                + "FROM Product WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE id = ? AND status <> 'DELETED'";
+        String nextOrderSql = "SELECT ISNULL(MAX(featured_display_order), 0) + 1 "
+                + "FROM Product WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE is_featured = 1 AND status <> 'DELETED'";
+        String updateSql = "UPDATE Product "
+                + "SET is_featured = ?, featured_display_order = ?, updated_at = GETDATE() "
+                + "WHERE id = ? AND status <> 'DELETED'";
 
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBoolean(1, featured);
-            if (featured) {
-                ps.setInt(2, displayOrder);
-            } else {
-                ps.setNull(2, Types.INTEGER);
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                boolean currentFeatured;
+                Integer currentOrder;
+
+                try (PreparedStatement ps = conn.prepareStatement(lockProductSql)) {
+                    ps.setInt(1, productId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+
+                        currentFeatured = rs.getBoolean("is_featured");
+                        int orderValue = rs.getInt("featured_display_order");
+                        currentOrder = rs.wasNull() ? null : orderValue;
+                    }
+                }
+
+                Integer resolvedOrder = null;
+                if (featured) {
+                    if (displayOrder != null) {
+                        resolvedOrder = displayOrder;
+                    } else if (currentFeatured && currentOrder != null && currentOrder > 0) {
+                        resolvedOrder = currentOrder;
+                    } else {
+                        try (PreparedStatement ps = conn.prepareStatement(nextOrderSql);
+                                ResultSet rs = ps.executeQuery()) {
+                            resolvedOrder = rs.next() ? rs.getInt(1) : 1;
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setBoolean(1, featured);
+                    if (featured) {
+                        ps.setInt(2, resolvedOrder == null || resolvedOrder < 1 ? 1 : resolvedOrder);
+                    } else {
+                        ps.setNull(2, Types.INTEGER);
+                    }
+                    ps.setInt(3, productId);
+
+                    if (ps.executeUpdate() != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ignored) {
+                    // Connection is closing; nothing else should replace the original result.
+                }
             }
-            ps.setInt(3, productId);
-            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
+            System.err.println("Could not update Featured Product " + productId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
