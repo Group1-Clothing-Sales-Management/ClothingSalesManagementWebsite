@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0">
+                    <table class="table table-striped table-hover align-middle border text-center variant-table admin-table mb-0" data-client-pagination data-pagination-label="products">
                             <thead>
                                 <tr>
                                     <th style="width: 100px;">ID</th>

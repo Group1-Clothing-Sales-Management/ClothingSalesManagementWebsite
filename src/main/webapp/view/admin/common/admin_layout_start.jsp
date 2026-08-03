@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/notification-ui.css">
+<script defer src="${pageContext.request.contextPath}/assets/admin-pagination.js?v=20260803-1"></script>
 <style>
     :root {
         --admin-bg: #f5f7fb;

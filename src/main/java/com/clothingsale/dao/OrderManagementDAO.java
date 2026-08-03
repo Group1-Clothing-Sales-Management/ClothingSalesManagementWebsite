@@ -248,6 +248,15 @@ public class OrderManagementDAO {
                             orderId
                     );
 
+                } else if ("NONE".equals(inventoryStatus)) {
+                    // Orders created before inventory reservation was introduced
+                    // have NONE here. They still need a normal stock deduction
+                    // when staff confirms them.
+                    deductUnreservedInventory(
+                            conn,
+                            orderId
+                    );
+
                 } else {
                     conn.rollback();
                     return false;
@@ -703,6 +712,123 @@ public class OrderManagementDAO {
                     "FIFO batches synchronized for an order "
                     + "whose Product_Variant stock was deducted "
                     + "before the reservation migration."
+            );
+        }
+    }
+
+    /**
+     * Deduct stock for a pending order that was created without a reservation.
+     * This keeps older/seeded orders compatible with the current inventory
+     * lifecycle while retaining the same FIFO and audit guarantees as new
+     * orders.
+     */
+    private void deductUnreservedInventory(
+            Connection conn,
+            int orderId)
+            throws SQLException {
+
+        String detailSql
+                = "SELECT variant_id, quantity "
+                + "FROM Order_Detail "
+                + "WHERE order_id=? "
+                + "ORDER BY id";
+
+        List<Integer> variantIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+
+        try (PreparedStatement detail = conn.prepareStatement(detailSql)) {
+            detail.setInt(1, orderId);
+
+            try (ResultSet rs = detail.executeQuery()) {
+                while (rs.next()) {
+                    int variantId = rs.getInt("variant_id");
+                    int quantity = rs.getInt("quantity");
+
+                    if (rs.wasNull() || variantId <= 0 || quantity <= 0) {
+                        throw new SQLException(
+                                "Order contains an invalid inventory item."
+                        );
+                    }
+
+                    variantIds.add(variantId);
+                    quantities.add(quantity);
+                }
+            }
+        }
+
+        if (variantIds.isEmpty()) {
+            throw new SQLException("Order does not contain any order details.");
+        }
+
+        String loadSql
+                = "SELECT pv.stock_quantity, pv.reserved_quantity, "
+                + "       pv.sku, p.product_name "
+                + "FROM Product_Variant pv WITH (UPDLOCK, HOLDLOCK) "
+                + "INNER JOIN Product p ON p.id = pv.product_id "
+                + "WHERE pv.id=?";
+
+        String updateSql
+                = "UPDATE Product_Variant "
+                + "SET stock_quantity = stock_quantity - ? "
+                + "WHERE id=? "
+                + "AND stock_quantity - reserved_quantity >= ?";
+
+        for (int i = 0; i < variantIds.size(); i++) {
+            int variantId = variantIds.get(i);
+            int quantity = quantities.get(i);
+            int stockBefore;
+            int reservedQuantity;
+            String sku;
+            String productName;
+
+            try (PreparedStatement load = conn.prepareStatement(loadSql)) {
+                load.setInt(1, variantId);
+
+                try (ResultSet rs = load.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new SQLException("Variant not found: " + variantId);
+                    }
+
+                    stockBefore = rs.getInt("stock_quantity");
+                    reservedQuantity = rs.getInt("reserved_quantity");
+                    sku = rs.getString("sku");
+                    productName = rs.getString("product_name");
+                }
+            }
+
+            if (stockBefore - reservedQuantity < quantity) {
+                throw new SQLException(
+                        "Available inventory is insufficient for variant "
+                        + variantId
+                );
+            }
+
+            consumeFifoBatches(conn, variantId, quantity);
+
+            try (PreparedStatement update = conn.prepareStatement(updateSql)) {
+                update.setInt(1, quantity);
+                update.setInt(2, variantId);
+                update.setInt(3, quantity);
+
+                if (update.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Inventory changed while approving variant "
+                            + variantId
+                    );
+                }
+            }
+
+            insertInventoryLog(
+                    conn,
+                    variantId,
+                    productName,
+                    sku,
+                    stockBefore,
+                    -quantity,
+                    stockBefore - quantity,
+                    "SALE_OUT",
+                    orderId,
+                    "Stock deducted after approving a legacy order."
             );
         }
     }

@@ -190,7 +190,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 price-table">
+                <table class="table table-hover align-middle mb-0 price-table" data-client-pagination data-pagination-label="price records">
                             <thead>
                                 <tr>
                                     <th>Product</th>

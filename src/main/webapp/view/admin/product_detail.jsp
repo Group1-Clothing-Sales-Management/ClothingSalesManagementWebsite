@@ -320,7 +320,7 @@
 
                     <div class="card-body p-0">
                         <div class="variant-table-wrapper">
-                            <table class="table table-hover table-striped mb-0 admin-table">
+                            <table class="table table-hover table-striped mb-0 admin-table" data-client-pagination data-pagination-label="variants">
                                 <thead class="thead-dark">
                                     <tr>
                                         <th class="text-center">Image</th>

@@ -95,7 +95,7 @@
                     </c:when>
                     <c:otherwise>
                         <div class="table-responsive">
-                            <table class="table align-middle mb-0">
+                            <table class="table align-middle mb-0" data-client-pagination data-pagination-label="products">
                                 <thead class="table-light">
                                 <tr>
                                     <th class="ps-4 border-0 text-secondary small">PRODUCT</th>
@@ -185,6 +185,8 @@
                 <span class="badge rounded-pill bg-light text-dark border px-3 py-2">${fn:length(feedbacks)} reviews</span>
             </div>
 
+            <div id="feedbackPaginationList" data-client-pagination-container
+                 data-pagination-page-size="10">
             <c:forEach var="fb" items="${feedbacks}">
                 <div class="feedback-card">
                     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
@@ -240,6 +242,12 @@
                     </c:if>
                 </div>
             </c:forEach>
+            </div>
+            <div id="feedbackPagination" class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-3"
+                 data-pagination-controls-for="feedbackPaginationList">
+                <small class="text-muted pagination-info"></small>
+                <nav aria-label="Feedback pages"><ul class="pagination pagination-sm mb-0 pagination-controls"></ul></nav>
+            </div>
         </c:otherwise>
     </c:choose>
 </div>

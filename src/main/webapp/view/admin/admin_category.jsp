@@ -705,6 +705,13 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="categoryPagination"
+                     class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-3">
+                    <small id="categoryPaginationInfo" class="text-muted"></small>
+                    <nav aria-label="Category pages">
+                        <ul id="categoryPaginationControls" class="pagination pagination-sm mb-0"></ul>
+                    </nav>
+                </div>
             </div>            </div>
         </div>
     </div>
@@ -1092,6 +1099,14 @@
             = document.getElementById('noCategoryResultRow');
     const visibleCategoryCount
             = document.getElementById('visibleCategoryCount');
+    const categoryPagination
+            = document.getElementById('categoryPagination');
+    const categoryPaginationInfo
+            = document.getElementById('categoryPaginationInfo');
+    const categoryPaginationControls
+            = document.getElementById('categoryPaginationControls');
+    const CATEGORY_PAGE_SIZE = 10;
+    let categoryPage = 1;
 
     const expandedParentIds = new Set();
 
@@ -1178,6 +1193,10 @@
         const selectedStatus = categoryStatusFilter.value;
         const filterActive = isFilterActive();
         let visibleCount = 0;
+
+        categoryRows.forEach(function (row) {
+            row.style.display = '';
+        });
 
         parentRows.forEach(function (parentRow) {
             const parentId = parentRow.dataset.categoryId;
@@ -1291,11 +1310,91 @@
             );
         }
 
-        visibleCategoryCount.textContent
-                = visibleCount
-                + (visibleCount === 1
-                        ? ' category shown'
-                        : ' categories shown');
+        const visibleParentRows = parentRows.filter(function (row) {
+            return !row.classList.contains('d-none');
+        });
+        const totalPages = Math.max(
+                1,
+                Math.ceil(visibleParentRows.length / CATEGORY_PAGE_SIZE)
+        );
+        categoryPage = Math.min(Math.max(categoryPage, 1), totalPages);
+
+        parentRows.forEach(function (parentRow) {
+            parentRow.style.display = 'none';
+        });
+        childRows.forEach(function (childRow) {
+            childRow.style.display = 'none';
+        });
+
+        const pageStart = (categoryPage - 1) * CATEGORY_PAGE_SIZE;
+        const pageParents = visibleParentRows.slice(
+                pageStart,
+                pageStart + CATEGORY_PAGE_SIZE
+        );
+        pageParents.forEach(function (parentRow) {
+            parentRow.style.display = '';
+            childrenOf(parentRow.dataset.categoryId).forEach(function (childRow) {
+                if (!childRow.classList.contains('d-none')) {
+                    childRow.style.display = '';
+                }
+            });
+        });
+
+        if (visibleCategoryCount) {
+            visibleCategoryCount.textContent
+                    = visibleCount
+                    + (visibleCount === 1
+                            ? ' category shown'
+                            : ' categories shown');
+        }
+
+        if (categoryPagination && categoryPaginationInfo
+                && categoryPaginationControls) {
+            categoryPagination.classList.toggle(
+                    'd-none',
+                    visibleParentRows.length <= CATEGORY_PAGE_SIZE
+            );
+            categoryPaginationInfo.textContent
+                    = visibleParentRows.length === 0
+                            ? ''
+                            : 'Showing ' + (pageStart + 1)
+                              + '-' + Math.min(
+                                      pageStart + CATEGORY_PAGE_SIZE,
+                                      visibleParentRows.length
+                              )
+                              + ' of ' + visibleParentRows.length
+                              + ' parent categories';
+            categoryPaginationControls.innerHTML = '';
+
+            function addCategoryPageItem(label, targetPage, disabled, active) {
+                const item = document.createElement('li');
+                item.className = 'page-item'
+                        + (disabled ? ' disabled' : '')
+                        + (active ? ' active' : '');
+                const link = document.createElement('a');
+                link.className = 'page-link';
+                link.href = '#';
+                link.textContent = label;
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    if (!disabled) {
+                        categoryPage = targetPage;
+                        applyCategoryView();
+                    }
+                });
+                item.appendChild(link);
+                categoryPaginationControls.appendChild(item);
+            }
+
+            addCategoryPageItem('‹', categoryPage - 1,
+                    categoryPage === 1, false);
+            for (let page = 1; page <= totalPages; page++) {
+                addCategoryPageItem(String(page), page, false,
+                        page === categoryPage);
+            }
+            addCategoryPageItem('›', categoryPage + 1,
+                    categoryPage === totalPages, false);
+        }
     }
 
     parentRows.forEach(function (parentRow) {
@@ -1324,8 +1423,14 @@
         });
     });
 
-    categorySearch.addEventListener('input', applyCategoryView);
-    categoryStatusFilter.addEventListener('change', applyCategoryView);
+    categorySearch.addEventListener('input', function () {
+        categoryPage = 1;
+        applyCategoryView();
+    });
+    categoryStatusFilter.addEventListener('change', function () {
+        categoryPage = 1;
+        applyCategoryView();
+    });
 
     /*
      * Trạng thái ban đầu: chỉ hiển thị Category cha.

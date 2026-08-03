@@ -102,7 +102,7 @@
                         </c:when>
                         <c:otherwise>
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0" data-client-pagination data-pagination-label="customers">
                                     <thead>
                                         <tr>
                                             <th>#</th>

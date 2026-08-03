@@ -368,7 +368,8 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle border variant-table admin-table admin-product-table mb-0">
+                        <table class="table table-striped table-hover align-middle border variant-table admin-table admin-product-table mb-0"
+                               data-client-pagination data-pagination-label="products">
                             <colgroup>
                                 <col style="width: 25%;">
                                 <col style="width: 10%;">

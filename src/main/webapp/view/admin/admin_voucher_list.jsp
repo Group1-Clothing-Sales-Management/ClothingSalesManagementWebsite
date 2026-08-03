@@ -104,7 +104,7 @@
                 <div class="card admin-card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0 admin-table">
+            <table class="table table-hover mb-0 admin-table" data-client-pagination data-pagination-label="vouchers">
                                 <thead>
                                     <tr>
                                         <th class="border-top-0 px-4">Code</th>

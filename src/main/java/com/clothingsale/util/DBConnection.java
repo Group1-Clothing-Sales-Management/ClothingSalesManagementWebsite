@@ -94,11 +94,13 @@ public class DBConnection {
             return null;
         }
 
+        Connection connection = null;
         try {
-            Connection connection = DriverManager.getConnection(JDBC_URL, USER, PASSWORD);
+            connection = DriverManager.getConnection(JDBC_URL, USER, PASSWORD);
             configureSession(connection);
             return connection;
         } catch (SQLException e) {
+            closeConnection(connection);
             System.err.println("Database connection failed. Check DB name, user, password, or SQL session settings.");
             e.printStackTrace();
             return null;

@@ -226,7 +226,7 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-hover mb-0 history-table">
+                    <table class="table table-hover mb-0 history-table" data-client-pagination data-pagination-label="price changes">
                     <thead>
                         <tr>
                             <th>Changed At</th>

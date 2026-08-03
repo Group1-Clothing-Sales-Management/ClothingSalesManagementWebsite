@@ -91,7 +91,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped mb-0 admin-table">
+                        <table class="table table-hover table-striped mb-0 admin-table" data-client-pagination data-pagination-label="variants">
                                 <thead>
                                     <tr>
                                         <th>Variant ID</th>

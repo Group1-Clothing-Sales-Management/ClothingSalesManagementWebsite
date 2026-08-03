@@ -30,7 +30,7 @@ public class StaffShipmentManagementDAO {
                 + "dri.status AS return_inspection_status "
                 + "FROM Shipment s "
                 + "JOIN [Order] o ON o.shipment_id = s.id "
-                + "LEFT JOIN Delivery_Return_Inspection dri ON dri.shipment_id = s.id "
+                + "LEFT JOIN dbo.Delivery_Return_Inspection dri ON dri.shipment_id = s.id "
                 + "WHERE UPPER(TRIM(o.order_status)) NOT IN ('PENDING', 'CANCELLED') ");
 
         List<Object> params = new ArrayList<>();
@@ -78,7 +78,7 @@ public class StaffShipmentManagementDAO {
                 + "dri.status AS return_inspection_status "
                 + "FROM Shipment s "
                 + "JOIN [Order] o ON o.shipment_id = s.id "
-                + "LEFT JOIN Delivery_Return_Inspection dri ON dri.shipment_id = s.id "
+                + "LEFT JOIN dbo.Delivery_Return_Inspection dri ON dri.shipment_id = s.id "
                 + "WHERE s.id = ? AND UPPER(TRIM(o.order_status)) NOT IN ('PENDING', 'CANCELLED')";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -234,8 +234,8 @@ public class StaffShipmentManagementDAO {
     public List<DeliveryReturnInspectionItem> getReturnInspectionItems(int shipmentId) {
         List<DeliveryReturnInspectionItem> list = new ArrayList<>();
         String sql = "SELECT dri_item.*, ISNULL(pv.stock_quantity, 0) AS current_stock "
-                + "FROM Delivery_Return_Inspection dri "
-                + "JOIN Delivery_Return_Inspection_Item dri_item ON dri_item.inspection_id = dri.id "
+                + "FROM dbo.Delivery_Return_Inspection dri "
+                + "JOIN dbo.Delivery_Return_Inspection_Item dri_item ON dri_item.inspection_id = dri.id "
                 + "LEFT JOIN Product_Variant pv ON pv.id = dri_item.variant_id "
                 + "WHERE dri.shipment_id = ? ORDER BY dri_item.id";
 
@@ -269,7 +269,7 @@ public class StaffShipmentManagementDAO {
                 int orderId;
                 String status;
                 String lockHeader = "SELECT id, order_id, status "
-                        + "FROM Delivery_Return_Inspection WITH (UPDLOCK, HOLDLOCK) "
+                        + "FROM dbo.Delivery_Return_Inspection WITH (UPDLOCK, HOLDLOCK) "
                         + "WHERE shipment_id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(lockHeader)) {
                     ps.setInt(1, shipmentId);
@@ -323,7 +323,7 @@ public class StaffShipmentManagementDAO {
                                 inspectionId, inspectionNote);
                     }
 
-                    String updateItem = "UPDATE Delivery_Return_Inspection_Item SET "
+                    String updateItem = "UPDATE dbo.Delivery_Return_Inspection_Item SET "
                             + "restock_quantity = ?, damaged_quantity = ?, item_note = ?, "
                             + "inspected = 1, inspected_by = ?, inspected_at = GETDATE() "
                             + "WHERE id = ? AND inspection_id = ? AND inspected = 0";
@@ -340,7 +340,7 @@ public class StaffShipmentManagementDAO {
                     }
                 }
 
-                String finishHeader = "UPDATE Delivery_Return_Inspection SET status = 'COMPLETED', "
+                String finishHeader = "UPDATE dbo.Delivery_Return_Inspection SET status = 'COMPLETED', "
                         + "inspection_note = ?, inspected_by = ?, inspected_at = GETDATE() "
                         + "WHERE id = ? AND status = 'PENDING_INSPECTION'";
                 try (PreparedStatement ps = conn.prepareStatement(finishHeader)) {
@@ -420,7 +420,7 @@ public class StaffShipmentManagementDAO {
             Connection conn, int inspectionId) throws SQLException {
         List<DeliveryReturnInspectionItem> list = new ArrayList<>();
         String sql = "SELECT dri_item.*, ISNULL(pv.stock_quantity, 0) AS current_stock "
-                + "FROM Delivery_Return_Inspection_Item dri_item WITH (UPDLOCK, HOLDLOCK) "
+                + "FROM dbo.Delivery_Return_Inspection_Item dri_item WITH (UPDLOCK, HOLDLOCK) "
                 + "LEFT JOIN Product_Variant pv ON pv.id = dri_item.variant_id "
                 + "WHERE dri_item.inspection_id = ? ORDER BY dri_item.id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -436,7 +436,7 @@ public class StaffShipmentManagementDAO {
 
     private void createPendingReturnInspection(Connection conn, int shipmentId,
             int orderId, String failureReason, int staffId) throws SQLException {
-        String insertHeader = "INSERT INTO Delivery_Return_Inspection "
+        String insertHeader = "INSERT INTO dbo.Delivery_Return_Inspection "
                 + "(shipment_id, order_id, failure_reason, status, created_by) "
                 + "VALUES (?, ?, ?, 'PENDING_INSPECTION', ?)";
         int inspectionId;
@@ -455,7 +455,7 @@ public class StaffShipmentManagementDAO {
             }
         }
 
-        String insertItems = "INSERT INTO Delivery_Return_Inspection_Item "
+        String insertItems = "INSERT INTO dbo.Delivery_Return_Inspection_Item "
                 + "(inspection_id, order_detail_id, variant_id, product_name_snapshot, "
                 + "variant_attributes_snapshot, return_quantity) "
                 + "SELECT ?, od.id, od.variant_id, od.product_name_snapshot, "

@@ -235,7 +235,7 @@
                                     </c:when>
                                     <c:otherwise>
                                         <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" data-client-pagination data-pagination-label="order items">
                                                 <thead>
                                                 <tr>
                                                     <th class="ps-4">Product</th>
@@ -408,7 +408,7 @@
                             </c:when>
                             <c:otherwise>
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" data-client-pagination data-pagination-label="orders">
                                         <thead>
                                         <tr>
                                             <th class="ps-4">Order</th>

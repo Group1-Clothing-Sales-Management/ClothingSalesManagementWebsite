@@ -82,7 +82,7 @@
             <div class="card shadow-sm">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped mb-0 align-middle">
+                    <table class="table table-hover table-striped mb-0 align-middle" data-client-pagination data-pagination-label="deliveries">
                             <colgroup>
                                 <col style="width:15%">
                                 <col style="width:15%">
