@@ -87,6 +87,13 @@
                         </div>
                     </c:when>
 
+                    <c:when test="${param.status == 'product-name-exists'}">
+                        <div class="alert alert-danger">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                            A product with this name already exists. Please use another name.
+                        </div>
+                    </c:when>
+
                     <c:when test="${param.status == 'name-too-long'}">
                         <div class="alert alert-danger">
                             Product name must not exceed 150 characters.

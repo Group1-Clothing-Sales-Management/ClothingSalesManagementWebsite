@@ -370,13 +370,13 @@
                 </div>
 
                 <div class="card card-main mb-4">
-                    <div class="card-body p-4">
+                    <div class="card-body p-6">
                         <form class="row g-3 align-items-end" method="get" action="${ordersBasePath}">
-                            <div class="col-lg-5">
+                            <div class="col-lg-6">
                                 <label class="form-label fw-semibold">Keyword</label>
                                 <input type="text" name="keyword" class="form-control" value="${keyword}" placeholder="Order code, customer name, phone number...">
                             </div>
-                            <div class="col-lg-3">
+                            <div class="col-lg-2">
                                 <label class="form-label fw-semibold">Status</label>
                                 <select name="status" class="form-select">
                                     <c:forEach var="option" items="${statusOptions}">
@@ -384,7 +384,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-                            <div class="col-lg-4 d-flex gap-2">
+                            <div class="col-lg-4 d-flex gap-4">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-search me-1"></i>Search
                                 </button>

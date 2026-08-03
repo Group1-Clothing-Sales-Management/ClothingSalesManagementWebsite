@@ -322,9 +322,14 @@
                                 <select id="productCategoryFilter" class="form-select">
                                     <option value="">All categories</option>
                                     <c:forEach var="cat" items="${categories}">
-                                        <option value="${cat.id}">${cat.categoryName}</option>
+                                        <c:if test="${cat.parentId ne null}">
+                                            <option value="${cat.id}">
+                                                ${cat.categoryName}
+                                            </option>
+                                        </c:if>
                                     </c:forEach>
                                 </select>
+
                             </div>
                             <div class="product-filter-field">
                                 <label for="productBrandFilter" class="product-filter-label">
@@ -452,8 +457,7 @@
                                         <td>
                                             <form class="featured-control-form"
                                                   action="${pageContext.request.contextPath}/admin/manage-product"
-                                                  method="POST"
-                                                  enctype="multipart/form-data">
+                                                  method="POST">
                                                 <input type="hidden" name="action" value="UPDATE_FEATURED">
                                                 <input type="hidden" name="productId" value="${prod.id}">
                                                 <input type="hidden"
@@ -565,9 +569,13 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
                                                         <select name="categoryId" class="form-select" required>
-                                                            <option value="">-- Select Category --</option>
+                                                            <option value="">-- Select Sub Category --</option>
                                                             <c:forEach var="cat" items="${categories}">
-                                                                <option value="${cat.id}">${cat.categoryName}</option>
+                                                                <c:if test="${cat.parentId ne null}">
+                                                                    <option value="${cat.id}">
+                                                                        ${cat.categoryName}
+                                                                    </option>
+                                                                </c:if>
                                                             </c:forEach>
                                                         </select>
                                                     </div>
@@ -712,6 +720,7 @@
                                                                         document.querySelectorAll("#productTableBody .product-row")
                                                                         );
 
+                                                                /** Chuẩn hóa từ khóa tìm kiếm. */
                                                                 function normalizeSearchValue(value) {
                                                                     return String(value == null ? "" : value)
                                                                             .normalize("NFD")
@@ -723,6 +732,7 @@
                                                                             .trim();
                                                                 }
 
+                                                                /** Lấy nhãn của option đã chọn. */
                                                                 function getOptionLabel(select, value) {
                                                                     if (!select || !value) {
                                                                         return "";
@@ -735,6 +745,7 @@
                                                                     return option ? option.textContent : "";
                                                                 }
 
+                                                                /** Áp dụng bộ lọc Product. */
                                                                 function applyProductFilters() {
                                                                     const keyword = normalizeSearchValue(searchInput.value);
                                                                     const selectedCategory = categoryFilter.value;
@@ -803,6 +814,7 @@
                                                                     clearSearchButton.disabled = searchInput.value.length === 0;
                                                                 }
 
+                                                                /** Đặt lại bộ lọc Product. */
                                                                 function resetProductFilters() {
                                                                     searchInput.value = "";
                                                                     categoryFilter.value = "";
@@ -839,10 +851,12 @@
                                                                 const createModal = document.getElementById("createProductModal");
                                                                 const variants = [];
 
+                                                                /** Chuẩn hóa khoảng trắng. */
                                                                 function cleanText(value) {
                                                                     return value == null ? "" : value.trim().replace(/\s+/g, " ");
                                                                 }
 
+                                                                /** Loại bỏ dấu tiếng Việt. */
                                                                 function removeVietnameseTones(value) {
                                                                     return value
                                                                             .normalize("NFD")
@@ -851,6 +865,7 @@
                                                                             .replace(/Đ/g, "D");
                                                                 }
 
+                                                                /** Chuẩn hóa giá trị SKU. */
                                                                 function normalizeSku(value) {
                                                                     const normalized = removeVietnameseTones(cleanText(value))
                                                                             .toLowerCase()
@@ -859,21 +874,25 @@
                                                                     return normalized || "na";
                                                                 }
 
+                                                                /** Chuẩn hóa Size và Color. */
                                                                 function normalizeCombinationValue(value) {
                                                                     return removeVietnameseTones(cleanText(value))
                                                                             .toLowerCase();
                                                                 }
 
+                                                                /** Tạo khóa Size và Color. */
                                                                 function getCombinationKey(size, color) {
                                                                     return normalizeCombinationValue(size) + "|" + normalizeCombinationValue(color);
                                                                 }
 
+                                                                /** Tạo SKU cho Variant. */
                                                                 function getVariantSku(variant) {
                                                                     return normalizeSku(productNameInput.value)
                                                                             + "-" + normalizeSku(variant.size)
                                                                             + "-" + normalizeSku(variant.color);
                                                                 }
 
+                                                                /** Mã hóa ký tự HTML. */
                                                                 function escapeHtml(value) {
                                                                     return String(value)
                                                                             .replace(/&/g, "&amp;")
@@ -883,6 +902,7 @@
                                                                             .replace(/'/g, "&#039;");
                                                                 }
 
+                                                                /** Hiển thị danh sách Variant. */
                                                                 function renderVariants() {
                                                                     countLabel.textContent = variants.length
                                                                             + (variants.length === 1 ? " variant" : " variants");
@@ -919,6 +939,7 @@
                                                                     tableBody.innerHTML = rows;
                                                                 }
 
+                                                                /** Thêm Variant tạm. */
                                                                 function addVariant() {
                                                                     const productName = cleanText(productNameInput.value);
                                                                     const size = cleanText(sizeInput.value);
@@ -975,6 +996,17 @@
                                                                 form.addEventListener("submit", function (event) {
                                                                     event.preventDefault();
 
+                                                                    const normalizedName = cleanText(productNameInput.value).toLowerCase();
+                                                                    const duplicatedName = Array.from(document.querySelectorAll(".product-name-cell")).some(function (cell) {
+                                                                        return cleanText(cell.textContent).toLowerCase() === normalizedName;
+                                                                    });
+
+                                                                    if (duplicatedName) {
+                                                                        window.showAppToast("A product with this name already exists.", "warning", {title: "Duplicate product name"});
+                                                                        productNameInput.focus();
+                                                                        return;
+                                                                    }
+
                                                                     if (variants.length === 0) {
                                                                         window.showAppToast("Please add at least one size-color variant.", "warning", {title: "Variant required"});
                                                                         return;
@@ -1002,48 +1034,101 @@
                                                             });
 
                                                             document.addEventListener("DOMContentLoaded", function () {
-                                                                const featuredForms = document.querySelectorAll(".featured-control-form");
-
-                                                                featuredForms.forEach(function (form) {
-                                                                    const toggle = form.querySelector(".featured-toggle");
-                                                                    const hiddenValue = form.querySelector(".featured-hidden-value");
-                                                                    const switchWrap = form.querySelector(".featured-switch-wrap");
-                                                                    const toggleText = form.querySelector(".featured-toggle-text");
-
-                                                                    if (!toggle || !hiddenValue || !switchWrap || !toggleText) {
-                                                                        return;
-                                                                    }
-
-                                                                    toggle.addEventListener("change", function () {
-                                                                        const enabled = toggle.checked;
-
-                                                                        hiddenValue.value = enabled ? "true" : "false";
-                                                                        toggle.disabled = true;
-                                                                        switchWrap.classList.toggle("is-active", enabled);
-                                                                        switchWrap.classList.add("is-saving");
-                                                                        toggleText.textContent = "Saving...";
-
-                                                                        form.submit();
-                                                                    });
-                                                                });
-
-                                                                const status = new URLSearchParams(window.location.search).get("status");
-                                                                const messages = {
-                                                                    "featured-enabled": ["Featured enabled", "The product is now displayed in Featured Products.", "success"],
-                                                                    "featured-disabled": ["Featured disabled", "The product was removed from Featured Products.", "success"],
+                                                                const statusMessages = {
+                                                                    "product-name-exists": ["Duplicate product name", "A product with this name already exists.", "warning"],
                                                                     "invalid-featured-order": ["Invalid order", "Display order must be a positive number.", "warning"],
                                                                     "product-not-eligible-for-featured": ["Cannot feature product", "The product must be active and have at least one active variant with a valid price.", "warning"],
                                                                     "featured-update-failed": ["Update failed", "The Featured Products setting could not be saved.", "error"],
                                                                     "product-not-found": ["Product not found", "The selected product no longer exists.", "error"],
                                                                     "invalid-product-id": ["Invalid product", "The selected product ID is invalid.", "warning"],
-                                                                    "invalid-request": ["Invalid request", "The Featured Products request is invalid.", "warning"]
+                                                                    "invalid-request": ["Invalid request", "The submitted product data is invalid.", "warning"],
+                                                                    "invalid-action": ["Invalid action", "The requested Product action is not supported.", "warning"],
+                                                                    "variant-invalid": ["Invalid variant", "Please check the Size and Color values.", "warning"],
+                                                                    "variant-required": ["Variant required", "Please add at least one Size and Color variant.", "warning"],
+                                                                    "category-inactive": ["Inactive category", "Please select an active subcategory.", "warning"],
+                                                                    "error": ["Update failed", "An unexpected error occurred while saving.", "error"]
                                                                 };
 
-                                                                if (status && messages[status]) {
-                                                                    window.showAppToast(messages[status][1], messages[status][2], {title: messages[status][0]});
+                                                                /** Cập nhật giao diện công tắc Featured. */
+                                                                function renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, featured) {
+                                                                    toggle.checked = featured;
+                                                                    hiddenValue.value = featured ? "true" : "false";
+                                                                    switchWrap.classList.toggle("is-active", featured);
+                                                                    toggleText.textContent = featured ? "Featured" : "Not featured";
+                                                                    if (productRow) {
+                                                                        productRow.dataset.featured = featured ? "true" : "false";
+                                                                    }
+                                                                }
+
+                                                                document.querySelectorAll(".featured-control-form").forEach(function (form) {
+                                                                    const toggle = form.querySelector(".featured-toggle");
+                                                                    const hiddenValue = form.querySelector(".featured-hidden-value");
+                                                                    const switchWrap = form.querySelector(".featured-switch-wrap");
+                                                                    const toggleText = form.querySelector(".featured-toggle-text");
+                                                                    const productRow = form.closest(".product-row");
+                                                                    if (!toggle || !hiddenValue || !switchWrap || !toggleText) {
+                                                                        return;
+                                                                    }
+
+                                                                    toggle.addEventListener("change", async function () {
+                                                                        const oldFeaturedState = hiddenValue.value === "true";
+                                                                        const requestedFeaturedState = toggle.checked;
+                                                                        const requestBody = new URLSearchParams();
+                                                                        requestBody.set("action", "UPDATE_FEATURED");
+                                                                        requestBody.set("productId", form.querySelector("[name='productId']").value);
+                                                                        requestBody.set("featured", requestedFeaturedState ? "true" : "false");
+
+                                                                        hiddenValue.value = requestedFeaturedState ? "true" : "false";
+                                                                        switchWrap.classList.toggle("is-active", requestedFeaturedState);
+                                                                        switchWrap.classList.add("is-saving");
+                                                                        toggleText.textContent = "Saving...";
+                                                                        toggle.disabled = true;
+
+                                                                        try {
+                                                                            const response = await fetch(form.action, {
+                                                                                method: "POST",
+                                                                                headers: {
+                                                                                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                                                                                    "X-Requested-With": "XMLHttpRequest",
+                                                                                    "Accept": "application/json"
+                                                                                },
+                                                                                body: requestBody.toString(),
+                                                                                credentials: "same-origin"
+                                                                            });
+
+                                                                            let result = null;
+                                                                            try {
+                                                                                result = await response.json();
+                                                                            } catch (parseError) {
+                                                                                throw new Error("featured-update-failed");
+                                                                            }
+
+                                                                            if (!response.ok || !result || result.success !== true) {
+                                                                                throw new Error(result && result.error ? result.error : "featured-update-failed");
+                                                                            }
+
+                                                                            renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, result.featured === true);
+                                                                        } catch (error) {
+                                                                            renderFeaturedState(toggle, hiddenValue, switchWrap, toggleText, productRow, oldFeaturedState);
+                                                                            const errorCode = error && error.message ? error.message : "featured-update-failed";
+                                                                            const message = statusMessages[errorCode] || statusMessages["featured-update-failed"];
+                                                                            window.showAppToast(message[1], message[2], {title: message[0]});
+                                                                            console.error("Could not update Featured Product:", error);
+                                                                        } finally {
+                                                                            switchWrap.classList.remove("is-saving");
+                                                                            toggle.disabled = false;
+                                                                        }
+                                                                    });
+                                                                });
+
+                                                                const status = new URLSearchParams(window.location.search).get("status");
+                                                                if (status && statusMessages[status]) {
+                                                                    const message = statusMessages[status];
+                                                                    window.showAppToast(message[1], message[2], {title: message[0]});
                                                                 }
                                                             });
 
+                                                            /** Xác nhận xóa Product. */
                                                             function deleteProduct(id) {
                                                                 window.confirmAppAction("The product will be soft-deleted and its variants will become inactive.", {
                                                                     title: "Delete this product?",

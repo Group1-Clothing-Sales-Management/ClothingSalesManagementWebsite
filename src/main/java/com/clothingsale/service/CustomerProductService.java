@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class CustomerProductService {
 
-    private static final int DEFAULT_HOMEPAGE_LIMIT = 8;
+    private static final int DEFAULT_HOMEPAGE_LIMIT = 0;
     private static final int MAX_HOMEPAGE_LIMIT = 50;
 
     private final CustomerProductDAO productDAO = new CustomerProductDAO();

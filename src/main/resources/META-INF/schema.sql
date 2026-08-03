@@ -144,6 +144,7 @@ CREATE TABLE dbo.Product (
         CONSTRAINT DF_Product_CreatedAt DEFAULT (GETDATE()),
     updated_at DATETIME NOT NULL
         CONSTRAINT DF_Product_UpdatedAt DEFAULT (GETDATE()),
+    active_product_name_key AS (CASE WHEN status = 'DELETED' THEN NULL ELSE LOWER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(product_name)), N'  ', N' '), N'  ', N' '), N'  ', N' ')) END) PERSISTED,
     CONSTRAINT PK_Product PRIMARY KEY (id),
     CONSTRAINT UQ_Product_Slug UNIQUE (slug),
     CONSTRAINT CK_Product_FeaturedDisplayOrder CHECK (
@@ -158,6 +159,9 @@ CREATE TABLE dbo.Product (
     CONSTRAINT FK_Product_Category FOREIGN KEY (category_id)
         REFERENCES dbo.Category(id)
 );
+
+CREATE UNIQUE INDEX UX_Product_Active_ProductName ON dbo.Product(active_product_name_key) WHERE status <> 'DELETED';
+GO
 
 CREATE TABLE dbo.Product_Image (
     id INT IDENTITY(1,1) NOT NULL,
@@ -910,4 +914,74 @@ BEGIN
     CREATE INDEX IX_DeliveryReturnInspectionItem_Inspection
         ON dbo.Delivery_Return_Inspection_Item(inspection_id, inspected);
 END;
+GO
+
+
+/*check duplicate name of product */
+USE [ClothesShopDB];
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+
+/* Kiểm tra bảng Product trước khi cập nhật. */
+IF OBJECT_ID(N'dbo.Product', N'U') IS NULL
+BEGIN
+    THROW 50000, 'Table dbo.Product does not exist.', 1;
+END;
+GO
+
+/* Kiểm tra tên Product chưa xóa đang bị trùng. */
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Product
+    WHERE status <> 'DELETED'
+    GROUP BY LOWER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(product_name)), N'  ', N' '), N'  ', N' '), N'  ', N' '))
+    HAVING COUNT(*) > 1
+)
+BEGIN
+    SELECT LOWER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(product_name)), N'  ', N' '), N'  ', N' '), N'  ', N' ')) AS normalized_product_name, COUNT(*) AS duplicate_count, STRING_AGG(CONVERT(varchar(20), id), ', ') AS product_ids
+    FROM dbo.Product
+    WHERE status <> 'DELETED'
+    GROUP BY LOWER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(product_name)), N'  ', N' '), N'  ', N' '), N'  ', N' '))
+    HAVING COUNT(*) > 1;
+
+    THROW 50001, 'Rename or soft-delete duplicate Product names before creating the unique index.', 1;
+END;
+GO
+
+/* Xóa index cũ nếu đã tồn tại. */
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Product_Active_ProductName' AND object_id = OBJECT_ID(N'dbo.Product'))
+BEGIN
+    DROP INDEX UX_Product_Active_ProductName ON dbo.Product;
+END;
+GO
+
+/* Xóa computed column cũ để thay bằng khóa không cần filtered index. */
+IF COL_LENGTH(N'dbo.Product', N'active_product_name_key') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.Product DROP COLUMN active_product_name_key;
+END;
+GO
+
+/* Tạo khóa chuẩn hóa: Product đã xóa dùng ID riêng, Product còn hiệu lực dùng tên chuẩn hóa. */
+ALTER TABLE dbo.Product ADD active_product_name_key AS (CONVERT(nvarchar(200), CASE WHEN status = 'DELETED' THEN N'D|' + CONVERT(nvarchar(20), id) ELSE N'A|' + LOWER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(product_name)), N'  ', N' '), N'  ', N' '), N'  ', N' ')) END)) PERSISTED;
+GO
+
+/* Chặn trùng tên mà không dùng filtered index. */
+CREATE UNIQUE INDEX UX_Product_Active_ProductName ON dbo.Product(active_product_name_key);
+GO
+
+/* Xác nhận index đã được tạo. */
+SELECT i.name AS index_name, i.is_unique, c.name AS key_column
+FROM sys.indexes i
+INNER JOIN sys.index_columns ic ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+INNER JOIN sys.columns c ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+WHERE i.object_id = OBJECT_ID(N'dbo.Product') AND i.name = N'UX_Product_Active_ProductName';
 GO

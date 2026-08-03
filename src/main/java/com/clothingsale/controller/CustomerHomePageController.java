@@ -22,9 +22,9 @@ import jakarta.servlet.http.HttpSession;
 )
 public class CustomerHomePageController extends HttpServlet {
 
-    private static final int FEATURED_PRODUCT_LIMIT = 8;
-    private static final int BEST_SELLER_PRODUCT_LIMIT = 8;
-    private static final int ON_SALE_PRODUCT_LIMIT = 8;
+    private static final int FEATURED_PRODUCT_LIMIT = 0;
+    private static final int BEST_SELLER_PRODUCT_LIMIT = 12;
+    private static final int ON_SALE_PRODUCT_LIMIT = 12;
 
     private final CustomerProductService productService
             = new CustomerProductService();

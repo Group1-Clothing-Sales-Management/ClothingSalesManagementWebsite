@@ -1,5 +1,3 @@
-
-
 package com.clothingsale.controller;
 
 import com.clothingsale.model.Product;
@@ -26,8 +24,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import com.clothingsale.model.Product;
-
 @WebServlet(
         name = "AdminManageProduct",
         urlPatterns = {
@@ -48,11 +44,11 @@ public class AdminProductController extends HttpServlet {
     private final AdminManageProductService productService
             = new AdminManageProductService();
 
+    /**
+     * Điều hướng các request GET của Product Management.
+     */
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String action = request.getParameter("action");
 
@@ -76,22 +72,18 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
+    /**
+     * Xử lý các request POST của Product Management.
+     */
     @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-
+        boolean ajaxRequest = isAjaxRequest(request);
         String action = getMultipartParameter(request, "action");
 
         if (action == null || action.trim().isEmpty()) {
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/manage-product?status=invalid-request"
-            );
+            finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_BAD_REQUEST, "invalid-request", null);
             return;
         }
 
@@ -106,46 +98,34 @@ public class AdminProductController extends HttpServlet {
                 case "UPDATE_VARIANT_STATUS":
                     handleUpdateVariantStatus(request, response);
                     break;
-
                 case "UPDATE_FEATURED":
                 case "UPDATE_FEATURED_STATUS":
                     handleUpdateFeaturedStatus(request, response);
                     break;
-
                 case "ADD_VARIANT":
                 case "ADD_VARIANTS":
                     handleAddVariants(request, response);
                     break;
-
                 case "ADD":
                     handleAddProduct(request, response);
                     break;
-
                 case "DELETE":
                     handleDeleteProduct(request, response);
                     break;
-
                 default:
-                    response.sendRedirect(
-                            request.getContextPath()
-                            + "/admin/manage-product?status=invalid-action"
-                    );
+                    finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_BAD_REQUEST, "invalid-action", null);
                     break;
             }
         } catch (Exception e) {
             e.printStackTrace();
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/manage-product?status=error"
-            );
+            finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error", null);
         }
     }
 
-    private void handleUpdateProduct(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+     * Xử lý cập nhật thông tin Product.
+     */
+    private void handleUpdateProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         int productId;
 
@@ -232,19 +212,11 @@ public class AdminProductController extends HttpServlet {
          * Chỉ cập nhật dữ liệu Product trước. Ảnh được xử lý riêng để tránh
          * database trỏ tới file chưa được ghi thành công.
          */
-        boolean updated = productService.updateProduct(
-                product,
-                null
-        );
+        String updateError = productService.updateProductWithResult(product, null);
 
-        if (!updated) {
+        if (updateError != null) {
             deleteStagedImage(stagedImage);
-
-            redirectToEdit(
-                    response,
-                    productId,
-                    "update-failed"
-            );
+            redirectToEdit(response, productId, updateError);
             return;
         }
 
@@ -323,10 +295,10 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void handleUpdateVariant(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+     * Xử lý cập nhật thông tin Variant.
+     */
+    private void handleUpdateVariant(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         int productId;
         int variantId;
@@ -526,10 +498,10 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void rollbackVariantInfo(
-            int productId,
-            int variantId,
-            ProductVariant oldVariant) {
+    /**
+     * Khôi phục thông tin Variant khi cập nhật ảnh lỗi.
+     */
+    private void rollbackVariantInfo(int productId, int variantId, ProductVariant oldVariant) {
 
         if (oldVariant == null) {
             return;
@@ -544,10 +516,10 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void redirectToProductDetail(
-            HttpServletResponse response,
-            int productId,
-            String status) throws IOException {
+    /**
+     * Chuyển về trang chi tiết Product.
+     */
+    private void redirectToProductDetail(HttpServletResponse response, int productId, String status) throws IOException {
 
         String redirectUrl = getServletContext().getContextPath()
                 + "/admin/manage-product?action=view";
@@ -563,10 +535,10 @@ public class AdminProductController extends HttpServlet {
         response.sendRedirect(redirectUrl);
     }
 
-    private void handleUpdateVariantStatus(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
+    /**
+     * Xử lý bật hoặc tắt Variant.
+     */
+    private void handleUpdateVariantStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         int productId;
         int variantId;
@@ -606,86 +578,48 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    /**
-     * Bật hoặc tắt Product trong khu vực Featured Products của Customer
-     * Homepage. Thao tác này chỉ cập nhật thông tin Featured trong bảng
-     * Product, không thay đổi status, giá hoặc tồn kho của Product/Variant.
-     */
-    private void handleUpdateFeaturedStatus(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
+    /** Xử lý bật hoặc tắt Featured bằng AJAX. */
+    private void handleUpdateFeaturedStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        boolean ajaxRequest = isAjaxRequest(request);
         int productId;
-
         try {
-            productId = Integer.parseInt(
-                    getMultipartParameter(request, "productId")
-            );
+            productId = Integer.parseInt(request.getParameter("productId"));
         } catch (Exception e) {
-            redirectToProductList(response, "invalid-request");
+            finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_BAD_REQUEST, "invalid-request", null);
             return;
         }
 
-        String featuredRaw
-                = getMultipartParameter(request, "featured");
-
-        boolean featured = "true".equalsIgnoreCase(featuredRaw)
-                || "1".equals(featuredRaw)
-                || "on".equalsIgnoreCase(featuredRaw)
-                || "yes".equalsIgnoreCase(featuredRaw);
-
+        String featuredRaw = request.getParameter("featured");
+        boolean featured = "true".equalsIgnoreCase(featuredRaw) || "1".equals(featuredRaw) || "on".equalsIgnoreCase(featuredRaw) || "yes".equalsIgnoreCase(featuredRaw);
         Integer displayOrder = null;
-        String displayOrderRaw
-                = getMultipartParameter(request, "displayOrder");
+        String displayOrderRaw = request.getParameter("displayOrder");
 
-        if (featured
-                && displayOrderRaw != null
-                && !displayOrderRaw.isBlank()) {
-
+        if (featured && displayOrderRaw != null && !displayOrderRaw.isBlank()) {
             try {
                 displayOrder = Integer.valueOf(displayOrderRaw);
-
                 if (displayOrder <= 0) {
-                    redirectToProductList(
-                            response,
-                            "invalid-featured-order"
-                    );
+                    finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_BAD_REQUEST, "invalid-featured-order", null);
                     return;
                 }
             } catch (NumberFormatException e) {
-                redirectToProductList(
-                        response,
-                        "invalid-featured-order"
-                );
+                finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_BAD_REQUEST, "invalid-featured-order", null);
                 return;
             }
         }
 
-        String updateError
-                = productService.updateFeaturedStatus(
-                        productId,
-                        featured,
-                        displayOrder
-                );
-
+        String updateError = productService.updateFeaturedStatus(productId, featured, displayOrder);
         if (updateError != null) {
-            redirectToProductList(response, updateError);
+            finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_CONFLICT, updateError, null);
             return;
         }
 
-        redirectToProductList(
-                response,
-                featured
-                        ? "featured-enabled"
-                        : "featured-disabled"
-        );
+        finishFeaturedRequest(response, ajaxRequest, HttpServletResponse.SC_OK, null, featured);
     }
 
-    private void handleAddVariants(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
+    /**
+     * Xử lý thêm Variant cho Product.
+     */
+    private void handleAddVariants(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         int productId;
 
@@ -758,10 +692,10 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void handleAddProduct(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+     * Xử lý tạo Product mới.
+     */
+    private void handleAddProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         Product product;
 
@@ -861,19 +795,11 @@ public class AdminProductController extends HttpServlet {
                 ? stagedImage.getFileName()
                 : null;
 
-        boolean added = productService.createProductWithVariants(
-                product,
-                stagedImageName,
-                variants
-        );
+        String createError = productService.createProductWithVariantsResult(product, stagedImageName, variants);
 
-        if (!added) {
+        if (createError != null) {
             deleteStagedImage(stagedImage);
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/manage-product?status=error"
-            );
+            response.sendRedirect(request.getContextPath() + "/admin/manage-product?status=" + createError);
             return;
         }
 
@@ -976,10 +902,10 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void handleDeleteProduct(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
+    /**
+     * Xử lý xóa mềm Product.
+     */
+    private void handleDeleteProduct(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String idRaw = request.getParameter("productId");
 
@@ -1006,8 +932,10 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private Product extractProductFromRequest(
-            HttpServletRequest request) {
+    /**
+     * Đọc dữ liệu Product từ request.
+     */
+    private Product extractProductFromRequest(HttpServletRequest request) {
 
         Product product = new Product();
 
@@ -1065,10 +993,10 @@ public class AdminProductController extends HttpServlet {
         return product;
     }
 
-    private List<ProductVariant> readVariantsFromRequest(
-            HttpServletRequest request,
-            int productId,
-            String productName) {
+    /**
+     * Đọc danh sách Variant từ request.
+     */
+    private List<ProductVariant> readVariantsFromRequest(HttpServletRequest request, int productId, String productName) {
 
         List<ProductVariant> variants
                 = new ArrayList<>();
@@ -1134,6 +1062,9 @@ public class AdminProductController extends HttpServlet {
         return variants;
     }
 
+    /**
+     * Kiểm tra request có file ảnh.
+     */
     private boolean hasUploadedFile(Part part) {
         return part != null
                 && part.getSubmittedFileName() != null
@@ -1144,11 +1075,9 @@ public class AdminProductController extends HttpServlet {
     }
 
     /**
-     * Ghi ảnh Product vào file staging trong upload/product. File này chỉ được
-     * đổi sang tên chuẩn sau khi đã có productId thật từ database.
+     * Lưu ảnh vào vùng tạm.
      */
-    private StagedProductImage stageProductImage(
-            Part filePart) throws IOException {
+    private StagedProductImage stageProductImage(Part filePart) throws IOException {
 
         if (!hasUploadedFile(filePart)) {
             return null;
@@ -1208,12 +1137,9 @@ public class AdminProductController extends HttpServlet {
     }
 
     /**
-     * Copy staging file thành tên chuẩn. Nếu file đích đã tồn tại, tạo một bản
-     * backup để có thể khôi phục khi cập nhật database thất bại.
+     * Đưa ảnh tạm vào thư mục chính.
      */
-    private Path publishStagedProductImage(
-            StagedProductImage stagedImage,
-            String finalImageName) throws IOException {
+    private Path publishStagedProductImage(StagedProductImage stagedImage, String finalImageName) throws IOException {
 
         if (stagedImage == null) {
             return null;
@@ -1255,9 +1181,10 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private void rollbackPublishedProductImage(
-            String finalImageName,
-            Path backupFile) {
+    /**
+     * Khôi phục file ảnh khi lưu lỗi.
+     */
+    private void rollbackPublishedProductImage(String finalImageName, Path backupFile) {
 
         if (finalImageName == null
                 || finalImageName.isBlank()) {
@@ -1294,8 +1221,10 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private void deleteStagedImage(
-            StagedProductImage stagedImage) {
+    /**
+     * Xóa file ảnh tạm.
+     */
+    private void deleteStagedImage(StagedProductImage stagedImage) {
 
         if (stagedImage == null) {
             return;
@@ -1304,6 +1233,9 @@ public class AdminProductController extends HttpServlet {
         deletePathQuietly(stagedImage.getPath());
     }
 
+    /**
+     * Xóa file mà không làm gián đoạn luồng.
+     */
     private void deletePathQuietly(Path path) {
         if (path == null) {
             return;
@@ -1325,29 +1257,41 @@ public class AdminProductController extends HttpServlet {
         private final String extension;
         private final Path path;
 
-        private StagedProductImage(
-                String fileName,
-                String extension,
-                Path path) {
+        /**
+         * Khởi tạo thông tin ảnh tạm.
+         */
+        private StagedProductImage(String fileName, String extension, Path path) {
 
             this.fileName = fileName;
             this.extension = extension;
             this.path = path;
         }
 
+        /**
+         * Lấy tên file ảnh tạm.
+         */
         private String getFileName() {
             return fileName;
         }
 
+        /**
+         * Lấy phần mở rộng ảnh tạm.
+         */
         private String getExtension() {
             return extension;
         }
 
+        /**
+         * Lấy đường dẫn ảnh tạm.
+         */
         private Path getPath() {
             return path;
         }
     }
 
+    /**
+     * Tách phần mở rộng của tên file.
+     */
     private String getFileExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
 
@@ -1357,6 +1301,9 @@ public class AdminProductController extends HttpServlet {
                 : "";
     }
 
+    /**
+     * Xóa file ảnh Product.
+     */
     private void deleteProductImage(String imageName) {
         if (imageName == null
                 || imageName.trim().isEmpty()) {
@@ -1378,9 +1325,10 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private String getMultipartParameter(
-            HttpServletRequest request,
-            String parameterName) {
+    /**
+     * Đọc tham số từ multipart request.
+     */
+    private String getMultipartParameter(HttpServletRequest request, String parameterName) {
 
         String value = request.getParameter(parameterName);
 
@@ -1408,10 +1356,32 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private void redirectToProductList(
-            HttpServletResponse response,
-            String status)
-            throws IOException {
+    /**
+     * Kiểm tra request AJAX.
+     */
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        return "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"));
+    }
+
+    /** Trả kết quả cập nhật Featured. */
+    private void finishFeaturedRequest(HttpServletResponse response, boolean ajaxRequest, int httpStatus, String statusCode, Boolean featured) throws IOException {
+        if (ajaxRequest) {
+            response.setStatus(httpStatus);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json;charset=UTF-8");
+            String success = httpStatus >= 200 && httpStatus < 300 ? "true" : "false";
+            String error = statusCode == null ? "null" : "\"" + statusCode + "\"";
+            String featuredValue = featured == null ? "null" : featured.toString();
+            response.getWriter().write("{\"success\":" + success + ",\"error\":" + error + ",\"featured\":" + featuredValue + "}");
+            return;
+        }
+        redirectToProductList(response, statusCode);
+    }
+
+    /**
+     * Chuyển về danh sách Product.
+     */
+    private void redirectToProductList(HttpServletResponse response, String status) throws IOException {
 
         String redirectUrl
                 = getServletContext().getContextPath()
@@ -1424,11 +1394,10 @@ public class AdminProductController extends HttpServlet {
         response.sendRedirect(redirectUrl);
     }
 
-    private void redirectToEdit(
-            HttpServletResponse response,
-            int productId,
-            String status)
-            throws IOException {
+    /**
+     * Chuyển về trang Edit Product.
+     */
+    private void redirectToEdit(HttpServletResponse response, int productId, String status) throws IOException {
 
         response.sendRedirect(
                 getServletContext().getContextPath()
@@ -1439,8 +1408,10 @@ public class AdminProductController extends HttpServlet {
         );
     }
 
-    private void listProducts(HttpServletRequest request,HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+     * Nạp dữ liệu trang danh sách Product.
+     */
+    private void listProducts(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         request.setAttribute(
                 "products",
@@ -1463,10 +1434,10 @@ public class AdminProductController extends HttpServlet {
         ).forward(request, response);
     }
 
-    private void showProductDetails(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+     * Nạp dữ liệu trang chi tiết Product.
+     */
+    private void showProductDetails(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
             int productId = Integer.parseInt(
@@ -1504,10 +1475,10 @@ public class AdminProductController extends HttpServlet {
         }
     }
 
-    private void showEditForm(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    /**
+     * Nạp dữ liệu trang Edit Product.
+     */
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
             int productId = Integer.parseInt(

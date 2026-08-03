@@ -29,9 +29,7 @@ public class CustomerProductDAO {
                 + "ORDER BY CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END, "
                 + "         ISNULL(parent_id, id), id";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Category category = new Category();
@@ -190,10 +188,33 @@ public class CustomerProductDAO {
      * Danh sách được sắp theo featured_display_order và chỉ trả Product hiện
      * vẫn có thể bán cho Customer.
      */
+//    public List<Product> getFeaturedProducts(int limit) {
+//        int safeLimit = normalizeHomepageLimit(limit);
+//
+//        String sql = "SELECT TOP " + safeLimit + " "
+//                + homepageProductProjection()
+//                + homepageProductFromClause()
+//                + "WHERE p.status = 'ACTIVE' "
+//                + "AND c.status = 1 "
+//                + "AND p.is_featured = 1 "
+//                + "AND p.featured_display_order IS NOT NULL "
+//                + purchasableProductExistsClause()
+//                + "ORDER BY p.featured_display_order ASC, p.id ASC";
+//
+//        return executeHomepageProductQuery(
+//                sql,
+//                "Could not load featured products for Customer Homepage."
+//        );
+//    }
     public List<Product> getFeaturedProducts(int limit) {
-        int safeLimit = normalizeHomepageLimit(limit);
+        String topClause = "";
 
-        String sql = "SELECT TOP " + safeLimit + " "
+        if (limit > 0) {
+            int safeLimit = Math.min(limit, 50);
+            topClause = "TOP " + safeLimit + " ";
+        }
+
+        String sql = "SELECT " + topClause
                 + homepageProductProjection()
                 + homepageProductFromClause()
                 + "WHERE p.status = 'ACTIVE' "
@@ -210,9 +231,9 @@ public class CustomerProductDAO {
     }
 
     /**
-     * Lấy Product bán chạy dựa trên tổng quantity của các đơn DELIVERED.
-     * Dữ liệu được gộp theo Product nên một Product có nhiều Variant vẫn chỉ
-     * xuất hiện một lần.
+     * Lấy Product bán chạy dựa trên tổng quantity của các đơn DELIVERED. Dữ
+     * liệu được gộp theo Product nên một Product có nhiều Variant vẫn chỉ xuất
+     * hiện một lần.
      */
     public List<Product> getBestSellingProducts(int limit) {
         int safeLimit = normalizeHomepageLimit(limit);
@@ -248,9 +269,9 @@ public class CustomerProductDAO {
     }
 
     /**
-     * Lấy Product đang có ít nhất một Variant giảm giá thật sự.
-     * sale_price phải nhỏ hơn list_price; Product được ưu tiên theo phần trăm
-     * giảm cao nhất của Variant đang còn hàng.
+     * Lấy Product đang có ít nhất một Variant giảm giá thật sự. sale_price phải
+     * nhỏ hơn list_price; Product được ưu tiên theo phần trăm giảm cao nhất của
+     * Variant đang còn hàng.
      */
     public List<Product> getOnSaleProducts(int limit) {
         int safeLimit = normalizeHomepageLimit(limit);
@@ -526,8 +547,7 @@ public class CustomerProductDAO {
                 + "AND ISNULL(pv.sale_price, 0) > 0 "
                 + "AND pv.sale_price <= pv.list_price";
 
-        try (Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, variantId);
 
@@ -709,9 +729,7 @@ public class CustomerProductDAO {
 
         List<Product> products = new ArrayList<>();
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 products.add(mapProduct(rs));

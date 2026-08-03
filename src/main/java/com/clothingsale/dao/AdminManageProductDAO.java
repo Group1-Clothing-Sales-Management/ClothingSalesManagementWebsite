@@ -17,21 +17,20 @@ import java.util.List;
 
 public class AdminManageProductDAO {
 
+    /** Báo lỗi khi tên Product bị trùng ở database. */
+    public static class DuplicateProductNameException extends RuntimeException {
+
+        /** Khởi tạo lỗi trùng tên Product. */
+        public DuplicateProductNameException(SQLException cause) {
+            super(cause);
+        }
+    }
+
+    /** Lấy toàn bộ Product chưa bị xóa. */
     public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
 
-        String sql = "SELECT p.id, p.product_name, p.slug, p.brand_id, p.category_id, "
-                + "p.short_description, p.long_description, p.status, "
-                + "p.is_featured, p.featured_display_order, "
-                + "p.created_at, p.updated_at, img.image_url AS main_image_url "
-                + "FROM Product p "
-                + "LEFT JOIN Product_Image img "
-                + "ON img.product_id = p.id "
-                + "AND img.variant_id IS NULL "
-                + "AND img.color IS NULL "
-                + "AND img.is_main = 1 "
-                + "WHERE p.status <> 'DELETED' "
-                + "ORDER BY p.id DESC";
+        String sql = "SELECT p.id, p.product_name, p.slug, p.brand_id, p.category_id, p.short_description, p.long_description, p.status, p.is_featured, p.featured_display_order, p.created_at, p.updated_at, img.image_url AS main_image_url FROM Product p LEFT JOIN Product_Image img ON img.product_id = p.id AND img.variant_id IS NULL AND img.color IS NULL AND img.is_main = 1 WHERE p.status <> 'DELETED' ORDER BY p.id DESC";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -45,18 +44,9 @@ public class AdminManageProductDAO {
         return products;
     }
 
+    /** Lấy Product theo ID. */
     public Product getProductById(int productId) {
-        String sql = "SELECT p.id, p.product_name, p.slug, p.brand_id, p.category_id, "
-                + "p.short_description, p.long_description, p.status, "
-                + "p.is_featured, p.featured_display_order, "
-                + "p.created_at, p.updated_at, img.image_url AS main_image_url "
-                + "FROM Product p "
-                + "LEFT JOIN Product_Image img "
-                + "ON img.product_id = p.id "
-                + "AND img.variant_id IS NULL "
-                + "AND img.color IS NULL "
-                + "AND img.is_main = 1 "
-                + "WHERE p.id = ? AND p.status <> 'DELETED'";
+        String sql = "SELECT p.id, p.product_name, p.slug, p.brand_id, p.category_id, p.short_description, p.long_description, p.status, p.is_featured, p.featured_display_order, p.created_at, p.updated_at, img.image_url AS main_image_url FROM Product p LEFT JOIN Product_Image img ON img.product_id = p.id AND img.variant_id IS NULL AND img.color IS NULL AND img.is_main = 1 WHERE p.id = ? AND p.status <> 'DELETED'";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -71,16 +61,11 @@ public class AdminManageProductDAO {
         }
     }
 
+    /** Tạo Product và ảnh chính. */
     public boolean insertProductWithImage(Product product, String imageName) {
-        String insertProductSql = "INSERT INTO Product "
-                + "(product_name, slug, brand_id, category_id, "
-                + "short_description, long_description, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertProductSql = "INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        String insertImageSql = "INSERT INTO Product_Image "
-                + "(product_id, variant_id, image_url, is_main, "
-                + "sort_order, updated_at) "
-                + "VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
+        String insertImageSql = "INSERT INTO Product_Image (product_id, variant_id, image_url, is_main, sort_order, updated_at) VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -129,49 +114,25 @@ public class AdminManageProductDAO {
                 throw e;
             }
         } catch (SQLException e) {
+            if (isDuplicateProductNameException(e)) {
+                throw new DuplicateProductNameException(e);
+            }
             e.printStackTrace();
             return false;
         }
     }
 
-    /**
-     * Cập nhật thông tin Product và ảnh chính.
-     *
-     * Không kiểm tra Category ACTIVE tại DAO vì update ảnh/tên/mô tả vẫn được
-     * phép khi Product đang nằm trong Category inactive. Ràng buộc đổi Category
-     * và kích hoạt Product được xử lý tại Service.
-     */
+    /** Cập nhật thông tin Product. */
     public boolean updateProduct(Product product, String newImageName) {
-        String updateProductSql = "UPDATE Product SET "
-                + "product_name = ?, slug = ?, brand_id = ?, category_id = ?, "
-                + "short_description = ?, long_description = ?, status = ?, "
-                + "updated_at = GETDATE() "
-                + "WHERE id = ? AND status <> 'DELETED'";
+        String updateProductSql = "UPDATE Product SET product_name = ?, slug = ?, brand_id = ?, category_id = ?, short_description = ?, long_description = ?, status = ?, updated_at = GETDATE() WHERE id = ? AND status <> 'DELETED'";
 
-        String deactivateVariantsSql = "UPDATE Product_Variant "
-                + "SET status = 'INACTIVE' "
-                + "WHERE product_id = ? AND status <> 'INACTIVE'";
+        String deactivateVariantsSql = "UPDATE Product_Variant SET status = 'INACTIVE' WHERE product_id = ? AND status <> 'INACTIVE'";
 
-        String clearFeaturedSql = "UPDATE Product SET "
-                + "is_featured = 0, featured_display_order = NULL, "
-                + "updated_at = GETDATE() WHERE id = ?";
+        String clearFeaturedSql = "UPDATE Product SET is_featured = 0, featured_display_order = NULL, updated_at = GETDATE() WHERE id = ?";
 
-        String findImageSql = "SELECT TOP 1 id FROM Product_Image "
-                + "WHERE product_id = ? "
-                + "AND variant_id IS NULL "
-                + "AND color IS NULL "
-                + "AND is_main = 1 "
-                + "ORDER BY id";
-        String updateImageSql = "UPDATE Product_Image "
-                + "SET image_url = ?, updated_at = GETDATE() "
-                + "WHERE product_id = ? "
-                + "AND variant_id IS NULL "
-                + "AND color IS NULL "
-                + "AND is_main = 1";
-        String insertImageSql = "INSERT INTO Product_Image "
-                + "(product_id, variant_id, image_url, is_main, "
-                + "sort_order, updated_at) "
-                + "VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
+        String findImageSql = "SELECT TOP 1 id FROM Product_Image WHERE product_id = ? AND variant_id IS NULL AND color IS NULL AND is_main = 1 ORDER BY id";
+        String updateImageSql = "UPDATE Product_Image SET image_url = ?, updated_at = GETDATE() WHERE product_id = ? AND variant_id IS NULL AND color IS NULL AND is_main = 1";
+        String insertImageSql = "INSERT INTO Product_Image (product_id, variant_id, image_url, is_main, sort_order, updated_at) VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -240,18 +201,41 @@ public class AdminManageProductDAO {
                 throw e;
             }
         } catch (SQLException e) {
+            if (isDuplicateProductNameException(e)) {
+                throw new DuplicateProductNameException(e);
+            }
             e.printStackTrace();
             return false;
         }
     }
 
+    /** Kiểm tra tên Product đã tồn tại. */
+    public boolean productNameExists(String productName, Integer excludedProductId) {
+        if (productName == null || productName.isBlank()) {
+            return true;
+        }
+        String sql = "SELECT COUNT(*) FROM Product WHERE status <> 'DELETED' AND LOWER(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(product_name)), N'  ', N' '), N'  ', N' '), N'  ', N' ')) = LOWER(?)" + (excludedProductId != null && excludedProductId > 0 ? " AND id <> ?" : "");
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, productName.trim().replaceAll("\\s+", " "));
+            if (excludedProductId != null && excludedProductId > 0) {
+                ps.setInt(2, excludedProductId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
+    /** Kiểm tra Category đang hoạt động. */
     public boolean isCategoryActive(int categoryId) {
         if (categoryId <= 0) {
             return false;
         }
 
-        String sql = "SELECT COUNT(*) FROM Category "
-                + "WHERE id = ? AND status = 1";
+        String sql = "SELECT COUNT(*) FROM Category WHERE id = ? AND status = 1";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -266,10 +250,9 @@ public class AdminManageProductDAO {
         }
     }
 
+    /** Kiểm tra Product đã phát sinh Order. */
     public boolean isProductInOrders(int productId) {
-        String sql = "SELECT COUNT(*) FROM Order_Detail "
-                + "WHERE variant_id IN "
-                + "(SELECT id FROM Product_Variant WHERE product_id = ?)";
+        String sql = "SELECT COUNT(*) FROM Order_Detail WHERE variant_id IN (SELECT id FROM Product_Variant WHERE product_id = ?)";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -284,17 +267,11 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * Xóa mềm Product và đồng thời vô hiệu hóa toàn bộ Variant.
-     */
+    /** Xóa mềm Product và vô hiệu hóa Variant. */
     public boolean softDeleteProduct(int productId) {
-        String deactivateVariantsSql = "UPDATE Product_Variant "
-                + "SET status = 'INACTIVE' WHERE product_id = ?";
+        String deactivateVariantsSql = "UPDATE Product_Variant SET status = 'INACTIVE' WHERE product_id = ?";
 
-        String deleteProductSql = "UPDATE Product "
-                + "SET status = 'DELETED', is_featured = 0, "
-                + "featured_display_order = NULL, updated_at = GETDATE() "
-                + "WHERE id = ? AND status <> 'DELETED'";
+        String deleteProductSql = "UPDATE Product SET status = 'DELETED', is_featured = 0, featured_display_order = NULL, updated_at = GETDATE() WHERE id = ? AND status <> 'DELETED'";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -330,14 +307,10 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * Giữ lại để tương thích với code cũ. Luồng hiện tại nên ưu tiên xóa mềm.
-     */
+    /** Xóa cứng Product và dữ liệu liên quan. */
     public boolean hardDeleteProduct(int productId) {
-        String deleteVariantsSql = "DELETE FROM Product_Variant "
-                + "WHERE product_id = ?";
-        String deleteImagesSql = "DELETE FROM Product_Image "
-                + "WHERE product_id = ?";
+        String deleteVariantsSql = "DELETE FROM Product_Variant WHERE product_id = ?";
+        String deleteImagesSql = "DELETE FROM Product_Image WHERE product_id = ?";
         String deleteProductSql = "DELETE FROM Product WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
@@ -373,17 +346,11 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * Lấy thứ tự tiếp theo khi bật Featured cho một Product mới.
-     */
+    /** Lấy thứ tự Featured tiếp theo. */
     public int getNextFeaturedDisplayOrder() {
-        String sql = "SELECT ISNULL(MAX(featured_display_order), 0) + 1 "
-                + "FROM Product WHERE is_featured = 1 "
-                + "AND status <> 'DELETED'";
+        String sql = "SELECT ISNULL(MAX(featured_display_order), 0) + 1 FROM Product WHERE is_featured = 1 AND status <> 'DELETED'";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             return rs.next() ? rs.getInt(1) : 1;
         } catch (SQLException e) {
@@ -392,31 +359,15 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * Product chỉ đủ điều kiện Featured khi Product và Category đang hoạt động,
-     * đồng thời có ít nhất một Variant ACTIVE với giá bán hợp lệ.
-     */
+    /** Kiểm tra Product đủ điều kiện Featured. */
     public boolean isProductEligibleForFeatured(int productId) {
         if (productId <= 0) {
             return false;
         }
 
-        String sql = "SELECT COUNT(*) FROM Product p "
-                + "INNER JOIN Category c ON c.id = p.category_id "
-                + "WHERE p.id = ? "
-                + "AND p.status = 'ACTIVE' "
-                + "AND c.status = 1 "
-                + "AND EXISTS ("
-                + "SELECT 1 FROM Product_Variant pv "
-                + "WHERE pv.product_id = p.id "
-                + "AND pv.status = 'ACTIVE' "
-                + "AND ISNULL(pv.list_price, 0) > 0 "
-                + "AND ISNULL(pv.sale_price, 0) > 0 "
-                + "AND pv.sale_price <= pv.list_price"
-                + ")";
+        String sql = "SELECT COUNT(*) FROM Product p INNER JOIN Category c ON c.id = p.category_id WHERE p.id = ? AND p.status = 'ACTIVE' AND c.status = 1 AND EXISTS (SELECT 1 FROM Product_Variant pv WHERE pv.product_id = p.id AND pv.status = 'ACTIVE' AND ISNULL(pv.list_price, 0) > 0 AND ISNULL(pv.sale_price, 0) > 0 AND pv.sale_price <= pv.list_price)";
 
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
 
@@ -429,59 +380,22 @@ public class AdminManageProductDAO {
         }
     }
 
-    /**
-     * Bật hoặc tắt Product trong khu vực Featured Products của Homepage.
-     * Phương thức này không thay đổi status, giá hoặc tồn kho của Product.
-     */
-    public boolean updateFeaturedStatus(
-            int productId,
-            boolean featured,
-            Integer displayOrder) {
-
-        if (productId <= 0) {
+    /** Cập nhật trạng thái Featured của Product. */
+    public boolean updateFeaturedStatus(int productId, boolean featured, Integer displayOrder) {
+        if (productId <= 0 || (featured && (displayOrder == null || displayOrder < 1))) {
             return false;
         }
 
-        String sql;
+        String sql = "UPDATE Product SET is_featured = ?, featured_display_order = ?, updated_at = GETDATE() WHERE id = ? AND status <> 'DELETED'";
 
-        if (featured) {
-            if (displayOrder == null || displayOrder < 1) {
-                return false;
-            }
-
-            sql = "UPDATE p SET p.is_featured = 1, "
-                    + "p.featured_display_order = ?, "
-                    + "p.updated_at = GETDATE() "
-                    + "FROM Product p "
-                    + "INNER JOIN Category c ON c.id = p.category_id "
-                    + "WHERE p.id = ? "
-                    + "AND p.status = 'ACTIVE' "
-                    + "AND c.status = 1 "
-                    + "AND EXISTS ("
-                    + "SELECT 1 FROM Product_Variant pv "
-                    + "WHERE pv.product_id = p.id "
-                    + "AND pv.status = 'ACTIVE' "
-                    + "AND ISNULL(pv.list_price, 0) > 0 "
-                    + "AND ISNULL(pv.sale_price, 0) > 0 "
-                    + "AND pv.sale_price <= pv.list_price"
-                    + ")";
-        } else {
-            sql = "UPDATE Product SET is_featured = 0, "
-                    + "featured_display_order = NULL, "
-                    + "updated_at = GETDATE() "
-                    + "WHERE id = ? AND status <> 'DELETED'";
-        }
-
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, featured);
             if (featured) {
-                ps.setInt(1, displayOrder);
-                ps.setInt(2, productId);
+                ps.setInt(2, displayOrder);
             } else {
-                ps.setInt(1, productId);
+                ps.setNull(2, Types.INTEGER);
             }
-
+            ps.setInt(3, productId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -489,10 +403,10 @@ public class AdminManageProductDAO {
         }
     }
 
+    /** Lấy toàn bộ Brand. */
     public List<Brand> getAllBrands() {
         List<Brand> brands = new ArrayList<>();
-        String sql = "SELECT id, brand_name, slug FROM Brand "
-                + "ORDER BY brand_name";
+        String sql = "SELECT id, brand_name, slug FROM Brand ORDER BY brand_name";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -510,14 +424,10 @@ public class AdminManageProductDAO {
         return brands;
     }
 
-    /**
-     * Dùng cho trang Edit để Category hiện tại vẫn xuất hiện dù đã inactive.
-     */
+    /** Lấy toàn bộ Category. */
     public List<Category> getAllCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT id, category_name, slug, status "
-                + "FROM Category "
-                + "ORDER BY status DESC, category_name";
+        String sql = "SELECT id, category_name, slug, parent_id, status FROM Category ORDER BY status DESC, category_name";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -531,14 +441,10 @@ public class AdminManageProductDAO {
         return categories;
     }
 
-    /**
-     * Dùng cho form tạo Product: chỉ cho chọn Category đang active.
-     */
+    /** Lấy Category đang hoạt động. */
     public List<Category> getActiveCategories() {
         List<Category> categories = new ArrayList<>();
-        String sql = "SELECT id, category_name, slug, status "
-                + "FROM Category WHERE status = 1 "
-                + "ORDER BY category_name";
+        String sql = "SELECT id, category_name, slug, parent_id, status FROM Category WHERE status = 1 ORDER BY category_name";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
@@ -552,26 +458,11 @@ public class AdminManageProductDAO {
         return categories;
     }
 
+    /** Lấy danh sách Variant của Product. */
     public List<ProductVariant> getVariantsByProductId(int productId) {
         List<ProductVariant> variants = new ArrayList<>();
 
-        String sql = "SELECT pv.id, pv.product_id, pv.sku, "
-                + "pv.color, pv.size, "
-                + "pv.cost_price, pv.list_price, pv.sale_price, "
-                + "pv.stock_quantity, pv.status, "
-                + "img.image_url AS variant_image_url, "
-                + "img.updated_at AS image_updated_at "
-                + "FROM Product_Variant pv "
-                + "OUTER APPLY (SELECT TOP 1 pi.image_url, pi.updated_at "
-                + "    FROM Product_Image pi "
-                + "    WHERE pi.product_id = pv.product_id "
-                + "      AND pi.is_main = 1 "
-                + "      AND (pi.variant_id = pv.id "
-                + "           OR (pi.variant_id IS NULL AND pi.color IS NOT NULL "
-                + "               AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color))))) "
-                + "    ORDER BY CASE WHEN pi.variant_id = pv.id THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
-                + "WHERE pv.product_id = ? "
-                + "ORDER BY pv.id DESC";
+        String sql = "SELECT pv.id, pv.product_id, pv.sku, pv.color, pv.size, pv.cost_price, pv.list_price, pv.sale_price, pv.stock_quantity, pv.status, img.image_url AS variant_image_url, img.updated_at AS image_updated_at FROM Product_Variant pv OUTER APPLY (SELECT TOP 1 pi.image_url, pi.updated_at     FROM Product_Image pi     WHERE pi.product_id = pv.product_id       AND pi.is_main = 1       AND (pi.variant_id = pv.id            OR (pi.variant_id IS NULL AND pi.color IS NOT NULL                AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color)))))     ORDER BY CASE WHEN pi.variant_id = pv.id THEN 0 ELSE 1 END, pi.sort_order, pi.id) img WHERE pv.product_id = ? ORDER BY pv.id DESC";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -589,24 +480,9 @@ public class AdminManageProductDAO {
         return variants;
     }
 
+    /** Lấy Variant theo ID. */
     public ProductVariant getVariantById(int productId, int variantId) {
-        String sql = "SELECT pv.id, pv.product_id, pv.sku, "
-                + "pv.color, pv.size, "
-                + "pv.cost_price, pv.list_price, pv.sale_price, "
-                + "pv.stock_quantity, pv.status, "
-                + "img.image_url AS variant_image_url, "
-                + "img.updated_at AS image_updated_at "
-                + "FROM Product_Variant pv "
-                + "OUTER APPLY (SELECT TOP 1 pi.image_url, pi.updated_at "
-                + "    FROM Product_Image pi "
-                + "    WHERE pi.product_id = pv.product_id "
-                + "      AND pi.is_main = 1 "
-                + "      AND (pi.variant_id = pv.id "
-                + "           OR (pi.variant_id IS NULL AND pi.color IS NOT NULL "
-                + "               AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color))))) "
-                + "    ORDER BY CASE WHEN pi.variant_id = pv.id THEN 0 ELSE 1 END, pi.sort_order, pi.id) img "
-                + "WHERE pv.product_id = ? "
-                + "AND pv.id = ?";
+        String sql = "SELECT pv.id, pv.product_id, pv.sku, pv.color, pv.size, pv.cost_price, pv.list_price, pv.sale_price, pv.stock_quantity, pv.status, img.image_url AS variant_image_url, img.updated_at AS image_updated_at FROM Product_Variant pv OUTER APPLY (SELECT TOP 1 pi.image_url, pi.updated_at     FROM Product_Image pi     WHERE pi.product_id = pv.product_id       AND pi.is_main = 1       AND (pi.variant_id = pv.id            OR (pi.variant_id IS NULL AND pi.color IS NOT NULL                AND UPPER(LTRIM(RTRIM(pi.color))) = UPPER(LTRIM(RTRIM(pv.color)))))     ORDER BY CASE WHEN pi.variant_id = pv.id THEN 0 ELSE 1 END, pi.sort_order, pi.id) img WHERE pv.product_id = ? AND pv.id = ?";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -622,20 +498,14 @@ public class AdminManageProductDAO {
         }
     }
 
-    public String getVariantMainImageUrl(
-            int productId,
-            int variantId) {
+    /** Lấy ảnh chính của Variant. */
+    public String getVariantMainImageUrl(int productId, int variantId) {
 
         if (productId <= 0 || variantId <= 0) {
             return null;
         }
 
-        String sql = "SELECT TOP 1 image_url "
-                + "FROM Product_Image "
-                + "WHERE product_id = ? "
-                + "AND variant_id = ? "
-                + "AND is_main = 1 "
-                + "ORDER BY sort_order, id";
+        String sql = "SELECT TOP 1 image_url FROM Product_Image WHERE product_id = ? AND variant_id = ? AND is_main = 1 ORDER BY sort_order, id";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -652,23 +522,14 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean insertProductWithMatrixVariants(
-            Product product,
-            String imageName,
-            List<ProductVariant> variants) {
+    /** Tạo Product cùng danh sách Variant. */
+    public boolean insertProductWithMatrixVariants(Product product, String imageName, List<ProductVariant> variants) {
 
-        String insertProductSql = "INSERT INTO Product "
-                + "(product_name, slug, brand_id, category_id, "
-                + "short_description, long_description, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertProductSql = "INSERT INTO Product (product_name, slug, brand_id, category_id, short_description, long_description, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        String insertImageSql = "INSERT INTO Product_Image "
-                + "(product_id, image_url, is_main) VALUES (?, ?, 1)";
+        String insertImageSql = "INSERT INTO Product_Image (product_id, image_url, is_main) VALUES (?, ?, 1)";
 
-        String insertVariantSql = "INSERT INTO Product_Variant "
-                + "(product_id, sku, cost_price, list_price, sale_price, "
-                + "stock_quantity, status, color, size) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String insertVariantSql = "INSERT INTO Product_Variant (product_id, sku, cost_price, list_price, sale_price, stock_quantity, status, color, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -735,35 +596,23 @@ public class AdminManageProductDAO {
                 throw e;
             }
         } catch (SQLException e) {
+            if (isDuplicateProductNameException(e)) {
+                throw new DuplicateProductNameException(e);
+            }
             e.printStackTrace();
             return false;
         }
     }
 
-    /**
-     * Variant chỉ được ACTIVE khi Category, Product và giá bán đều hợp lệ.
-     */
-    public boolean updateVariantStatus(
-            int productId,
-            int variantId,
-            String status) {
+    /** Cập nhật trạng thái Variant. */
+    public boolean updateVariantStatus(int productId, int variantId, String status) {
 
         String sql;
 
         if ("ACTIVE".equals(status)) {
-            sql = "UPDATE pv SET pv.status = 'ACTIVE' "
-                    + "FROM Product_Variant pv "
-                    + "INNER JOIN Product p ON p.id = pv.product_id "
-                    + "INNER JOIN Category c ON c.id = p.category_id "
-                    + "WHERE pv.id = ? AND pv.product_id = ? "
-                    + "AND p.status = 'ACTIVE' "
-                    + "AND c.status = 1 "
-                    + "AND ISNULL(pv.list_price, 0) > 0 "
-                    + "AND ISNULL(pv.sale_price, 0) > 0 "
-                    + "AND pv.sale_price <= pv.list_price";
+            sql = "UPDATE pv SET pv.status = 'ACTIVE' FROM Product_Variant pv INNER JOIN Product p ON p.id = pv.product_id INNER JOIN Category c ON c.id = p.category_id WHERE pv.id = ? AND pv.product_id = ? AND p.status = 'ACTIVE' AND c.status = 1 AND ISNULL(pv.list_price, 0) > 0 AND ISNULL(pv.sale_price, 0) > 0 AND pv.sale_price <= pv.list_price";
         } else if ("INACTIVE".equals(status)) {
-            sql = "UPDATE Product_Variant SET status = 'INACTIVE' "
-                    + "WHERE id = ? AND product_id = ?";
+            sql = "UPDATE Product_Variant SET status = 'INACTIVE' WHERE id = ? AND product_id = ?";
         } else {
             return false;
         }
@@ -779,6 +628,7 @@ public class AdminManageProductDAO {
         }
     }
 
+    /** Tạo một Variant. */
     public boolean insertSingleVariant(ProductVariant variant) {
         if (variant == null || variantCombinationExists(
                 variant.getProductId(),
@@ -787,10 +637,7 @@ public class AdminManageProductDAO {
             return false;
         }
 
-        String sql = "INSERT INTO Product_Variant "
-                + "(product_id, sku, cost_price, list_price, sale_price, "
-                + "stock_quantity, status, color, size) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Product_Variant (product_id, sku, cost_price, list_price, sale_price, stock_quantity, status, color, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -811,19 +658,14 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean variantCombinationExists(
-            int productId,
-            String size,
-            String color) {
+    /** Kiểm tra trùng Size và Color. */
+    public boolean variantCombinationExists(int productId, String size, String color) {
 
         if (productId <= 0 || size == null || color == null) {
             return true;
         }
 
-        String sql = "SELECT COUNT(*) FROM Product_Variant "
-                + "WHERE product_id = ? "
-                + "AND UPPER(LTRIM(RTRIM(size))) = UPPER(LTRIM(RTRIM(?))) "
-                + "AND UPPER(LTRIM(RTRIM(color))) = UPPER(LTRIM(RTRIM(?)))";
+        String sql = "SELECT COUNT(*) FROM Product_Variant WHERE product_id = ? AND UPPER(LTRIM(RTRIM(size))) = UPPER(LTRIM(RTRIM(?))) AND UPPER(LTRIM(RTRIM(color))) = UPPER(LTRIM(RTRIM(?)))";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -842,15 +684,13 @@ public class AdminManageProductDAO {
         }
     }
 
+    /** Tạo nhiều Variant trong transaction. */
     public boolean insertVariants(List<ProductVariant> variants) {
         if (variants == null || variants.isEmpty()) {
             return false;
         }
 
-        String sql = "INSERT INTO Product_Variant "
-                + "(product_id, sku, cost_price, list_price, sale_price, "
-                + "stock_quantity, status, color, size) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Product_Variant (product_id, sku, cost_price, list_price, sale_price, stock_quantity, status, color, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -882,6 +722,19 @@ public class AdminManageProductDAO {
         }
     }
 
+    /** Nhận diện lỗi unique tên Product. */
+    private boolean isDuplicateProductNameException(SQLException exception) {
+        for (SQLException current = exception; current != null; current = current.getNextException()) {
+            int errorCode = current.getErrorCode();
+            String message = current.getMessage() == null ? "" : current.getMessage().toLowerCase();
+            if ((errorCode == 2601 || errorCode == 2627) && (message.contains("ux_product_active_productname") || message.contains("active_product_name_key"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Ánh xạ ResultSet sang Product. */
     private Product mapProduct(ResultSet rs) throws SQLException {
         Product product = new Product();
         product.setId(rs.getInt("id"));
@@ -904,15 +757,23 @@ public class AdminManageProductDAO {
         return product;
     }
 
+    /** Ánh xạ ResultSet sang Category. */
     private Category mapCategory(ResultSet rs) throws SQLException {
         Category category = new Category();
+
         category.setId(rs.getInt("id"));
         category.setCategoryName(rs.getString("category_name"));
         category.setSlug(rs.getString("slug"));
+
+        int parentId = rs.getInt("parent_id");
+        category.setParentId(rs.wasNull() ? null : parentId);
+
         category.setStatus(rs.getInt("status"));
+
         return category;
     }
 
+    /** Ánh xạ ResultSet sang ProductVariant. */
     private ProductVariant mapVariant(ResultSet rs) throws SQLException {
         ProductVariant variant = new ProductVariant();
         variant.setId(rs.getInt("id"));
@@ -953,14 +814,13 @@ public class AdminManageProductDAO {
         return variant;
     }
 
+    /** Đổi giá trị null thành số không. */
     private BigDecimal zeroIfNull(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    private void setNullableInt(
-            PreparedStatement statement,
-            int parameterIndex,
-            int value) throws SQLException {
+    /** Gán tham số Integer có thể null. */
+    private void setNullableInt(PreparedStatement statement, int parameterIndex, int value) throws SQLException {
 
         if (value > 0) {
             statement.setInt(parameterIndex, value);
@@ -969,12 +829,10 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean updateVariantInfo(int productId, int variantId,
-            String size, String color, String status) {
+    /** Cập nhật Size, Color và trạng thái Variant. */
+    public boolean updateVariantInfo(int productId, int variantId, String size, String color, String status) {
 
-        String sql = "UPDATE Product_Variant "
-                + "SET size = ?, color = ?, status = ? "
-                + "WHERE id = ? AND product_id = ?";
+        String sql = "UPDATE Product_Variant SET size = ?, color = ?, status = ? WHERE id = ? AND product_id = ?";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -992,11 +850,8 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean variantCombinationExistsForUpdate(
-            int productId,
-            int variantId,
-            String size,
-            String color) {
+    /** Kiểm tra trùng Variant khi edit. */
+    public boolean variantCombinationExistsForUpdate(int productId, int variantId, String size, String color) {
 
         if (productId <= 0
                 || variantId <= 0
@@ -1005,14 +860,7 @@ public class AdminManageProductDAO {
             return true;
         }
 
-        String sql = "SELECT COUNT(*) "
-                + "FROM Product_Variant "
-                + "WHERE product_id = ? "
-                + "AND id <> ? "
-                + "AND UPPER(LTRIM(RTRIM(size))) "
-                + "= UPPER(LTRIM(RTRIM(?))) "
-                + "AND UPPER(LTRIM(RTRIM(color))) "
-                + "= UPPER(LTRIM(RTRIM(?)))";
+        String sql = "SELECT COUNT(*) FROM Product_Variant WHERE product_id = ? AND id <> ? AND UPPER(LTRIM(RTRIM(size))) = UPPER(LTRIM(RTRIM(?))) AND UPPER(LTRIM(RTRIM(color))) = UPPER(LTRIM(RTRIM(?)))";
 
         try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -1033,9 +881,8 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean saveProductMainImage(
-            int productId,
-            String imageUrl) {
+    /** Lưu ảnh chính Product. */
+    public boolean saveProductMainImage(int productId, String imageUrl) {
 
         if (productId <= 0
                 || imageUrl == null
@@ -1043,35 +890,13 @@ public class AdminManageProductDAO {
             return false;
         }
 
-        String findImageSql
-                = "SELECT TOP 1 id "
-                + "FROM Product_Image "
-                + "WHERE product_id = ? "
-                + "AND variant_id IS NULL "
-                + "AND color IS NULL "
-                + "ORDER BY is_main DESC, sort_order, id";
+        String findImageSql = "SELECT TOP 1 id FROM Product_Image WHERE product_id = ? AND variant_id IS NULL AND color IS NULL ORDER BY is_main DESC, sort_order, id";
 
-        String clearMainSql
-                = "UPDATE Product_Image "
-                + "SET is_main = 0 "
-                + "WHERE product_id = ? "
-                + "AND variant_id IS NULL "
-                + "AND color IS NULL "
-                + "AND is_main = 1";
+        String clearMainSql = "UPDATE Product_Image SET is_main = 0 WHERE product_id = ? AND variant_id IS NULL AND color IS NULL AND is_main = 1";
 
-        String updateImageSql
-                = "UPDATE Product_Image "
-                + "SET image_url = ?, "
-                + "is_main = 1, "
-                + "sort_order = 0, "
-                + "updated_at = SYSDATETIME() "
-                + "WHERE id = ?";
+        String updateImageSql = "UPDATE Product_Image SET image_url = ?, is_main = 1, sort_order = 0, updated_at = SYSDATETIME() WHERE id = ?";
 
-        String insertImageSql
-                = "INSERT INTO Product_Image "
-                + "(product_id, variant_id, image_url, "
-                + "is_main, sort_order, updated_at) "
-                + "VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
+        String insertImageSql = "INSERT INTO Product_Image (product_id, variant_id, image_url, is_main, sort_order, updated_at) VALUES (?, NULL, ?, 1, 0, SYSDATETIME())";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -1142,10 +967,8 @@ public class AdminManageProductDAO {
         }
     }
 
-    public boolean saveVariantMainImage(
-            int productId,
-            int variantId,
-            String imageUrl) {
+    /** Lưu ảnh chính Variant. */
+    public boolean saveVariantMainImage(int productId, int variantId, String imageUrl) {
 
         if (productId <= 0
                 || variantId <= 0
@@ -1154,24 +977,9 @@ public class AdminManageProductDAO {
             return false;
         }
 
-        String updateSql = "UPDATE Product_Image "
-                + "SET image_url = ?, "
-                + "color = NULL, "
-                + "is_main = 1, "
-                + "sort_order = 0, "
-                + "updated_at = SYSDATETIME() "
-                + "WHERE product_id = ? "
-                + "AND variant_id = ? "
-                + "AND is_main = 1";
+        String updateSql = "UPDATE Product_Image SET image_url = ?, color = NULL, is_main = 1, sort_order = 0, updated_at = SYSDATETIME() WHERE product_id = ? AND variant_id = ? AND is_main = 1";
 
-        String insertSql = "INSERT INTO Product_Image "
-                + "(product_id, variant_id, color, image_url, "
-                + "is_main, sort_order, updated_at) "
-                + "SELECT ?, ?, NULL, ?, 1, 0, SYSDATETIME() "
-                + "WHERE EXISTS ("
-                + "SELECT 1 FROM Product_Variant "
-                + "WHERE id = ? AND product_id = ?"
-                + ")";
+        String insertSql = "INSERT INTO Product_Image (product_id, variant_id, color, image_url, is_main, sort_order, updated_at) SELECT ?, ?, NULL, ?, 1, 0, SYSDATETIME() WHERE EXISTS (SELECT 1 FROM Product_Variant WHERE id = ? AND product_id = ?)";
 
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);

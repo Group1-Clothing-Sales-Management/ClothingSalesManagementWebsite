@@ -1,6 +1,7 @@
 package com.clothingsale.service;
 
 import com.clothingsale.dao.AdminManageProductDAO;
+import com.clothingsale.dao.AdminManageProductDAO.DuplicateProductNameException;
 import com.clothingsale.model.Brand;
 import com.clothingsale.model.Category;
 import com.clothingsale.model.Product;
@@ -14,16 +15,17 @@ import java.util.Set;
 
 public class AdminManageProductService {
 
-    private static final Set<String> TEXTUAL_SIZES = Set.of(
-            "XS", "S", "M", "L", "XL", "XXL", "XXXL", "3XL", "4XL", "FREE SIZE");
+    private static final Set<String> TEXTUAL_SIZES = Set.of("XS", "S", "M", "L", "XL", "XXL", "XXXL", "3XL", "4XL", "FREE SIZE");
 
     private final AdminManageProductDAO productDAO
             = new AdminManageProductDAO();
 
+    /** Lấy toàn bộ Product chưa bị xóa. */
     public List<Product> getAllProducts() {
         return productDAO.getAllProducts();
     }
 
+    /** Lấy Product theo ID. */
     public Product getProductById(int productId) {
         if (productId <= 0) {
             return null;
@@ -32,229 +34,181 @@ public class AdminManageProductService {
         return productDAO.getProductById(productId);
     }
 
+    /** Tạo Product theo luồng tương thích cũ. */
     public boolean addProduct(Product product, String imageName) {
-        return productDAO.insertProductWithImage(product, imageName);
-    }
-
-    public boolean updateProduct(Product product, String newImageName) {
-        if (product == null || product.getId() <= 0) {
+        try {
+            return validateProductForCreate(product) == null && productDAO.insertProductWithImage(product, imageName);
+        } catch (DuplicateProductNameException e) {
             return false;
         }
-
-        return productDAO.updateProduct(product, newImageName);
     }
 
-    /**
-     * Luôn dùng xóa mềm để giữ lịch sử giá, tồn kho và Order Detail.
-     */
+    /** Cập nhật thông tin Product. */
+    public boolean updateProduct(Product product, String newImageName) {
+        return updateProductWithResult(product, newImageName) == null;
+    }
+
+    /** Cập nhật Product và trả mã lỗi. */
+    public String updateProductWithResult(Product product, String newImageName) {
+        if (product == null || product.getId() <= 0) {
+            return "update-failed";
+        }
+        String validationError = validateProduct(product);
+        if (validationError != null) {
+            return validationError;
+        }
+        if (productDAO.productNameExists(product.getProductName(), product.getId())) {
+            return "product-name-exists";
+        }
+        try {
+            return productDAO.updateProduct(product, newImageName) ? null : "update-failed";
+        } catch (DuplicateProductNameException e) {
+            return "product-name-exists";
+        }
+    }
+
+    /** Xóa mềm Product an toàn. */
     public boolean deleteProductSmartly(int productId) {
         return productId > 0
                 && productDAO.softDeleteProduct(productId);
     }
 
+    /** Lấy toàn bộ Brand. */
     public List<Brand> getAllBrands() {
         return productDAO.getAllBrands();
     }
 
-    /**
-     * Danh sách đầy đủ, bao gồm Category inactive. Dùng cho trang Edit để
-     * Category hiện tại không bị mất khỏi select.
-     */
+    /** Lấy toàn bộ Category. */
     public List<Category> getAllCategories() {
         return productDAO.getAllCategories();
     }
 
-    /**
-     * Chỉ Category active, dùng cho form tạo Product.
-     */
+    /** Lấy Category đang hoạt động. */
     public List<Category> getActiveCategories() {
         return productDAO.getActiveCategories();
     }
 
+    /** Lấy danh sách Variant của Product. */
     public List<ProductVariant> getVariantsByProductId(int productId) {
         return productDAO.getVariantsByProductId(productId);
     }
 
-    /**
-     * Lấy vị trí tiếp theo cho Product mới được đưa vào khu vực Featured
-     * Products của Homepage.
-     */
+    /** Lấy thứ tự Featured tiếp theo. */
     public int getNextFeaturedDisplayOrder() {
         return productDAO.getNextFeaturedDisplayOrder();
     }
 
-    /**
-     * Dùng để khóa công tắc Featured trên giao diện khi Product chưa đủ điều
-     * kiện hiển thị cho Customer.
-     */
+    /** Kiểm tra Product đủ điều kiện Featured. */
     public boolean isProductEligibleForFeatured(int productId) {
         return productId > 0
                 && productDAO.isProductEligibleForFeatured(productId);
     }
 
-    /**
-     * Bật hoặc tắt Product trong khu vực Featured Products của Homepage.
-     *
-     * Khi bật mà giao diện không truyền displayOrder, hệ thống giữ vị trí cũ
-     * nếu Product đã Featured; nếu chưa có vị trí thì tự đưa xuống cuối danh
-     * sách. Khi tắt, DAO sẽ đặt featured_display_order về NULL.
-     *
-     * @return null khi thành công; ngược lại trả về mã lỗi để Controller hiển
-     * thị thông báo phù hợp.
-     */
-    public String updateFeaturedStatus(
-            int productId,
-            boolean featured,
-            Integer displayOrder) {
-
+    /** Cập nhật và xác nhận trạng thái Featured. */
+    public String updateFeaturedStatus(int productId, boolean featured, Integer displayOrder) {
         if (productId <= 0) {
             return "invalid-product-id";
         }
 
         Product product = productDAO.getProductById(productId);
-
-        if (product == null
-                || "DELETED".equalsIgnoreCase(product.getStatus())) {
+        if (product == null || "DELETED".equalsIgnoreCase(product.getStatus())) {
             return "product-not-found";
         }
 
         Integer normalizedDisplayOrder = null;
-
         if (featured) {
             if (!productDAO.isProductEligibleForFeatured(productId)) {
                 return "product-not-eligible-for-featured";
             }
-
             if (displayOrder != null && displayOrder > 0) {
                 normalizedDisplayOrder = displayOrder;
-            } else if (product.isFeatured()
-                    && product.getFeaturedDisplayOrder() != null
-                    && product.getFeaturedDisplayOrder() > 0) {
+            } else if (product.isFeatured() && product.getFeaturedDisplayOrder() != null && product.getFeaturedDisplayOrder() > 0) {
                 normalizedDisplayOrder = product.getFeaturedDisplayOrder();
             } else {
-                normalizedDisplayOrder
-                        = productDAO.getNextFeaturedDisplayOrder();
+                normalizedDisplayOrder = productDAO.getNextFeaturedDisplayOrder();
             }
         }
 
-        boolean updated = productDAO.updateFeaturedStatus(
-                productId,
-                featured,
-                normalizedDisplayOrder
-        );
+        if (!productDAO.updateFeaturedStatus(productId, featured, normalizedDisplayOrder)) {
+            return "featured-update-failed";
+        }
 
-        return updated ? null : "featured-update-failed";
+        Product savedProduct = productDAO.getProductById(productId);
+        if (savedProduct == null || savedProduct.isFeatured() != featured) {
+            return "featured-update-failed";
+        }
+        if (featured && (savedProduct.getFeaturedDisplayOrder() == null || savedProduct.getFeaturedDisplayOrder() < 1)) {
+            return "featured-update-failed";
+        }
+        return null;
     }
 
-    /**
-     * Validation dữ liệu chung, không kiểm tra trạng thái Category.
-     *
-     * Lý do: admin vẫn phải sửa được ảnh, tên và mô tả của Product đang thuộc
-     * Category inactive.
-     */
+    /** Chuẩn hóa và kiểm tra Product. */
     public String validateProduct(Product product) {
         if (product == null) {
             return "invalid-product";
         }
-
-        String productName = product.getProductName();
-
-        if (productName == null || productName.trim().isEmpty()) {
+        String productName = normalizeProductName(product.getProductName());
+        if (productName == null || productName.isEmpty()) {
             return "name-required";
         }
-
-        productName = productName.trim();
-
         if (productName.length() > 150) {
             return "name-too-long";
         }
-
         if (product.getCategoryId() <= 0) {
             return "category-required";
         }
-
         String status = normalizeStatus(product.getStatus());
-
-        if (!"ACTIVE".equals(status)
-                && !"INACTIVE".equals(status)) {
+        if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
             return "invalid-status";
         }
-
         product.setProductName(productName);
         product.setStatus(status);
-
         if (product.getShortDescription() != null) {
-            product.setShortDescription(
-                    product.getShortDescription().trim()
-            );
+            product.setShortDescription(product.getShortDescription().trim());
         }
-
         if (product.getLongDescription() != null) {
-            product.setLongDescription(
-                    product.getLongDescription().trim()
-            );
+            product.setLongDescription(product.getLongDescription().trim());
         }
-
         return null;
     }
 
-    /**
-     * Product mới chỉ được tạo trong Category active.
-     */
+    /** Kiểm tra Product trước khi tạo. */
     public String validateProductForCreate(Product product) {
         String validationError = validateProduct(product);
-
         if (validationError != null) {
             return validationError;
         }
-
-        if (!productDAO.isCategoryActive(
-                product.getCategoryId())) {
+        if (productDAO.productNameExists(product.getProductName(), null)) {
+            return "product-name-exists";
+        }
+        if (!productDAO.isCategoryActive(product.getCategoryId())) {
             return "category-inactive";
         }
-
         return null;
     }
 
-    /**
-     * Cho phép sửa ảnh/thông tin khi Category hiện tại inactive.
-     *
-     * Chỉ chặn khi: 1. Chuyển Product sang một Category inactive khác. 2.
-     * Chuyển Product từ INACTIVE sang ACTIVE trong Category inactive.
-     */
-    public String validateProductForUpdate(
-            Product oldProduct,
-            Product newProduct) {
-
+    /** Kiểm tra Product trước khi edit. */
+    public String validateProductForUpdate(Product oldProduct, Product newProduct) {
         String validationError = validateProduct(newProduct);
-
         if (validationError != null) {
             return validationError;
         }
-
-        if (oldProduct == null
-                || oldProduct.getId() <= 0
-                || "DELETED".equals(oldProduct.getStatus())) {
+        if (oldProduct == null || oldProduct.getId() <= 0 || "DELETED".equals(oldProduct.getStatus())) {
             return "product-not-found";
         }
-
-        boolean categoryChanged
-                = oldProduct.getCategoryId()
-                != newProduct.getCategoryId();
-
-        boolean activatingProduct
-                = !"ACTIVE".equals(oldProduct.getStatus())
-                && "ACTIVE".equals(newProduct.getStatus());
-
-        if ((categoryChanged || activatingProduct)
-                && !productDAO.isCategoryActive(
-                        newProduct.getCategoryId())) {
+        if (productDAO.productNameExists(newProduct.getProductName(), oldProduct.getId())) {
+            return "product-name-exists";
+        }
+        boolean categoryChanged = oldProduct.getCategoryId() != newProduct.getCategoryId();
+        boolean activatingProduct = !"ACTIVE".equals(oldProduct.getStatus()) && "ACTIVE".equals(newProduct.getStatus());
+        if ((categoryChanged || activatingProduct) && !productDAO.isCategoryActive(newProduct.getCategoryId())) {
             return "category-inactive";
         }
-
         return null;
     }
 
+    /** Tạo slug duy nhất cho Product. */
     public String generateSlug(String productName, int productId) {
         if (productName == null) {
             return "product-" + productId;
@@ -279,10 +233,8 @@ public class AdminManageProductService {
         return slug + "-" + productId;
     }
 
-    public boolean updateVariantStatus(
-            int productId,
-            int variantId,
-            String status) {
+    /** Cập nhật trạng thái Variant. */
+    public boolean updateVariantStatus(int productId, int variantId, String status) {
 
         if (productId <= 0 || variantId <= 0) {
             return false;
@@ -314,37 +266,36 @@ public class AdminManageProductService {
         );
     }
 
-    public boolean createProductWithVariants(
-            Product product,
-            String imageName,
-            List<ProductVariant> variants) {
+    /** Tạo Product cùng Variant. */
+    public boolean createProductWithVariants(Product product, String imageName, List<ProductVariant> variants) {
+        return createProductWithVariantsResult(product, imageName, variants) == null;
+    }
 
+    /** Tạo Product và trả mã lỗi. */
+    public String createProductWithVariantsResult(Product product, String imageName, List<ProductVariant> variants) {
         if (product == null) {
-            return false;
+            return "invalid-product";
         }
-
-        // Product mới chưa được phép bán ngay.
         product.setStatus("INACTIVE");
-
-        if (validateProductForCreate(product) != null
-                || !validateVariants(variants)) {
-            return false;
+        String validationError = validateProductForCreate(product);
+        if (validationError != null) {
+            return validationError;
         }
-
+        if (!validateVariants(variants)) {
+            return "variant-invalid";
+        }
         for (ProductVariant variant : variants) {
             prepareNewVariant(variant);
         }
-
-        return productDAO.insertProductWithMatrixVariants(
-                product,
-                imageName,
-                variants
-        );
+        try {
+            return productDAO.insertProductWithMatrixVariants(product, imageName, variants) ? null : "error";
+        } catch (DuplicateProductNameException e) {
+            return "product-name-exists";
+        }
     }
 
-    public boolean addVariants(
-            int productId,
-            List<ProductVariant> variants) {
+    /** Thêm danh sách Variant. */
+    public boolean addVariants(int productId, List<ProductVariant> variants) {
 
         Product product = productDAO.getProductById(productId);
 
@@ -370,9 +321,7 @@ public class AdminManageProductService {
         return productDAO.insertVariants(variants);
     }
 
-    /**
-     * Giữ để tương thích với code cũ.
-     */
+    /** Thêm một Variant. */
     public boolean addSingleVariant(ProductVariant variant) {
         if (variant == null
                 || variant.getProductId() <= 0
@@ -386,6 +335,7 @@ public class AdminManageProductService {
         return productDAO.insertSingleVariant(variant);
     }
 
+    /** Tạo mã SKU cơ sở. */
     public String generateBaseSku(String productName) {
         String value = normalizeSkuPart(productName);
         return "na".equals(value)
@@ -393,10 +343,8 @@ public class AdminManageProductService {
                 : value.toUpperCase(Locale.ROOT);
     }
 
-    public String generateVariantSku(
-            String productName,
-            String size,
-            String color) {
+    /** Tạo SKU theo Product, Size và Color. */
+    public String generateVariantSku(String productName, String size, String color) {
 
         return normalizeSkuPart(productName)
                 + "-"
@@ -405,6 +353,7 @@ public class AdminManageProductService {
                 + normalizeSkuPart(color);
     }
 
+    /** Kiểm tra danh sách Variant. */
     private boolean validateVariants(List<ProductVariant> variants) {
         if (variants == null || variants.isEmpty()) {
             return false;
@@ -448,6 +397,7 @@ public class AdminManageProductService {
         return true;
     }
 
+    /** Chuẩn hóa Variant mới. */
     private void prepareNewVariant(ProductVariant variant) {
         variant.setCostPrice(BigDecimal.ZERO);
         variant.setListPrice(BigDecimal.ZERO);
@@ -461,6 +411,7 @@ public class AdminManageProductService {
         );
     }
 
+    /** Chuẩn hóa giá trị Variant. */
     private String normalizeVariantValue(String value) {
         String normalized = Normalizer.normalize(
                 value.trim(),
@@ -475,6 +426,7 @@ public class AdminManageProductService {
                 .replaceAll("\\s+", " ");
     }
 
+    /** Chuẩn hóa thành phần SKU. */
     private String normalizeSkuPart(String value) {
         if (isBlank(value)) {
             return "na";
@@ -496,16 +448,24 @@ public class AdminManageProductService {
         return normalized.isEmpty() ? "na" : normalized;
     }
 
+    /** Chuẩn hóa khoảng trắng tên Product. */
+    private String normalizeProductName(String value) {
+        return value == null ? null : value.trim().replaceAll("\\s+", " ");
+    }
+
+    /** Chuẩn hóa trạng thái. */
     private String normalizeStatus(String status) {
         return status == null
                 ? null
                 : status.trim().toUpperCase(Locale.ROOT);
     }
 
+    /** Kiểm tra chuỗi rỗng. */
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
 
+    /** Lấy Variant theo ID. */
     public ProductVariant getVariantById(int productId, int variantId) {
         if (productId <= 0 || variantId <= 0) {
             return null;
@@ -523,12 +483,8 @@ public class AdminManageProductService {
         return variant;
     }
 
-    public String updateVariantInfo(
-            int productId,
-            int variantId,
-            String size,
-            String color,
-            String status) {
+    /** Cập nhật Size, Color và trạng thái Variant. */
+    public String updateVariantInfo(int productId, int variantId, String size, String color, String status) {
 
         if (productId <= 0 || variantId <= 0) {
             return "invalid-id";
@@ -603,9 +559,8 @@ public class AdminManageProductService {
         return updated ? null : "update-failed";
     }
 
-    public String saveProductMainImage(
-            int productId,
-            String imageUrl) {
+    /** Lưu ảnh chính Product. */
+    public String saveProductMainImage(int productId, String imageUrl) {
 
         if (productId <= 0) {
             return "invalid-id";
@@ -645,9 +600,8 @@ public class AdminManageProductService {
         return saved ? null : "image-save-failed";
     }
 
-    public String getVariantMainImageUrl(
-            int productId,
-            int variantId) {
+    /** Lấy ảnh chính của Variant. */
+    public String getVariantMainImageUrl(int productId, int variantId) {
 
         if (productId <= 0 || variantId <= 0) {
             return null;
@@ -659,10 +613,8 @@ public class AdminManageProductService {
         );
     }
 
-    public String saveVariantMainImage(
-            int productId,
-            int variantId,
-            String imageUrl) {
+    /** Lưu ảnh chính Variant. */
+    public String saveVariantMainImage(int productId, int variantId, String imageUrl) {
 
         if (productId <= 0 || variantId <= 0) {
             return "invalid-id";
@@ -705,6 +657,7 @@ public class AdminManageProductService {
         return saved ? null : "image-save-failed";
     }
 
+    /** Chuẩn hóa Size hợp lệ. */
     private String normalizeSize(String value) {
         if (isBlank(value)) {
             return null;
